@@ -1,0 +1,678 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("KERNEL_DATABASE_URL")
+  directUrl = env("KERNEL_DIRECT_URL")
+}
+
+enum AccountStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  SUSPENDED
+  DISABLED
+}
+
+enum PlatformRole {
+  USER
+  SUPERADMIN
+}
+
+enum OrganizationType {
+  DISTRICT
+  CLUB
+  OTHER
+}
+
+enum OrganizationStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum MembershipStatus {
+  PENDING
+  ACTIVE
+  ON_LEAVE
+  INACTIVE
+  GRADUATED
+  TRANSFERRED
+}
+
+enum MembershipTransitionType {
+  CREATED
+  ACTIVATED
+  LEAVE_STARTED
+  LEAVE_ENDED
+  DEACTIVATED
+  GRADUATED
+  TRANSFERRED_OUT
+  TRANSFERRED_IN
+  REACTIVATED
+}
+
+enum PeriodStatus {
+  DRAFT
+  SCHEDULED
+  ACTIVE
+  CLOSED
+  CANCELLED
+}
+
+enum AppointmentStatus {
+  NOMINATED
+  ELECTED
+  ACTIVE
+  ENDED
+  REVOKED
+}
+
+enum ScopeType {
+  PLATFORM
+  ORGANIZATION
+  ORGANIZATION_TREE
+}
+
+enum AssignmentEffect {
+  ALLOW
+  DENY
+}
+
+enum ApplicationStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  CANCELLED
+  EXPIRED
+}
+
+enum TransferStatus {
+  REQUESTED
+  ACCEPTED_BY_DESTINATION
+  CONFIRMED_BY_ORIGIN
+  COMPLETED
+  REJECTED
+  CANCELLED
+  EXPIRED
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+enum ModuleStatus {
+  DRAFT
+  ACTIVE
+  DEPRECATED
+  DISABLED
+}
+
+enum InstallationStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  DISABLED
+}
+
+enum OutboxStatus {
+  PENDING
+  PUBLISHED
+  FAILED
+}
+
+enum ActorType {
+  USER
+  SERVICE
+  SYSTEM
+}
+
+model Person {
+  id                String    @id @default(cuid())
+  firstName         String
+  lastName          String
+  displayName       String?
+  primaryEmail      String?
+  phone             String?
+  birthDate         DateTime? @db.Date
+  avatarUrl         String?
+  externalReference String?
+  metadata          Json?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  archivedAt        DateTime?
+
+  account               UserAccount?
+  memberships           OrganizationMembership[]
+  roleAssignments       RoleAssignment[]
+  invitations           AccountInvitation[]
+  requestedApplications MembershipApplication[]  @relation("ApplicationRequester")
+  reviewedApplications  MembershipApplication[]  @relation("ApplicationReviewer")
+  requestedTransfers    MembershipTransfer[]     @relation("TransferRequester")
+  acceptedTransfers     MembershipTransfer[]     @relation("TransferAcceptor")
+  confirmedTransfers    MembershipTransfer[]     @relation("TransferConfirmer")
+  rejectedTransfers     MembershipTransfer[]     @relation("TransferRejecter")
+  cancelledTransfers    MembershipTransfer[]     @relation("TransferCanceller")
+  createdAppointments   Appointment[]            @relation("AppointmentCreator")
+  revokedAppointments   Appointment[]            @relation("AppointmentRevoker")
+
+  @@index([primaryEmail])
+  @@index([lastName, firstName])
+  @@index([externalReference])
+}
+
+model UserAccount {
+  id                  String        @id @default(cuid())
+  personId            String        @unique
+  email               String
+  emailNormalized     String        @unique
+  passwordHash        String
+  status              AccountStatus @default(PENDING_VERIFICATION)
+  platformRole        PlatformRole  @default(USER)
+  emailVerifiedAt     DateTime?
+  mustChangePassword  Boolean       @default(false)
+  failedLoginAttempts Int           @default(0)
+  lockedUntil         DateTime?
+  lastLoginAt         DateTime?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  disabledAt          DateTime?
+
+  person                  Person                   @relation(fields: [personId], references: [id], onDelete: Restrict)
+  sessions                AccountSession[]
+  passwordResetTokens     PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
+
+  @@index([status])
+}
+
+model AccountSession {
+  id               String    @id @default(cuid())
+  accountId        String
+  refreshTokenHash String    @unique
+  userAgent        String?
+  ipAddress        String?
+  createdAt        DateTime  @default(now())
+  lastUsedAt       DateTime  @default(now())
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  revokeReason     String?
+
+  account UserAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId, revokedAt])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  accountId String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  account UserAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([expiresAt])
+}
+
+model EmailVerificationToken {
+  id        String    @id @default(cuid())
+  accountId String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  account UserAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([expiresAt])
+}
+
+model Organization {
+  id           String             @id @default(cuid())
+  parentId     String?
+  type         OrganizationType
+  code         String             @unique
+  name         String
+  slug         String             @unique
+  status       OrganizationStatus @default(DRAFT)
+  countryCode  String?
+  region       String?
+  city         String?
+  timezone     String             @default("America/Argentina/Cordoba")
+  contactEmail String?
+  contactPhone String?
+  logoUrl      String?
+  foundedAt    DateTime?          @db.Date
+  description  String?            @db.Text
+  attributes   Json?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  archivedAt   DateTime?
+
+  parent              Organization?            @relation("OrganizationHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children            Organization[]           @relation("OrganizationHierarchy")
+  memberships         OrganizationMembership[]
+  periods             InstitutionalPeriod[]
+  appointments        Appointment[]
+  applications        MembershipApplication[]
+  transfersFrom       MembershipTransfer[]     @relation("TransferFromOrganization")
+  transfersTo         MembershipTransfer[]     @relation("TransferToOrganization")
+  roleAssignments     RoleAssignment[]
+  moduleInstallations ModuleInstallation[]
+  positionDefinitions PositionDefinition[]     @relation("PositionCatalogOwner")
+
+  @@index([parentId])
+  @@index([type, status])
+  @@index([name])
+}
+
+model OrganizationMembership {
+  id              String           @id @default(cuid())
+  organizationId  String
+  personId        String
+  memberNumber    String?
+  status          MembershipStatus @default(PENDING)
+  joinedAt        DateTime?
+  statusChangedAt DateTime         @default(now())
+  endedAt         DateTime?
+  internalNotes   String?          @db.Text
+  metadata        Json?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  organization Organization            @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  person       Person                  @relation(fields: [personId], references: [id], onDelete: Restrict)
+  appointments Appointment[]
+  transitions  MembershipTransition[]
+  invitations  AccountInvitation[]
+  applications MembershipApplication[]
+  transfers    MembershipTransfer[]
+
+  @@unique([organizationId, personId])
+  @@unique([organizationId, memberNumber])
+  @@index([organizationId, status])
+  @@index([personId, status])
+}
+
+model MembershipTransition {
+  id            String                   @id @default(cuid())
+  membershipId  String
+  type          MembershipTransitionType
+  fromStatus    MembershipStatus?
+  toStatus      MembershipStatus
+  reasonCode    String?
+  reasonText    String?
+  effectiveAt   DateTime
+  performedById String?
+  commandId     String?
+  createdAt     DateTime                 @default(now())
+
+  membership OrganizationMembership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+
+  @@index([membershipId, effectiveAt])
+  @@index([commandId])
+}
+
+model InstitutionalPeriod {
+  id             String       @id @default(cuid())
+  organizationId String
+  code           String
+  name           String
+  sequence       Int
+  startDate      DateTime     @db.Date
+  endDate        DateTime     @db.Date
+  status         PeriodStatus @default(DRAFT)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  closedAt       DateTime?
+
+  organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  appointments    Appointment[]
+  roleAssignments RoleAssignment[]
+
+  @@unique([organizationId, code])
+  @@unique([organizationId, sequence])
+  @@index([organizationId, status])
+  @@index([startDate, endDate])
+}
+
+model PositionDefinition {
+  id                   String           @id @default(cuid())
+  code                 String           @unique
+  name                 String
+  description          String?
+  organizationType     OrganizationType
+  // Distrito propietario del catálogo para cargos DISTRICT configurables.
+  // Null sólo para cargos globales de sistema sembrados por la plataforma.
+  ownerOrganizationId  String?
+  // Permiso que autoriza a editar esta definición y los permisos de su rol.
+  editPermissionCode   String           @default("kernel.position.manage")
+  defaultRoleCode      String?
+  isSingletonPerPeriod Boolean          @default(false)
+  isSystem             Boolean          @default(false)
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  appointments      Appointment[]
+  ownerOrganization Organization?        @relation("PositionCatalogOwner", fields: [ownerOrganizationId], references: [id], onDelete: Restrict)
+  editPermission    PermissionDefinition @relation("PositionEditPermission", fields: [editPermissionCode], references: [code], onDelete: Restrict)
+
+  @@index([organizationType])
+  @@index([ownerOrganizationId, organizationType])
+  @@index([editPermissionCode])
+}
+
+model Appointment {
+  id                     String            @id @default(cuid())
+  organizationId         String
+  // Membresía activa que habilita a la persona a ocupar el cargo. Para un
+  // cargo DISTRICT puede pertenecer a cualquier CLUB descendiente.
+  membershipId           String
+  periodId               String
+  positionDefinitionId   String
+  status                 AppointmentStatus @default(NOMINATED)
+  startsAt               DateTime?
+  endsAt                 DateTime?
+  createdById            String?
+  createdAt              DateTime          @default(now())
+  activatedAt            DateTime?
+  endedAt                DateTime?
+  revokedAt              DateTime?
+  revokedById            String?
+  revokeReason           String?
+  derivedRoleAssignments RoleAssignment[]  @relation("AppointmentDerivedRole")
+  updatedAt              DateTime          @updatedAt
+
+  organization       Organization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  membership         OrganizationMembership @relation(fields: [membershipId], references: [id], onDelete: Restrict)
+  period             InstitutionalPeriod    @relation(fields: [periodId], references: [id], onDelete: Restrict)
+  positionDefinition PositionDefinition     @relation(fields: [positionDefinitionId], references: [id], onDelete: Restrict)
+  createdBy          Person?                @relation("AppointmentCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  revokedBy          Person?                @relation("AppointmentRevoker", fields: [revokedById], references: [id], onDelete: SetNull)
+
+  // No hay unicidad histórica: un cargo revocado debe poder recrearse para
+  // la misma persona en el mismo período. La unicidad ACTIVE de cargos
+  // singleton se protege transaccionalmente (ver §5.1 y §6.6).
+  @@index([organizationId, periodId, positionDefinitionId, membershipId])
+  @@index([organizationId, periodId, status])
+  @@index([membershipId, status])
+  @@index([positionDefinitionId, status])
+}
+
+model PermissionDefinition {
+  id           String   @id @default(cuid())
+  code         String   @unique
+  namespace    String
+  name         String
+  description  String?
+  resourceType String?
+  moduleId     String?
+  isSystem     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  rolePermissions   RolePermission[]
+  editablePositions PositionDefinition[] @relation("PositionEditPermission")
+
+  @@index([namespace])
+  @@index([moduleId])
+}
+
+model RoleDefinition {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  description String?
+  moduleId    String?
+  isSystem    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  permissions RolePermission[]
+  assignments RoleAssignment[]
+
+  @@index([moduleId])
+}
+
+model RolePermission {
+  roleDefinitionId       String
+  permissionDefinitionId String
+  createdAt              DateTime @default(now())
+
+  roleDefinition       RoleDefinition       @relation(fields: [roleDefinitionId], references: [id], onDelete: Cascade)
+  permissionDefinition PermissionDefinition @relation(fields: [permissionDefinitionId], references: [id], onDelete: Cascade)
+
+  @@id([roleDefinitionId, permissionDefinitionId])
+}
+
+model RoleAssignment {
+  id                  String           @id @default(cuid())
+  personId            String
+  roleDefinitionId    String
+  effect              AssignmentEffect @default(ALLOW)
+  scopeType           ScopeType
+  organizationId      String?
+  periodId            String?
+  validFrom           DateTime         @default(now())
+  validUntil          DateTime?
+  grantedById         String?
+  reason              String?
+  createdAt           DateTime         @default(now())
+  revokedAt           DateTime?
+  revokedById         String?
+  sourceAppointmentId String?
+
+  person            Person               @relation(fields: [personId], references: [id], onDelete: Restrict)
+  roleDefinition    RoleDefinition       @relation(fields: [roleDefinitionId], references: [id], onDelete: Restrict)
+  organization      Organization?        @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  period            InstitutionalPeriod? @relation(fields: [periodId], references: [id], onDelete: Restrict)
+  sourceAppointment Appointment?         @relation("AppointmentDerivedRole", fields: [sourceAppointmentId], references: [id], onDelete: Restrict)
+
+  @@index([personId, revokedAt])
+  @@index([organizationId, periodId])
+  @@index([roleDefinitionId])
+  @@index([sourceAppointmentId])
+}
+
+model MembershipApplication {
+  id                String            @id @default(cuid())
+  organizationId    String
+  requesterPersonId String
+  membershipId      String?
+  status            ApplicationStatus @default(DRAFT)
+  message           String?           @db.Text
+  submittedAt       DateTime?
+  reviewedById      String?
+  reviewedAt        DateTime?
+  rejectionReason   String?
+  expiresAt         DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  organization Organization            @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  requester    Person                  @relation("ApplicationRequester", fields: [requesterPersonId], references: [id], onDelete: Restrict)
+  reviewer     Person?                 @relation("ApplicationReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  membership   OrganizationMembership? @relation(fields: [membershipId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, status])
+  @@index([requesterPersonId, status])
+}
+
+model MembershipTransfer {
+  id                      String         @id @default(cuid())
+  membershipId            String
+  fromOrganizationId      String
+  toOrganizationId        String
+  requestedById           String
+  status                  TransferStatus @default(REQUESTED)
+  reason                  String?        @db.Text
+  requestedAt             DateTime       @default(now())
+  acceptedById            String?
+  acceptedAt              DateTime?
+  confirmedById           String?
+  confirmedAt             DateTime?
+  completedAt             DateTime?
+  rejectedById            String?
+  rejectedAt              DateTime?
+  rejectionReason         String?
+  cancelledById           String?
+  cancelledAt             DateTime?
+  expiresAt               DateTime?
+  destinationMembershipId String?
+  createdAt               DateTime       @default(now())
+  updatedAt               DateTime       @updatedAt
+
+  membership       OrganizationMembership @relation(fields: [membershipId], references: [id], onDelete: Restrict)
+  fromOrganization Organization           @relation("TransferFromOrganization", fields: [fromOrganizationId], references: [id], onDelete: Restrict)
+  toOrganization   Organization           @relation("TransferToOrganization", fields: [toOrganizationId], references: [id], onDelete: Restrict)
+  requestedBy      Person                 @relation("TransferRequester", fields: [requestedById], references: [id], onDelete: Restrict)
+  acceptedBy       Person?                @relation("TransferAcceptor", fields: [acceptedById], references: [id], onDelete: SetNull)
+  confirmedBy      Person?                @relation("TransferConfirmer", fields: [confirmedById], references: [id], onDelete: SetNull)
+  rejectedBy       Person?                @relation("TransferRejecter", fields: [rejectedById], references: [id], onDelete: SetNull)
+  cancelledBy      Person?                @relation("TransferCanceller", fields: [cancelledById], references: [id], onDelete: SetNull)
+
+  @@index([membershipId, status])
+  @@index([fromOrganizationId, status])
+  @@index([toOrganizationId, status])
+}
+
+model AccountInvitation {
+  id           String           @id @default(cuid())
+  membershipId String
+  personId     String
+  email        String
+  tokenHash    String           @unique
+  status       InvitationStatus @default(PENDING)
+  invitedById  String?
+  expiresAt    DateTime
+  acceptedAt   DateTime?
+  revokedAt    DateTime?
+  createdAt    DateTime         @default(now())
+
+  membership OrganizationMembership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  person     Person                 @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@index([email, status])
+  @@index([expiresAt])
+}
+
+model ModuleDefinition {
+  id                  String       @id
+  name                String
+  description         String?
+  version             String
+  contractVersion     Int          @default(1)
+  status              ModuleStatus @default(DRAFT)
+  manifest            Json
+  configurationSchema Json?
+  registeredAt        DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  installations ModuleInstallation[]
+
+  @@index([status])
+}
+
+model ModuleInstallation {
+  id             String             @id @default(cuid())
+  moduleId       String
+  organizationId String
+  status         InstallationStatus @default(PENDING)
+  configuration  Json?
+  installedById  String?
+  installedAt    DateTime           @default(now())
+  activatedAt    DateTime?
+  disabledAt     DateTime?
+  updatedAt      DateTime           @updatedAt
+
+  module       ModuleDefinition @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@unique([moduleId, organizationId])
+  @@index([organizationId, status])
+}
+
+model IdempotencyKey {
+  id             String    @id @default(cuid())
+  key            String
+  operation      String
+  actorScope     String
+  requestHash    String
+  responseStatus Int?
+  responseBody   Json?
+  lockedUntil    DateTime?
+  completedAt    DateTime?
+  expiresAt      DateTime
+  createdAt      DateTime  @default(now())
+
+  @@unique([key, operation, actorScope])
+  @@index([expiresAt])
+}
+
+model OutboxMessage {
+  id               String       @id @default(cuid())
+  eventType        String
+  eventVersion     Int          @default(1)
+  aggregateType    String
+  aggregateId      String
+  aggregateVersion Int
+  tenantId         String?
+  actorType        ActorType
+  actorId          String?
+  correlationId    String?
+  causationId      String?
+  traceId          String?
+  payload          Json
+  occurredAt       DateTime     @default(now())
+  status           OutboxStatus @default(PENDING)
+  attempts         Int          @default(0)
+  nextAttemptAt    DateTime?
+  publishedAt      DateTime?
+  lastError        String?
+
+  @@index([status, nextAttemptAt])
+  @@index([aggregateType, aggregateId, aggregateVersion])
+  @@index([occurredAt])
+}
+
+model AggregateVersion {
+  aggregateType String
+  aggregateId   String
+  version       Int      @default(0)
+  updatedAt     DateTime @updatedAt
+
+  @@id([aggregateType, aggregateId])
+}
+
+model KernelAuditLog {
+  id             String    @id @default(cuid())
+  actorType      ActorType
+  actorId        String?
+  action         String
+  resourceType   String
+  resourceId     String?
+  organizationId String?
+  result         String
+  reason         String?
+  metadata       Json?
+  ipAddress      String?
+  userAgent      String?
+  traceId        String?
+  occurredAt     DateTime  @default(now())
+
+  @@index([actorId, occurredAt])
+  @@index([resourceType, resourceId, occurredAt])
+  @@index([organizationId, occurredAt])
+  @@index([action, occurredAt])
+}

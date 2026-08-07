@@ -1,0 +1,11 @@
+node_modules
+**/node_modules
+.turbo
+**/.next
+**/dist
+coverage
+.git
+.env
+postgres-data
+redis-data
+nats-data

@@ -1,0 +1,39 @@
+{
+  "name": "mirotaract-platform",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.13.1",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:integration": "pnpm build && pnpm --filter @mirotaract/institutional-kernel-api test:integration",
+    "test:contract": "pnpm --filter @mirotaract/institutional-kernel-api test:contract",
+    "test:live": "pnpm test:integration",
+    "contracts:openapi": "node scripts/validate-openapi.mjs",
+    "contracts:events": "node scripts/validate-events-contract.mjs",
+    "contracts:http": "node scripts/validate-http-operations.mjs",
+    "contracts:validate": "pnpm contracts:openapi && pnpm contracts:events && pnpm contracts:http",
+    "format": "prettier --write .",
+    "db:generate": "pnpm --filter @mirotaract/institutional-kernel-api prisma:generate",
+    "db:migrate": "pnpm --filter @mirotaract/institutional-kernel-api prisma:migrate",
+    "db:deploy": "pnpm --filter @mirotaract/institutional-kernel-api prisma:deploy",
+    "db:seed": "pnpm --filter @mirotaract/institutional-kernel-api prisma:seed",
+    "db:seed:legacy:dry-run": "tsx prisma/seed-legacy.ts",
+    "db:seed:legacy": "tsx prisma/seed-legacy.ts --apply",
+    "db:seed:current-presidents:dry-run": "tsx prisma/seed-current-presidents.ts",
+    "db:seed:current-presidents": "tsx prisma/seed-current-presidents.ts --apply"
+  },
+  "devDependencies": {
+    "@prisma/client": "^6.10.1",
+    "@apidevtools/swagger-parser": "^10.1.1",
+    "@trivago/prettier-plugin-sort-imports": "^5.2.2",
+    "prettier": "^3.5.3",
+    "prisma": "^6.10.1",
+    "tsx": "^4.19.4",
+    "turbo": "^2.5.4",
+    "typescript": "^5.8.3"
+  }
+}

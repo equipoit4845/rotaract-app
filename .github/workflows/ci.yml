@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: kernel
+          POSTGRES_PASSWORD: kernel_dev_only
+          POSTGRES_DB: institutional_kernel
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U kernel -d institutional_kernel"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+      nats:
+        image: nats:2.10-alpine
+        ports: ["4222:4222"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: pnpm }
+      - uses: pnpm/action-setup@v4
+        with: { version: 10.13.1 }
+      - name: Kernel environment
+        run: |
+          echo 'KERNEL_DATABASE_URL=postgresql://kernel:kernel_dev_only@localhost:5432/institutional_kernel?schema=public' >> $GITHUB_ENV
+          echo 'KERNEL_DIRECT_URL=postgresql://kernel:kernel_dev_only@localhost:5432/institutional_kernel?schema=public' >> $GITHUB_ENV
+          echo 'REDIS_URL=redis://localhost:6379' >> $GITHUB_ENV
+          echo 'NATS_URL=nats://localhost:4222' >> $GITHUB_ENV
+          echo 'JWT_SECRET=ci-only-not-a-production-secret' >> $GITHUB_ENV
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm contracts:validate
+      - run: pnpm db:deploy
+      - run: pnpm db:seed && pnpm db:seed
+      - run: pnpm build
+
+  live-contract:
+    name: Live infrastructure and HTTP contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: pnpm }
+      - uses: pnpm/action-setup@v4
+        with: { version: 10.13.1 }
+      - name: Start live dependencies (including JetStream)
+        run: docker compose up -d postgres redis nats
+      - name: Wait for dependencies
+        run: docker compose up --wait postgres redis nats
+      - name: Kernel environment
+        run: |
+          echo 'KERNEL_DATABASE_URL=postgresql://kernel:kernel_dev_only@localhost:5432/institutional_kernel?schema=public' >> $GITHUB_ENV
+          echo 'KERNEL_DIRECT_URL=postgresql://kernel:kernel_dev_only@localhost:5432/institutional_kernel?schema=public' >> $GITHUB_ENV
+          echo 'REDIS_URL=redis://localhost:6379' >> $GITHUB_ENV
+          echo 'NATS_URL=nats://localhost:4222' >> $GITHUB_ENV
+          echo 'JWT_SECRET=ci-only-not-a-production-secret' >> $GITHUB_ENV
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm db:deploy
+      - run: pnpm db:seed
+      - run: pnpm test:live
+      - run: pnpm test:contract
+      - name: Dependency logs on failure
+        if: failure()
+        run: docker compose logs postgres redis nats
+      - name: Stop dependencies
+        if: always()
+        run: docker compose down -v

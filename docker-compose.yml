@@ -1,0 +1,113 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-kernel}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kernel_dev_only}
+      POSTGRES_DB: ${POSTGRES_DB:-institutional_kernel}
+    ports: ["5432:5432"]
+    volumes: [postgres-data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+    volumes: [redis-data:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  nats:
+    image: nats:2.10-alpine
+    command: ["-js", "-sd", "/data", "-m", "8222"]
+    ports: ["4222:4222", "8222:8222"]
+    volumes: [nats-data:/data]
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:8222/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build:
+      context: .
+      dockerfile: infra/docker/api.Dockerfile
+    environment:
+      PORT: 3001
+      KERNEL_DATABASE_URL: ${KERNEL_DATABASE_URL:-postgresql://kernel:kernel_dev_only@postgres:5432/institutional_kernel?schema=public}
+      KERNEL_DIRECT_URL: ${KERNEL_DIRECT_URL:-postgresql://kernel:kernel_dev_only@postgres:5432/institutional_kernel?schema=public}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      NATS_URL: ${NATS_URL:-nats://nats:4222}
+      JWT_SECRET: ${JWT_SECRET:-development-only-change-me}
+      KERNEL_SERVICE_API_KEY: ${KERNEL_SERVICE_API_KEY:-}
+      KERNEL_JOBS_ENABLED: "false"
+      CLICKMAIL_API_KEY: ${CLICKMAIL_API_KEY:-}
+      CLICKMAIL_BASE_URL: ${CLICKMAIL_BASE_URL:-http://localhost:3000}
+      CLICKMAIL_FROM_ADDRESS: ${CLICKMAIL_FROM_ADDRESS:-Mi Rotaract <no-reply@mirotaract.org>}
+      KERNEL_PUBLIC_WEB_URL: ${KERNEL_PUBLIC_WEB_URL:-http://localhost:3000}
+    ports: ["3001:3001"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      nats: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://127.0.0.1:3001/health/live"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+
+  worker:
+    build:
+      context: .
+      dockerfile: infra/docker/api.Dockerfile
+    environment:
+      KERNEL_WORKER_ONLY: "true"
+      KERNEL_DATABASE_URL: ${KERNEL_DATABASE_URL:-postgresql://kernel:kernel_dev_only@postgres:5432/institutional_kernel?schema=public}
+      KERNEL_DIRECT_URL: ${KERNEL_DIRECT_URL:-postgresql://kernel:kernel_dev_only@postgres:5432/institutional_kernel?schema=public}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      NATS_URL: ${NATS_URL:-nats://nats:4222}
+      JWT_SECRET: ${JWT_SECRET:-development-only-change-me}
+      KERNEL_JOBS_ENABLED: "true"
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      nats: { condition: service_healthy }
+
+  migrate:
+    build:
+      context: .
+      dockerfile: infra/docker/api.Dockerfile
+    command:
+      [
+        "pnpm",
+        "--filter",
+        "@mirotaract/institutional-kernel-api",
+        "prisma:deploy",
+      ]
+    environment:
+      KERNEL_DATABASE_URL: ${KERNEL_DATABASE_URL:-postgresql://kernel:kernel_dev_only@postgres:5432/institutional_kernel?schema=public}
+      KERNEL_DIRECT_URL: ${KERNEL_DIRECT_URL:-postgresql://kernel:kernel_dev_only@postgres:5432/institutional_kernel?schema=public}
+    depends_on:
+      postgres: { condition: service_healthy }
+    profiles: ["tools"]
+
+  web:
+    build:
+      context: .
+      dockerfile: infra/docker/web.Dockerfile
+    environment:
+      NEXT_PUBLIC_KERNEL_API_URL: ${NEXT_PUBLIC_KERNEL_API_URL:-http://localhost:3001/api/kernel/v1}
+    ports: ["3000:3000"]
+    depends_on:
+      api: { condition: service_healthy }
+
+volumes:
+  postgres-data:
+  redis-data:
+  nats-data:

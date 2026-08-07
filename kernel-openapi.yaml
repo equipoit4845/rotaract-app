@@ -1,0 +1,3564 @@
+openapi: 3.1.0
+info:
+  title: Institutional Kernel API
+  version: "1.1.0"
+  description: >
+    API HTTP del Institutional Kernel de Mi Rotaract. Fuente única de verdad
+    para identidad, organizaciones jerárquicas, membresías, períodos, cargos
+    y autoridades, autorización contextual, solicitudes de ingreso,
+    transferencias entre organizaciones y registro de módulos externos.
+    Este documento es un contrato de datos derivado de `kernel-spec.md`
+    (secciones 4, 5, 9 y 10). No reemplaza la especificación; ante cualquier
+    conflicto, `kernel-spec.md` es la fuente normativa. El proceso de
+    compatibilidad y publicación está definido en
+    `kernel-openapi-contract-plan.md`.
+  contact:
+    name: Institutional Kernel
+  license:
+    name: Uso interno — Mi Rotaract
+    identifier: LicenseRef-MiRotaract-Internal
+externalDocs:
+  description: Especificación técnica completa del kernel
+  url: ./kernel-spec.md
+
+servers:
+  - url: https://api.agendai.com.ar/api/kernel/v1
+    description: Producción
+  - url: https://staging-api.agendai.com.ar/api/kernel/v1
+    description: Staging
+
+tags:
+  - name: Auth
+    description: Cuentas, credenciales, sesiones y recuperación de acceso.
+  - name: Persons
+    description: Personas y datos personales institucionales básicos.
+  - name: Organizations
+    description: Organizaciones jerárquicas (distritos, clubes).
+  - name: Memberships
+    description: Membresías e historial institucional.
+  - name: Periods
+    description: Períodos institucionales.
+  - name: Positions
+    description: Definiciones de cargo.
+  - name: Appointments
+    description: Cargos ocupados y autoridades vigentes.
+  - name: Authorization
+    description: Permisos, roles, asignaciones y decisiones de autorización.
+  - name: Applications
+    description: Solicitudes de ingreso a una organización.
+  - name: Transfers
+    description: Transferencias de membresía entre organizaciones.
+  - name: Modules
+    description: Catálogo e instalación de módulos externos.
+  - name: Service
+    description: >
+      APIs exclusivas para servicios consumidores autenticados con
+      identidad de servicio (audiencia `institutional-kernel`).
+      No accesibles con token de usuario.
+
+security:
+  - bearerAuth: []
+
+paths:
+  # ---------------------------------------------------------------------
+  # 9.2 Auth
+  # ---------------------------------------------------------------------
+
+  /auth/register:
+    post:
+      operationId: registerAccount
+      tags: [Auth]
+      summary: Registrar una nueva cuenta
+      description: Crea `Person` y `UserAccount` atómicamente (CA-ID-01).
+      security: []
+      x-required-permission: null
+      x-rate-limited: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RegisterAccountRequest" }
+      responses:
+        "201":
+          description: Cuenta creada, pendiente de verificación de email.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserAccount" }
+        "409":
+          description: Email ya registrado (CA-ID-02).
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /auth/login:
+    post:
+      operationId: authenticateAccount
+      tags: [Auth]
+      summary: Iniciar sesión
+      security: []
+      x-required-permission: null
+      x-rate-limited: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LoginRequest" }
+      responses:
+        "200":
+          description: Autenticación exitosa.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthTokens" }
+        "401":
+          description: Credenciales inválidas o cuenta no verificada (CA-ID-03).
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "423":
+          description: Cuenta bloqueada por intentos fallidos.
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /auth/refresh:
+    post:
+      operationId: refreshSession
+      tags: [Auth]
+      summary: Rotar el refresh token de una sesión
+      description: Rota el refresh token y revoca el anterior (CA-ID-04).
+      security: []
+      x-required-permission: null
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken: { type: string }
+      responses:
+        "200":
+          description: Nuevo par de tokens.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthTokens" }
+        "401":
+          description: Refresh token inválido, revocado o expirado.
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /auth/logout:
+    post:
+      operationId: revokeSession
+      tags: [Auth]
+      summary: Cerrar la sesión actual
+      x-required-permission: kernel.account.update.self
+      responses:
+        "204": { description: Sesión revocada. }
+
+  /auth/logout-all:
+    post:
+      operationId: revokeAllSessions
+      tags: [Auth]
+      summary: Cerrar todas las sesiones de la cuenta
+      x-required-permission: kernel.account.update.self
+      responses:
+        "204": { description: Todas las sesiones revocadas. }
+
+  /auth/verify-email:
+    post:
+      operationId: verifyEmail
+      tags: [Auth]
+      summary: Verificar el email de la cuenta
+      security: []
+      x-required-permission: null
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token: { type: string }
+      responses:
+        "200":
+          description: Email verificado.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserAccount" }
+        "410":
+          description: Token usado o vencido.
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /auth/forgot-password:
+    post:
+      operationId: requestPasswordReset
+      tags: [Auth]
+      summary: Solicitar recuperación de contraseña
+      security: []
+      x-required-permission: null
+      x-rate-limited: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        "202":
+          description: >
+            Solicitud aceptada. Responde 202 exista o no el email, para no
+            filtrar existencia de cuentas.
+
+  /auth/reset-password:
+    post:
+      operationId: resetPassword
+      tags: [Auth]
+      summary: Restablecer contraseña con token
+      security: []
+      x-required-permission: null
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, newPassword]
+              properties:
+                token: { type: string }
+                newPassword: { type: string, minLength: 10 }
+      responses:
+        "200": { description: Contraseña actualizada. }
+        "410":
+          description: Token usado o vencido (CA-ID-05).
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /auth/invitations/accept:
+    post:
+      operationId: acceptAccountInvitation
+      tags: [Auth]
+      summary: Aceptar una invitación y crear la cuenta vinculada
+      description: >
+        Consume una invitación PENDING no vencida y crea UserAccount vinculada
+        a su Person en una única transacción. Es público, rate-limited y está
+        exento de Idempotency-Key; el token es de un único uso.
+      security: []
+      x-required-permission: null
+      x-rate-limited: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              { $ref: "#/components/schemas/AcceptAccountInvitationRequest" }
+      responses:
+        "201":
+          description: Cuenta creada e invitación aceptada.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserAccount" }
+        "409":
+          description: Invitación ya consumida, revocada o la persona ya tiene cuenta.
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /auth/me:
+    get:
+      operationId: getOwnAccount
+      tags: [Auth]
+      summary: Obtener el contexto de la cuenta autenticada
+      description: No depende de servicios externos (CA-ID-07).
+      x-required-permission: kernel.account.read.self
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserContext" }
+    patch:
+      operationId: updateOwnAccount
+      tags: [Auth]
+      summary: Actualizar email de la cuenta propia
+      x-required-permission: kernel.account.update.self
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: { type: string, format: email }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserAccount" }
+        "409":
+          description: Email ya en uso.
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /auth/me/password:
+    patch:
+      operationId: changePassword
+      tags: [Auth]
+      summary: Cambiar la contraseña propia
+      x-required-permission: kernel.account.update.self
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [currentPassword, newPassword]
+              properties:
+                currentPassword: { type: string }
+                newPassword: { type: string, minLength: 10 }
+      responses:
+        "200": { description: Contraseña actualizada. }
+        "401": { description: Contraseña actual incorrecta. }
+
+  /auth/sessions:
+    get:
+      operationId: listOwnSessions
+      tags: [Auth]
+      summary: Listar sesiones activas de la cuenta
+      x-required-permission: kernel.account.read.self
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/AccountSession" }
+
+  /auth/sessions/{sessionId}:
+    delete:
+      operationId: revokeOwnSession
+      tags: [Auth]
+      summary: Revocar una sesión puntual
+      x-required-permission: kernel.account.update.self
+      parameters:
+        - $ref: "#/components/parameters/sessionId"
+      responses:
+        "204": { description: Sesión revocada. }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /auth/introspect:
+    post:
+      operationId: introspectToken
+      tags: [Auth]
+      summary: Introspección de token (uso interno/gateway)
+      x-required-permission: null
+      x-service-only: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token: { type: string }
+      responses:
+        "200":
+          description: Resultado de introspección.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/IntrospectionResult" }
+
+  /auth/accounts/{accountId}/suspend:
+    post:
+      operationId: suspendAccount
+      tags: [Auth]
+      summary: Suspender una cuenta (administración de plataforma)
+      description: >
+        kernel-spec.md §8.1 SuspendAccount. Administración de cuentas de
+        terceros, distinta de las operaciones propias de `/auth/me/*`.
+      x-required-permission: kernel.account.manage
+      parameters:
+        - $ref: "#/components/parameters/accountId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserAccount" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  /auth/accounts/{accountId}/reactivate:
+    post:
+      operationId: reactivateAccount
+      tags: [Auth]
+      summary: Reactivar una cuenta suspendida
+      description: kernel-spec.md §8.1 ReactivateAccount.
+      x-required-permission: kernel.account.manage
+      parameters:
+        - $ref: "#/components/parameters/accountId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserAccount" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  /auth/accounts/{accountId}/disable:
+    post:
+      operationId: disableAccount
+      tags: [Auth]
+      summary: Deshabilitar una cuenta de forma permanente
+      description: kernel-spec.md §8.1 DisableAccount. Transición terminal.
+      x-required-permission: kernel.account.manage
+      parameters:
+        - $ref: "#/components/parameters/accountId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserAccount" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  # ---------------------------------------------------------------------
+  # 9.3 Personas
+  # ---------------------------------------------------------------------
+
+  /persons:
+    post:
+      operationId: createPerson
+      tags: [Persons]
+      summary: Crear una persona (puede no tener cuenta)
+      x-required-permission: kernel.person.manage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreatePersonRequest" }
+      responses:
+        "201":
+          description: Creado.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Person" }
+    get:
+      operationId: listPersons
+      tags: [Persons]
+      summary: Listar personas
+      x-required-permission: kernel.person.read
+      parameters:
+        - $ref: "#/components/parameters/query"
+        - $ref: "#/components/parameters/cursor"
+        - $ref: "#/components/parameters/limit"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PersonPage" }
+
+  /persons/{personId}:
+    get:
+      operationId: getPerson
+      tags: [Persons]
+      summary: Obtener una persona
+      description: >
+        Requiere `kernel.person.read`, o `kernel.person.read.self` si
+        `personId` corresponde a la persona vinculada a la cuenta autenticada.
+      x-required-permission: kernel.person.read
+      parameters:
+        - $ref: "#/components/parameters/personId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Person" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      operationId: updatePerson
+      tags: [Persons]
+      summary: Actualizar datos de una persona
+      description: >
+        Requiere `kernel.person.manage`, o `kernel.person.update.self`
+        sobre la propia persona.
+      x-required-permission: kernel.person.manage
+      parameters:
+        - $ref: "#/components/parameters/personId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdatePersonRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Person" }
+
+  /persons/{personId}/archive:
+    post:
+      operationId: archivePerson
+      tags: [Persons]
+      summary: Archivar una persona
+      description: >
+        Una persona archivada no puede recibir membresías, cargos ni roles
+        nuevos (invariante 6.2.3). No elimina su historial (invariante 6.2.2).
+      x-required-permission: kernel.person.manage
+      parameters:
+        - $ref: "#/components/parameters/personId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Person" }
+
+  /persons/{personId}/invitations:
+    post:
+      operationId: invitePersonToCreateAccount
+      tags: [Persons]
+      summary: Invitar a una persona a vincular una cuenta
+      x-required-permission: kernel.person.manage
+      parameters:
+        - $ref: "#/components/parameters/personId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [membershipId, email]
+              properties:
+                membershipId: { type: string }
+                email: { type: string, format: email }
+      responses:
+        "201":
+          description: Invitación creada.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AccountInvitation" }
+
+  # ---------------------------------------------------------------------
+  # 9.4 Organizaciones
+  # ---------------------------------------------------------------------
+
+  /organizations:
+    post:
+      operationId: createOrganization
+      tags: [Organizations]
+      summary: Crear una organización
+      x-required-permission: kernel.organization.create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateOrganizationRequest" }
+      responses:
+        "201":
+          description: Creada.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Organization" }
+    get:
+      operationId: listOrganizations
+      tags: [Organizations]
+      summary: Listar organizaciones
+      x-required-permission: kernel.organization.read
+      parameters:
+        - name: type
+          in: query
+          schema: { $ref: "#/components/schemas/OrganizationType" }
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/OrganizationStatus" }
+        - name: parentId
+          in: query
+          schema: { type: string }
+        - $ref: "#/components/parameters/query"
+        - $ref: "#/components/parameters/cursor"
+        - $ref: "#/components/parameters/limit"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OrganizationPage" }
+
+  /organizations/{organizationId}:
+    get:
+      operationId: getOrganization
+      tags: [Organizations]
+      summary: Obtener una organización
+      x-required-permission: kernel.organization.read
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Organization" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      operationId: updateOrganization
+      tags: [Organizations]
+      summary: Actualizar datos de una organización
+      x-required-permission: kernel.organization.update
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateOrganizationRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Organization" }
+
+  /organizations/{organizationId}/activate:
+    post:
+      operationId: activateOrganization
+      tags: [Organizations]
+      summary: Activar una organización (DRAFT/INACTIVE → ACTIVE)
+      x-required-permission: kernel.organization.activate
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Organization" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  /organizations/{organizationId}/deactivate:
+    post:
+      operationId: deactivateOrganization
+      tags: [Organizations]
+      summary: Desactivar una organización (ACTIVE → INACTIVE)
+      description: >
+        (Supuesto) `kernel-spec.md` §10.1 no define un permiso distinto para
+        desactivar; se asume que reutiliza `kernel.organization.activate`
+        por tratarse de la misma transición administrativa reversible.
+      x-required-permission: kernel.organization.activate
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Organization" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  /organizations/{organizationId}/archive:
+    post:
+      operationId: archiveOrganization
+      tags: [Organizations]
+      summary: Archivar una organización (terminal)
+      x-required-permission: kernel.organization.archive
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Organization" }
+
+  /organizations/{organizationId}/move:
+    post:
+      operationId: moveOrganization
+      tags: [Organizations]
+      summary: Reasignar el padre de una organización
+      description: Valida que el cambio no genere ciclos (invariante 6.3.6).
+      x-required-permission: kernel.organization.move
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [newParentId]
+              properties:
+                newParentId: { type: string, nullable: true }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Organization" }
+        "409":
+          description: El movimiento genera un ciclo jerárquico (CA-ORG-03).
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /organizations/{organizationId}/children:
+    get:
+      operationId: listOrganizationChildren
+      tags: [Organizations]
+      summary: Listar hijos directos
+      x-required-permission: kernel.organization.read
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Organization" }
+
+  /organizations/{organizationId}/ancestors:
+    get:
+      operationId: listOrganizationAncestors
+      tags: [Organizations]
+      summary: Listar ancestros ordenados desde el padre inmediato
+      x-required-permission: kernel.organization.read
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Organization" }
+
+  /organizations/{organizationId}/descendants:
+    get:
+      operationId: listOrganizationDescendants
+      tags: [Organizations]
+      summary: Listar todos los descendientes
+      x-required-permission: kernel.organization.read
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Organization" }
+
+  # ---------------------------------------------------------------------
+  # 9.5 Membresías
+  # ---------------------------------------------------------------------
+
+  /organizations/{organizationId}/memberships:
+    post:
+      operationId: createMembership
+      tags: [Memberships]
+      summary: Crear una membresía en una organización
+      x-required-permission: kernel.membership.create
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateMembershipRequest" }
+      responses:
+        "201":
+          description: Creada.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OrganizationMembership" }
+        "409":
+          description: Ya existe membresía para esa persona en la organización (CA-MEM-02).
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Error" }
+    get:
+      operationId: listOrganizationMemberships
+      tags: [Memberships]
+      summary: Listar membresías de una organización
+      x-required-permission: kernel.membership.read
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+        - name: status
+          in: query
+          schema:
+            type: array
+            items: { $ref: "#/components/schemas/MembershipStatus" }
+          style: form
+          explode: true
+        - $ref: "#/components/parameters/cursor"
+        - $ref: "#/components/parameters/limit"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MembershipPage" }
+
+  /memberships/{membershipId}:
+    get:
+      operationId: getMembership
+      tags: [Memberships]
+      summary: Obtener una membresía
+      x-required-permission: kernel.membership.read
+      parameters:
+        - $ref: "#/components/parameters/membershipId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OrganizationMembership" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      operationId: updateMembership
+      tags: [Memberships]
+      summary: Actualizar metadatos de una membresía
+      x-required-permission: kernel.membership.update
+      parameters:
+        - $ref: "#/components/parameters/membershipId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                memberNumber: { type: string, nullable: true }
+                internalNotes: { type: string, nullable: true }
+                metadata: { type: object, nullable: true }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OrganizationMembership" }
+
+  /memberships/{membershipId}/activate:
+    post:
+      operationId: activateMembership
+      tags: [Memberships]
+      summary: Activar una membresía (PENDING → ACTIVE)
+      description: Requiere `joinedAt` (invariante 6.4.2). Registra transición (CA-MEM-03).
+      x-required-permission: kernel.membership.activate
+      parameters:
+        - $ref: "#/components/parameters/membershipId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                joinedAt: { type: string, format: date-time }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OrganizationMembership" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  /memberships/{membershipId}/leave:
+    post:
+      operationId: putMembershipOnLeave
+      tags: [Memberships]
+      summary: Pasar a licencia (ACTIVE → ON_LEAVE)
+      x-required-permission: kernel.membership.update
+      parameters:
+        - $ref: "#/components/parameters/membershipId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reasonCode: { type: string, nullable: true }
+                reasonText: { type: string, nullable: true }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OrganizationMembership" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  /memberships/{membershipId}/resume:
+    post:
+      operationId: resumeMembership
+      tags: [Memberships]
+      summary: Volver de licencia (ON_LEAVE → ACTIVE)
+      x-required-permission: kernel.membership.update
+      parameters:
+        - $ref: "#/components/parameters/membershipId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OrganizationMembership" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  /memberships/{membershipId}/deactivate:
+    post:
+      operationId: deactivateMembership
+      tags: [Memberships]
+      summary: Desactivar una membresía (→ INACTIVE)
+      description: Requiere `endedAt` (invariante 6.4.3).
+      x-required-permission: kernel.membership.deactivate
+      parameters:
+        - $ref: "#/components/parameters/membershipId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reasonCode: { type: string, nullable: true }
+                reasonText: { type: string, nullable: true }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OrganizationMembership" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  /memberships/{membershipId}/graduate:
+    post:
+      operationId: graduateMembership
+      tags: [Memberships]
+      summary: Marcar egreso (ACTIVE → GRADUATED)
+      x-required-permission: kernel.membership.update
+      parameters:
+        - $ref: "#/components/parameters/membershipId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OrganizationMembership" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  /memberships/{membershipId}/reactivate:
+    post:
+      operationId: reactivateMembership
+      tags: [Memberships]
+      summary: Reactivar una membresía en estado terminal (→ ACTIVE)
+      description: >
+        Preserva el mismo ID y agrega historial (invariante 6.4.7). Sólo
+        aplica desde `INACTIVE` según la máquina de estados (§7.3); estados
+        `GRADUATED`/`TRANSFERRED` no tienen retorno documentado y deberían
+        resolverse con una nueva membresía o un `MembershipTransfer` (supuesto,
+        pendiente de aclaración en `kernel-spec.md`).
+      x-required-permission: kernel.membership.update
+      parameters:
+        - $ref: "#/components/parameters/membershipId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OrganizationMembership" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  /memberships/{membershipId}/history:
+    get:
+      operationId: getMembershipHistory
+      tags: [Memberships]
+      summary: Historial de transiciones de una membresía
+      x-required-permission: kernel.membership.read
+      parameters:
+        - $ref: "#/components/parameters/membershipId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/MembershipTransition" }
+
+  /persons/{personId}/memberships:
+    get:
+      operationId: listPersonMemberships
+      tags: [Memberships]
+      summary: Listar membresías de una persona
+      description: >
+        Requiere `kernel.membership.read`, o acceso propio si `personId`
+        corresponde a la persona autenticada.
+      x-required-permission: kernel.membership.read
+      parameters:
+        - $ref: "#/components/parameters/personId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/OrganizationMembership" }
+
+  # ---------------------------------------------------------------------
+  # 9.6 Períodos
+  # ---------------------------------------------------------------------
+
+  /organizations/{organizationId}/periods:
+    post:
+      operationId: createPeriod
+      tags: [Periods]
+      summary: Crear un período (DRAFT)
+      x-required-permission: kernel.period.create
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreatePeriodRequest" }
+      responses:
+        "201":
+          description: Creado.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/InstitutionalPeriod" }
+        "422":
+          description: "Fechas inválidas: el período debe ir del 1 de julio al 30 de junio siguiente (CA-PER-01/01a)."
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Error" }
+    get:
+      operationId: listPeriods
+      tags: [Periods]
+      summary: Listar períodos de una organización
+      x-required-permission: kernel.period.read
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/PeriodStatus" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/InstitutionalPeriod" }
+
+  /organizations/{organizationId}/periods/current:
+    get:
+      operationId: getCurrentPeriod
+      tags: [Periods]
+      summary: Obtener el período ACTIVE vigente
+      x-required-permission: kernel.period.read
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/InstitutionalPeriod" }
+        "404":
+          description: No hay período activo.
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /periods/{periodId}:
+    get:
+      operationId: getPeriod
+      tags: [Periods]
+      summary: Obtener un período
+      x-required-permission: kernel.period.read
+      parameters:
+        - $ref: "#/components/parameters/periodId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/InstitutionalPeriod" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      operationId: updateDraftPeriod
+      tags: [Periods]
+      summary: Actualizar un período en estado DRAFT
+      x-required-permission: kernel.period.update
+      parameters:
+        - $ref: "#/components/parameters/periodId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdatePeriodRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/InstitutionalPeriod" }
+        "409":
+          description: El período no está en DRAFT.
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /periods/{periodId}/schedule:
+    post:
+      operationId: schedulePeriod
+      tags: [Periods]
+      summary: Programar un período (DRAFT → SCHEDULED)
+      x-required-permission: kernel.period.update
+      parameters:
+        - $ref: "#/components/parameters/periodId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/InstitutionalPeriod" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  /periods/{periodId}/activate:
+    post:
+      operationId: activatePeriod
+      tags: [Periods]
+      summary: Activar un período (SCHEDULED → ACTIVE)
+      description: >
+        Sólo se activa desde `SCHEDULED` (invariante 6.5.4). No puede haber
+        dos períodos `ACTIVE` para la misma organización (invariante 6.5.2,
+        CA-PER-02). Emite `kernel.period.activated.v1` (CA-PER-03).
+      x-required-permission: kernel.period.activate
+      parameters:
+        - $ref: "#/components/parameters/periodId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/InstitutionalPeriod" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  /periods/{periodId}/close:
+    post:
+      operationId: closePeriod
+      tags: [Periods]
+      summary: Cerrar un período (ACTIVE → CLOSED)
+      description: >
+        Finaliza sus cargos activos en la misma transacción
+        (invariante 6.5.7, CA-PER-04).
+      x-required-permission: kernel.period.close
+      parameters:
+        - $ref: "#/components/parameters/periodId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/InstitutionalPeriod" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  /periods/{periodId}/cancel:
+    post:
+      operationId: cancelPeriod
+      tags: [Periods]
+      summary: Cancelar un período (DRAFT/SCHEDULED → CANCELLED)
+      description: >
+        (Supuesto) `kernel-spec.md` §10.1 no define un permiso propio para
+        cancelar; se asume que reutiliza `kernel.period.update` por ser una
+        corrección administrativa previa a la activación.
+      x-required-permission: kernel.period.update
+      parameters:
+        - $ref: "#/components/parameters/periodId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/InstitutionalPeriod" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  # ---------------------------------------------------------------------
+  # 9.7 Cargos
+  # ---------------------------------------------------------------------
+
+  /position-definitions:
+    post:
+      operationId: createPositionDefinition
+      tags: [Positions]
+      summary: Registrar una definición de cargo
+      description: >
+        Registra un cargo. Todo cargo DISTRICT configurable debe indicar el
+        distrito propietario y un permiso de edición. La autorización se
+        evalúa en ese distrito.
+      x-required-permission: kernel.position.create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              { $ref: "#/components/schemas/CreatePositionDefinitionRequest" }
+      responses:
+        "201":
+          description: Creada.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PositionDefinition" }
+    get:
+      operationId: listPositionDefinitions
+      tags: [Positions]
+      summary: Listar definiciones de cargo
+      x-required-permission: kernel.position.read
+      parameters:
+        - name: organizationType
+          in: query
+          schema: { $ref: "#/components/schemas/OrganizationType" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/PositionDefinition" }
+
+  /position-definitions/{positionDefinitionId}:
+    patch:
+      operationId: updatePositionDefinition
+      tags: [Positions]
+      summary: Editar una definición de cargo
+      description: >
+        Requiere el editPermissionCode configurado en el cargo y se evalúa
+        sobre el distrito propietario. Los cargos de sistema no son editables
+        desde un distrito.
+      x-required-permission: dynamic:position.editPermissionCode
+      parameters:
+        - $ref: "#/components/parameters/positionDefinitionId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              { $ref: "#/components/schemas/UpdatePositionDefinitionRequest" }
+      responses:
+        "200":
+          description: Actualizada.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PositionDefinition" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /position-definitions/{positionDefinitionId}/permissions/{permissionId}:
+    put:
+      operationId: attachPermissionToPosition
+      tags: [Positions]
+      summary: Asociar un permiso al rol técnico de un cargo
+      description: >
+        Requiere editPermissionCode. Actualiza el rol defaultRoleCode del
+        cargo; responde 409 si el cargo no tiene rol técnico asociado.
+      x-required-permission: dynamic:position.editPermissionCode
+      parameters:
+        - $ref: "#/components/parameters/positionDefinitionId"
+        - $ref: "#/components/parameters/permissionId"
+      responses:
+        "204": { description: Permiso asociado. }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+    delete:
+      operationId: detachPermissionFromPosition
+      tags: [Positions]
+      summary: Quitar un permiso del rol técnico de un cargo
+      x-required-permission: dynamic:position.editPermissionCode
+      parameters:
+        - $ref: "#/components/parameters/positionDefinitionId"
+        - $ref: "#/components/parameters/permissionId"
+      responses:
+        "204": { description: Permiso quitado. }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  /organizations/{organizationId}/appointments:
+    post:
+      operationId: createAppointment
+      tags: [Appointments]
+      summary: Crear un cargo (NOMINATED)
+      description: >
+        Para un cargo de CLUB, la membresía habilitante debe pertenecer a ese
+        club. Para un cargo de DISTRICT, puede pertenecer a cualquier club
+        descendiente, sin crear membresía distrital artificial. El período
+        debe corresponder a la organización o a un ancestro aplicable. Puede
+        crearse para un período futuro y coexistir con el cargo ACTIVE actual.
+      x-required-permission: kernel.appointment.create
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateAppointmentRequest" }
+      responses:
+        "201":
+          description: Creado.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Appointment" }
+    get:
+      operationId: listAppointments
+      tags: [Appointments]
+      summary: Listar cargos de una organización
+      x-required-permission: kernel.appointment.read
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+        - name: periodId
+          in: query
+          schema: { type: string }
+        - name: positionCode
+          in: query
+          schema: { type: string }
+        - name: membershipId
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/AppointmentStatus" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Appointment" }
+
+  /organizations/{organizationId}/authorities/current:
+    get:
+      operationId: getCurrentAuthorities
+      tags: [Appointments]
+      summary: Obtener las autoridades ACTIVE del período vigente
+      description: >
+        `Appointment` es la única fuente de verdad para presidencias y
+        autoridades (§4.5, CA-APP-03, CA-APP-04). No existen flags
+        `isPresident`.
+      x-required-permission: kernel.appointment.read
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Appointment" }
+
+  /appointments/{appointmentId}:
+    get:
+      operationId: getAppointment
+      tags: [Appointments]
+      summary: Obtener un cargo
+      x-required-permission: kernel.appointment.read
+      parameters:
+        - $ref: "#/components/parameters/appointmentId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Appointment" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /appointments/{appointmentId}/elect:
+    post:
+      operationId: markAppointmentElected
+      tags: [Appointments]
+      summary: Marcar un cargo como electo (NOMINATED → ELECTED)
+      description: >
+        (Supuesto) Se asume `kernel.appointment.create` como permiso
+        requerido; §10.1 no distingue un permiso propio para la transición
+        "elect".
+      x-required-permission: kernel.appointment.create
+      parameters:
+        - $ref: "#/components/parameters/appointmentId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Appointment" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  /appointments/{appointmentId}/activate:
+    post:
+      operationId: activateAppointment
+      tags: [Appointments]
+      summary: Activar un cargo (ELECTED → ACTIVE)
+      description: >
+        Sólo se activa si la membresía habilitante está `ACTIVE`, el período
+        ya está `ACTIVE` y llegó `startsAt`. Un
+        cargo singleton admite una sola asignación `ACTIVE` por
+        organización/período/posición (invariante 6.6.4, CA-APP-02). Puede
+        materializar una `RoleAssignment` derivada (§10.3).
+      x-required-permission: kernel.appointment.activate
+      parameters:
+        - $ref: "#/components/parameters/appointmentId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Appointment" }
+        "409":
+          description: >
+            Transición inválida, o ya existe un titular ACTIVE para un cargo
+            singleton (CA-APP-02).
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /appointments/{appointmentId}/end:
+    post:
+      operationId: endAppointment
+      tags: [Appointments]
+      summary: Finalizar un cargo (ACTIVE → ENDED)
+      x-required-permission: kernel.appointment.end
+      parameters:
+        - $ref: "#/components/parameters/appointmentId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Appointment" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  /appointments/{appointmentId}/revoke:
+    post:
+      operationId: revokeAppointment
+      tags: [Appointments]
+      summary: Revocar un cargo
+      description: >
+        Un cargo revocado no puede reactivarse; se crea uno nuevo
+        (invariante 6.6.7). Revoca el rol derivado si existía (CA-APP-05).
+      x-required-permission: kernel.appointment.revoke
+      parameters:
+        - $ref: "#/components/parameters/appointmentId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [revokeReason]
+              properties:
+                revokeReason: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Appointment" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  # ---------------------------------------------------------------------
+  # 9.8 Autorización
+  # ---------------------------------------------------------------------
+
+  /permissions:
+    get:
+      operationId: listPermissions
+      tags: [Authorization]
+      summary: Listar definiciones de permiso
+      x-required-permission: kernel.role.read
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/PermissionDefinition" }
+    post:
+      operationId: registerPermission
+      tags: [Authorization]
+      summary: Registrar una definición de permiso
+      description: >
+        Un módulo sólo puede registrar permisos dentro de su namespace
+        (invariante 6.7.9). No se agregan permisos mediante enums compilados
+        (invariante 6.7.2).
+      x-required-permission: kernel.role.manage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreatePermissionRequest" }
+      responses:
+        "201":
+          description: Creado.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PermissionDefinition" }
+
+  /roles:
+    get:
+      operationId: listRoles
+      tags: [Authorization]
+      summary: Listar definiciones de rol
+      x-required-permission: kernel.role.read
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/RoleDefinition" }
+    post:
+      operationId: createRole
+      tags: [Authorization]
+      summary: Crear una definición de rol
+      x-required-permission: kernel.role.manage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateRoleRequest" }
+      responses:
+        "201":
+          description: Creado.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RoleDefinition" }
+
+  /roles/{roleId}/permissions/{permissionId}:
+    put:
+      operationId: attachPermissionToRole
+      tags: [Authorization]
+      summary: Adjuntar un permiso a un rol
+      x-required-permission: kernel.role.manage
+      parameters:
+        - $ref: "#/components/parameters/roleId"
+        - $ref: "#/components/parameters/permissionId"
+      responses:
+        "204": { description: Adjuntado. }
+    delete:
+      operationId: detachPermissionFromRole
+      tags: [Authorization]
+      summary: Quitar un permiso de un rol
+      x-required-permission: kernel.role.manage
+      parameters:
+        - $ref: "#/components/parameters/roleId"
+        - $ref: "#/components/parameters/permissionId"
+      responses:
+        "204": { description: Quitado. }
+
+  /role-assignments:
+    post:
+      operationId: grantRole
+      tags: [Authorization]
+      summary: Otorgar (o denegar explícitamente) un rol en un alcance
+      description: >
+        `PLATFORM` sólo puede asignarse a roles expresamente autorizados
+        (invariante 6.7.7).
+      x-required-permission: kernel.role.assign
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GrantRoleRequest" }
+      responses:
+        "201":
+          description: Creado.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RoleAssignment" }
+    get:
+      operationId: listRoleAssignments
+      tags: [Authorization]
+      summary: Listar asignaciones de rol
+      x-required-permission: kernel.role.read
+      parameters:
+        - name: personId
+          in: query
+          schema: { type: string }
+        - name: organizationId
+          in: query
+          schema: { type: string }
+        - name: roleDefinitionId
+          in: query
+          schema: { type: string }
+        - name: includeRevoked
+          in: query
+          schema: { type: boolean, default: false }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/RoleAssignment" }
+
+  /role-assignments/{assignmentId}/revoke:
+    post:
+      operationId: revokeRole
+      tags: [Authorization]
+      summary: Revocar una asignación de rol
+      x-required-permission: kernel.role.revoke
+      parameters:
+        - $ref: "#/components/parameters/assignmentId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RoleAssignment" }
+
+  /authorization/check:
+    post:
+      operationId: checkAuthorization
+      tags: [Authorization]
+      summary: Evaluar una decisión de autorización puntual
+      description: >
+        Denegación por defecto (principio 9). `DENY` gana sobre `ALLOW` con
+        igual o mayor especificidad (invariante 6.7.4).
+        Un sujeto autenticado siempre puede consultar su propia
+        autorización (`subjectId` = persona propia); consultar la de otro
+        `subjectId` requiere `kernel.role.read`.
+      x-required-permission: kernel.role.read
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AuthorizationCheckRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthorizationDecision" }
+
+  /authorization/batch-check:
+    post:
+      operationId: batchCheckAuthorization
+      tags: [Authorization]
+      summary: Evaluar hasta 100 decisiones de autorización (CA-AUTHZ-06)
+      x-required-permission: kernel.role.read
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [checks]
+              properties:
+                checks:
+                  type: array
+                  maxItems: 100
+                  items:
+                    { $ref: "#/components/schemas/AuthorizationCheckRequest" }
+      responses:
+        "200":
+          description: >
+            Devuelve una decisión por cada ítem, en el mismo orden
+            (CA-AUTHZ-06).
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/AuthorizationDecision" }
+
+  /persons/{personId}/effective-permissions:
+    get:
+      operationId: getEffectivePermissions
+      tags: [Authorization]
+      summary: Listar permisos efectivos de una persona en un alcance
+      x-required-permission: kernel.role.read
+      parameters:
+        - $ref: "#/components/parameters/personId"
+        - name: organizationId
+          in: query
+          schema: { type: string }
+        - name: periodId
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { type: string }
+              example: ["kernel.membership.read", "meetings.meeting.create"]
+
+  # ---------------------------------------------------------------------
+  # 9.9 Solicitudes
+  # ---------------------------------------------------------------------
+
+  /membership-applications:
+    post:
+      operationId: createMembershipApplication
+      tags: [Applications]
+      summary: Crear una solicitud de ingreso (DRAFT)
+      x-required-permission: kernel.application.create.self
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              {
+                $ref: "#/components/schemas/CreateMembershipApplicationRequest",
+              }
+      responses:
+        "201":
+          description: Creada.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MembershipApplication" }
+        "409":
+          description: Ya existe una solicitud abierta (CA-SOL-01).
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Error" }
+    get:
+      operationId: listMembershipApplications
+      tags: [Applications]
+      summary: Listar solicitudes de ingreso
+      description: >
+        Requiere `kernel.application.review` para ver solicitudes de
+        terceros; sin ese permiso, `kernel.application.read.self` limita el
+        resultado a las propias y el filtro `personId` se ignora (se fuerza
+        al actor).
+      x-required-permission: kernel.application.review
+      parameters:
+        - name: organizationId
+          in: query
+          schema: { type: string }
+        - name: personId
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/ApplicationStatus" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/MembershipApplication" }
+
+  /membership-applications/{applicationId}:
+    get:
+      operationId: getMembershipApplication
+      tags: [Applications]
+      summary: Obtener una solicitud
+      x-required-permission: kernel.application.read.self
+      parameters:
+        - $ref: "#/components/parameters/applicationId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MembershipApplication" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /membership-applications/{applicationId}/submit:
+    post:
+      operationId: submitMembershipApplication
+      tags: [Applications]
+      summary: Enviar una solicitud (DRAFT → SUBMITTED)
+      x-required-permission: kernel.application.create.self
+      parameters:
+        - $ref: "#/components/parameters/applicationId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MembershipApplication" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  /membership-applications/{applicationId}/approve:
+    post:
+      operationId: approveMembershipApplication
+      tags: [Applications]
+      summary: Aprobar una solicitud (SUBMITTED → APPROVED)
+      description: >
+        Crea o reactiva la membresía en la misma transacción
+        (invariante 6.8.3-4, CA-SOL-02).
+      x-required-permission: kernel.application.review
+      parameters:
+        - $ref: "#/components/parameters/applicationId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MembershipApplication" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  /membership-applications/{applicationId}/reject:
+    post:
+      operationId: rejectMembershipApplication
+      tags: [Applications]
+      summary: Rechazar una solicitud (SUBMITTED → REJECTED)
+      description: Exige motivo (invariante 6.8.5, CA-SOL-03).
+      x-required-permission: kernel.application.review
+      parameters:
+        - $ref: "#/components/parameters/applicationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rejectionReason]
+              properties:
+                rejectionReason: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MembershipApplication" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  /membership-applications/{applicationId}/cancel:
+    post:
+      operationId: cancelMembershipApplication
+      tags: [Applications]
+      summary: Cancelar una solicitud propia (DRAFT/SUBMITTED → CANCELLED)
+      description: Sólo se cancela desde `DRAFT` o `SUBMITTED` (invariante 6.8.6).
+      x-required-permission: kernel.application.cancel.self
+      parameters:
+        - $ref: "#/components/parameters/applicationId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MembershipApplication" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  # ---------------------------------------------------------------------
+  # 9.10 Transferencias
+  # ---------------------------------------------------------------------
+
+  /membership-transfers:
+    post:
+      operationId: requestMembershipTransfer
+      tags: [Transfers]
+      summary: Solicitar una transferencia de membresía (REQUESTED)
+      description: >
+        Sólo se transfiere una membresía `ACTIVE` (invariante 6.9.1,
+        CA-TRA-01). Origen y destino deben ser diferentes
+        (invariante 6.9.2). Sólo una transferencia abierta por membresía
+        (invariante 6.9.3, CA-TRA-06).
+      x-required-permission: kernel.transfer.create.self
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              { $ref: "#/components/schemas/RequestMembershipTransferRequest" }
+      responses:
+        "201":
+          description: Creada.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MembershipTransfer" }
+        "409":
+          description: Ya existe una transferencia abierta para esa membresía.
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Error" }
+    get:
+      operationId: listMembershipTransfers
+      tags: [Transfers]
+      summary: Listar transferencias
+      description: >
+        Sin `kernel.transfer.accept`/`.confirm`/`.reject` (alcance staff), el
+        resultado se limita a las transferencias solicitadas por el propio
+        actor (`kernel.transfer.read.self`); el filtro `requestedById` se
+        ignora en ese caso y se fuerza al actor.
+      x-required-permission: kernel.transfer.read.self
+      parameters:
+        - name: membershipId
+          in: query
+          schema: { type: string }
+        - name: fromOrganizationId
+          in: query
+          schema: { type: string }
+        - name: toOrganizationId
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/TransferStatus" }
+        - name: requestedById
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/MembershipTransfer" }
+
+  /membership-transfers/{transferId}:
+    get:
+      operationId: getMembershipTransfer
+      tags: [Transfers]
+      summary: Obtener una transferencia
+      x-required-permission: kernel.transfer.read.self
+      parameters:
+        - $ref: "#/components/parameters/transferId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MembershipTransfer" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /membership-transfers/{transferId}/accept:
+    post:
+      operationId: acceptTransferByDestination
+      tags: [Transfers]
+      summary: Aceptar desde la organización destino (REQUESTED → ACCEPTED_BY_DESTINATION)
+      description: El destino acepta antes de que el origen confirme (invariante 6.9.4, CA-TRA-02).
+      x-required-permission: kernel.transfer.accept
+      parameters:
+        - $ref: "#/components/parameters/transferId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MembershipTransfer" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  /membership-transfers/{transferId}/confirm:
+    post:
+      operationId: confirmTransferByOrigin
+      tags: [Transfers]
+      summary: Confirmar desde la organización origen (ACCEPTED_BY_DESTINATION → CONFIRMED_BY_ORIGIN)
+      description: CA-TRA-03. Puede disparar `complete` automáticamente según configuración (§9.10).
+      x-required-permission: kernel.transfer.confirm
+      parameters:
+        - $ref: "#/components/parameters/transferId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MembershipTransfer" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  /membership-transfers/{transferId}/complete:
+    post:
+      operationId: completeMembershipTransfer
+      tags: [Transfers]
+      summary: Completar la transferencia (CONFIRMED_BY_ORIGIN → COMPLETED)
+      description: >
+        Operación administrativa/interna o automática tras `confirm` (§9.10).
+        En una única transacción: marca la membresía origen `TRANSFERRED`,
+        finaliza cargos activos incompatibles, crea o reactiva la membresía
+        destino, guarda `destinationMembershipId` y emite un único evento
+        (invariante 6.9.5-6, CA-TRA-04, CA-TRA-05). Es inmutable una vez
+        completada (invariante 6.9.8).
+        (Supuesto) Se asume que requiere `kernel.transfer.confirm` cuando se
+        invoca manualmente; §10.1 no define un permiso "complete" propio.
+      x-required-permission: kernel.transfer.confirm
+      parameters:
+        - $ref: "#/components/parameters/transferId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MembershipTransfer" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  /membership-transfers/{transferId}/reject:
+    post:
+      operationId: rejectMembershipTransfer
+      tags: [Transfers]
+      summary: Rechazar una transferencia
+      description: Exige motivo (invariante 6.9.7).
+      x-required-permission: kernel.transfer.reject
+      parameters:
+        - $ref: "#/components/parameters/transferId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rejectionReason]
+              properties:
+                rejectionReason: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MembershipTransfer" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  /membership-transfers/{transferId}/cancel:
+    post:
+      operationId: cancelMembershipTransfer
+      tags: [Transfers]
+      summary: Cancelar una transferencia propia
+      description: >
+        (Supuesto) Se asume `kernel.transfer.create.self` como permiso
+        requerido, por ser el solicitante quien cancela su propia
+        solicitud; §10.1 no define un permiso "cancel" dedicado.
+      x-required-permission: kernel.transfer.create.self
+      parameters:
+        - $ref: "#/components/parameters/transferId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MembershipTransfer" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  # ---------------------------------------------------------------------
+  # 9.11 Módulos
+  # ---------------------------------------------------------------------
+
+  /modules:
+    post:
+      operationId: registerModule
+      tags: [Modules]
+      summary: Registrar un módulo
+      description: >
+        Un módulo se registra sin migrar tablas del kernel (CA-MOD-01). El
+        registro administra metadatos; no ejecuta código externo (decisión
+        final #10).
+      x-required-permission: kernel.module.register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateModuleRequest" }
+      responses:
+        "201":
+          description: Creado.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ModuleDefinition" }
+    get:
+      operationId: listModules
+      tags: [Modules]
+      summary: Listar módulos registrados
+      x-required-permission: kernel.module.read
+      parameters:
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/ModuleStatus" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ModuleDefinition" }
+
+  /modules/{moduleId}:
+    get:
+      operationId: getModule
+      tags: [Modules]
+      summary: Obtener un módulo
+      x-required-permission: kernel.module.read
+      parameters:
+        - $ref: "#/components/parameters/moduleId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ModuleDefinition" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /modules/{moduleId}/manifest:
+    put:
+      operationId: updateModuleManifest
+      tags: [Modules]
+      summary: Reemplazar el manifiesto de un módulo
+      x-required-permission: kernel.module.register
+      parameters:
+        - $ref: "#/components/parameters/moduleId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [manifest]
+              properties:
+                manifest: { type: object }
+                configurationSchema: { type: object, nullable: true }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ModuleDefinition" }
+
+  /modules/{moduleId}/deprecate:
+    post:
+      operationId: deprecateModule
+      tags: [Modules]
+      summary: Marcar un módulo como DEPRECATED
+      description: Un módulo `DEPRECATED` no admite instalaciones nuevas (invariante 6.10.3).
+      x-required-permission: kernel.module.register
+      parameters:
+        - $ref: "#/components/parameters/moduleId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ModuleDefinition" }
+
+  /organizations/{organizationId}/modules/{moduleId}/install:
+    post:
+      operationId: installModule
+      tags: [Modules]
+      summary: Instalar un módulo en una organización (PENDING)
+      description: Una organización tiene como máximo una instalación por módulo (invariante 6.10.2).
+      x-required-permission: kernel.module.install
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+        - $ref: "#/components/parameters/moduleId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                configuration: { type: object, nullable: true }
+      responses:
+        "201":
+          description: Instalada.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ModuleInstallation" }
+        "409":
+          description: Ya existe una instalación para ese módulo/organización.
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /organizations/{organizationId}/modules/{moduleId}/activate:
+    post:
+      operationId: activateModuleInstallation
+      tags: [Modules]
+      summary: Activar una instalación (PENDING/SUSPENDED → ACTIVE)
+      description: Valida `configurationSchema` (invariante 6.10.4, CA-MOD-02). Emite evento (CA-MOD-03).
+      x-required-permission: kernel.module.install
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+        - $ref: "#/components/parameters/moduleId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ModuleInstallation" }
+        "422":
+          description: Configuración inválida contra `configurationSchema` (CA-MOD-02).
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /organizations/{organizationId}/modules/{moduleId}/configuration:
+    patch:
+      operationId: updateModuleConfiguration
+      tags: [Modules]
+      summary: Actualizar la configuración de una instalación
+      x-required-permission: kernel.module.configure
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+        - $ref: "#/components/parameters/moduleId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [configuration]
+              properties:
+                configuration: { type: object }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ModuleInstallation" }
+        "422":
+          description: Configuración inválida contra `configurationSchema`.
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /organizations/{organizationId}/modules/{moduleId}/suspend:
+    post:
+      operationId: suspendModuleInstallation
+      tags: [Modules]
+      summary: Suspender una instalación (ACTIVE → SUSPENDED)
+      x-required-permission: kernel.module.configure
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+        - $ref: "#/components/parameters/moduleId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ModuleInstallation" }
+
+  /organizations/{organizationId}/modules/{moduleId}/disable:
+    post:
+      operationId: disableModuleInstallation
+      tags: [Modules]
+      summary: Deshabilitar una instalación
+      description: No elimina datos del servicio consumidor (invariante 6.10.5, CA-MOD-04).
+      x-required-permission: kernel.module.disable
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+        - $ref: "#/components/parameters/moduleId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ModuleInstallation" }
+
+  /organizations/{organizationId}/modules:
+    get:
+      operationId: listOrganizationModules
+      tags: [Modules]
+      summary: Listar instalaciones de módulos de una organización
+      x-required-permission: kernel.module.read
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ModuleInstallation" }
+
+  /organizations/{organizationId}/capabilities:
+    get:
+      operationId: getOrganizationCapabilities
+      tags: [Modules]
+      summary: Obtener capacidades habilitadas (módulos activos + permisos)
+      description: Refleja instalación y permisos (CA-MOD-05).
+      x-required-permission: kernel.module.read
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  organizationId: { type: string }
+                  modules:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        moduleId: { type: string }
+                        status:
+                          { $ref: "#/components/schemas/InstallationStatus" }
+
+  # ---------------------------------------------------------------------
+  # 9.12 APIs para servicios
+  # ---------------------------------------------------------------------
+
+  /service/users/{accountId}/context:
+    get:
+      operationId: serviceGetUserContext
+      tags: [Service]
+      summary: Obtener el UserContext de una cuenta (para servicios)
+      security: [{ serviceAuth: [] }]
+      x-service-only: true
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserContext" }
+
+  /service/persons/{personId}:
+    get:
+      operationId: serviceGetPerson
+      tags: [Service]
+      summary: Obtener resumen de persona (para servicios)
+      security: [{ serviceAuth: [] }]
+      x-service-only: true
+      parameters:
+        - $ref: "#/components/parameters/personId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PersonSummary" }
+
+  /service/organizations/{organizationId}:
+    get:
+      operationId: serviceGetOrganization
+      tags: [Service]
+      summary: Obtener resumen de organización (para servicios)
+      security: [{ serviceAuth: [] }]
+      x-service-only: true
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OrganizationSummary" }
+
+  /service/organizations/{organizationId}/membership-snapshot:
+    get:
+      operationId: serviceGetMembershipSnapshot
+      tags: [Service]
+      summary: Obtener snapshot de membresías (para quórum, listas, etc.)
+      security: [{ serviceAuth: [] }]
+      x-service-only: true
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+        - name: status
+          in: query
+          schema:
+            type: array
+            items: { $ref: "#/components/schemas/MembershipStatus" }
+        - name: at
+          in: query
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MembershipSnapshot" }
+
+  /service/organizations/{organizationId}/authority-snapshot:
+    get:
+      operationId: serviceGetAuthoritySnapshot
+      tags: [Service]
+      summary: Obtener snapshot de autoridades vigentes
+      security: [{ serviceAuth: [] }]
+      x-service-only: true
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+        - name: periodId
+          in: query
+          schema: { type: string }
+        - name: at
+          in: query
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthoritySnapshot" }
+
+  /service/organizations/{organizationId}/period-snapshot:
+    get:
+      operationId: serviceGetPeriodSnapshot
+      tags: [Service]
+      summary: Obtener snapshot del período vigente
+      security: [{ serviceAuth: [] }]
+      x-service-only: true
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+        - name: at
+          in: query
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PeriodSnapshot" }
+
+  /service/authorization/check:
+    post:
+      operationId: serviceCheckAuthorization
+      tags: [Service]
+      summary: Evaluar autorización (para servicios, sin sesión de usuario)
+      security: [{ serviceAuth: [] }]
+      x-service-only: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AuthorizationCheckRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthorizationDecision" }
+
+  /service/authorization/batch-check:
+    post:
+      operationId: serviceBatchCheckAuthorization
+      tags: [Service]
+      summary: Evaluar hasta 100 decisiones (para servicios)
+      security: [{ serviceAuth: [] }]
+      x-service-only: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [checks]
+              properties:
+                checks:
+                  type: array
+                  maxItems: 100
+                  items:
+                    { $ref: "#/components/schemas/AuthorizationCheckRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/AuthorizationDecision" }
+
+  /service/modules/{moduleId}/installations/{organizationId}:
+    get:
+      operationId: serviceGetModuleInstallation
+      tags: [Service]
+      summary: Obtener el estado de instalación de un módulo (para el propio servicio consumidor)
+      security: [{ serviceAuth: [] }]
+      x-service-only: true
+      parameters:
+        - $ref: "#/components/parameters/moduleId"
+        - $ref: "#/components/parameters/organizationId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ModuleInstallation" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        Access token de usuario emitido por `POST /auth/login` o
+        `/auth/refresh` (§14.2). Vida útil de 10 minutos. `aud`:
+        `mirotaract-platform`.
+    serviceAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        Token de servicio a servicio firmado (o mTLS equivalente, §14.3).
+        `sub` identifica al servicio emisor. `aud` debe ser
+        `institutional-kernel`. Requerido para todos los endpoints bajo
+        `/service/*`; el kernel rechaza estas rutas con token de usuario.
+
+  parameters:
+    personId:
+      name: personId
+      in: path
+      required: true
+      schema: { type: string }
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      schema: { type: string }
+    membershipId:
+      name: membershipId
+      in: path
+      required: true
+      schema: { type: string }
+    periodId:
+      name: periodId
+      in: path
+      required: true
+      schema: { type: string }
+    appointmentId:
+      name: appointmentId
+      in: path
+      required: true
+      schema: { type: string }
+    positionDefinitionId:
+      name: positionDefinitionId
+      in: path
+      required: true
+      schema: { type: string }
+    moduleId:
+      name: moduleId
+      in: path
+      required: true
+      schema: { type: string }
+    applicationId:
+      name: applicationId
+      in: path
+      required: true
+      schema: { type: string }
+    transferId:
+      name: transferId
+      in: path
+      required: true
+      schema: { type: string }
+    roleId:
+      name: roleId
+      in: path
+      required: true
+      schema: { type: string }
+    permissionId:
+      name: permissionId
+      in: path
+      required: true
+      schema: { type: string }
+    assignmentId:
+      name: assignmentId
+      in: path
+      required: true
+      schema: { type: string }
+    sessionId:
+      name: sessionId
+      in: path
+      required: true
+      schema: { type: string }
+    accountId:
+      name: accountId
+      in: path
+      required: true
+      schema: { type: string }
+    query:
+      name: query
+      in: query
+      schema: { type: string }
+      description: Búsqueda de texto libre.
+    cursor:
+      name: cursor
+      in: query
+      schema: { type: string }
+      description: Cursor de paginación opaco devuelto por la página anterior.
+    limit:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+      description: Tamaño de página. Por defecto 25, máximo 100 (§18).
+
+  headers:
+    Idempotency-Key:
+      description: >
+        Obligatorio en todo POST que crea o transiciona un agregado, salvo los
+        flujos Auth expresamente exentos. Su ámbito es (operationId,
+        actorScope). Reutilizarla con el mismo body devuelve la respuesta
+        original; con distinto body devuelve 409 sin ejecutar el comando.
+      schema: { type: string }
+    X-Correlation-Id:
+      description: Identificador de correlación propagado a eventos y auditoría.
+      schema: { type: string }
+    traceparent:
+      description: Cabecera de trazado distribuido (W3C Trace Context).
+      schema: { type: string }
+
+  responses:
+    NotFound:
+      description: Recurso inexistente.
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Error" }
+    InvalidTransition:
+      description: La transición de estado solicitada no es válida desde el estado actual.
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Forbidden:
+      description: El sujeto autenticado no tiene el permiso requerido en el alcance solicitado.
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    # --- Errores y paginación (§9.1) -----------------------------------
+
+    Error:
+      type: object
+      description: Problem Details (RFC 9457).
+      required: [type, title, status, code, instance]
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer }
+        code:
+          type: string
+          description: Código estable de error, p. ej. `KERNEL_INVALID_TRANSITION`.
+        detail: { type: string }
+        instance: { type: string }
+        traceId: { type: string }
+      example:
+        type: https://api.agendai.com.ar/errors/invalid-transition
+        title: Invalid state transition
+        status: 409
+        code: KERNEL_INVALID_TRANSITION
+        detail: ACTIVE membership cannot transition directly to PENDING
+        instance: /api/kernel/v1/memberships/mem_123/status
+        traceId: trc_123
+
+    PageInfo:
+      type: object
+      properties:
+        nextCursor: { type: string, nullable: true }
+        hasMore: { type: boolean }
+
+    # --- Enums (idénticos al esquema Prisma, §5) -----------------------
+
+    AccountStatus:
+      type: string
+      enum: [PENDING_VERIFICATION, ACTIVE, SUSPENDED, DISABLED]
+    PlatformRole:
+      type: string
+      enum: [USER, SUPERADMIN]
+    OrganizationType:
+      type: string
+      enum: [DISTRICT, CLUB, OTHER]
+    OrganizationStatus:
+      type: string
+      enum: [DRAFT, ACTIVE, INACTIVE, ARCHIVED]
+    MembershipStatus:
+      type: string
+      enum: [PENDING, ACTIVE, ON_LEAVE, INACTIVE, GRADUATED, TRANSFERRED]
+    MembershipTransitionType:
+      type: string
+      enum:
+        - CREATED
+        - ACTIVATED
+        - LEAVE_STARTED
+        - LEAVE_ENDED
+        - DEACTIVATED
+        - GRADUATED
+        - TRANSFERRED_OUT
+        - TRANSFERRED_IN
+        - REACTIVATED
+    PeriodStatus:
+      type: string
+      enum: [DRAFT, SCHEDULED, ACTIVE, CLOSED, CANCELLED]
+    AppointmentStatus:
+      type: string
+      enum: [NOMINATED, ELECTED, ACTIVE, ENDED, REVOKED]
+    ScopeType:
+      type: string
+      enum: [PLATFORM, ORGANIZATION, ORGANIZATION_TREE]
+    AssignmentEffect:
+      type: string
+      enum: [ALLOW, DENY]
+    ApplicationStatus:
+      type: string
+      enum: [DRAFT, SUBMITTED, APPROVED, REJECTED, CANCELLED, EXPIRED]
+    TransferStatus:
+      type: string
+      enum:
+        - REQUESTED
+        - ACCEPTED_BY_DESTINATION
+        - CONFIRMED_BY_ORIGIN
+        - COMPLETED
+        - REJECTED
+        - CANCELLED
+        - EXPIRED
+    InvitationStatus:
+      type: string
+      enum: [PENDING, ACCEPTED, EXPIRED, REVOKED]
+    ModuleStatus:
+      type: string
+      enum: [DRAFT, ACTIVE, DEPRECATED, DISABLED]
+    InstallationStatus:
+      type: string
+      enum: [PENDING, ACTIVE, SUSPENDED, DISABLED]
+    ActorType:
+      type: string
+      enum: [USER, SERVICE, SYSTEM]
+
+    # --- Agregados (§4, §5) --------------------------------------------
+
+    Person:
+      type: object
+      required: [id, firstName, lastName, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        firstName: { type: string }
+        lastName: { type: string }
+        displayName: { type: string, nullable: true }
+        primaryEmail: { type: string, format: email, nullable: true }
+        phone: { type: string, nullable: true }
+        birthDate: { type: string, format: date, nullable: true }
+        avatarUrl: { type: string, nullable: true }
+        externalReference: { type: string, nullable: true }
+        metadata: { type: object, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        archivedAt: { type: string, format: date-time, nullable: true }
+
+    PersonSummary:
+      type: object
+      description: Vista mínima de Person para consumo entre servicios (§12.5 — sin email salvo necesidad explícita).
+      required: [id, firstName, lastName]
+      properties:
+        id: { type: string }
+        firstName: { type: string }
+        lastName: { type: string }
+        displayName: { type: string, nullable: true }
+        avatarUrl: { type: string, nullable: true }
+
+    PersonPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/Person" }
+        pageInfo: { $ref: "#/components/schemas/PageInfo" }
+
+    UserAccount:
+      type: object
+      description: Nunca expone `passwordHash` (§14.5).
+      required:
+        [id, personId, email, status, platformRole, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        personId: { type: string }
+        email: { type: string, format: email }
+        status: { $ref: "#/components/schemas/AccountStatus" }
+        platformRole: { $ref: "#/components/schemas/PlatformRole" }
+        emailVerifiedAt: { type: string, format: date-time, nullable: true }
+        mustChangePassword: { type: boolean }
+        lastLoginAt: { type: string, format: date-time, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        disabledAt: { type: string, format: date-time, nullable: true }
+
+    AccountSession:
+      type: object
+      required: [id, userAgent, createdAt, lastUsedAt, expiresAt]
+      properties:
+        id: { type: string }
+        userAgent: { type: string, nullable: true }
+        ipAddress: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        lastUsedAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time }
+        revokedAt: { type: string, format: date-time, nullable: true }
+        current:
+          type: boolean
+          description: Indica si es la sesión con la que se realizó la solicitud.
+
+    RegisterAccountRequest:
+      type: object
+      required: [firstName, lastName, email, password]
+      properties:
+        firstName: { type: string }
+        lastName: { type: string }
+        email: { type: string, format: email }
+        password: { type: string, minLength: 10 }
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string }
+
+    AuthTokens:
+      type: object
+      required: [accessToken, refreshToken, expiresIn, tokenType]
+      properties:
+        accessToken: { type: string }
+        refreshToken: { type: string }
+        tokenType: { type: string, enum: [Bearer] }
+        expiresIn:
+          type: integer
+          description: Segundos de vida del access token (600 = 10 minutos, §14.1).
+
+    IntrospectionResult:
+      type: object
+      required: [active]
+      properties:
+        active: { type: boolean }
+        accountId: { type: string, nullable: true }
+        personId: { type: string, nullable: true }
+        sessionId: { type: string, nullable: true }
+        platformRole: { $ref: "#/components/schemas/PlatformRole" }
+        expiresAt: { type: string, format: date-time, nullable: true }
+
+    CreatePersonRequest:
+      type: object
+      required: [firstName, lastName]
+      properties:
+        firstName: { type: string }
+        lastName: { type: string }
+        primaryEmail: { type: string, format: email, nullable: true }
+        phone: { type: string, nullable: true }
+        birthDate: { type: string, format: date, nullable: true }
+        externalReference: { type: string, nullable: true }
+        metadata: { type: object, nullable: true }
+
+    UpdatePersonRequest:
+      type: object
+      properties:
+        firstName: { type: string }
+        lastName: { type: string }
+        displayName: { type: string, nullable: true }
+        primaryEmail: { type: string, format: email, nullable: true }
+        phone: { type: string, nullable: true }
+        birthDate: { type: string, format: date, nullable: true }
+        avatarUrl: { type: string, nullable: true }
+        metadata: { type: object, nullable: true }
+
+    Organization:
+      type: object
+      required:
+        [id, type, code, name, slug, status, timezone, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        parentId: { type: string, nullable: true }
+        type: { $ref: "#/components/schemas/OrganizationType" }
+        code: { type: string }
+        name: { type: string }
+        slug: { type: string }
+        status: { $ref: "#/components/schemas/OrganizationStatus" }
+        countryCode: { type: string, nullable: true }
+        region: { type: string, nullable: true }
+        city: { type: string, nullable: true }
+        timezone: { type: string, default: "America/Argentina/Cordoba" }
+        contactEmail: { type: string, nullable: true }
+        contactPhone: { type: string, nullable: true }
+        logoUrl: { type: string, nullable: true }
+        foundedAt: { type: string, format: date, nullable: true }
+        description: { type: string, nullable: true }
+        attributes: { type: object, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        archivedAt: { type: string, format: date-time, nullable: true }
+
+    OrganizationSummary:
+      type: object
+      required: [id, type, code, name, slug, status]
+      properties:
+        id: { type: string }
+        parentId: { type: string, nullable: true }
+        type: { $ref: "#/components/schemas/OrganizationType" }
+        code: { type: string }
+        name: { type: string }
+        slug: { type: string }
+        status: { $ref: "#/components/schemas/OrganizationStatus" }
+
+    OrganizationPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/Organization" }
+        pageInfo: { $ref: "#/components/schemas/PageInfo" }
+
+    CreateOrganizationRequest:
+      type: object
+      required: [type, code, name, slug]
+      properties:
+        parentId: { type: string, nullable: true }
+        type: { $ref: "#/components/schemas/OrganizationType" }
+        code: { type: string }
+        name: { type: string }
+        slug: { type: string }
+        countryCode: { type: string, nullable: true }
+        region: { type: string, nullable: true }
+        city: { type: string, nullable: true }
+        timezone: { type: string, nullable: true }
+        contactEmail: { type: string, nullable: true }
+        contactPhone: { type: string, nullable: true }
+        foundedAt: { type: string, format: date, nullable: true }
+        description: { type: string, nullable: true }
+        attributes: { type: object, nullable: true }
+
+    UpdateOrganizationRequest:
+      type: object
+      properties:
+        name: { type: string }
+        countryCode: { type: string, nullable: true }
+        region: { type: string, nullable: true }
+        city: { type: string, nullable: true }
+        timezone: { type: string }
+        contactEmail: { type: string, nullable: true }
+        contactPhone: { type: string, nullable: true }
+        logoUrl: { type: string, nullable: true }
+        description: { type: string, nullable: true }
+        attributes: { type: object, nullable: true }
+
+    OrganizationMembership:
+      type: object
+      required: [id, organizationId, personId, status, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        organizationId: { type: string }
+        personId: { type: string }
+        memberNumber: { type: string, nullable: true }
+        status: { $ref: "#/components/schemas/MembershipStatus" }
+        joinedAt: { type: string, format: date-time, nullable: true }
+        statusChangedAt: { type: string, format: date-time }
+        endedAt: { type: string, format: date-time, nullable: true }
+        internalNotes:
+          type: string
+          nullable: true
+          description: Nunca se expone en eventos de integración (§11.3).
+        metadata: { type: object, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    MembershipPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/OrganizationMembership" }
+        pageInfo: { $ref: "#/components/schemas/PageInfo" }
+
+    CreateMembershipRequest:
+      type: object
+      required: [personId]
+      properties:
+        personId: { type: string }
+        memberNumber: { type: string, nullable: true }
+        metadata: { type: object, nullable: true }
+
+    MembershipTransition:
+      type: object
+      required: [id, membershipId, type, toStatus, effectiveAt, createdAt]
+      properties:
+        id: { type: string }
+        membershipId: { type: string }
+        type: { $ref: "#/components/schemas/MembershipTransitionType" }
+        fromStatus: { $ref: "#/components/schemas/MembershipStatus" }
+        toStatus: { $ref: "#/components/schemas/MembershipStatus" }
+        reasonCode: { type: string, nullable: true }
+        reasonText: { type: string, nullable: true }
+        effectiveAt: { type: string, format: date-time }
+        performedById: { type: string, nullable: true }
+        commandId: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+
+    InstitutionalPeriod:
+      type: object
+      required:
+        [
+          id,
+          organizationId,
+          code,
+          name,
+          sequence,
+          startDate,
+          endDate,
+          status,
+          createdAt,
+          updatedAt,
+        ]
+      properties:
+        id: { type: string }
+        organizationId: { type: string }
+        code: { type: string }
+        name: { type: string }
+        sequence: { type: integer }
+        startDate:
+          { type: string, format: date, description: Debe ser 1 de julio. }
+        endDate:
+          {
+            type: string,
+            format: date,
+            description: Debe ser 30 de junio del año siguiente.,
+          }
+        status: { $ref: "#/components/schemas/PeriodStatus" }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        closedAt: { type: string, format: date-time, nullable: true }
+
+    CreatePeriodRequest:
+      type: object
+      required: [code, name, sequence, startDate, endDate]
+      properties:
+        code: { type: string }
+        name: { type: string }
+        sequence: { type: integer }
+        startDate:
+          { type: string, format: date, description: Debe ser 1 de julio. }
+        endDate:
+          {
+            type: string,
+            format: date,
+            description: Debe ser 30 de junio del año siguiente.,
+          }
+
+    UpdatePeriodRequest:
+      type: object
+      properties:
+        name: { type: string }
+        startDate:
+          { type: string, format: date, description: Debe ser 1 de julio. }
+        endDate:
+          {
+            type: string,
+            format: date,
+            description: Debe ser 30 de junio del año siguiente.,
+          }
+
+    PositionDefinition:
+      type: object
+      required:
+        [
+          id,
+          code,
+          name,
+          organizationType,
+          editPermissionCode,
+          isSingletonPerPeriod,
+          isSystem,
+          createdAt,
+          updatedAt,
+        ]
+      properties:
+        id: { type: string }
+        code: { type: string }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        organizationType: { $ref: "#/components/schemas/OrganizationType" }
+        ownerOrganizationId:
+          type: string
+          nullable: true
+          description: Distrito propietario; requerido para cargos DISTRICT no sistémicos.
+        editPermissionCode:
+          type: string
+          description: Permiso requerido para editar este cargo y los permisos de su rol técnico.
+        defaultRoleCode: { type: string, nullable: true }
+        isSingletonPerPeriod: { type: boolean }
+        isSystem: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    CreatePositionDefinitionRequest:
+      type: object
+      required: [code, name, organizationType, editPermissionCode]
+      properties:
+        code: { type: string }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        organizationType: { $ref: "#/components/schemas/OrganizationType" }
+        ownerOrganizationId: { type: string, nullable: true }
+        editPermissionCode: { type: string, default: kernel.position.manage }
+        defaultRoleCode: { type: string, nullable: true }
+        isSingletonPerPeriod: { type: boolean, default: false }
+
+    UpdatePositionDefinitionRequest:
+      type: object
+      properties:
+        name: { type: string }
+        description: { type: string, nullable: true }
+        editPermissionCode: { type: string }
+        defaultRoleCode: { type: string, nullable: true }
+        isSingletonPerPeriod: { type: boolean }
+
+    Appointment:
+      type: object
+      required:
+        [
+          id,
+          organizationId,
+          membershipId,
+          membershipOrganizationId,
+          periodId,
+          positionDefinitionId,
+          status,
+          createdAt,
+          updatedAt,
+        ]
+      properties:
+        id: { type: string }
+        organizationId: { type: string }
+        membershipId: { type: string }
+        membershipOrganizationId:
+          type: string
+          readOnly: true
+          description: Organización de la membresía habilitante; puede diferir de organizationId sólo para cargos DISTRICT.
+        periodId: { type: string }
+        positionDefinitionId: { type: string }
+        status: { $ref: "#/components/schemas/AppointmentStatus" }
+        startsAt: { type: string, format: date-time, nullable: true }
+        endsAt: { type: string, format: date-time, nullable: true }
+        createdById: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        activatedAt: { type: string, format: date-time, nullable: true }
+        endedAt: { type: string, format: date-time, nullable: true }
+        revokedAt: { type: string, format: date-time, nullable: true }
+        revokedById: { type: string, nullable: true }
+        revokeReason: { type: string, nullable: true }
+        updatedAt: { type: string, format: date-time }
+
+    CreateAppointmentRequest:
+      type: object
+      required: [membershipId, periodId, positionDefinitionId]
+      properties:
+        membershipId:
+          type: string
+          description: Membresía ACTIVE habilitante. Para DISTRICT debe ser de un CLUB descendiente; para CLUB, del mismo club.
+        periodId: { type: string }
+        positionDefinitionId: { type: string }
+        startsAt: { type: string, format: date-time, nullable: true }
+        endsAt: { type: string, format: date-time, nullable: true }
+
+    PermissionDefinition:
+      type: object
+      required: [id, code, namespace, name, isSystem, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        code:
+          type: string
+          description: Formato `<namespace>.<resource>.<action>` (invariante 6.7.1).
+        namespace: { type: string }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        resourceType: { type: string, nullable: true }
+        moduleId: { type: string, nullable: true }
+        isSystem: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    CreatePermissionRequest:
+      type: object
+      required: [code, namespace, name]
+      properties:
+        code: { type: string }
+        namespace: { type: string }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        resourceType: { type: string, nullable: true }
+        moduleId: { type: string, nullable: true }
+
+    RoleDefinition:
+      type: object
+      required: [id, code, name, isSystem, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        code: { type: string }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        moduleId: { type: string, nullable: true }
+        isSystem: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    CreateRoleRequest:
+      type: object
+      required: [code, name]
+      properties:
+        code: { type: string }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        moduleId: { type: string, nullable: true }
+
+    RoleAssignment:
+      type: object
+      required:
+        [
+          id,
+          personId,
+          roleDefinitionId,
+          effect,
+          scopeType,
+          validFrom,
+          createdAt,
+        ]
+      properties:
+        id: { type: string }
+        personId: { type: string }
+        roleDefinitionId: { type: string }
+        effect: { $ref: "#/components/schemas/AssignmentEffect" }
+        scopeType: { $ref: "#/components/schemas/ScopeType" }
+        organizationId:
+          type: string
+          nullable: true
+          description: Requerido si `scopeType` != PLATFORM (invariante de esquema §5.1).
+        periodId: { type: string, nullable: true }
+        validFrom: { type: string, format: date-time }
+        validUntil: { type: string, format: date-time, nullable: true }
+        grantedById: { type: string, nullable: true }
+        reason: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        revokedAt: { type: string, format: date-time, nullable: true }
+        revokedById: { type: string, nullable: true }
+        sourceAppointmentId:
+          type: string
+          nullable: true
+          readOnly: true
+          description: FK obligatoria para asignaciones derivadas de un cargo; null si fue asignada manualmente.
+
+    GrantRoleRequest:
+      type: object
+      required: [personId, roleDefinitionId, scopeType]
+      properties:
+        personId: { type: string }
+        roleDefinitionId: { type: string }
+        effect: { $ref: "#/components/schemas/AssignmentEffect" }
+        scopeType: { $ref: "#/components/schemas/ScopeType" }
+        organizationId: { type: string, nullable: true }
+        periodId: { type: string, nullable: true }
+        validFrom: { type: string, format: date-time }
+        validUntil: { type: string, format: date-time, nullable: true }
+        reason: { type: string, nullable: true }
+
+    AuthorizationCheckRequest:
+      type: object
+      required: [subjectId, permission, scope]
+      properties:
+        subjectId:
+          type: string
+          description: personId a evaluar.
+        permission:
+          type: string
+          example: meetings.meeting.create
+        scope:
+          type: object
+          required: [type]
+          properties:
+            type: { $ref: "#/components/schemas/ScopeType" }
+            organizationId: { type: string, nullable: true }
+        periodId: { type: string, nullable: true }
+        resource:
+          type: object
+          nullable: true
+          properties:
+            type: { type: string }
+            id: { type: string }
+            attributes: { type: object }
+
+    AuthorizationDecision:
+      type: object
+      required: [allowed, decisionId, subjectId, permission, evaluatedAt]
+      properties:
+        allowed: { type: boolean }
+        decisionId: { type: string }
+        subjectId: { type: string }
+        permission: { type: string }
+        matchedAssignments:
+          type: array
+          items: { type: string }
+        reasonCodes:
+          type: array
+          items: { type: string }
+          example: ["ROLE_ALLOWED"]
+        evaluatedAt: { type: string, format: date-time }
+        cacheUntil: { type: string, format: date-time, nullable: true }
+
+    MembershipApplication:
+      type: object
+      required:
+        [id, organizationId, requesterPersonId, status, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        organizationId: { type: string }
+        requesterPersonId: { type: string }
+        membershipId: { type: string, nullable: true }
+        status: { $ref: "#/components/schemas/ApplicationStatus" }
+        message: { type: string, nullable: true }
+        submittedAt: { type: string, format: date-time, nullable: true }
+        reviewedById: { type: string, nullable: true }
+        reviewedAt: { type: string, format: date-time, nullable: true }
+        rejectionReason: { type: string, nullable: true }
+        expiresAt: { type: string, format: date-time, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    CreateMembershipApplicationRequest:
+      type: object
+      required: [organizationId]
+      properties:
+        organizationId: { type: string }
+        message: { type: string, nullable: true }
+
+    MembershipTransfer:
+      type: object
+      required:
+        [
+          id,
+          membershipId,
+          fromOrganizationId,
+          toOrganizationId,
+          requestedById,
+          status,
+          requestedAt,
+          createdAt,
+          updatedAt,
+        ]
+      properties:
+        id: { type: string }
+        membershipId: { type: string }
+        fromOrganizationId: { type: string }
+        toOrganizationId: { type: string }
+        requestedById: { type: string }
+        status: { $ref: "#/components/schemas/TransferStatus" }
+        reason: { type: string, nullable: true }
+        requestedAt: { type: string, format: date-time }
+        acceptedById: { type: string, nullable: true }
+        acceptedAt: { type: string, format: date-time, nullable: true }
+        confirmedById: { type: string, nullable: true }
+        confirmedAt: { type: string, format: date-time, nullable: true }
+        completedAt: { type: string, format: date-time, nullable: true }
+        rejectedById: { type: string, nullable: true }
+        rejectedAt: { type: string, format: date-time, nullable: true }
+        rejectionReason: { type: string, nullable: true }
+        cancelledById: { type: string, nullable: true }
+        cancelledAt: { type: string, format: date-time, nullable: true }
+        expiresAt: { type: string, format: date-time, nullable: true }
+        destinationMembershipId: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    RequestMembershipTransferRequest:
+      type: object
+      required: [membershipId, toOrganizationId]
+      properties:
+        membershipId: { type: string }
+        toOrganizationId: { type: string }
+        reason: { type: string, nullable: true }
+
+    AccountInvitation:
+      type: object
+      required:
+        [id, membershipId, personId, email, status, expiresAt, createdAt]
+      properties:
+        id: { type: string }
+        membershipId: { type: string }
+        personId: { type: string }
+        email: { type: string, format: email }
+        status: { $ref: "#/components/schemas/InvitationStatus" }
+        invitedById: { type: string, nullable: true }
+        expiresAt: { type: string, format: date-time }
+        acceptedAt: { type: string, format: date-time, nullable: true }
+        revokedAt: { type: string, format: date-time, nullable: true }
+        createdAt: { type: string, format: date-time }
+
+    AcceptAccountInvitationRequest:
+      type: object
+      required: [token, password]
+      properties:
+        token: { type: string, minLength: 32, writeOnly: true }
+        password:
+          { type: string, format: password, minLength: 12, writeOnly: true }
+
+    ModuleDefinition:
+      type: object
+      required:
+        [
+          id,
+          name,
+          version,
+          contractVersion,
+          status,
+          manifest,
+          registeredAt,
+          updatedAt,
+        ]
+      properties:
+        id:
+          type: string
+          description: Identificador estable, p. ej. `meetings` (invariante 6.10.1).
+        name: { type: string }
+        description: { type: string, nullable: true }
+        version: { type: string }
+        contractVersion: { type: integer }
+        status: { $ref: "#/components/schemas/ModuleStatus" }
+        manifest:
+          type: object
+          description: Declara permisos, eventos publicados/suscritos y capacidades (§19.3).
+        configurationSchema: { type: object, nullable: true }
+        registeredAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    CreateModuleRequest:
+      type: object
+      required: [id, name, version, manifest]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        version: { type: string }
+        manifest: { type: object }
+        configurationSchema: { type: object, nullable: true }
+
+    ModuleInstallation:
+      type: object
+      required: [id, moduleId, organizationId, status, installedAt, updatedAt]
+      properties:
+        id: { type: string }
+        moduleId: { type: string }
+        organizationId: { type: string }
+        status: { $ref: "#/components/schemas/InstallationStatus" }
+        configuration: { type: object, nullable: true }
+        installedById: { type: string, nullable: true }
+        installedAt: { type: string, format: date-time }
+        activatedAt: { type: string, format: date-time, nullable: true }
+        disabledAt: { type: string, format: date-time, nullable: true }
+        updatedAt: { type: string, format: date-time }
+
+    # --- Contratos para consumidores (§12) ------------------------------
+
+    UserContext:
+      type: object
+      required:
+        [
+          accountId,
+          personId,
+          accountStatus,
+          platformRole,
+          displayName,
+          memberships,
+          contextVersion,
+        ]
+      properties:
+        accountId: { type: string }
+        personId: { type: string }
+        accountStatus: { type: string, enum: [ACTIVE] }
+        platformRole: { $ref: "#/components/schemas/PlatformRole" }
+        displayName: { type: string }
+        memberships:
+          type: array
+          items:
+            type: object
+            required: [membershipId, organizationId, organizationType, status]
+            properties:
+              membershipId: { type: string }
+              organizationId: { type: string }
+              organizationType:
+                { $ref: "#/components/schemas/OrganizationType" }
+              status: { type: string }
+        contextVersion: { type: integer }
+
+    MembershipSnapshot:
+      type: object
+      required: [snapshotId, organizationId, capturedAt, sourceVersion, members]
+      properties:
+        snapshotId: { type: string }
+        organizationId: { type: string }
+        capturedAt: { type: string, format: date-time }
+        sourceVersion: { type: integer }
+        members:
+          type: array
+          items:
+            type: object
+            required: [membershipId, personId, status]
+            properties:
+              membershipId: { type: string }
+              personId: { type: string }
+              accountId: { type: string, nullable: true }
+              status: { type: string }
+
+    AuthoritySnapshot:
+      type: object
+      required: [snapshotId, organizationId, periodId, capturedAt, appointments]
+      properties:
+        snapshotId: { type: string }
+        organizationId: { type: string }
+        periodId: { type: string }
+        capturedAt: { type: string, format: date-time }
+        appointments:
+          type: array
+          items:
+            type: object
+            required:
+              [
+                appointmentId,
+                positionCode,
+                membershipId,
+                membershipOrganizationId,
+                personId,
+                status,
+              ]
+            properties:
+              appointmentId: { type: string }
+              positionCode: { type: string }
+              membershipId: { type: string }
+              membershipOrganizationId: { type: string }
+              personId: { type: string }
+              status: { type: string, enum: [ACTIVE] }
+              startsAt: { type: string, format: date-time, nullable: true }
+              endsAt: { type: string, format: date-time, nullable: true }
+
+    PeriodSnapshot:
+      type: object
+      description: Snapshot sellado del período activo, o null si no existe.
+      required: [snapshotId, organizationId, capturedAt]
+      properties:
+        snapshotId: { type: string }
+        organizationId: { type: string }
+        capturedAt: { type: string, format: date-time }
+        currentPeriod:
+          nullable: true
+          type: object
+          required: [periodId, code, name, sequence, startDate, endDate, status]
+          properties:
+            periodId: { type: string }
+            code: { type: string }
+            name: { type: string }
+            sequence: { type: integer }
+            startDate: { type: string, format: date }
+            endDate: { type: string, format: date }
+            status: { type: string, enum: [ACTIVE] }
