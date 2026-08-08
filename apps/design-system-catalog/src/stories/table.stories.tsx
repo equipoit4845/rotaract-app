@@ -1,4 +1,4 @@
-import { Badge } from "@mirotaract/ui";
+import { Badge } from "@equipoit4845/ui";
 import {
   Table,
   TableBody,
@@ -7,7 +7,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@mirotaract/ui";
+} from "@equipoit4845/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta: Meta<typeof Table> = { title: "ui/Table", component: Table };

@@ -10,8 +10,8 @@ import {
   Avatar,
   OrganizationSwitcher,
   PeriodIndicator,
-} from "@mirotaract/admin-shell";
-import { Logo } from "@mirotaract/icons";
+} from "@equipoit4845/admin-shell";
+import { Logo } from "@equipoit4845/icons";
 import type { ReactNode } from "react";
 
 import { AuthGate } from "./auth-gate";

@@ -1,5 +1,5 @@
-import { DataToolbar } from "@mirotaract/admin-shell";
-import { Button, Input } from "@mirotaract/ui";
+import { DataToolbar } from "@equipoit4845/admin-shell";
+import { Button, Input } from "@equipoit4845/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta: Meta<typeof DataToolbar> = {

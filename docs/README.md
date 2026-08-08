@@ -19,7 +19,7 @@ contratos públicos son [`kernel-openapi.yaml`](../kernel-openapi.yaml),
   está comprobado y qué debe cerrarse antes de producción.
 - [Frontend Web](07-frontend-web.md): capa de consumo de la API en
   `apps/mirotaract-web` — arquitectura, autenticación, dominios y testing.
-- [Design System](08-design-system.md): `@mirotaract/design-tokens`,
+- [Design System](08-design-system.md): `@equipoit4845/design-tokens`,
   `icons`, `ui` y `admin-shell` — arquitectura de paquetes, theming,
   componentes, catálogo Storybook, boundaries y publicación.
 - [Contrato de UI para módulos externos](module-ui-contract.md): qué

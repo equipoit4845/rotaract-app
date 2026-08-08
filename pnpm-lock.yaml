@@ -38,16 +38,16 @@ importers:
 
   apps/design-system-catalog:
     dependencies:
-      '@mirotaract/admin-shell':
+      '@equipoit4845/admin-shell':
         specifier: workspace:*
         version: link:../../packages/admin-shell
-      '@mirotaract/design-tokens':
+      '@equipoit4845/design-tokens':
         specifier: workspace:*
         version: link:../../packages/design-tokens
-      '@mirotaract/icons':
+      '@equipoit4845/icons':
         specifier: workspace:*
         version: link:../../packages/icons
-      '@mirotaract/ui':
+      '@equipoit4845/ui':
         specifier: workspace:*
         version: link:../../packages/ui
       react:
@@ -108,13 +108,13 @@ importers:
 
   apps/design-system-consumer:
     dependencies:
-      '@mirotaract/admin-shell':
+      '@equipoit4845/admin-shell':
         specifier: workspace:*
         version: link:../../packages/admin-shell
-      '@mirotaract/design-tokens':
+      '@equipoit4845/design-tokens':
         specifier: workspace:*
         version: link:../../packages/design-tokens
-      '@mirotaract/ui':
+      '@equipoit4845/ui':
         specifier: workspace:*
         version: link:../../packages/ui
       react:
@@ -239,16 +239,16 @@ importers:
 
   apps/mirotaract-web:
     dependencies:
-      '@mirotaract/admin-shell':
+      '@equipoit4845/admin-shell':
         specifier: workspace:*
         version: link:../../packages/admin-shell
-      '@mirotaract/design-tokens':
+      '@equipoit4845/design-tokens':
         specifier: workspace:*
         version: link:../../packages/design-tokens
-      '@mirotaract/icons':
+      '@equipoit4845/icons':
         specifier: workspace:*
         version: link:../../packages/icons
-      '@mirotaract/ui':
+      '@equipoit4845/ui':
         specifier: workspace:*
         version: link:../../packages/ui
       '@tanstack/react-query':
@@ -309,13 +309,13 @@ importers:
 
   packages/admin-shell:
     dependencies:
-      '@mirotaract/design-tokens':
+      '@equipoit4845/design-tokens':
         specifier: workspace:*
         version: link:../design-tokens
-      '@mirotaract/icons':
+      '@equipoit4845/icons':
         specifier: workspace:*
         version: link:../icons
-      '@mirotaract/ui':
+      '@equipoit4845/ui':
         specifier: workspace:*
         version: link:../ui
       react:
@@ -396,7 +396,7 @@ importers:
 
   packages/ui:
     dependencies:
-      '@mirotaract/design-tokens':
+      '@equipoit4845/design-tokens':
         specifier: workspace:*
         version: link:../design-tokens
       '@radix-ui/react-checkbox':

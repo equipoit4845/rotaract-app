@@ -12,21 +12,21 @@ Para consumo desde un módulo externo (fuera de este monorepo), ver
 ## Arquitectura
 
 ```text
-          @mirotaract/design-tokens
+          @equipoit4845/design-tokens
              /                  \
-@mirotaract/icons          @mirotaract/ui
+@equipoit4845/icons          @equipoit4845/ui
              \                  /
-            @mirotaract/admin-shell
+            @equipoit4845/admin-shell
                     ↓
                   apps/*
 ```
 
 | Paquete | Depende de | Contenido |
 | --- | --- | --- |
-| `@mirotaract/design-tokens` | (nada) | `tokens.css`, `reset.css` (opt-in) y tipos TS de tema/tono. |
-| `@mirotaract/icons` | `react` (peer) | Logo y estados visuales genéricos (`StatusIcon`). |
-| `@mirotaract/ui` | `design-tokens`; primitivas Radix; `react`/`react-dom` (peer) | Primitivas de interfaz. |
-| `@mirotaract/admin-shell` | `design-tokens`, `ui`, `icons`; `react`/`react-dom` (peer) | Patrones de administración construidos sobre `ui`. |
+| `@equipoit4845/design-tokens` | (nada) | `tokens.css`, `reset.css` (opt-in) y tipos TS de tema/tono. |
+| `@equipoit4845/icons` | `react` (peer) | Logo y estados visuales genéricos (`StatusIcon`). |
+| `@equipoit4845/ui` | `design-tokens`; primitivas Radix; `react`/`react-dom` (peer) | Primitivas de interfaz. |
+| `@equipoit4845/admin-shell` | `design-tokens`, `ui`, `icons`; `react`/`react-dom` (peer) | Patrones de administración construidos sobre `ui`. |
 
 ### Boundaries automáticos
 
@@ -35,7 +35,7 @@ script en [`scripts/validate-design-system-boundaries.mjs`](../scripts/validate-
 recorre el `src/` de los cuatro paquetes y falla si encuentra:
 
 - un import fuera del allow-list declarado por paquete (p. ej. `ui` sólo
-  puede importar `react`, `react-dom`, `@mirotaract/design-tokens` y
+  puede importar `react`, `react-dom`, `@equipoit4845/design-tokens` y
   `@radix-ui/*`);
 - un import de Next.js, el Kernel SDK/contratos, `@mirotaract/auth-middleware`,
   `@prisma/client`, o cualquier ruta bajo `apps/`, sin importar el paquete;
@@ -58,10 +58,10 @@ cambia de tema por su cuenta — el host decide:
 </div>
 ```
 
-`@mirotaract/design-tokens` exporta un helper de conveniencia para esto:
+`@equipoit4845/design-tokens` exporta un helper de conveniencia para esto:
 
 ```tsx
-import { mrThemeProps } from "@mirotaract/design-tokens";
+import { mrThemeProps } from "@equipoit4845/design-tokens";
 
 <div {...mrThemeProps("dark")}>
   <App />
@@ -71,7 +71,7 @@ import { mrThemeProps } from "@mirotaract/design-tokens";
 Los tokens se declaran en `.mr-theme[data-mr-theme="light"|"dark"]`, nunca en
 `:root`. Todos los selectores públicos usan el prefijo `.mr-`. Ningún paquete
 aplica estilos a elementos HTML sueltos; el único reset disponible es
-`@mirotaract/design-tokens/reset.css`, opt-in y separado de `tokens.css`.
+`@equipoit4845/design-tokens/reset.css`, opt-in y separado de `tokens.css`.
 
 ### Tokens públicos
 
@@ -89,13 +89,13 @@ Semánticos, no escalas de color crudas:
 - Fundamentos no cromáticos: `--mr-font-sans`, `--mr-radius-*`,
   `--mr-shadow-*`, `--mr-space-*`.
 
-Los tonos genéricos de `@mirotaract/icons` (`active`, `inactive`, `pending`)
+Los tonos genéricos de `@equipoit4845/icons` (`active`, `inactive`, `pending`)
 son alias visuales de esos cinco estados, resueltos en el componente — nunca
 tokens CSS adicionales.
 
 ## Componentes
 
-### `@mirotaract/ui`
+### `@equipoit4845/ui`
 
 Button, IconButton, Badge, Alert, Toast (+`ToastProvider`/`ToastViewport`),
 Tooltip (+`TooltipProvider`), Spinner, Progress, Skeleton, Input, Select,
@@ -108,7 +108,7 @@ los resuelve Radix, no una reimplementación propia. Todo componente que
 renderiza un único nodo DOM interactivo (`Button`, `Input`, `Select`,
 `Textarea`, `IconButton`, y cada wrapper Radix) usa `forwardRef`.
 
-### `@mirotaract/admin-shell`
+### `@equipoit4845/admin-shell`
 
 PageHeader, StatCard, DataState (variantes `empty`/`error`; una variante de
 carga se compone aparte con `Skeleton` de `ui`), Breadcrumbs (extraído de
@@ -126,7 +126,7 @@ descubrimiento de módulos ni navegación institucional. El contrato completo
 para consumirlo desde un módulo externo está en
 [`module-ui-contract.md`](module-ui-contract.md).
 
-### `@mirotaract/icons`
+### `@equipoit4845/icons`
 
 `Logo` (placeholder, pendiente de asset final de marca) y `StatusIcon`
 (tonos `success`/`warning`/`danger`/`info`/`neutral`/`active`/`inactive`/`pending`).
@@ -241,7 +241,7 @@ a `dist/*`, no a `src/*`.
   `auth-middleware`, el catálogo y el consumidor de ejemplo nunca se
   versionan por Changesets).
 - **Registry**: GitHub Packages (`https://npm.pkg.github.com`), configurado
-  vía `publishConfig` en cada `package.json` y `@mirotaract:registry=...`
+  vía `publishConfig` en cada `package.json` y `@equipoit4845:registry=...`
   en `.npmrc` — este último sólo importa para instalar/publicar desde
   *fuera* del workspace; dentro del monorepo todo resuelve por
   `workspace:*`.
@@ -284,8 +284,8 @@ pnpm --filter @mirotaract/design-system-consumer-example build
   clasificación:
 
   ```text
-  GENERIC       → @mirotaract/ui
-  ADMIN_PATTERN → @mirotaract/admin-shell
+  GENERIC       → @equipoit4845/ui
+  ADMIN_PATTERN → @equipoit4845/admin-shell
   DOMAIN        → app o módulo correspondiente
   ```
 
@@ -294,7 +294,7 @@ pnpm --filter @mirotaract/design-system-consumer-example build
   límite (tri-estado visual, nunca un enum de Kernel).
 - CSS nuevo siempre usa variables de `design-tokens`, nunca colores
   literales, y siempre bajo un selector `.mr-*` con clase.
-- Antes de subir un cambio: `pnpm --filter @mirotaract/<paquete> typecheck`,
+- Antes de subir un cambio: `pnpm --filter @equipoit4845/<paquete> typecheck`,
   `... lint` (Prettier) y `pnpm contracts:design-system-boundaries` desde la
   raíz deben pasar. Un cambio en un componente publicable necesita
   `pnpm changeset`.

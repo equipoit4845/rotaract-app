@@ -1,4 +1,4 @@
-import { Button, Tooltip } from "@mirotaract/ui";
+import { Button, Tooltip } from "@equipoit4845/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta: Meta<typeof Tooltip> = { title: "ui/Tooltip", component: Tooltip };

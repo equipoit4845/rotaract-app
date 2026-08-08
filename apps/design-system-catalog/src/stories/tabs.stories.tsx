@@ -1,4 +1,4 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@mirotaract/ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@equipoit4845/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta: Meta<typeof Tabs> = { title: "ui/Tabs", component: Tabs };

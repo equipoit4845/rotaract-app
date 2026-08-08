@@ -1,4 +1,4 @@
-import { StatCard } from "@mirotaract/admin-shell";
+import { StatCard } from "@equipoit4845/admin-shell";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta: Meta<typeof StatCard> = {

@@ -1,4 +1,4 @@
-import { Spinner } from "@mirotaract/ui";
+import { Spinner } from "@equipoit4845/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta: Meta<typeof Spinner> = { title: "ui/Spinner", component: Spinner };

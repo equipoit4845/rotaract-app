@@ -1,4 +1,4 @@
-import { StatusIcon } from "@mirotaract/icons";
+import { StatusIcon } from "@equipoit4845/icons";
 import type { ReactNode } from "react";
 
 import { cx } from "../lib/cx";
@@ -16,7 +16,7 @@ export type DataStateProps = {
 /**
  * Covers the "nothing to show" and "couldn't load" shapes for a data
  * listing. A loading shape is intentionally not modeled here — compose
- * @mirotaract/ui's Skeleton for that instead.
+ * @equipoit4845/ui's Skeleton for that instead.
  */
 export function DataState({
   kind = "empty",

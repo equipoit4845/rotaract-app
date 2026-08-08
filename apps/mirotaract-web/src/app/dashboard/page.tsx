@@ -1,7 +1,7 @@
 "use client";
 
-import { PageHeader } from "@mirotaract/admin-shell";
-import { Card, CardContent } from "@mirotaract/ui";
+import { PageHeader } from "@equipoit4845/admin-shell";
+import { Card, CardContent } from "@equipoit4845/ui";
 
 import { DashboardShell } from "@/features/shell/dashboard-shell";
 

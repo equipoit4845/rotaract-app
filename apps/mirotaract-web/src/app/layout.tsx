@@ -1,9 +1,9 @@
-import "@mirotaract/design-tokens/tokens.css";
-import "@mirotaract/design-tokens/reset.css";
-import "@mirotaract/ui/styles.css";
-import "@mirotaract/admin-shell/styles.css";
+import "@equipoit4845/design-tokens/tokens.css";
+import "@equipoit4845/design-tokens/reset.css";
+import "@equipoit4845/ui/styles.css";
+import "@equipoit4845/admin-shell/styles.css";
 
-import { mrThemeProps } from "@mirotaract/design-tokens";
+import { mrThemeProps } from "@equipoit4845/design-tokens";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 

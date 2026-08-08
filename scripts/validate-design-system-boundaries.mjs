@@ -10,15 +10,15 @@ const PACKAGES = {
   "packages/design-tokens": { allow: [] },
   "packages/icons": { allow: ["react"] },
   "packages/ui": {
-    allow: ["react", "react-dom", "@mirotaract/design-tokens", "@radix-ui/"],
+    allow: ["react", "react-dom", "@equipoit4845/design-tokens", "@radix-ui/"],
   },
   "packages/admin-shell": {
     allow: [
       "react",
       "react-dom",
-      "@mirotaract/design-tokens",
-      "@mirotaract/ui",
-      "@mirotaract/icons",
+      "@equipoit4845/design-tokens",
+      "@equipoit4845/ui",
+      "@equipoit4845/icons",
       "@radix-ui/",
     ],
   },

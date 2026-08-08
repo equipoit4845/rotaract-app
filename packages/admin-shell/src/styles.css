@@ -1,9 +1,9 @@
 /*
- * @mirotaract/admin-shell component styles.
+ * @equipoit4845/admin-shell component styles.
  *
- * Same isolation rules as @mirotaract/ui: class-based, `.mr-` prefixed, no
+ * Same isolation rules as @equipoit4845/ui: class-based, `.mr-` prefixed, no
  * bare-element selectors, no color literals — everything reads from
- * @mirotaract/design-tokens custom properties on an ancestor
+ * @equipoit4845/design-tokens custom properties on an ancestor
  * `.mr-theme[data-mr-theme]`.
  */
 

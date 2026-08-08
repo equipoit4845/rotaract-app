@@ -1,4 +1,4 @@
-import { Button } from "@mirotaract/ui";
+import { Button } from "@equipoit4845/ui";
 import type { ReactNode } from "react";
 
 import { cx } from "../lib/cx";

@@ -1,4 +1,4 @@
-import { Progress } from "@mirotaract/ui";
+import { Progress } from "@equipoit4845/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta: Meta<typeof Progress> = {

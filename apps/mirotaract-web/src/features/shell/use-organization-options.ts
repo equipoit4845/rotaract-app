@@ -1,7 +1,7 @@
 "use client";
 
 import { useCurrentUser, useOrganizations } from "@/lib/api";
-import type { OrganizationOption } from "@mirotaract/admin-shell";
+import type { OrganizationOption } from "@equipoit4845/admin-shell";
 
 /**
  * Real organization names for the person's ACTIVE memberships, adapted

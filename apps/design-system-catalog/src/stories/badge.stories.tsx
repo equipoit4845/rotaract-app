@@ -1,4 +1,4 @@
-import { Badge, type BadgeTone } from "@mirotaract/ui";
+import { Badge, type BadgeTone } from "@equipoit4845/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const tones: BadgeTone[] = ["neutral", "info", "success", "warning", "danger"];

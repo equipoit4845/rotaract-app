@@ -1,8 +1,8 @@
 "use client";
 
 import { useAuthStatus } from "@/lib/api";
-import { DataState } from "@mirotaract/admin-shell";
-import { Spinner } from "@mirotaract/ui";
+import { DataState } from "@equipoit4845/admin-shell";
+import { Spinner } from "@equipoit4845/ui";
 import type { ReactNode } from "react";
 
 /**

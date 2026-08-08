@@ -1,4 +1,4 @@
-import { Button } from "@mirotaract/ui";
+import { Button } from "@equipoit4845/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta: Meta<typeof Button> = {

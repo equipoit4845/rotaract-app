@@ -1,4 +1,4 @@
-import { FormField, Input, Select, Textarea } from "@mirotaract/ui";
+import { FormField, Input, Select, Textarea } from "@equipoit4845/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta: Meta = { title: "ui/FormField" };

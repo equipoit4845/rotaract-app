@@ -1,5 +1,5 @@
-import { ModuleFrame } from "@mirotaract/admin-shell";
-import { Card, CardContent } from "@mirotaract/ui";
+import { ModuleFrame } from "@equipoit4845/admin-shell";
+import { Card, CardContent } from "@equipoit4845/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta: Meta<typeof ModuleFrame> = {

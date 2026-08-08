@@ -6,7 +6,7 @@ import {
   DropdownLabel,
   DropdownSeparator,
   DropdownTrigger,
-} from "@mirotaract/ui";
+} from "@equipoit4845/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta: Meta<typeof Dropdown> = {

@@ -1,4 +1,4 @@
-import { Separator } from "@mirotaract/ui";
+import { Separator } from "@equipoit4845/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta: Meta<typeof Separator> = {

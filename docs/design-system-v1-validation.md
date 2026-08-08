@@ -25,16 +25,16 @@ Four packages, all building real `dist/` output (not raw `src/` exports):
 
 | Package | Components | Build |
 | --- | --- | --- |
-| `@mirotaract/design-tokens` | tokens.css, reset.css, `mrThemeProps` | `tsc -p tsconfig.build.json` |
-| `@mirotaract/icons` | `Logo`, `StatusIcon` | `tsc -p tsconfig.build.json` |
-| `@mirotaract/ui` | 20 components (Radix-backed where needed) | `tsc` + CSS copy |
-| `@mirotaract/admin-shell` | 12 components incl. `AdminFrame`/`ModuleFrame` | `tsc` + CSS copy |
+| `@equipoit4845/design-tokens` | tokens.css, reset.css, `mrThemeProps` | `tsc -p tsconfig.build.json` |
+| `@equipoit4845/icons` | `Logo`, `StatusIcon` | `tsc -p tsconfig.build.json` |
+| `@equipoit4845/ui` | 20 components (Radix-backed where needed) | `tsc` + CSS copy |
+| `@equipoit4845/admin-shell` | 12 components incl. `AdminFrame`/`ModuleFrame` | `tsc` + CSS copy |
 
 ```
-$ pnpm --filter @mirotaract/design-tokens build && \
-  pnpm --filter @mirotaract/icons build && \
-  pnpm --filter @mirotaract/ui build && \
-  pnpm --filter @mirotaract/admin-shell build
+$ pnpm --filter @equipoit4845/design-tokens build && \
+  pnpm --filter @equipoit4845/icons build && \
+  pnpm --filter @equipoit4845/ui build && \
+  pnpm --filter @equipoit4845/admin-shell build
 ✓ all four build clean, exit 0
 ```
 
@@ -67,7 +67,7 @@ $ grep -rEn "\bMembership\b|\bAppointment\b|\bPeriodStatus\b|\bRole\b|\bPermissi
 page-numbered, matching the Kernel's real pagination model instead of
 inventing a numbering scheme it doesn't have.
 
-**Public-API-only smoke test** (imports only `@mirotaract/design-tokens`,
+**Public-API-only smoke test** (imports only `@equipoit4845/design-tokens`,
 `/icons`, `/ui`, `/admin-shell` top-level entry points — no `/dist/*`,
 no internals), run against packages installed from a real npm registry
 (see [External Consumer](#external-consumer)):
@@ -80,7 +80,7 @@ Public-API-only smoke test passed.
 ```
 
 **Tree-shaking**: built a Vite production bundle importing only `Button`
-from `@mirotaract/ui`. The resulting bundle contains zero occurrences of
+from `@equipoit4845/ui`. The resulting bundle contains zero occurrences of
 `DialogPrimitive`, `mr-table__wrapper`, `ToastPrimitive`,
 `mr-dropdown__item`, or `mr-tabs__trigger` — importing one component does
 not drag in Dialog/Table/Toast/Dropdown/Tabs. All four packages declare
@@ -186,17 +186,17 @@ $ npm ls react-dom
 ```
 
 Confirmed: real tarball resolution (`resolved:
-"http://localhost:4873/@mirotaract/ui/-/ui-0.1.0.tgz"`), no duplicate
+"http://localhost:4873/@equipoit4845/ui/-/ui-0.1.0.tgz"`), no duplicate
 React, SSR in both themes (see [Public API](#public-api)), and a clean
 production Vite build.
 
 **Package content audit** (`npm pack --dry-run` on each):
 
 ```
-@mirotaract/design-tokens tarball OK: 7 files, 3058 bytes
-@mirotaract/icons tarball OK: 13 files, 3096 bytes
-@mirotaract/ui tarball OK: 82 files, 16497 bytes
-@mirotaract/admin-shell tarball OK: 54 files, 11350 bytes
+@equipoit4845/design-tokens tarball OK: 7 files, 3058 bytes
+@equipoit4845/icons tarball OK: 13 files, 3096 bytes
+@equipoit4845/ui tarball OK: 82 files, 16497 bytes
+@equipoit4845/admin-shell tarball OK: 54 files, 11350 bytes
 ```
 
 Every tarball contains exactly `dist/**` + `package.json` — no `src/`, no

@@ -1,9 +1,9 @@
 /*
- * @mirotaract/ui component styles.
+ * @equipoit4845/ui component styles.
  *
  * Every selector here is class-based and prefixed `.mr-`; nothing targets a
  * bare HTML element. Colors, spacing, radius and shadows come from
- * @mirotaract/design-tokens custom properties (`--mr-color-*`, `--mr-space-*`,
+ * @equipoit4845/design-tokens custom properties (`--mr-color-*`, `--mr-space-*`,
  * ...) — this file assumes tokens.css is loaded on an ancestor
  * `.mr-theme[data-mr-theme]` and never redefines them.
  */

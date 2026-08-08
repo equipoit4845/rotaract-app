@@ -5,7 +5,7 @@ import {
   ToastClose,
   ToastDescription,
   ToastTitle,
-} from "@mirotaract/ui";
+} from "@equipoit4845/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 

@@ -1,10 +1,14 @@
-import "@mirotaract/design-tokens/tokens.css";
-import "@mirotaract/design-tokens/reset.css";
-import "@mirotaract/ui/styles.css";
-import "@mirotaract/admin-shell/styles.css";
+import "@equipoit4845/design-tokens/tokens.css";
+import "@equipoit4845/design-tokens/reset.css";
+import "@equipoit4845/ui/styles.css";
+import "@equipoit4845/admin-shell/styles.css";
 
-import { mrThemeProps, type MrThemeName } from "@mirotaract/design-tokens";
-import { ToastProvider, ToastViewport, TooltipProvider } from "@mirotaract/ui";
+import { mrThemeProps, type MrThemeName } from "@equipoit4845/design-tokens";
+import {
+  ToastProvider,
+  ToastViewport,
+  TooltipProvider,
+} from "@equipoit4845/ui";
 import type { Preview } from "@storybook/react";
 
 const preview: Preview = {

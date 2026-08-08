@@ -1,4 +1,4 @@
-import type { MrStateTone } from "@mirotaract/design-tokens";
+import type { MrStateTone } from "@equipoit4845/design-tokens";
 import type { ReactNode } from "react";
 
 import { cx } from "../lib/cx";

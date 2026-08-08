@@ -13,10 +13,10 @@
     "test:visual:update": "playwright test --update-snapshots"
   },
   "dependencies": {
-    "@mirotaract/admin-shell": "workspace:*",
-    "@mirotaract/design-tokens": "workspace:*",
-    "@mirotaract/icons": "workspace:*",
-    "@mirotaract/ui": "workspace:*",
+    "@equipoit4845/admin-shell": "workspace:*",
+    "@equipoit4845/design-tokens": "workspace:*",
+    "@equipoit4845/icons": "workspace:*",
+    "@equipoit4845/ui": "workspace:*",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },

@@ -1,4 +1,4 @@
-import { Alert } from "@mirotaract/ui";
+import { Alert } from "@equipoit4845/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta: Meta<typeof Alert> = {

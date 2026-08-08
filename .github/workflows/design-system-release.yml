@@ -40,7 +40,7 @@ jobs:
           node-version: 24
           cache: pnpm
           registry-url: "https://npm.pkg.github.com"
-          scope: "@mirotaract"
+          scope: "@equipoit4845"
       - run: pnpm install --frozen-lockfile
       # On a changeset-less main, this opens/updates a "Version Packages" PR.
       # Once that PR merges (versions bumped, changelogs written), this same

@@ -1,4 +1,4 @@
-import type { MrStateTone } from "@mirotaract/design-tokens";
+import type { MrStateTone } from "@equipoit4845/design-tokens";
 import * as ToastPrimitive from "@radix-ui/react-toast";
 import { forwardRef } from "react";
 import type { ComponentPropsWithoutRef, ElementRef } from "react";

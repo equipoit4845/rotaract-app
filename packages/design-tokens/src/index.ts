@@ -2,7 +2,7 @@ export type MrThemeName = "light" | "dark";
 
 export const MR_THEME_NAMES: readonly MrThemeName[] = ["light", "dark"];
 
-/** Semantic state tones shared across @mirotaract/ui and @mirotaract/icons. */
+/** Semantic state tones shared across @equipoit4845/ui and @equipoit4845/icons. */
 export type MrStateTone = "neutral" | "info" | "success" | "warning" | "danger";
 
 /**

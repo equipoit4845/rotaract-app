@@ -1,5 +1,5 @@
 {
-  "name": "@mirotaract/admin-shell",
+  "name": "@equipoit4845/admin-shell",
   "version": "0.1.0",
   "private": false,
   "type": "module",
@@ -29,9 +29,9 @@
     "test": "node --test"
   },
   "dependencies": {
-    "@mirotaract/design-tokens": "workspace:*",
-    "@mirotaract/icons": "workspace:*",
-    "@mirotaract/ui": "workspace:*"
+    "@equipoit4845/design-tokens": "workspace:*",
+    "@equipoit4845/icons": "workspace:*",
+    "@equipoit4845/ui": "workspace:*"
   },
   "peerDependencies": {
     "react": "^19.0.0",

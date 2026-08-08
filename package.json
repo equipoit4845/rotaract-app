@@ -19,7 +19,7 @@
     "contracts:validate": "pnpm contracts:openapi && pnpm contracts:events && pnpm contracts:http && pnpm contracts:design-system-boundaries",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "pnpm --filter @mirotaract/design-tokens --filter @mirotaract/icons --filter @mirotaract/ui --filter @mirotaract/admin-shell build && changeset publish",
+    "release": "pnpm --filter @equipoit4845/design-tokens --filter @equipoit4845/icons --filter @equipoit4845/ui --filter @equipoit4845/admin-shell build && changeset publish",
     "format": "prettier --write .",
     "db:generate": "pnpm --filter @mirotaract/institutional-kernel-api prisma:generate",
     "db:migrate": "pnpm --filter @mirotaract/institutional-kernel-api prisma:migrate",

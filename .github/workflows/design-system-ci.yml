@@ -41,14 +41,18 @@ jobs:
 
       - name: Build packages (dist is what everything below consumes)
         run: |
-          pnpm --filter @mirotaract/design-tokens build
-          pnpm --filter @mirotaract/icons build
-          pnpm --filter @mirotaract/ui build
-          pnpm --filter @mirotaract/admin-shell build
+          pnpm --filter @equipoit4845/design-tokens build
+          pnpm --filter @equipoit4845/icons build
+          pnpm --filter @equipoit4845/ui build
+          pnpm --filter @equipoit4845/admin-shell build
 
       - name: Lint + typecheck each package
         run: |
-          for pkg in design-tokens icons ui admin-shell design-system-catalog design-system-consumer-example; do
+          for pkg in design-tokens icons ui admin-shell; do
+            pnpm --filter "@equipoit4845/$pkg" lint
+            pnpm --filter "@equipoit4845/$pkg" typecheck
+          done
+          for pkg in design-system-catalog design-system-consumer-example; do
             pnpm --filter "@mirotaract/$pkg" lint
             pnpm --filter "@mirotaract/$pkg" typecheck
           done

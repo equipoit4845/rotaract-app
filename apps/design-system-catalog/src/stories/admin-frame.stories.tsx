@@ -3,8 +3,8 @@ import {
   Avatar,
   PeriodIndicator,
   StatCard,
-} from "@mirotaract/admin-shell";
-import { Button } from "@mirotaract/ui";
+} from "@equipoit4845/admin-shell";
+import { Button } from "@equipoit4845/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta: Meta<typeof AdminFrame> = {

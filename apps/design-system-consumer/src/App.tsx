@@ -1,11 +1,11 @@
-import { mrThemeProps } from "@mirotaract/design-tokens";
+import { mrThemeProps } from "@equipoit4845/design-tokens";
 import {
   DataState,
   ModuleFrame,
   PageHeader,
   PeriodIndicator,
   StatCard,
-} from "@mirotaract/admin-shell";
+} from "@equipoit4845/admin-shell";
 import {
   Badge,
   Button,
@@ -17,7 +17,7 @@ import {
   ToastProvider,
   ToastViewport,
   TooltipProvider,
-} from "@mirotaract/ui";
+} from "@equipoit4845/ui";
 import { useState } from "react";
 
 /**
@@ -46,7 +46,7 @@ export function App() {
           >
             <PageHeader
               title="Consumer example"
-              description="Renders @mirotaract/ui and @mirotaract/admin-shell as an installed dependency, not a relative import."
+              description="Renders @equipoit4845/ui and @equipoit4845/admin-shell as an installed dependency, not a relative import."
               actions={
                 <Button
                   variant="outline"

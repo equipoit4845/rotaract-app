@@ -1,6 +1,6 @@
 # Changesets
 
-Versions only the design system packages (`@mirotaract/design-tokens`,
+Versions only the design system packages (`@equipoit4845/design-tokens`,
 `icons`, `ui`, `admin-shell`) — every other workspace package is listed in
 `.changeset/config.json`'s `ignore` and never gets a Changesets-managed
 version bump.

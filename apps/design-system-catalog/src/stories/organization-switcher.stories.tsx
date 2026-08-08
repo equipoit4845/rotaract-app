@@ -1,4 +1,4 @@
-import { OrganizationSwitcher } from "@mirotaract/admin-shell";
+import { OrganizationSwitcher } from "@equipoit4845/admin-shell";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 

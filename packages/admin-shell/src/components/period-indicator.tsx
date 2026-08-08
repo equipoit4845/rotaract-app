@@ -1,4 +1,4 @@
-import { StatusIcon } from "@mirotaract/icons";
+import { StatusIcon } from "@equipoit4845/icons";
 
 import { cx } from "../lib/cx";
 

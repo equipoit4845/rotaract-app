@@ -10,15 +10,15 @@ este monorepo, ver en cambio
 ## Qué instala un módulo
 
 Sólo paquetes públicos, versionados independientemente, publicados en
-GitHub Packages bajo el scope `@mirotaract`. `react`/`react-dom` son
+GitHub Packages bajo el scope `@equipoit4845`. `react`/`react-dom` son
 `peerDependencies` en los cuatro — el módulo aporta su propia copia,
 `^19.0.0`:
 
 ```bash
-npm install @mirotaract/design-tokens @mirotaract/ui @mirotaract/admin-shell react@^19 react-dom@^19
+npm install @equipoit4845/design-tokens @equipoit4845/ui @equipoit4845/admin-shell react@^19 react-dom@^19
 ```
 
-`@mirotaract/icons` es opcional — sólo hace falta si el módulo usa
+`@equipoit4845/icons` es opcional — sólo hace falta si el módulo usa
 `StatusIcon`/`Logo` directamente en vez de recibir íconos por props.
 
 ### Autenticación contra el registry
@@ -27,7 +27,7 @@ GitHub Packages exige un token para *instalar*, no sólo para publicar
 (incluso en paquetes públicos del repo). En el `.npmrc` del módulo:
 
 ```ini
-@mirotaract:registry=https://npm.pkg.github.com
+@equipoit4845:registry=https://npm.pkg.github.com
 //npm.pkg.github.com/:_authToken=${GITHUB_PACKAGES_TOKEN}
 ```
 
@@ -55,21 +55,21 @@ Cada paquete expone su hoja de estilos como export propio; no hay un solo
 bundle "todo incluido":
 
 ```ts
-import "@mirotaract/design-tokens/tokens.css";
-import "@mirotaract/ui/styles.css";
-import "@mirotaract/admin-shell/styles.css";
+import "@equipoit4845/design-tokens/tokens.css";
+import "@equipoit4845/ui/styles.css";
+import "@equipoit4845/admin-shell/styles.css";
 ```
 
 - Todo selector público está bajo el prefijo `.mr-` y ningún paquete aplica
   estilos a elementos HTML sueltos — un módulo puede convivir con su propio
   CSS (o el de otro framework) sin colisión de especificidad ni de reset.
-- `@mirotaract/design-tokens/reset.css` es opt-in: sólo impórtalo si el
+- `@equipoit4845/design-tokens/reset.css` es opt-in: sólo impórtalo si el
   módulo no trae ya un reset propio. Nunca se carga automáticamente.
 - El tema se aplica explícitamente, envolviendo el árbol del módulo (o de
   toda la página, si el módulo controla el documento):
 
   ```tsx
-  import { mrThemeProps } from "@mirotaract/design-tokens";
+  import { mrThemeProps } from "@equipoit4845/design-tokens";
 
   <div {...mrThemeProps("light")}>
     <ModuleApp />
@@ -89,7 +89,7 @@ Es el único punto de integración estructural entre la Web Shell y un
 módulo. Deliberadamente mínimo:
 
 ```tsx
-import { ModuleFrame } from "@mirotaract/admin-shell";
+import { ModuleFrame } from "@equipoit4845/admin-shell";
 
 <ModuleFrame
   moduleName="Eventos"
@@ -120,7 +120,7 @@ monta directamente.
 
 ## Accesibilidad
 
-Los componentes de `@mirotaract/ui`/`admin-shell` ya cumplen: teclado,
+Los componentes de `@equipoit4845/ui`/`admin-shell` ya cumplen: teclado,
 foco visible, ARIA (nativo o heredado de Radix), y — desde el cierre de
 v1 — pasan un suite automatizado (`axe-core` vía
 `@storybook/test-runner`) que corre en CI sobre cada story del catálogo.
@@ -157,14 +157,14 @@ siendo responsabilidad del módulo.
 
 Cada PR de un módulo que toca UI debe:
 
-1. Declarar qué versión de `@mirotaract/design-tokens` / `ui` /
+1. Declarar qué versión de `@equipoit4845/design-tokens` / `ui` /
    `admin-shell` está usando (el diff de `package.json` alcanza).
 2. Incluir una captura visual (o el link al preview de Storybook del
    catálogo, si el componente que se está evaluando vive ahí) de la
    pantalla afectada, en claro y oscuro si el módulo soporta ambos.
 3. No introducir ningún selector CSS con prefijo `.mr-` propio — ese
    namespace es de los paquetes compartidos.
-4. No copiar código fuente de `@mirotaract/ui` o `@mirotaract/admin-shell`
+4. No copiar código fuente de `@equipoit4845/ui` o `@equipoit4845/admin-shell`
    dentro del módulo "para ajustarlo": un componente que casi sirve pero no
    del todo es una señal para pedir el cambio en el paquete compartido, no
    para bifurcarlo.
@@ -178,14 +178,14 @@ Todo lo de arriba junto, copiable — instalación ya asumida:
 
 ```tsx
 // main.tsx (o el entrypoint que arme el documento)
-import "@mirotaract/design-tokens/tokens.css";
-import "@mirotaract/design-tokens/reset.css"; // opt-in: sólo si el módulo no trae reset propio
-import "@mirotaract/ui/styles.css";
-import "@mirotaract/admin-shell/styles.css";
+import "@equipoit4845/design-tokens/tokens.css";
+import "@equipoit4845/design-tokens/reset.css"; // opt-in: sólo si el módulo no trae reset propio
+import "@equipoit4845/ui/styles.css";
+import "@equipoit4845/admin-shell/styles.css";
 
-import { mrThemeProps } from "@mirotaract/design-tokens";
-import { ModuleFrame } from "@mirotaract/admin-shell";
-import { Badge, Button, Card, CardContent, CardHeader, CardTitle } from "@mirotaract/ui";
+import { mrThemeProps } from "@equipoit4845/design-tokens";
+import { ModuleFrame } from "@equipoit4845/admin-shell";
+import { Badge, Button, Card, CardContent, CardHeader, CardTitle } from "@equipoit4845/ui";
 import { createRoot } from "react-dom/client";
 
 // La Web Shell le pasa esto ya resuelto (via query string, postMessage,

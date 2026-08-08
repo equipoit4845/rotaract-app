@@ -1,7 +1,7 @@
 "use client";
 
 import { useCan } from "@/lib/api";
-import type { AdminNavItem } from "@mirotaract/admin-shell";
+import type { AdminNavItem } from "@equipoit4845/admin-shell";
 
 /**
  * Builds `AdminFrame`'s `navItems` already filtered — the component never

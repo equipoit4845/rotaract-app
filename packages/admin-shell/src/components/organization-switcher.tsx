@@ -4,7 +4,7 @@ import {
   DropdownContent,
   DropdownItem,
   DropdownTrigger,
-} from "@mirotaract/ui";
+} from "@equipoit4845/ui";
 
 import { cx } from "../lib/cx";
 

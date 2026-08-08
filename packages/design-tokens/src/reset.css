@@ -1,8 +1,8 @@
 /*
- * @mirotaract/design-tokens/reset.css
+ * @equipoit4845/design-tokens/reset.css
  *
  * Optional. Import this only if your app doesn't already ship a CSS reset.
- * Never imported automatically by tokens.css or any @mirotaract/* package.
+ * Never imported automatically by tokens.css or any @equipoit4845/* package.
  * Scoped under `.mr-theme` (not bare element selectors) so it never leaks
  * outside a themed subtree, e.g. when an embedded module shares a page with
  * a host app that has its own reset.
@@ -22,7 +22,7 @@
  * to the ambient text color regardless of variant — exactly the kind of
  * bug the automated a11y suite caught (white-on-blue primary buttons
  * rendering as near-black-on-blue, failing color-contrast). Each
- * @mirotaract/ui component sets its own `color` and doesn't need this.
+ * @equipoit4845/ui component sets its own `color` and doesn't need this.
  */
 .mr-theme button,
 .mr-theme input,

@@ -1,4 +1,4 @@
-import { IconButton } from "@mirotaract/ui";
+import { IconButton } from "@equipoit4845/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const PencilIcon = () => (
