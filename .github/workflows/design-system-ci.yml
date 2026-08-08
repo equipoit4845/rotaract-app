@@ -30,10 +30,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 24, cache: pnpm }
+      # Must precede actions/setup-node's cache:pnpm — that cache step shells
+      # out to `pnpm store path`, which fails if pnpm isn't on PATH yet.
       - uses: pnpm/action-setup@v4
         with: { version: 10.13.1 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: pnpm }
       - run: pnpm install --frozen-lockfile
       - run: pnpm contracts:design-system-boundaries
 

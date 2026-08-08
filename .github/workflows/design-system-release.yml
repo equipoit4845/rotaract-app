@@ -27,14 +27,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
+      # Must precede actions/setup-node's cache:pnpm — that cache step shells
+      # out to `pnpm store path`, which fails if pnpm isn't on PATH yet.
+      - uses: pnpm/action-setup@v4
+        with: { version: 10.13.1 }
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: pnpm
           registry-url: "https://npm.pkg.github.com"
           scope: "@mirotaract"
-      - uses: pnpm/action-setup@v4
-        with: { version: 10.13.1 }
       - run: pnpm install --frozen-lockfile
       # On a changeset-less main, this opens/updates a "Version Packages" PR.
       # Once that PR merges (versions bumped, changelogs written), this same
