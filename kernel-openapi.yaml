@@ -22,9 +22,9 @@ externalDocs:
   url: ./kernel-spec.md
 
 servers:
-  - url: https://api.agendai.com.ar/api/kernel/v1
+  - url: https://api.rotaract4845.com/api/kernel/v1
     description: Producción
-  - url: https://staging-api.agendai.com.ar/api/kernel/v1
+  - url: https://staging-api.rotaract4845.com/api/kernel/v1
     description: Staging
 
 tags:
@@ -2653,7 +2653,7 @@ components:
         instance: { type: string }
         traceId: { type: string }
       example:
-        type: https://api.agendai.com.ar/errors/invalid-transition
+        type: https://api.rotaract4845.com/errors/invalid-transition
         title: Invalid state transition
         status: 409
         code: KERNEL_INVALID_TRANSITION

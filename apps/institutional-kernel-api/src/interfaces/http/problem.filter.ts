@@ -41,7 +41,7 @@ export class ProblemFilter implements ExceptionFilter {
       .status(status)
       .type("application/problem+json")
       .send({
-        type: `https://api.agendai.com.ar/errors/${code.toLowerCase()}`,
+        type: `https://api.rotaract4845.com/errors/${code.toLowerCase()}`,
         title: status >= 500 ? "Internal Server Error" : "Request failed",
         status,
         code,
