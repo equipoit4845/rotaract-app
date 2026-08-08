@@ -14,6 +14,10 @@ on:
       - "packages/ui/**"
       - "packages/admin-shell/**"
       - ".changeset/**"
+  # Lets a maintainer force a run without an unrelated package touch —
+  # e.g. after a workflow-only fix, or to retry a run that failed on CI
+  # infra rather than on the packages themselves.
+  workflow_dispatch: {}
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
