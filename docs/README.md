@@ -17,12 +17,23 @@ contratos públicos son [`kernel-openapi.yaml`](../kernel-openapi.yaml),
   legacy y presidentes actuales.
 - [Verificación y límites conocidos](06-verification-and-known-gaps.md): qué
   está comprobado y qué debe cerrarse antes de producción.
+- [Frontend Web](07-frontend-web.md): capa de consumo de la API en
+  `apps/mirotaract-web` — arquitectura, autenticación, dominios y testing.
+- [Validación de la capa de consumo](kernel-api-consumption-validation.md):
+  auditoría adversarial estructural de esa capa (hallazgos, fixes aplicados,
+  deuda pendiente).
+- [Validación de runtime](kernel-api-runtime-validation.md): la misma capa
+  ejercitada con hooks renderizados de verdad (login, reload, concurrencia
+  de refresh, invalidación de permisos efectivos, aislamiento de cache entre
+  usuarios, paginación, bundle de producción).
 
 ## Alcance actual
 
 El Kernel cubre identidad, personas, organizaciones, membresías, períodos,
 cargos, autorización, solicitudes, transferencias, módulos y consultas de
-servicio. La Web es un consumidor separado. Las capacidades de gobierno v1.2
+servicio. La Web es un consumidor separado; su capa de consumo de API está
+implementada y documentada en [07-frontend-web.md](07-frontend-web.md), pero
+todavía no tiene pantallas de negocio. Las capacidades de gobierno v1.2
 (elecciones, delegaciones, incompatibilidades, políticas institucionales
 avanzadas y correcciones históricas) siguen fuera de este alcance.
 

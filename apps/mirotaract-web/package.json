@@ -2,25 +2,36 @@
   "name": "@mirotaract/mirotaract-web",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "build": "next build",
     "dev": "next dev",
     "start": "next start",
     "lint": "prettier --check src",
     "typecheck": "tsc --noEmit",
-    "test": "node --test test/**/*.test.mjs"
+    "test": "tsx --tsconfig test/tsconfig.json --test --test-force-exit test/**/*.test.{mjs,ts}",
+    "api:types": "openapi-typescript ../../kernel-openapi.yaml -o ./src/lib/api/client/schema.ts"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.101.4",
     "next": "^15.3.4",
+    "openapi-fetch": "^0.17.0",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/jsdom": "^30.0.0",
     "@types/node": "^24.0.10",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "eslint": "^9.30.0",
     "eslint-config-next": "^15.3.4",
+    "jsdom": "^30.0.1",
+    "openapi-typescript": "^7.13.0",
+    "tsx": "^4.19.4",
     "typescript": "^5.8.3"
   }
 }
