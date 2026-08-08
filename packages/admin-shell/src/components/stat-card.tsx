@@ -1,3 +1,4 @@
+import type { MrStateTone } from "@mirotaract/design-tokens";
 import type { ReactNode } from "react";
 
 import { cx } from "../lib/cx";
@@ -7,7 +8,7 @@ export type StatCardProps = {
   value: ReactNode;
   detail?: ReactNode;
   icon?: ReactNode;
-  tone?: "default" | "success" | "warning" | "info";
+  tone?: MrStateTone;
   className?: string;
 };
 
@@ -16,7 +17,7 @@ export function StatCard({
   value,
   detail,
   icon,
-  tone = "default",
+  tone = "neutral",
   className,
 }: StatCardProps) {
   return (
@@ -26,7 +27,11 @@ export function StatCard({
         <strong className="mr-stat-card__value">{value}</strong>
         {detail ? <p className="mr-stat-card__detail">{detail}</p> : null}
       </div>
-      {icon ? <span className="mr-stat-card__icon" aria-hidden="true">{icon}</span> : null}
+      {icon ? (
+        <span className="mr-stat-card__icon" aria-hidden="true">
+          {icon}
+        </span>
+      ) : null}
     </section>
   );
 }

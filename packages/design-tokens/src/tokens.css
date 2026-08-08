@@ -1,0 +1,131 @@
+/*
+ * @mirotaract/design-tokens
+ *
+ * Semantic tokens only (canvas, surface, text, border, action, state).
+ * No component classes live here. Tokens are scoped to
+ * `.mr-theme[data-mr-theme]` — never `:root` — so an app can nest a
+ * differently-themed subtree (e.g. an embedded module) without collision,
+ * and so packages never guess the theme from `prefers-color-scheme`.
+ *
+ * Usage:
+ *   <div className="mr-theme" data-mr-theme="light"> ... </div>
+ *   <div className="mr-theme" data-mr-theme="dark"> ... </div>
+ */
+
+.mr-theme {
+  --mr-font-sans:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+
+  --mr-radius-sm: 0.5rem;
+  --mr-radius-md: 0.75rem;
+  --mr-radius-lg: 1rem;
+  --mr-radius-full: 999px;
+
+  --mr-shadow-sm: 0 1px 2px rgb(15 23 42 / 6%);
+  --mr-shadow-md: 0 8px 24px rgb(15 23 42 / 9%);
+
+  --mr-space-1: 0.25rem;
+  --mr-space-2: 0.5rem;
+  --mr-space-3: 0.75rem;
+  --mr-space-4: 1rem;
+  --mr-space-5: 1.25rem;
+  --mr-space-6: 1.5rem;
+  --mr-space-8: 2rem;
+}
+
+.mr-theme[data-mr-theme="light"] {
+  color-scheme: light;
+
+  --mr-color-canvas: #f8fafc;
+  --mr-color-surface: #ffffff;
+  --mr-color-surface-muted: #f1f5f9;
+  --mr-color-surface-raised: #ffffff;
+
+  --mr-color-text: #172033;
+  /* #64748b measured ~4.3:1 on --mr-color-surface-muted — under the 4.5:1
+     AA minimum for normal text (caught by the automated a11y suite on
+     Badge/Alert/Table). #475569 clears it with margin (~6.9:1) while
+     staying in the same gray family. */
+  --mr-color-text-muted: #475569;
+  --mr-color-text-on-action: #ffffff;
+
+  --mr-color-border: #dce4ee;
+  --mr-color-border-strong: #c3d0df;
+
+  --mr-color-action: #1d4ed8;
+  --mr-color-action-hover: #1e40af;
+
+  --mr-color-focus-ring: #84adff;
+
+  --mr-color-state-neutral-text: #475569;
+  --mr-color-state-neutral-surface: #f1f5f9;
+  --mr-color-state-neutral-border: #dce4ee;
+
+  --mr-color-state-info-text: #175cd3;
+  --mr-color-state-info-surface: #eff8ff;
+  --mr-color-state-info-border: color-mix(in srgb, #175cd3 20%, transparent);
+
+  --mr-color-state-success-text: #067647;
+  --mr-color-state-success-surface: #ecfdf3;
+  --mr-color-state-success-border: color-mix(in srgb, #067647 20%, transparent);
+
+  --mr-color-state-warning-text: #b54708;
+  --mr-color-state-warning-surface: #fffaeb;
+  --mr-color-state-warning-border: color-mix(in srgb, #b54708 20%, transparent);
+
+  --mr-color-state-danger-text: #b42318;
+  --mr-color-state-danger-surface: #fef3f2;
+  --mr-color-state-danger-border: color-mix(in srgb, #b42318 20%, transparent);
+}
+
+.mr-theme[data-mr-theme="dark"] {
+  color-scheme: dark;
+
+  --mr-color-canvas: #111827;
+  --mr-color-surface: #182235;
+  --mr-color-surface-muted: #202d43;
+  --mr-color-surface-raised: #233149;
+
+  --mr-color-text: #f8fafc;
+  --mr-color-text-muted: #b4c0d0;
+  --mr-color-text-on-action: #0e1e42;
+
+  --mr-color-border: #334155;
+  --mr-color-border-strong: #475569;
+
+  --mr-color-action: #7aa2ff;
+  --mr-color-action-hover: #a5c0ff;
+
+  --mr-color-focus-ring: #a5c0ff;
+
+  --mr-color-state-neutral-text: #b4c0d0;
+  --mr-color-state-neutral-surface: #202d43;
+  --mr-color-state-neutral-border: #334155;
+
+  --mr-color-state-info-text: #84caff;
+  --mr-color-state-info-surface: #0b315a;
+  --mr-color-state-info-border: color-mix(in srgb, #84caff 25%, transparent);
+
+  --mr-color-state-success-text: #6ce9a6;
+  --mr-color-state-success-surface: #073b2a;
+  --mr-color-state-success-border: color-mix(in srgb, #6ce9a6 25%, transparent);
+
+  --mr-color-state-warning-text: #fec84b;
+  --mr-color-state-warning-surface: #422006;
+  --mr-color-state-warning-border: color-mix(in srgb, #fec84b 25%, transparent);
+
+  --mr-color-state-danger-text: #fda29b;
+  --mr-color-state-danger-surface: #451a1a;
+  --mr-color-state-danger-border: color-mix(in srgb, #fda29b 25%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mr-theme *,
+  .mr-theme *::before,
+  .mr-theme *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

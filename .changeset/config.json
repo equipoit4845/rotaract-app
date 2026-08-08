@@ -1,0 +1,19 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@3.0.0/schema.json",
+  "changelog": "@changesets/cli/changelog",
+  "commit": false,
+  "fixed": [],
+  "linked": [],
+  "access": "restricted",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": [
+    "@mirotaract/mirotaract-web",
+    "@mirotaract/institutional-kernel-api",
+    "@mirotaract/kernel-sdk",
+    "@mirotaract/kernel-contracts",
+    "@mirotaract/auth-middleware",
+    "@mirotaract/design-system-catalog",
+    "@mirotaract/design-system-consumer-example"
+  ]
+}

@@ -2,6 +2,9 @@ node_modules
 .turbo
 .next
 dist
+storybook-static
+test-results
+playwright-report
 coverage
 .env
 .env.local

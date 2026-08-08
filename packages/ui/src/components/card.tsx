@@ -6,11 +6,17 @@ export function Card({ className, ...props }: HTMLAttributes<HTMLElement>) {
   return <section {...props} className={cx("mr-card", className)} />;
 }
 
-export function CardHeader({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+export function CardHeader({
+  className,
+  ...props
+}: HTMLAttributes<HTMLDivElement>) {
   return <div {...props} className={cx("mr-card__header", className)} />;
 }
 
-export function CardTitle({ className, ...props }: HTMLAttributes<HTMLHeadingElement>) {
+export function CardTitle({
+  className,
+  ...props
+}: HTMLAttributes<HTMLHeadingElement>) {
   return <h2 {...props} className={cx("mr-card__title", className)} />;
 }
 
@@ -21,10 +27,16 @@ export function CardDescription({
   return <p {...props} className={cx("mr-card__description", className)} />;
 }
 
-export function CardContent({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+export function CardContent({
+  className,
+  ...props
+}: HTMLAttributes<HTMLDivElement>) {
   return <div {...props} className={cx("mr-card__content", className)} />;
 }
 
-export function CardFooter({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+export function CardFooter({
+  className,
+  ...props
+}: HTMLAttributes<HTMLDivElement>) {
   return <div {...props} className={cx("mr-card__footer", className)} />;
 }

@@ -12,6 +12,8 @@ autorización y contratos de integración para los módulos consumidores.
 | Web Next.js          | `apps/mirotaract-web`           |         3000 |
 | SDK                  | `packages/kernel-sdk`           |            — |
 | Contratos TypeScript | `packages/kernel-contracts`     |            — |
+| Design System        | `packages/{design-tokens,icons,ui,admin-shell}` | — |
+| Catálogo Storybook   | `apps/design-system-catalog`    |         6006 |
 | PostgreSQL           | Compose                         |         5432 |
 | Redis                | Compose                         |         6379 |
 | NATS JetStream       | Compose                         |  4222 / 8222 |
@@ -135,6 +137,10 @@ La documentación detallada se encuentra en [docs/README.md](docs/README.md):
 - [Operación y despliegue](docs/04-operations-and-deployment.md)
 - [Seeds e importaciones](docs/05-import-and-seeding.md)
 - [Verificación y límites conocidos](docs/06-verification-and-known-gaps.md)
+- [Frontend Web](docs/07-frontend-web.md)
+- [Design System](docs/08-design-system.md)
+- [Contrato de UI para módulos externos](docs/module-ui-contract.md)
+- [Validación v1 del Design System](docs/design-system-v1-validation.md)
 
 ## Estado antes de producción
 

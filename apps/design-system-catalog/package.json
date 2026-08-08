@@ -1,0 +1,41 @@
+{
+  "name": "@mirotaract/design-system-catalog",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "storybook dev -p 6006",
+    "build": "storybook build",
+    "typecheck": "tsc --noEmit",
+    "lint": "prettier --check src .storybook visual",
+    "test:a11y": "start-server-and-test 'http-server storybook-static -p 6007 -s' http://localhost:6007 'test-storybook --url http://localhost:6007 --maxWorkers=2'",
+    "test:visual": "playwright test",
+    "test:visual:update": "playwright test --update-snapshots"
+  },
+  "dependencies": {
+    "@mirotaract/admin-shell": "workspace:*",
+    "@mirotaract/design-tokens": "workspace:*",
+    "@mirotaract/icons": "workspace:*",
+    "@mirotaract/ui": "workspace:*",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@storybook/addon-a11y": "^8.4.7",
+    "@storybook/addon-essentials": "^8.4.7",
+    "@storybook/react": "^8.4.7",
+    "@storybook/react-vite": "^8.4.7",
+    "@storybook/test-runner": "^0.22.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@playwright/test": "^1.62.1",
+    "@types/node": "^24.0.10",
+    "axe-playwright": "^2.2.2",
+    "http-server": "^14.1.1",
+    "playwright": "^1.62.1",
+    "start-server-and-test": "^3.0.12",
+    "storybook": "^8.4.7",
+    "typescript": "^5.8.3",
+    "vite": "^6.0.0"
+  }
+}

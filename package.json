@@ -15,7 +15,11 @@
     "contracts:openapi": "node scripts/validate-openapi.mjs",
     "contracts:events": "node scripts/validate-events-contract.mjs",
     "contracts:http": "node scripts/validate-http-operations.mjs",
-    "contracts:validate": "pnpm contracts:openapi && pnpm contracts:events && pnpm contracts:http",
+    "contracts:design-system-boundaries": "node scripts/validate-design-system-boundaries.mjs",
+    "contracts:validate": "pnpm contracts:openapi && pnpm contracts:events && pnpm contracts:http && pnpm contracts:design-system-boundaries",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "pnpm --filter @mirotaract/design-tokens --filter @mirotaract/icons --filter @mirotaract/ui --filter @mirotaract/admin-shell build && changeset publish",
     "format": "prettier --write .",
     "db:generate": "pnpm --filter @mirotaract/institutional-kernel-api prisma:generate",
     "db:migrate": "pnpm --filter @mirotaract/institutional-kernel-api prisma:migrate",
@@ -27,8 +31,9 @@
     "db:seed:current-presidents": "tsx prisma/seed-current-presidents.ts --apply"
   },
   "devDependencies": {
-    "@prisma/client": "^6.10.1",
     "@apidevtools/swagger-parser": "^10.1.1",
+    "@changesets/cli": "^2.31.1",
+    "@prisma/client": "^6.10.1",
     "@trivago/prettier-plugin-sort-imports": "^5.2.2",
     "prettier": "^3.5.3",
     "prisma": "^6.10.1",

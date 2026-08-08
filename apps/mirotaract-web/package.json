@@ -13,6 +13,10 @@
     "api:types": "openapi-typescript ../../kernel-openapi.yaml -o ./src/lib/api/client/schema.ts"
   },
   "dependencies": {
+    "@mirotaract/admin-shell": "workspace:*",
+    "@mirotaract/design-tokens": "workspace:*",
+    "@mirotaract/icons": "workspace:*",
+    "@mirotaract/ui": "workspace:*",
     "@tanstack/react-query": "^5.101.4",
     "next": "^15.3.4",
     "openapi-fetch": "^0.17.0",

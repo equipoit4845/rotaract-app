@@ -1,0 +1,80 @@
+name: Design System CI
+
+# Deliberately its own workflow, not a job bolted onto the main Kernel CI
+# (.github/workflows/ci.yml): a Kernel-only PR shouldn't wait on Storybook/
+# Playwright, and a purely-visual patch shouldn't need postgres/redis/nats
+# up. Path-filtered so it only runs when it's actually relevant.
+on:
+  pull_request:
+    paths:
+      - "packages/design-tokens/**"
+      - "packages/icons/**"
+      - "packages/ui/**"
+      - "packages/admin-shell/**"
+      - "apps/design-system-catalog/**"
+      - "apps/design-system-consumer/**"
+      - "scripts/validate-design-system-boundaries.mjs"
+  push:
+    branches: [main]
+    paths:
+      - "packages/design-tokens/**"
+      - "packages/icons/**"
+      - "packages/ui/**"
+      - "packages/admin-shell/**"
+      - "apps/design-system-catalog/**"
+      - "apps/design-system-consumer/**"
+      - "scripts/validate-design-system-boundaries.mjs"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: pnpm }
+      - uses: pnpm/action-setup@v4
+        with: { version: 10.13.1 }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm contracts:design-system-boundaries
+
+      - name: Build packages (dist is what everything below consumes)
+        run: |
+          pnpm --filter @mirotaract/design-tokens build
+          pnpm --filter @mirotaract/icons build
+          pnpm --filter @mirotaract/ui build
+          pnpm --filter @mirotaract/admin-shell build
+
+      - name: Lint + typecheck each package
+        run: |
+          for pkg in design-tokens icons ui admin-shell design-system-catalog design-system-consumer-example; do
+            pnpm --filter "@mirotaract/$pkg" lint
+            pnpm --filter "@mirotaract/$pkg" typecheck
+          done
+
+      - name: Package content audit (tarball must be dist + package.json only)
+        run: |
+          for pkg in design-tokens icons ui admin-shell; do
+            (cd "packages/$pkg" && npm pack --dry-run --json) | node -e '
+              const data = JSON.parse(require("fs").readFileSync(0, "utf8"))[0];
+              const bad = data.files.map(f => f.path).filter(p => !p.startsWith("dist/") && p !== "package.json");
+              if (bad.length) { console.error("Unexpected files in tarball:", bad); process.exit(1); }
+              console.log(data.name, "tarball OK:", data.files.length, "files");
+            '
+          done
+
+      - name: Storybook build
+        run: pnpm --filter @mirotaract/design-system-catalog build
+
+      - name: Automated accessibility (Storybook test-runner + axe)
+        run: |
+          cd apps/design-system-catalog
+          npx playwright install --with-deps chromium
+          pnpm test:a11y
+
+      - name: Visual regression (Playwright screenshots vs. committed baselines)
+        run: |
+          cd apps/design-system-catalog
+          pnpm test:visual
+
+      - name: External consumer build (workspace:*-resolved, same shape as a registry install)
+        run: pnpm --filter @mirotaract/design-system-consumer-example build

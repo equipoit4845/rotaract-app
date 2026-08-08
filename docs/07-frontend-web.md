@@ -4,8 +4,13 @@
 Router, React 19). No comparte Prisma ni accede a la base de datos: todo el
 acceso a datos pasa por la capa `src/lib/api`, que consume
 [`kernel-openapi.yaml`](../kernel-openapi.yaml) directamente. Todavía no
-existen pantallas de negocio (`src/app` sólo tiene el layout raíz y la home
-de scaffolding); esta capa está lista para que los componentes `.tsx` la
+existen pantallas de negocio (miembros, cargos, períodos, solicitudes,
+transferencias) — `src/app` tiene el layout raíz, la home de scaffolding,
+y un primer shell autenticado (`/dashboard`, ver
+[`08-design-system.md`](08-design-system.md#componentes) y
+`src/features/shell/`) que valida sesión, organización activa, período y
+navegación filtrada sobre `AdminFrame`, sin contenido de negocio todavía.
+Esta capa está lista para que los componentes `.tsx` de negocio la
 consuman a medida que se construyan.
 
 ## Arquitectura de capas
