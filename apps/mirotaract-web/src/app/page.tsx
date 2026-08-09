@@ -1,11 +1,12 @@
+import { HomeContainer } from "@/features/home/containers/home-container";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Mi Rotaract",
+  description:
+    "Mi Rotaract centraliza la gestión institucional de clubes y distritos.",
+};
+
 export default function HomePage() {
-  return (
-    <main>
-      <h1>Mi Rotaract</h1>
-      <p>
-        Scaffolding institucional listo. La interfaz de negocio se incorporará
-        por cortes verticales.
-      </p>
-    </main>
-  );
+  return <HomeContainer />;
 }

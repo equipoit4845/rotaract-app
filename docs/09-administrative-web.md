@@ -2095,6 +2095,296 @@ módulo fuera de Fase 8 (ni Fase 5 ni Fase 6) durante este track.
 
 ---
 
+## Área transversal — Auth / Access
+
+Cierre de autenticación, acceso inicial, recuperación de acceso,
+aceptación de invitaciones/creación de cuenta, logout/session UX y la
+página pública `/`. A diferencia de las Áreas 0–7 (rutas protegidas
+detrás de `AuthGate`), esta área cubre las rutas *públicas* de
+`apps/mirotaract-web` — ver también "Rutas públicas (Auth / Access)" y
+"Ciclo de vida de `AuthStatus` y redirects" en
+[`docs/07-frontend-web.md`](07-frontend-web.md).
+
+Arquitectura preexistente que se preservó sin reemplazo (BFF con access
+token en memoria, refresh token httpOnly server-side, refresh
+single-flight, `AuthStatus` de tres estados, limpieza de Query Cache al
+quedar `UNAUTHENTICATED`) — nada de NextAuth/Auth.js/Clerk/Supabase
+Auth/Firebase Auth ni tokens en `localStorage`.
+
+### AUTH-01 — Login
+
+Ruta `/login` · Actor: visitante sin sesión válida (o con una sesión
+que expiró) · Hook: `useLogin()` · La sesión se resuelve **vía el BFF**
+(`POST /api/auth/login`, `src/app/api/auth/login/route.ts`), nunca
+contra el Kernel directo — el frontend nunca ve `POST /auth/login` del
+Kernel ni el `refreshToken` que ese endpoint devuelve · Request:
+`LoginRequest` (`email`, `password` — el contrato no ofrece un
+identificador alternativo tipo username) · Response del BFF:
+`{ accessToken, tokenType, expiresIn }` (el `refreshToken` queda en la
+cookie httpOnly, nunca llega al componente) · Regla Kernel: access
+token vive 10 min (`bearerAuth`); `401` no distingue "credenciales
+inválidas" de "cuenta no verificada" (mismo código, sin campo `code`
+que los separe) — mostrar un único mensaje genérico es deliberado, no
+un gap, para no facilitar account enumeration (product spec §15); `423`
+cuenta bloqueada por intentos fallidos; `429` rate limit · Estados UI:
+idle, submitting, error, authenticated · Errores visibles: `401` → "Las
+credenciales ingresadas no son válidas."; `423` → "Esta cuenta está
+bloqueada por intentos fallidos."; `429`/network/5xx → mensaje acorde
+(`describeLoginError`, `features/auth/adapters/auth-mutation-errors.ts`)
+· Redirect: éxito → `resolveSafeNext(searchParams.get("next"))` o
+`/dashboard`; un visitante ya `AUTHENTICATED` que entra a `/login` es
+redirigido de inmediato, sin ver el formulario · Security: nunca llama
+al Kernel directo (regla arquitectónica); no reintentos automáticos de
+login ante `429`/red · **Status: DONE**
+
+### AUTH-02 — Session bootstrap
+
+Sin ruta propia — `SessionBootstrap` (`src/lib/api/auth/
+session-bootstrap.tsx`) se monta una vez en `app/providers/
+query-provider.tsx` · Actor: cualquier visitante al cargar/recargar la
+app · API: `POST /api/auth/refresh` (BFF), disparado automáticamente al
+montar, sin hook público de componente · Regla: `AuthStatus` arranca en
+`BOOTSTRAPPING` y no dispara ningún request protegido hasta resolver a
+`AUTHENTICATED`/`UNAUTHENTICATED` — verificado con un test dedicado que
+comprueba que `GET /auth/me` no se llama antes de que el refresh
+resuelva · Estados: `BOOTSTRAPPING` → `AUTHENTICATED` (refresh
+exitoso) / `UNAUTHENTICATED` (cookie ausente o refresh rechazado) ·
+Redirect: ninguno directo — los consumidores de `useAuthStatus()`
+(`AuthGate`, `LoginContainer`, `HomeContainer`, etc.) deciden qué
+mostrar en cada estado · Security: el refresh token nunca llega al
+navegador (cookie `httpOnly`, `secure` en producción, `sameSite:
+strict`) · **Status: DONE**
+
+### AUTH-03 — Logout
+
+Acción desde `AccountMenu` (`features/shell/account-menu.tsx`, menú de
+usuario del Shell) · Hook: `useLogout()` · API: `POST /api/auth/logout`
+(BFF) · Regla: limpia el access token en memoria, la cookie httpOnly
+(server-side, vía la ruta BFF) y **todo** el `QueryClient`
+(`queryClient.clear()` — única invalidación global intencional del
+código, por ser un cambio de sesión) · Estados: idle, pending · Errores:
+un fallo de red en la llamada al BFF no bloquea el logout local — la
+sesión local se limpia igual · Redirect: → `/` (landing pública) vía
+`router.push`, nunca `window.location.reload()` · **Status: DONE**
+
+### AUTH-04 — Logout all
+
+Acción desde `AccountMenu` → "Cerrar todas las sesiones", con
+`ConfirmationDialog` (`features/shell/confirmation-dialog.tsx`) · Hook:
+`useLogoutAllSessions()` · API: `POST /api/auth/logout-all` · Regla:
+revoca todas las sesiones de la cuenta, incluida la actual — la sesión
+actual también termina (mismo comportamiento de limpieza que AUTH-03) ·
+Estados: dialog de confirmación, pending ("Procesando…"), error inline
+en el dialog · Redirect: → `/` tras confirmar y completar ·
+**Status: DONE**
+
+### AUTH-05 / AUTH-06 — Invitation acceptance y creación de cuenta
+
+Ruta `/invite/[token]` · Actor: persona ya existente institucionalmente
+(con `Membership`) que recibió una invitación por email pero no tiene
+`UserAccount` todavía · Hook: `useAcceptInvitation()` · operationId
+`acceptAccountInvitation` (`POST /auth/invitations/accept`) — la
+aceptación de la invitación **es** la creación de la cuenta, un único
+request; no hay un paso de "validar invitación" separado porque
+`kernel-openapi.yaml` no define uno (ver `BLOCKED_API` abajo) · Request:
+`AcceptAccountInvitationRequest { token, password }` · Response:
+`UserAccount` · Regla Kernel: password mínimo 12 caracteres para esta
+vía (distinto del mínimo 10 de `/auth/register` — se copió el valor
+real del schema, no se inventó uno) · Estados UI: formulario, pending,
+éxito, error · Errores visibles: `409` (invitación ya consumida,
+revocada, o la persona ya tiene cuenta — el contrato no da un `code`
+que distinga los tres casos, así que se muestra un único mensaje
+honesto en vez de adivinar cuál fue) → "Esta invitación ya no está
+disponible."; `429` rate limit · Redirect: éxito → pantalla de
+confirmación con link manual a `/login` (no hay auto-login: el
+contrato no define que `acceptAccountInvitation` devuelva sesión) ·
+Security: el token nunca se persiste en `localStorage`/`sessionStorage`
+(cubierto por un test dedicado), vive sólo en el path de la URL y en
+el body del único request que lo usa · **Status: DONE**
+
+**`BLOCKED_API`**: no existe un `GET` para previsualizar la invitación
+por token antes de aceptar — `AccountInvitation` (el schema que
+devuelve `invitePersonToCreateAccount`, la operación que la Fase 3 usa
+para crear la invitación) nunca incluye el token crudo, así que no hay
+forma de resolver "¿a qué organización/persona pertenece este link?"
+del lado del cliente antes del submit. La pantalla va directo al
+formulario de password sin mostrar esos datos.
+
+### AUTH-07 — Password recovery (forgot password)
+
+Ruta `/forgot-password` · Actor: cualquier visitante · Hook:
+`useRequestPasswordReset()` · operationId `requestPasswordReset`
+(`POST /auth/forgot-password`) — confirmado real en
+`kernel-openapi.yaml`, no `BLOCKED_API` · Request: `{ email }` ·
+Response: `202` **siempre**, exista o no una cuenta con ese email ·
+Estados UI: formulario, pending, confirmación genérica · Errores
+visibles: sólo un fallo de request real (network/5xx) muestra error —
+el Kernel nunca informa "no existe esa cuenta" como error, así que esa
+rama del código jamás se ejecuta para ese caso · Redirect: ninguno
+automático, la pantalla se queda mostrando el mensaje con un link
+manual de vuelta a `/login` · Security: mensaje idéntico
+("Si existe una cuenta asociada, recibirás instrucciones.") sin
+importar el resultado real — account enumeration evitado por
+construcción, no por buena voluntad del copy · **Status: DONE**
+
+### AUTH-08 — Password reset
+
+Ruta `/reset-password/[token]` · Actor: quien llegó desde el email de
+AUTH-07 · Hook: `useResetPassword()` · operationId `resetPassword`
+(`POST /auth/reset-password`) · Request: `{ token, newPassword }`
+(`newPassword` mínimo 10 caracteres, verificado contra el schema real)
+· Regla Kernel: `410 Gone` si el token ya fue usado o expiró · Estados
+UI: formulario, pending, éxito, error · Errores visibles: `410` → "Este
+enlace de recuperación ya no es válido."; confirmación de password
+distinta valida client-side antes de siquiera llamar al hook · Redirect:
+éxito → `/login` (el Kernel ya invalidó el token server-side, no queda
+nada del lado del cliente que conservar) · Security: el token no se
+copia a ningún otro lugar (state, storage, query param adicional) más
+allá del path de la URL y el body del submit · **Status: DONE**
+
+### AUTH-09 — Authenticated redirect / protected routing
+
+Todas las rutas de las Áreas 0–7 · Hook: `useAuthStatus()` dentro de
+`AuthGate` (`features/shell/auth-gate.tsx`), envuelto en `Suspense`
+porque `useSearchParams()` lo exige durante el prerender estático de
+Next.js · Regla: `UNAUTHENTICATED` → `router.replace(
+"/login?next=" + encodeURIComponent(pathname + query))` (incluye la
+querystring, así los filtros de una lista sobreviven el viaje de ida y
+vuelta); `AUTHENTICATED` → renderiza los hijos sin redirect ·
+`BOOTSTRAPPING` → spinner únicamente, sin decidir todavía (evita el
+flicker "login → ya estás adentro" en cada recarga) · Un `403` de un
+endpoint específico dentro de una pantalla ya autenticada **nunca** pasa
+por este redirect — se muestra inline vía `describeKernelError()`
+(`features/shell/kernel-error-message.ts`); `401` (sesión) y `403`
+(autorización) son señales distintas con manejo distinto en todo el
+código (product spec §27), verificado con un test que confirma que un
+`403` no dispara ninguna llamada a `/login` · Security: el `next` que
+`AuthGate` genera se construye internamente desde `usePathname()`/
+`useSearchParams()`, nunca se lee un valor externo no confiable en este
+punto (`resolveSafeNext` sólo hace falta donde se *lee* un `next`, es
+decir en `LoginContainer`) · **Status: DONE**
+
+### AUTH-10 — Public home routing
+
+Ruta `/` · Hook: `useAuthStatus()` dentro de `HomeContainer`
+(`features/home/containers/home-container.tsx`) · Regla:
+`BOOTSTRAPPING`/`AUTHENTICATED` comparten el mismo spinner mínimo que
+`AuthGate`/`LoginContainer` (nunca se ve la landing pública parpadear
+antes del redirect a `/dashboard`); `AUTHENTICATED` → `router.replace(
+"/dashboard")`; `UNAUTHENTICATED` → landing pública (`HomeHeader`,
+`HomeHero`, `HomeCapabilities`, `HomeAccessModel`, `HomeFooter`,
+componentes locales de marketing en `features/home/`, usando sólo
+`@equipoit4845/design-tokens`/`/icons`/`/ui`) · Contenido de
+Capabilities basado únicamente en features reales ya cerradas
+(Organizaciones y clubes, Personas y membresías, Autoridades y
+períodos, Solicitudes y transferencias) — sin claims comerciales ni
+estadísticas inventadas · Footer menciona "Rotaract Distrito 4845"
+porque es una organización real de los datos semilla del proyecto
+(`prisma/seed-legacy.ts`), no una marca inventada · SEO: `/` es
+indexable (`src/app/robots.ts`); las rutas token-bearing (`/invite/*`,
+`/reset-password/*`, `/verify-email/*`) y todas las administrativas
+están deshabilitadas para crawling, más `noindex` por meta tag en las
+tres primeras · **Status: DONE**
+
+### AUTH-11 / AUTH-12 — Registro público y verificación de email
+
+No estaban en el alcance mínimo sugerido (`docs` sección 19 por
+defecto desalienta un `/register` abierto, dado el modelo real Person →
+Membership → Invitation → UserAccount), pero `kernel-openapi.yaml`
+confirma que `registerAccount` (`POST /auth/register`) y `verifyEmail`
+(`POST /auth/verify-email`) son operaciones públicas reales — no
+inventadas — así que se implementaron y se documentan explícitamente
+según exige la sección 20 del encargo:
+
+- **Qué crea**: `Person` + `UserAccount` atómicamente (no dos pasos
+  separados desde el frontend).
+- **Qué NO crea**: ninguna `Membership`. Una cuenta auto-registrada
+  queda sin pertenencia a ningún club/distrito hasta que se presente
+  una `MembershipApplication` real (Fase 7, `/applications`) — este es
+  un camino self-service genuinamente distinto del flujo
+  admin-driven Person → Membership → Invitation (`/invite/[token]`,
+  AUTH-05/06); no reemplaza ni compite con él.
+- **Quién puede registrarse**: cualquier visitante sin cuenta. La
+  cuenta queda `PENDING_VERIFICATION` hasta que se complete
+  AUTH-12 (verificación de email).
+
+Ruta `/register` (AUTH-11) · Hook `useRegister()` · Request
+`RegisterAccountRequest { firstName, lastName, email, password }`
+(`password` mínimo 10 caracteres) · Errores: `409` → "Ya existe una
+cuenta registrada con ese email."; `429` rate limit · Redirect: éxito
+no navega — muestra "Revisá tu email" in-place (la cuenta no puede
+usarse hasta verificar) · Un visitante ya `AUTHENTICATED` es redirigido
+a `/dashboard` sin ver el formulario, igual que en `/login` ·
+**Status: DONE**
+
+Ruta `/verify-email/[token]` (AUTH-12) · Hook `useVerifyEmail()` ·
+dispara `POST /auth/verify-email` una única vez al montar (no hay nada
+que la persona deba tipear, el token ya viene en el link) · Regla:
+`410 Gone` si el token ya fue usado o expiró · Redirect: éxito muestra
+confirmación con link manual a `/login` (sin auto-login, mismo criterio
+que AUTH-05/06) · **Status: DONE**
+
+### Auditoría de seguridad
+
+- `localStorage`/`sessionStorage`/`document.cookie`/`console.log` — 0
+  apariciones en `features/auth` y `features/home` (grep dedicado, sin
+  hallazgos).
+- Todo uso de `next`/`redirect` revisado: el único punto que **lee** un
+  valor externo es `LoginContainer` vía `resolveSafeNext()`
+  (`features/auth/utils/safe-redirect.ts`); `AuthGate` sólo **construye**
+  el suyo desde `usePathname()`/`useSearchParams()` internos. Durante
+  esta auditoría se encontró y corrigió un bypass real:
+  `resolveSafeNext` rechazaba `//evil.com` (protocol-relative) pero no
+  `/\evil.com` — por la spec WHATWG, los navegadores tratan `\` como
+  `/` para esquemas especiales, así que ese valor normaliza a
+  `//evil.com` en tiempo de navegación. Se agregó el rechazo de
+  cualquier `\` en el valor, con test de regresión
+  (`test/runtime/auth-login.runtime.test.ts`).
+- Cero imports de Prisma, Kernel SDK, `client/*`, `schema.ts`, rutas de
+  servicio o internals del Design System dentro de `features/auth` y
+  `features/home` (grep dedicado, sin hallazgos) — todo el HTTP de auth
+  pasa por `@/lib/api` (BFF para sesión, Kernel directo sólo para las
+  operaciones públicas sin sesión: register, verify-email, forgot/reset
+  password, accept invitation).
+- `PasswordInput` (`features/auth/components/password-input.tsx`) tenía
+  un bug de accesibilidad real, encontrado escribiendo los tests: como
+  ningún formulario le pasaba un `id` explícito, caía a un `useId()`
+  generado que nunca coincidía con el `for` del `<label>` de
+  `FormField` — la etiqueta quedaba visualmente asociada pero rota para
+  lectores de pantalla / `getByLabelText`. Corregido pasando `id`
+  explícito en los cinco usos (`login-form.tsx`, `register-form.tsx`
+  ×2, `invite-accept-form.tsx` ×2, `reset-password-form.tsx` ×2).
+
+### Tests
+
+Siete suites nuevas en `test/runtime/` (34 tests): `auth-login`
+(BOOTSTRAPPING sin flicker, éxito, 401/423/429/network, `next` seguro,
+`next` externo rechazado, `next` con backslash rechazado, visitante ya
+autenticado), `auth-register` (éxito, 409, visitante autenticado,
+verify-email válido/expirado), `auth-invitation` (éxito con verificación
+del body enviado, 409, mismatch de password bloquea el submit
+client-side, token nunca en storage), `auth-password-reset` (forgot:
+respuesta genérica + error real distinto; reset: éxito con redirect,
+410, 404, mismatch), `auth-logout` (logout y logout-all: cache clear,
+sesión limpia, redirect a `/`, confirmación previa a logout-all),
+`home` (BOOTSTRAPPING, landing, CTA, redirect autenticado) y
+`protected-routes` (`AuthGate` en sus tres estados + `401 ≠ 403`). Ver
+detalle de convenciones de test (incluida una limitación real del mock
+de router que hubo que sortear con un helper local) en
+[`docs/07-frontend-web.md`](07-frontend-web.md#testing).
+
+### Verificación de cierre — Área transversal (Auth / Access)
+
+`pnpm typecheck`, `pnpm lint` y `pnpm build` en verde (el `build`
+reveló y permitió corregir un bug real: `AuthGate` había agregado
+`useSearchParams()` sin envolver en `Suspense`, lo que rompía el
+prerender estático de **todas** las rutas administrativas — no sólo un
+hallazgo de esta auditoría sino un blocker de despliegue real). `pnpm
+test`: 248/248 en verde (213 preexistentes + 34 nuevas de esta área +
+1 test de regresión del bypass de `resolveSafeNext`).
+
+---
+
 ## Resumen de status
 
 | Área | Historias | DONE | NOT_STARTED |
@@ -2107,6 +2397,7 @@ módulo fuera de Fase 8 (ni Fase 5 ni Fase 6) durante este track.
 | 5. Períodos | 9 (agrupadas en 6 entradas) | 9* | 0 |
 | 6. Solicitudes | 7 | 7 | 0 |
 | 7. Transferencias | 8 | 8 | 0 |
+| Transversal. Auth / Access | 12 (AUTH-01..12) | 12 | 0 |
 
 \* Incluye US-PRD-02 (período actual), cubierto como parte del
 Dashboard sin ruta propia adicional.
@@ -2138,3 +2429,13 @@ endpoint para leer los permisos hoy adjuntos a un cargo). Con Fase 4,
 re-confirmó las ocho áreas contando historias reales, no sólo
 encabezados de sección), sólo queda pendiente cerrar formalmente el
 gate hacia cualquier fase futura que se agregue al alcance.
+
+El área transversal Auth / Access cerró `DONE` el 2026-08-09 (ver
+"Verificación de cierre — Área transversal (Auth / Access)" más
+arriba), cerrando junto con ella toda la Web administrativa
+institucional: login, bootstrap de sesión, logout/logout-all,
+aceptación de invitación, registro público + verificación de email,
+recuperación de contraseña, ruteo protegido (`401 ≠ 403`) y la página
+pública `/`. No se avanzó a ningún módulo externo (Meetings, Events,
+Projects, Professional Development) ni se rediseñó el Kernel, conforme
+al alcance del encargo.

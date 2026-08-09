@@ -18,7 +18,34 @@ incluida la integración cruzada entre Personas y Membresías (ver
 y Cargos (ver "Integración Período ↔ Appointment"); el resto sigue el
 gate de fases.
 
-### Rutas disponibles
+### Rutas públicas (Auth / Access)
+
+No pasan por `AuthGate` ni `DashboardShell`/`AdminFrame` — usan
+`AuthShell` (`features/auth/components/auth-shell.tsx`), un layout público
+sin sidebar/organization switcher. Detalle historia por historia
+(AUTH-01…10) en
+[`09-administrative-web.md`](09-administrative-web.md#área-transversal--auth--access).
+
+| Ruta | Contenido | Indexable |
+| --- | --- | --- |
+| `/` | Landing institucional (`features/home/`) si `AuthStatus=UNAUTHENTICATED`; redirige a `/dashboard` si `AUTHENTICATED`; skeleton mínimo mientras `BOOTSTRAPPING` | Sí |
+| `/login` | Formulario de acceso (email + password vía BFF), soporta `?next=<ruta interna>` | Sí |
+| `/register` | Alta de cuenta pública (`POST /auth/register`, confirmado real en `kernel-openapi.yaml`) — crea `Person`+`UserAccount` sin `Membership`; unirse a un club/distrito sigue requiriendo una `MembershipApplication` (Fase 7) | Sí |
+| `/verify-email/[token]` | Confirma el email de una cuenta recién registrada | No |
+| `/invite/[token]` | Acepta una invitación existente (`POST /auth/invitations/accept`) y define password — sin preview de organización/persona, ver `BLOCKED_API` en docs/09 | No |
+| `/forgot-password` | Solicita recuperación de contraseña; respuesta `202` genérica siempre, nunca confirma si el email existe | Sí |
+| `/reset-password/[token]` | Define una nueva contraseña con el token recibido por email | No |
+
+`src/app/robots.ts` (convención `MetadataRoute.Robots` de Next.js)
+deshabilita el crawling de `/invite/`, `/reset-password/`,
+`/verify-email/` y de todas las rutas administrativas; los tres layouts
+token-bearing (`invite/[token]/layout.tsx`,
+`reset-password/[token]/layout.tsx`, `verify-email/[token]/layout.tsx`)
+agregan además `<meta name="robots" content="noindex">` por página — el
+`robots.txt` sólo evita el crawling, el meta tag evita la indexación
+aunque alguien comparta el link directo.
+
+### Rutas protegidas
 
 | Ruta | Fase | Contenido |
 | --- | --- | --- |
@@ -125,6 +152,51 @@ la app: como el access token vive sólo en memoria, sin este paso cada
 recarga de página aparecería como sesión cerrada aunque la cookie de refresh
 siguiera vigente.
 
+### Ciclo de vida de `AuthStatus` y redirects
+
+`useAuthStatus()` (`src/lib/api/client/use-auth-status.ts`) expone tres
+estados (`token-manager.ts`):
+
+- **`BOOTSTRAPPING`** — valor inicial de cada proceso de navegador, antes
+  de que el refresh silencioso de `session-bootstrap.tsx` resuelva.
+  Tanto `AuthGate` (rutas protegidas) como `LoginContainer`/
+  `HomeContainer`/`RegisterContainer` renderizan únicamente un spinner en
+  este estado — nunca deciden "mostrar login" ni "mostrar landing"
+  todavía, para no parpadear entre un estado transitorio y el real.
+- **`AUTHENTICATED`** — sesión válida. `AuthGate` renderiza los hijos;
+  `/login`, `/register` y `/` redirigen (`router.replace`) en vez de
+  mostrar su propio contenido.
+- **`UNAUTHENTICATED`** — sin sesión (logout explícito, nunca hubo
+  sesión, o un refresh que terminó fallando de verdad —
+  `refresh-manager.ts` llama `tokenManager.clearSession()`, que produce
+  este mismo estado sea cual sea la causa). `AuthGate` redirige a
+  `/login?next=<ruta+query actual, URL-encoded>`; `/` muestra la
+  landing pública.
+
+`features/shell/auth-gate.tsx` es el único punto que decide "sesión
+requerida → a `/login`". No reemplaza la validación de permisos: un
+`403` de un endpoint específico (`KernelApiError.isForbidden`) se
+muestra inline vía `describeKernelError()` dentro de la propia pantalla,
+nunca dispara este redirect — `401` (sesión) y `403` (autorización) son
+señales distintas y nunca comparten manejo (product spec §27).
+
+`resolveSafeNext()` (`features/auth/utils/safe-redirect.ts`) es el
+único lugar que lee un `?next=` y decide si es seguro seguirlo: exige
+que empiece con `/` (una sola barra — `//evil.com` se rechaza),
+rechaza cualquier `\` (WHATWG trata la barra invertida como equivalente
+a `/` para esquemas especiales, así que `/\evil.com` normaliza a
+`//evil.com` en el navegador — el bypass clásico de un chequeo que sólo
+mira `//` literal) y rechaza cualquier cosa con `://`. Cualquier valor
+que no pase cae a `/dashboard`. `AuthGate` en cambio *construye* el
+`next` a partir de `usePathname()`/`useSearchParams()` (nunca lee un
+valor no confiable), así que sólo `LoginContainer` necesita esta
+validación.
+
+Logout (`useLogout()`) y logout-all (`useLogoutAllSessions()`) limpian
+el token en memoria, la cookie httpOnly (vía la ruta BFF
+correspondiente) y todo el `QueryClient` (`queryClient.clear()`), y
+navegan a `/` — nunca `window.location.reload()`.
+
 ## Dominios
 
 Cada dominio en `src/lib/api/<dominio>/` sigue el mismo patrón:
@@ -185,14 +257,18 @@ Corre con `tsx --tsconfig test/tsconfig.json --test --test-force-exit` (no
 `node --test`: el loader nativo de Node no resuelve imports relativos sin
 extensión de TypeScript ni con `--experimental-strip-types`; el tsconfig
 propio de `test/` sólo sobreescribe `jsx: "react-jsx"` para que `tsx` pueda
-ejecutar archivos `.tsx` reales fuera del compilador de Next). 213 tests,
+ejecutar archivos `.tsx` reales fuera del compilador de Next). 248 tests,
 contra los módulos y componentes reales (no regex sobre archivos), en dos
 capas (incluye `test/runtime/persons-memberships.integration.test.ts`,
 `test/runtime/applications-membership.integration.test.ts` y
 `test/runtime/transfers-membership-appointment.integration.test.ts`, las
 suites de integración cruzada entre Personas/Membresías/Solicitudes/
 Transferencias/Autoridades — ver "Integración Personas ↔ Membresías" en
-[`09-administrative-web.md`](09-administrative-web.md)):
+[`09-administrative-web.md`](09-administrative-web.md); y siete suites de
+Auth/Home —`auth-login`, `auth-register`, `auth-invitation`,
+`auth-password-reset`, `auth-logout`, `home`,
+`protected-routes.runtime.test.ts` — ver "Área transversal — Auth /
+Access" en ese mismo documento):
 
 **Módulo (`test/*.test.mjs`)** — llaman directamente a `token-manager`,
 `refresh-manager`, `http-client`, sin React:
@@ -226,7 +302,15 @@ de humo que sólo importa del barrel público `@/lib/api`. Detalle completo en
 `node --test`) para pantallas que usan `useRouter()`/`useSearchParams()`;
 su `push`/`replace` mock actualiza de verdad el `SearchParamsContext`, así
 que un componente que lee filtros de la URL ve el cambio en el mismo
-render. `test/runtime/bootstrap.ts` fue extendido con varios globals de
+render — correcto para filtros/paginación, pero
+`protected-routes.runtime.test.ts` necesita su propio helper local
+inerte (`replace` que sólo registra la llamada) para probar el redirect
+de `AuthGate`: ese efecto deriva el destino de `pathname`/`searchParams`
+y a la vez llama `replace`, así que con el `replace` "real" del mock
+cada redirect vuelve a disparar el efecto con un `next=` cada vez más
+largo (bucle infinito hasta agotar memoria) — algo que nunca pasa en
+Next.js real porque navegar a `/login` desmonta la página que `AuthGate`
+protegía. `test/runtime/bootstrap.ts` fue extendido con varios globals de
 jsdom (`self`, `MutationObserver`, `Event`/`CustomEvent`, `NodeFilter`,
 `HTMLInputElement` y afines) que Radix UI (`Dialog`, `Tabs`) y
 `next/link` necesitan y que Node no expone — sin ellos, componentes que

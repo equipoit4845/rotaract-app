@@ -64,6 +64,21 @@ export class KernelApiError extends Error {
   get isInvalidTransition(): boolean {
     return this.code === "KERNEL_INVALID_TRANSITION";
   }
+
+  /** Account locked after repeated failed logins (`POST /auth/login` 423 in kernel-openapi.yaml). */
+  get isLocked(): boolean {
+    return this.status === 423;
+  }
+
+  /** `x-rate-limited` endpoints (login, register, forgot-password, invitation accept) respond 429. */
+  get isRateLimited(): boolean {
+    return this.status === 429;
+  }
+
+  /** Single-use tokens (verify-email, reset-password) are `410 Gone` once consumed or expired. */
+  get isGone(): boolean {
+    return this.status === 410;
+  }
 }
 
 function isProblemDetails(value: unknown): value is Partial<ProblemDetails> {

@@ -7,7 +7,6 @@ import {
 } from "@/lib/api";
 import {
   AdminFrame,
-  Avatar,
   DataState,
   OrganizationSwitcher,
   PeriodIndicator,
@@ -15,6 +14,7 @@ import {
 import { Logo } from "@equipoit4845/icons";
 import type { ReactNode } from "react";
 
+import { AccountMenu } from "./account-menu";
 import { ActiveOrganizationProvider } from "./active-organization-context";
 import { AuthGate } from "./auth-gate";
 import { toVisualPeriodStatus } from "./period-status";
@@ -79,7 +79,7 @@ function DashboardShellContent({
       }
       user={
         currentUser ? (
-          <Avatar name={currentUser.displayName} size="sm" />
+          <AccountMenu displayName={currentUser.displayName} />
         ) : undefined
       }
     >
