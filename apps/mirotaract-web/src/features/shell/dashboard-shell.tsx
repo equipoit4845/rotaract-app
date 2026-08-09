@@ -8,12 +8,14 @@ import {
 import {
   AdminFrame,
   Avatar,
+  DataState,
   OrganizationSwitcher,
   PeriodIndicator,
 } from "@equipoit4845/admin-shell";
 import { Logo } from "@equipoit4845/icons";
 import type { ReactNode } from "react";
 
+import { ActiveOrganizationProvider } from "./active-organization-context";
 import { AuthGate } from "./auth-gate";
 import { toVisualPeriodStatus } from "./period-status";
 import { useOrganizationOptions } from "./use-organization-options";
@@ -48,8 +50,8 @@ function DashboardShellContent({
   children: ReactNode;
 }) {
   const { data: currentUser } = useCurrentUser();
-  const { organizationId, organization, setActiveOrganizationId } =
-    useActiveOrganization();
+  const activeOrganization = useActiveOrganization();
+  const { organizationId, organization } = activeOrganization;
   const { data: currentPeriod } = useCurrentPeriod(organizationId);
   const { options: organizationOptions } = useOrganizationOptions();
   const navItems = useShellNavItems(activePath);
@@ -63,7 +65,7 @@ function DashboardShellContent({
           <OrganizationSwitcher
             organizations={organizationOptions}
             activeOrganizationId={organizationId ?? ""}
-            onSelect={setActiveOrganizationId}
+            onSelect={activeOrganization.setActiveOrganizationId}
           />
         ) : undefined
       }
@@ -81,7 +83,17 @@ function DashboardShellContent({
         ) : undefined
       }
     >
-      {organization ? children : <p>Elegí una organización para continuar.</p>}
+      {organization ? (
+        <ActiveOrganizationProvider value={activeOrganization}>
+          {children}
+        </ActiveOrganizationProvider>
+      ) : (
+        <DataState
+          kind="empty"
+          title="Elegí una organización"
+          description="Seleccioná un club o distrito desde el selector de organización para continuar."
+        />
+      )}
     </AdminFrame>
   );
 }

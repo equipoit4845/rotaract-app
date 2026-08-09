@@ -3,13 +3,47 @@
 `apps/mirotaract-web` es un consumidor separado del Kernel (Next.js 15, App
 Router, React 19). No comparte Prisma ni accede a la base de datos: todo el
 acceso a datos pasa por la capa `src/lib/api`, que consume
-[`kernel-openapi.yaml`](../kernel-openapi.yaml) directamente. Todavía no
-existen pantallas de negocio (miembros, cargos, períodos, solicitudes,
-transferencias) — `src/app` tiene el layout raíz, la home de scaffolding,
-y un primer shell autenticado (`/dashboard`, ver
-[`08-design-system.md`](08-design-system.md#componentes) y
-`src/features/shell/`) que valida sesión, organización activa, período y
-navegación filtrada sobre `AdminFrame`, sin contenido de negocio todavía.
+[`kernel-openapi.yaml`](../kernel-openapi.yaml) directamente. `src/app`
+tiene el layout raíz, un shell autenticado (`src/features/shell/`, ver
+[`08-design-system.md`](08-design-system.md#componentes)) que valida
+sesión, organización activa, período y navegación filtrada sobre
+`AdminFrame`, y las pantallas de negocio de la Web administrativa
+institucional descritas en
+[`09-administrative-web.md`](09-administrative-web.md) — Fase 1
+(Dashboard), Fase 2 (Organizaciones), Fase 3 (Personas), Fase 4
+(Membresías), Fase 5 (Autoridades / Cargos), Fase 6 (Períodos), Fase 7
+(Solicitudes de membresía) y Fase 8 (Transferencias) están cerradas,
+incluida la integración cruzada entre Personas y Membresías (ver
+"Integración Personas ↔ Membresías" en ese documento) y entre Períodos
+y Cargos (ver "Integración Período ↔ Appointment"); el resto sigue el
+gate de fases.
+
+### Rutas disponibles
+
+| Ruta | Fase | Contenido |
+| --- | --- | --- |
+| `/dashboard` | 1 | Panel distrital o de club según el tipo de la organización activa |
+| `/organizations` | 2 | Listado de organizaciones (filtros `type`/`status`/`query` en la URL, paginación por cursor) |
+| `/organizations/[organizationId]` | 2 | Detalle: resumen, jerarquía (ancestros/hijos), tab "Socios" que enlaza a Membresías, acciones de ciclo de vida |
+| `/organizations/[organizationId]/edit` | 2 | Edición de una organización |
+| `/persons` | 3 | Listado/búsqueda de personas (filtro `query` en la URL, paginación por cursor) |
+| `/persons/[personId]` | 3 | Detalle: Identidad, Membresías (sólo lectura, cada fila linkea a `/memberships/[id]`), Cuenta (`BLOCKED_API`, ver `docs/09-administrative-web.md`), Historial |
+| `/persons/[personId]/edit` | 3 | Edición de una persona |
+| `/memberships` | 4 | Listado de membresías de una organización (filtros `organization`/`status` en la URL, paginación por cursor real) |
+| `/memberships/[membershipId]` | 4 | Detalle: resumen (persona y organización como links a sus propios detalles), historial inmutable de transiciones, acciones de ciclo de vida individuales (activar/licencia/reanudar/desactivar/graduar/reactivar) |
+| `/authorities` | 5 | Autoridades vigentes (`useCurrentAuthorities`) de la organización activa |
+| `/appointments` | 5 | Listado de cargos (filtros reales en la URL); separa Actuales/Futuras/Históricas a partir del `status` real, sin pseudo-estados inventados |
+| `/appointments/[appointmentId]` | 5 | Detalle: persona, cargo, organización, período, estado, acciones de ciclo de vida (nominar/electo/activar/finalizar/revocar), sin optimistic update |
+| `/positions` | 5 | Catálogo de `PositionDefinition` |
+| `/positions/new` | 5 | Crear cargo distrital |
+| `/positions/[positionDefinitionId]` | 5 | Detalle/edición de un cargo, permisos asociados (adjuntar/desadjuntar) — `BLOCKED_API`: no hay endpoint para leer qué permisos tiene adjuntos hoy (ver `docs/09-administrative-web.md`) |
+| `/periods` | 6 | Listado de períodos institucionales, scope de organización explícito en la URL (`?organization=`) con fallback a la organización activa del Shell, sin cambiarla nunca |
+| `/periods/[periodId]` | 6 | Detalle: organización, fechas, estado, acciones de ciclo de vida (programar/activar/cerrar/cancelar) — cerrar sólo llama la operación real del Kernel, nunca finaliza Appointments manualmente |
+| `/applications` | 7 | Listado de solicitudes de ingreso (filtros `organization`/`status` en la URL; `GET /membership-applications` es un array plano del Kernel, sin cursor — no hay paginación) |
+| `/applications/[applicationId]` | 7 | Detalle: persona, organización, estado, motivo, acciones de ciclo de vida (enviar/aprobar/rechazar/cancelar) — aprobar ejecuta únicamente `useApproveMembershipApplication()`, nunca crea/reactiva la Membership manualmente |
+| `/transfers` | 8 | Listado de transferencias (filtros `membership`/`from`/`to`/`status` en la URL; `GET /membership-transfers` también es un array plano, sin paginación) |
+| `/transfers/[transferId]` | 8 | Detalle: timeline del workflow (`TransferWorkflowTimeline`, componente DOMAIN local), acciones gateadas por permiso + scope de organización (aceptar en destino, confirmar/completar en origen) — completar ejecuta únicamente `useCompleteMembershipTransfer()`, nunca muta Membership/Appointment manualmente |
+
 Esta capa está lista para que los componentes `.tsx` de negocio la
 consuman a medida que se construyan.
 
@@ -151,9 +185,14 @@ Corre con `tsx --tsconfig test/tsconfig.json --test --test-force-exit` (no
 `node --test`: el loader nativo de Node no resuelve imports relativos sin
 extensión de TypeScript ni con `--experimental-strip-types`; el tsconfig
 propio de `test/` sólo sobreescribe `jsx: "react-jsx"` para que `tsx` pueda
-ejecutar archivos `.tsx` reales fuera del compilador de Next). 39 tests,
+ejecutar archivos `.tsx` reales fuera del compilador de Next). 213 tests,
 contra los módulos y componentes reales (no regex sobre archivos), en dos
-capas:
+capas (incluye `test/runtime/persons-memberships.integration.test.ts`,
+`test/runtime/applications-membership.integration.test.ts` y
+`test/runtime/transfers-membership-appointment.integration.test.ts`, las
+suites de integración cruzada entre Personas/Membresías/Solicitudes/
+Transferencias/Autoridades — ver "Integración Personas ↔ Membresías" en
+[`09-administrative-web.md`](09-administrative-web.md)):
 
 **Módulo (`test/*.test.mjs`)** — llaman directamente a `token-manager`,
 `refresh-manager`, `http-client`, sin React:
@@ -180,6 +219,24 @@ completar una transferencia o cerrar un período, aislamiento de cache entre
 usuarios, errores de dominio (409), paginación por cursor, y una pantalla
 de humo que sólo importa del barrel público `@/lib/api`. Detalle completo en
 [`kernel-api-runtime-validation.md`](kernel-api-runtime-validation.md).
+
+`test/runtime/render.ts` también expone `renderWithRouter()` (contextos
+`AppRouterContext`/`SearchParamsContext`/`PathnameContext` de
+`next/dist/shared/lib/*.shared-runtime` — no hay router real bajo
+`node --test`) para pantallas que usan `useRouter()`/`useSearchParams()`;
+su `push`/`replace` mock actualiza de verdad el `SearchParamsContext`, así
+que un componente que lee filtros de la URL ve el cambio en el mismo
+render. `test/runtime/bootstrap.ts` fue extendido con varios globals de
+jsdom (`self`, `MutationObserver`, `Event`/`CustomEvent`, `NodeFilter`,
+`HTMLInputElement` y afines) que Radix UI (`Dialog`, `Tabs`) y
+`next/link` necesitan y que Node no expone — sin ellos, componentes que
+renderizan un Dialog abierto o un `<Link>` fallan con `ReferenceError`s
+crípticos ajenos al código de la feature bajo test. También hay que
+importar `./bootstrap.ts` antes que `@testing-library/react` en cualquier
+archivo de test que importe ese paquete directamente (no sólo a través de
+`render.ts`) — si se invierte el orden, react-dom carga sin
+`document`/`window` y los `onChange` de formularios controlados quedan
+mudos sin ningún error visible.
 
 ## Estado y pendientes
 

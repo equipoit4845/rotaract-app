@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useInfiniteQuery,
   useMutation,
   useQuery,
   useQueryClient,
@@ -18,16 +19,28 @@ import type {
   UpdateMembershipPayload,
 } from "./memberships.types";
 
+/**
+ * `useInfiniteQuery`, not `useQuery` — the Kernel's `MembershipPage` carries
+ * a real `nextCursor`/`hasMore` (kernel-openapi.yaml `MembershipPage`) and
+ * this hook has to actually walk it, same pattern as `useOrganizations`.
+ */
 export function useOrganizationMemberships(
   organizationId: string | undefined,
   filters: Omit<MembershipFilters, "cursor"> = {},
 ) {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: membershipKeys.organizationList(organizationId ?? "", filters),
-    queryFn: ({ signal }) =>
-      membershipsApi.listByOrganization(organizationId as string, filters, {
-        signal,
-      }),
+    queryFn: ({ pageParam, signal }) =>
+      membershipsApi.listByOrganization(
+        organizationId as string,
+        { ...filters, cursor: pageParam },
+        { signal },
+      ),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) =>
+      lastPage.pageInfo?.hasMore
+        ? (lastPage.pageInfo?.nextCursor ?? undefined)
+        : undefined,
     enabled: Boolean(organizationId),
   });
 }

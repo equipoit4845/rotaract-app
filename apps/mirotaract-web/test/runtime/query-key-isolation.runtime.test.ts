@@ -39,9 +39,18 @@ test("useOrganizationMemberships caches are isolated per organization and per st
     ),
   );
 
-  assert.equal(result.current.orgAActive.data?.items?.[0]?.id, "org_a-ACTIVE");
-  assert.equal(result.current.orgAOnLeave.data?.items?.[0]?.id, "org_a-ON_LEAVE");
-  assert.equal(result.current.orgBActive.data?.items?.[0]?.id, "org_b-ACTIVE");
+  assert.equal(
+    result.current.orgAActive.data?.pages[0]?.items?.[0]?.id,
+    "org_a-ACTIVE",
+  );
+  assert.equal(
+    result.current.orgAOnLeave.data?.pages[0]?.items?.[0]?.id,
+    "org_a-ON_LEAVE",
+  );
+  assert.equal(
+    result.current.orgBActive.data?.pages[0]?.items?.[0]?.id,
+    "org_b-ACTIVE",
+  );
 
   const kernelRequests = backend.kernelCalls.filter((c) => c.url.includes("/memberships"));
   assert.equal(kernelRequests.length, 3, "three distinct query keys must mean three distinct requests, not a shared/collided cache entry");

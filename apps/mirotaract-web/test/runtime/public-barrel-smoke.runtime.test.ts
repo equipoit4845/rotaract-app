@@ -95,7 +95,7 @@ test("a screen built only from the public @/lib/api barrel — useCurrentUser, u
   await waitFor(() => assert.equal(result.current.canReadMembers, true));
 
   assert.equal(result.current.active.organization?.name, "Club Norte");
-  assert.equal(result.current.members.data?.items?.[0]?.id, "mem_1");
+  assert.equal(result.current.members.data?.pages[0]?.items?.[0]?.id, "mem_1");
   assert.deepEqual(result.current.authorities.data, []);
 
   tokenManager.clearSession();

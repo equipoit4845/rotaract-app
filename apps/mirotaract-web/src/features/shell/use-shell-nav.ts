@@ -8,21 +8,38 @@ import type { AdminNavItem } from "@equipoit4845/admin-shell";
  * sees a permission code, only the resulting list. `useCan` is a UX-only
  * gate (kernel-openapi.yaml §19); the Kernel still enforces every mutation
  * server-side regardless of what's visible here.
- *
- * Item set is intentionally placeholder/generic — this is shell
- * validation, not a business feature. `kernel.organization.manage` follows
- * the real `<namespace>.<resource>.<action>` permission-code format
- * (invariant 6.7.1) but isn't a claim that this exact code exists in seed
- * data; the point is proving the filtering mechanism, not shipping a real
- * admin section.
  */
 export function useShellNavItems(activePath: string): AdminNavItem[] {
-  const canManageOrganization = useCan("kernel.organization.manage");
+  const canReadOrganizations = useCan("kernel.organization.read");
+  const canReadPersons = useCan("kernel.person.read");
+  const canReadMemberships = useCan("kernel.membership.read");
+  const canReadApplications = useCan("kernel.application.read.self");
+  const canReadTransfers = useCan("kernel.transfer.read.self");
+  const canReadAppointments = useCan("kernel.appointment.read");
+  const canReadPeriods = useCan("kernel.period.read");
 
   const items: AdminNavItem[] = [{ label: "Panel", href: "/dashboard" }];
 
-  if (canManageOrganization) {
-    items.push({ label: "Organización", href: "/dashboard/organization" });
+  if (canReadOrganizations) {
+    items.push({ label: "Organizaciones", href: "/organizations" });
+  }
+  if (canReadPersons) {
+    items.push({ label: "Personas", href: "/persons" });
+  }
+  if (canReadMemberships) {
+    items.push({ label: "Membresías", href: "/memberships" });
+  }
+  if (canReadAppointments) {
+    items.push({ label: "Autoridades", href: "/authorities" });
+  }
+  if (canReadPeriods) {
+    items.push({ label: "Períodos", href: "/periods" });
+  }
+  if (canReadApplications) {
+    items.push({ label: "Solicitudes", href: "/applications" });
+  }
+  if (canReadTransfers) {
+    items.push({ label: "Transferencias", href: "/transfers" });
   }
 
   return items.map((item) => ({ ...item, active: item.href === activePath }));
