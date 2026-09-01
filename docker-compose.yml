@@ -45,6 +45,7 @@ services:
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       NATS_URL: ${NATS_URL:-nats://nats:4222}
       JWT_SECRET: ${JWT_SECRET:-development-only-change-me}
+      KERNEL_CORS_ORIGINS: ${KERNEL_CORS_ORIGINS:-https://app.rotaract4845.com,http://localhost:3000}
       KERNEL_SERVICE_API_KEY: ${KERNEL_SERVICE_API_KEY:-}
       KERNEL_JOBS_ENABLED: "false"
       CLICKMAIL_API_KEY: ${CLICKMAIL_API_KEY:-}
@@ -101,6 +102,8 @@ services:
     build:
       context: .
       dockerfile: infra/docker/web.Dockerfile
+      args:
+        NEXT_PUBLIC_KERNEL_API_URL: ${NEXT_PUBLIC_KERNEL_API_URL:-http://localhost:3001/api/kernel/v1}
     environment:
       NEXT_PUBLIC_KERNEL_API_URL: ${NEXT_PUBLIC_KERNEL_API_URL:-http://localhost:3001/api/kernel/v1}
     ports: ["3000:3000"]
