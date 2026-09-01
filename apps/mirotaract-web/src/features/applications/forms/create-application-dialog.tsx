@@ -68,7 +68,7 @@ export function CreateApplicationDialog({
         <DialogHeader>
           <DialogTitle>Solicitar ingreso</DialogTitle>
           <DialogDescription>
-            Crea una solicitud de membresía (borrador) para esta organización.
+            Crea una solicitud de ingreso (borrador) para este club.
           </DialogDescription>
         </DialogHeader>
         <form

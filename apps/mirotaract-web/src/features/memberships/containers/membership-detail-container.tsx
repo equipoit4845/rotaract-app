@@ -67,7 +67,7 @@ export function MembershipDetailContainer({
         title={personLabel}
         description="Membresía"
         breadcrumb={[
-          { label: "Membresías", href: "/memberships" },
+          { label: "Socios", href: "/memberships" },
           { label: personLabel },
         ]}
         actions={

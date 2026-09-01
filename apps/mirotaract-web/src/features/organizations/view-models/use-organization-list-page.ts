@@ -28,7 +28,10 @@ export function useOrganizationListPage(filters: OrganizationListFilters): {
   goPrevious: () => void;
   goNext: () => void;
 } {
-  const query = useOrganizations(filters);
+  // The District 4845 directory is intentionally complete at its current
+  // scale. It still keeps the Kernel cursor flow for installations with more
+  // than 100 clubs, but avoids hiding ordinary clubs behind a default page.
+  const query = useOrganizations({ ...filters, limit: 100 });
   const [pageIndex, setPageIndex] = useState(0);
 
   // A filter change means a different query key — a stale pageIndex left

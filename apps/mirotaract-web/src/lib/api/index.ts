@@ -53,3 +53,5 @@ export type * from "./transfers/transfers.types";
 export * from "./modules/modules.hooks";
 export * from "./modules/modules.keys";
 export type * from "./modules/modules.types";
+
+export * from "./administration/administrative-user-directory.hooks";

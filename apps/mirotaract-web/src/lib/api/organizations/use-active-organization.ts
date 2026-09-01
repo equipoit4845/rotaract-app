@@ -19,14 +19,14 @@ function persistId(id: string | undefined): void {
 
 /**
  * The organization the signed-in person is currently acting in. A person
- * can hold memberships in several organizations (`UserContext.memberships`,
- * kernel-openapi.yaml) — this only persists the chosen *id*, never a copy
- * of the organization object, so it can't drift from the server record.
+ * can work in several organizations (`UserContext.workspaces`) through an
+ * active membership or a scoped role such as DISTRICT_RDR. This only
+ * persists the chosen *id*, never a copy of the organization object.
  *
- * Falls back to the first ACTIVE membership whenever the current selection
- * isn't (or is no longer) one — on first load, and again if the active
- * organization's membership is later ended, transferred out, or otherwise
- * stops being ACTIVE (not just when there was no selection to begin with).
+ * Falls back to the first available workspace whenever the current selection
+ * is no longer authorized. This allows a district officer to switch between
+ * the district workspace and its clubs without inventing district
+ * memberships in the Kernel data model.
  */
 export function useActiveOrganization() {
   const { data: currentUser } = useCurrentUser();
@@ -36,15 +36,13 @@ export function useActiveOrganization() {
 
   useEffect(() => {
     if (!currentUser) return;
-    const activeMemberships = currentUser.memberships.filter(
-      (m) => m.status === "ACTIVE",
-    );
-    const stillActive = activeMemberships.some(
-      (m) => m.organizationId === organizationId,
-    );
-    if (stillActive) return;
+    const workspaces = currentUser.workspaces ?? currentUser.memberships
+      .filter((membership) => membership.status === "ACTIVE")
+      .map((membership) => ({ organizationId: membership.organizationId }));
+    if (workspaces.some((workspace) => workspace.organizationId === organizationId))
+      return;
 
-    const fallback = activeMemberships[0]?.organizationId;
+    const fallback = workspaces[0]?.organizationId;
     setOrganizationIdState(fallback);
     persistId(fallback);
   }, [organizationId, currentUser]);
@@ -54,12 +52,18 @@ export function useActiveOrganization() {
     persistId(id);
   }, []);
 
-  const isActiveMember =
+  const isAvailableWorkspace =
+    currentUser?.workspaces?.some(
+      (workspace) => workspace.organizationId === organizationId,
+    ) ??
     currentUser?.memberships.some(
-      (m) => m.organizationId === organizationId && m.status === "ACTIVE",
-    ) ?? true;
+      (membership) =>
+        membership.organizationId === organizationId &&
+        membership.status === "ACTIVE",
+    ) ??
+    true;
   const organizationQuery = useOrganization(
-    isActiveMember ? organizationId : undefined,
+    isAvailableWorkspace ? organizationId : undefined,
   );
 
   return {
@@ -67,6 +71,7 @@ export function useActiveOrganization() {
     organization: organizationQuery.data,
     isLoading: organizationQuery.isLoading,
     availableMemberships: currentUser?.memberships ?? [],
+    availableWorkspaces: currentUser?.workspaces ?? [],
     setActiveOrganizationId,
   };
 }

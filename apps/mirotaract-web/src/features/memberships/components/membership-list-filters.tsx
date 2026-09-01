@@ -47,11 +47,11 @@ export function MembershipOrganizationFilter({
 }) {
   return (
     <Select
-      aria-label="Filtrar por organización"
+      aria-label="Filtrar por club"
       value={value ?? ""}
       onChange={(event) => onChange(event.target.value || undefined)}
     >
-      <option value="">Elegí una organización</option>
+      <option value="">Elegí un club</option>
       {organizations.map((organization) => (
         <option key={organization.id} value={organization.id}>
           {organization.name}

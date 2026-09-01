@@ -2,6 +2,7 @@ import "@equipoit4845/design-tokens/tokens.css";
 import "@equipoit4845/design-tokens/reset.css";
 import "@equipoit4845/ui/styles.css";
 import "@equipoit4845/admin-shell/styles.css";
+import "./legacy-admin-theme.css";
 
 import { mrThemeProps } from "@equipoit4845/design-tokens";
 import type { Metadata } from "next";

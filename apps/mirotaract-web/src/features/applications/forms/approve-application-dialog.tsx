@@ -46,7 +46,7 @@ export function ApproveApplicationDialog({
       }}
       trigger={<Button>Aprobar</Button>}
       title="Aprobar solicitud"
-      description={`Se creará o reactivará la membresía de ${personLabel} en esta organización.`}
+      description={`${personLabel} pasará a figurar como socio/a activo/a de este club.`}
       confirmLabel="Aprobar"
       isPending={approve.isPending}
       errorMessage={

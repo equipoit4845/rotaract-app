@@ -11,7 +11,7 @@ import { Skeleton } from "@equipoit4845/ui";
 
 import { describeKernelError } from "@/features/shell/kernel-error-message";
 
-import { OrganizationListFilters as OrganizationListFiltersRow } from "../components/organization-list-filters";
+import { OrganizationStatusFilter } from "../components/organization-list-filters";
 import { OrganizationSearchInput } from "../components/organization-search-input";
 import { OrganizationsTable } from "../components/organizations-table";
 import { useOrganizationListFilters } from "../view-models/use-organization-list-filters";
@@ -19,16 +19,20 @@ import { useOrganizationListPage } from "../view-models/use-organization-list-pa
 import { CreateOrganizationDialog } from "../forms/create-organization-dialog";
 
 export function OrganizationsListContainer() {
-  const { filters, setType, setStatus, setQuery } =
+  const { filters: urlFilters, setStatus, setQuery } =
     useOrganizationListFilters();
+  // Distrito 4845 is a fixed tenant context in this Web. The operational
+  // directory is therefore the club directory; the underlying Kernel keeps
+  // its generic Organization aggregate and hierarchy intact.
+  const filters = { ...urlFilters, type: "CLUB" as const };
   const page = useOrganizationListPage(filters);
   const canCreate = useCan("kernel.organization.create");
 
   return (
     <>
       <PageHeader
-        title="Organizaciones"
-        description="Distritos, clubes y otras organizaciones institucionales."
+        title="Clubes"
+        description="Clubes del Distrito 4845 y su información institucional."
         actions={canCreate ? <CreateOrganizationDialog /> : undefined}
       />
 
@@ -37,11 +41,9 @@ export function OrganizationsListContainer() {
           <OrganizationSearchInput value={filters.query} onCommit={setQuery} />
         }
         filters={
-          <OrganizationListFiltersRow
-            type={filters.type}
-            status={filters.status}
-            onTypeChange={setType}
-            onStatusChange={setStatus}
+          <OrganizationStatusFilter
+            value={filters.status}
+            onChange={setStatus}
           />
         }
       />
@@ -64,14 +66,14 @@ export function OrganizationsListContainer() {
       ) : page.items.length === 0 ? (
         <DataState
           kind="empty"
-          title="Sin organizaciones"
-          description="No encontramos organizaciones con estos filtros."
+          title="Sin clubes"
+          description="No encontramos clubes con estos filtros."
         />
       ) : (
         <>
           <OrganizationsTable items={page.items} />
           <DataPagination
-            summary={`${page.items.length} organización(es) en esta página`}
+            summary={`${page.items.length} club(es) en esta página`}
             hasPrevious={page.hasPrevious}
             hasNext={page.hasNext}
             onPrevious={page.goPrevious}

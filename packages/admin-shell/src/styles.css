@@ -296,6 +296,11 @@
   background: var(--mr-color-surface);
   padding: var(--mr-space-5);
 }
+.mr-admin-frame__sidebar-footer {
+  margin-top: auto;
+  border-top: 1px solid var(--mr-color-border);
+  padding-top: var(--mr-space-3);
+}
 .mr-admin-frame__brand {
   display: flex;
   align-items: center;

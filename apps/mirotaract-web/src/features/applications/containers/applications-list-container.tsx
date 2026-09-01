@@ -55,8 +55,8 @@ export function ApplicationsListContainer() {
   return (
     <>
       <PageHeader
-        title="Solicitudes de membresía"
-        description="Solicitudes de ingreso, con estado y revisión."
+        title="Solicitudes de ingreso"
+        description="Solicitudes para sumarse al club, con estado y revisión."
         actions={
           canCreate && organizationId ? (
             <CreateApplicationDialog organizationId={organizationId} />

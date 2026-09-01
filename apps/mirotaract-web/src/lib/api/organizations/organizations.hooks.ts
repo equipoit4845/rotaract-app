@@ -6,6 +6,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 import { organizationsApi } from "./organizations.api";
 import { organizationKeys } from "./organizations.keys";
@@ -17,6 +18,7 @@ import type {
 
 export function useOrganizations(
   filters: Omit<OrganizationFilters, "cursor"> = {},
+  options: { enabled?: boolean } = {},
 ) {
   return useInfiniteQuery({
     queryKey: organizationKeys.list(filters),
@@ -27,7 +29,30 @@ export function useOrganizations(
       lastPage.pageInfo?.hasMore
         ? (lastPage.pageInfo?.nextCursor ?? undefined)
         : undefined,
+    enabled: options.enabled,
   });
+}
+
+/** Loads every cursor page for administrative directories without replacing the Kernel cursor contract. */
+export function useAllOrganizations(
+  filters: Omit<OrganizationFilters, "cursor"> = {},
+  options: { enabled?: boolean } = {},
+) {
+  const query = useOrganizations(
+    { ...filters, limit: filters.limit ?? 100 },
+    options,
+  );
+
+  useEffect(() => {
+    if (query.hasNextPage && !query.isFetchingNextPage) {
+      void query.fetchNextPage();
+    }
+  }, [query.fetchNextPage, query.hasNextPage, query.isFetchingNextPage]);
+
+  return {
+    ...query,
+    items: query.data?.pages.flatMap((page) => page.items ?? []) ?? [],
+  };
 }
 
 export function useOrganization(organizationId: string | undefined) {

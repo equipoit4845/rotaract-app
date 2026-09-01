@@ -60,7 +60,7 @@ export function PersonDetailContainer({ personId }: { personId: string }) {
         title={personDisplayName(person)}
         description={person.archivedAt ? "Persona archivada" : undefined}
         breadcrumb={[
-          { label: "Personas", href: "/persons" },
+          { label: "Usuarios y socios", href: "/persons" },
           { label: personDisplayName(person) },
         ]}
         actions={<PersonActionsRow person={person} />}
@@ -68,7 +68,7 @@ export function PersonDetailContainer({ personId }: { personId: string }) {
       <Tabs defaultValue="identity">
         <TabsList>
           <TabsTrigger value="identity">Identidad</TabsTrigger>
-          <TabsTrigger value="memberships">Membresías</TabsTrigger>
+          <TabsTrigger value="memberships">Clubes</TabsTrigger>
           <TabsTrigger value="account">Cuenta</TabsTrigger>
           <TabsTrigger value="history">Historial</TabsTrigger>
         </TabsList>

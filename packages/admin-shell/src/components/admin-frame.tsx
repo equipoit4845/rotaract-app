@@ -16,6 +16,8 @@ export type AdminFrameProps = {
   organizationSwitcher?: ReactNode;
   periodIndicator?: ReactNode;
   user?: ReactNode;
+  /** Optional presentational footer for the application-owned account summary. */
+  sidebarFooter?: ReactNode;
   actions?: ReactNode;
   children: ReactNode;
   className?: string;
@@ -32,6 +34,7 @@ export function AdminFrame({
   organizationSwitcher,
   periodIndicator,
   user,
+  sidebarFooter,
   actions,
   children,
   className,
@@ -60,6 +63,9 @@ export function AdminFrame({
             </a>
           ))}
         </nav>
+        {sidebarFooter ? (
+          <div className="mr-admin-frame__sidebar-footer">{sidebarFooter}</div>
+        ) : null}
       </aside>
       <div className="mr-admin-frame__main">
         <header className="mr-admin-frame__header">

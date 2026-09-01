@@ -15,7 +15,7 @@ export function useOrganizationCandidates(): {
   candidates: Organization[];
   isLoading: boolean;
 } {
-  const query = useOrganizations({ status: "ACTIVE" });
+  const query = useOrganizations({ type: "CLUB", status: "ACTIVE", limit: 100 });
   const candidates = (query.data?.pages ?? []).flatMap(
     (page) => page.items ?? [],
   );

@@ -3,6 +3,7 @@
 import {
   useInfiniteQuery,
   useMutation,
+  useQueries,
   useQuery,
   useQueryClient,
   type QueryClient,
@@ -51,6 +52,26 @@ export function usePersonMemberships(personId: string | undefined) {
     queryFn: ({ signal }) =>
       membershipsApi.listByPerson(personId as string, { signal }),
     enabled: Boolean(personId),
+  });
+}
+
+/**
+ * Read memberships for a directory of clubs. It belongs to the API layer so
+ * feature components never import an `*.api.ts` client directly.
+ */
+export function useOrganizationMembershipDirectories(
+  organizationIds: readonly string[],
+  options: { enabled?: boolean } = {},
+) {
+  const ids = [...new Set(organizationIds)].sort();
+  return useQueries({
+    queries: ids.map((organizationId) => ({
+      queryKey: membershipKeys.organizationList(organizationId, { limit: 100 }),
+      queryFn: ({ signal }: { signal: AbortSignal }) =>
+        membershipsApi.listByOrganization(organizationId, { limit: 100 }, { signal }),
+      enabled: options.enabled !== false,
+      staleTime: 60_000,
+    })),
   });
 }
 

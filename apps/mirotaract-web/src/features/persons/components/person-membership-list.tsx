@@ -31,7 +31,7 @@ export function PersonMembershipList({ personId }: { personId: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Membresías</CardTitle>
+        <CardTitle>Clubes y relaciones</CardTitle>
       </CardHeader>
       <CardContent>
         {membershipsQuery.isLoading ? (
@@ -53,14 +53,14 @@ export function PersonMembershipList({ personId }: { personId: string }) {
         ) : !membershipsQuery.data || membershipsQuery.data.length === 0 ? (
           <DataState
             kind="empty"
-            title="Sin membresías"
-            description="Esta persona todavía no tiene membresías registradas."
+            title="Sin clubes relacionados"
+            description="Esta persona todavía no tiene una relación de socio registrada."
           />
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Organización</TableHead>
+                <TableHead>Club</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead>Inicio</TableHead>
                 <TableHead>Fin</TableHead>

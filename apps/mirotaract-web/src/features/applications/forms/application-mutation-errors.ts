@@ -17,7 +17,7 @@ export function describeCreateApplicationError(
 ): KernelErrorMessage {
   if (error instanceof KernelApiError && error.status === 409) {
     return {
-      title: "Ya tenés una solicitud abierta para esta organización.",
+      title: "Ya tenés una solicitud abierta para este club.",
       description: error.detail,
     };
   }

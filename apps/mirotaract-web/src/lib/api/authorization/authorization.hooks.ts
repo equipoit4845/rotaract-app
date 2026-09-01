@@ -22,19 +22,24 @@ export function usePermissions() {
   });
 }
 
-export function useRoles() {
+export function useRoles(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: authorizationKeys.roles(),
     queryFn: ({ signal }) => authorizationApi.listRoles({ signal }),
     staleTime: 5 * 60_000,
+    enabled: options.enabled,
   });
 }
 
-export function useRoleAssignments(filters: RoleAssignmentFilters = {}) {
+export function useRoleAssignments(
+  filters: RoleAssignmentFilters = {},
+  options: { enabled?: boolean } = {},
+) {
   return useQuery({
     queryKey: authorizationKeys.roleAssignmentList(filters),
     queryFn: ({ signal }) =>
       authorizationApi.listRoleAssignments(filters, { signal }),
+    enabled: options.enabled,
   });
 }
 

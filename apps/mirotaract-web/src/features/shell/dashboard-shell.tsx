@@ -7,11 +7,13 @@ import {
 } from "@/lib/api";
 import {
   AdminFrame,
+  Avatar,
   DataState,
   OrganizationSwitcher,
   PeriodIndicator,
 } from "@equipoit4845/admin-shell";
 import { Logo } from "@equipoit4845/icons";
+import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { AccountMenu } from "./account-menu";
@@ -20,6 +22,11 @@ import { AuthGate } from "./auth-gate";
 import { toVisualPeriodStatus } from "./period-status";
 import { useOrganizationOptions } from "./use-organization-options";
 import { useShellNavItems } from "./use-shell-nav";
+import {
+  SuperadminModeProvider,
+  useSuperadminMode,
+} from "./superadmin-mode-context";
+import { SuperadminModeSwitcher } from "./superadmin-mode-switcher";
 
 /**
  * The one place Kernel hooks meet `AdminFrame`. Everything below this
@@ -29,13 +36,19 @@ import { useShellNavItems } from "./use-shell-nav";
 export function DashboardShell({
   activePath,
   children,
+  allowWithoutOrganization = false,
 }: {
   activePath: string;
   children: ReactNode;
+  /** Onboarding is the only authenticated flow before a person is a club member. */
+  allowWithoutOrganization?: boolean;
 }) {
   return (
     <AuthGate>
-      <DashboardShellContent activePath={activePath}>
+      <DashboardShellContent
+        activePath={activePath}
+        allowWithoutOrganization={allowWithoutOrganization}
+      >
         {children}
       </DashboardShellContent>
     </AuthGate>
@@ -45,20 +58,31 @@ export function DashboardShell({
 function DashboardShellContent({
   activePath,
   children,
+  allowWithoutOrganization,
 }: {
   activePath: string;
   children: ReactNode;
+  allowWithoutOrganization: boolean;
 }) {
   const { data: currentUser } = useCurrentUser();
+  const superadminMode = useSuperadminMode(
+    currentUser?.platformRole === "SUPERADMIN",
+  );
   const activeOrganization = useActiveOrganization();
   const { organizationId, organization } = activeOrganization;
   const { data: currentPeriod } = useCurrentPeriod(organizationId);
   const { options: organizationOptions } = useOrganizationOptions();
-  const navItems = useShellNavItems(activePath);
+  const navItems = useShellNavItems(activePath, superadminMode.mode);
 
   return (
-    <AdminFrame
-      brand={<Logo size={20} />}
+    <SuperadminModeProvider value={superadminMode}>
+      <AdminFrame
+      brand={
+        <Link href="/dashboard" className="mr-workspace-brand">
+          <Logo size={20} />
+          <span>Mi Rotaract</span>
+        </Link>
+      }
       navItems={navItems}
       organizationSwitcher={
         organizationOptions.length > 0 ? (
@@ -82,18 +106,43 @@ function DashboardShellContent({
           <AccountMenu displayName={currentUser.displayName} />
         ) : undefined
       }
-    >
-      {organization ? (
+      actions={
+        superadminMode.isSuperadmin ? (
+          <SuperadminModeSwitcher
+            mode={superadminMode.mode}
+            onChange={superadminMode.setMode}
+          />
+        ) : undefined
+      }
+      sidebarFooter={
+        currentUser ? (
+          <div className="mr-workspace-user">
+            <Avatar name={currentUser.displayName} size="sm" />
+            <div style={{ minWidth: 0 }}>
+              <span className="mr-workspace-user__name">
+                {currentUser.displayName}
+              </span>
+              <span className="mr-workspace-user__hint">
+                Distrito 4845
+              </span>
+            </div>
+          </div>
+        ) : undefined
+      }
+      >
         <ActiveOrganizationProvider value={activeOrganization}>
-          {children}
+          {organization || allowWithoutOrganization ? (
+            children
+          ) : (
+            <DataState
+              kind="empty"
+              title="Todavía no pertenecés a un club"
+              description="Buscá tu club y enviá una solicitud. La presidencia del club la revisará antes de habilitar tu espacio de socio."
+              action={<Link href="/join-club">Buscar mi club</Link>}
+            />
+          )}
         </ActiveOrganizationProvider>
-      ) : (
-        <DataState
-          kind="empty"
-          title="Elegí una organización"
-          description="Seleccioná un club o distrito desde el selector de organización para continuar."
-        />
-      )}
-    </AdminFrame>
+      </AdminFrame>
+    </SuperadminModeProvider>
   );
 }

@@ -54,8 +54,8 @@ export function MembershipsListContainer() {
     return (
       <DataState
         kind="empty"
-        title="Elegí una organización"
-        description="Seleccioná una organización para ver sus membresías."
+        title="Elegí un club"
+        description="Seleccioná un club para ver sus socios."
       />
     );
   }
@@ -63,8 +63,8 @@ export function MembershipsListContainer() {
   return (
     <>
       <PageHeader
-        title="Membresías"
-        description="Socios de la organización seleccionada."
+        title="Socios"
+        description="Socios relacionados con el club seleccionado."
         actions={
           canCreate ? (
             <CreateMembershipDialog organizationId={organizationId} />
@@ -103,8 +103,8 @@ export function MembershipsListContainer() {
       ) : page.items.length === 0 ? (
         <DataState
           kind="empty"
-          title="Sin membresías"
-          description="No encontramos membresías con estos filtros."
+          title="Sin socios"
+          description="No encontramos socios con estos filtros."
         />
       ) : (
         <>
