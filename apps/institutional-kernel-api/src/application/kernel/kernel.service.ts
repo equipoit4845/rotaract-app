@@ -47,8 +47,8 @@ import { PrismaService } from "../../infrastructure/prisma/prisma.service";
 
 type Json = Prisma.InputJsonValue;
 type Page<T> = {
-  data: T[];
-  pageInfo: { hasNextPage: boolean; endCursor: string | null };
+  items: T[];
+  pageInfo: { hasMore: boolean; nextCursor: string | null };
 };
 
 /** Application boundary for every institutional aggregate. HTTP adapters never access Prisma. */
@@ -138,10 +138,10 @@ export class KernelService {
   private page<T extends { id: string }>(items: T[], limit: number): Page<T> {
     const data = items.slice(0, limit);
     return {
-      data,
+      items: data,
       pageInfo: {
-        hasNextPage: items.length > limit,
-        endCursor: data.at(-1)?.id ?? null,
+        hasMore: items.length > limit,
+        nextCursor: data.at(-1)?.id ?? null,
       },
     };
   }
@@ -186,7 +186,9 @@ export class KernelService {
               ]
             : undefined,
         },
-        orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+        orderBy: [{ lastName: "asc" }, { firstName: "asc" }, { id: "asc" }],
+        cursor: query.cursor ? { id: String(query.cursor) } : undefined,
+        skip: query.cursor ? 1 : undefined,
         take: limit + 1,
       })
       .then((values) => this.page(values, limit));
@@ -301,7 +303,13 @@ export class KernelService {
         : undefined,
     };
     return this.prisma.organization
-      .findMany({ where, orderBy: { name: "asc" }, take: limit + 1 })
+      .findMany({
+        where,
+        orderBy: [{ name: "asc" }, { id: "asc" }],
+        cursor: query.cursor ? { id: String(query.cursor) } : undefined,
+        skip: query.cursor ? 1 : undefined,
+        take: limit + 1,
+      })
       .then((values) => this.page(values, limit));
   }
   getOrganization(id: string) {
@@ -516,12 +524,27 @@ export class KernelService {
       },
     );
   }
-  listMemberships(organizationId: string, query: any = {}) {
-    return this.prisma.organizationMembership.findMany({
-      where: { organizationId, status: query.status, personId: query.personId },
-      include: { person: true },
-      orderBy: { createdAt: "asc" },
-    });
+  listMemberships(organizationId: string, query: any = {}): Promise<Page<any>> {
+    const limit = Math.min(Math.max(Number(query.limit) || 20, 1), 100);
+    const statuses = Array.isArray(query.status)
+      ? query.status
+      : query.status
+        ? [query.status]
+        : undefined;
+    return this.prisma.organizationMembership
+      .findMany({
+        where: {
+          organizationId,
+          status: statuses ? { in: statuses } : undefined,
+          personId: query.personId,
+        },
+        include: { person: true },
+        orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+        cursor: query.cursor ? { id: String(query.cursor) } : undefined,
+        skip: query.cursor ? 1 : undefined,
+        take: limit + 1,
+      })
+      .then((values) => this.page(values, limit));
   }
   getMembership(id: string) {
     return this.prisma.organizationMembership.findUniqueOrThrow({
@@ -1381,24 +1404,47 @@ export class KernelService {
   }
 
   // Membership applications and transfers
-  createApplication(input: any, context?: CommandContext) {
+  async createApplication(input: any, context?: CommandContext) {
+    // `CreateMembershipApplicationRequest` deliberately has no personId:
+    // a self-service request always belongs to the authenticated person.
+    // Keeping this binding here (rather than trusting HTTP input) also makes
+    // the invariant hold for any future adapter.
+    const requesterPersonId =
+      context?.actor.type === "USER" ? context.actor.id : input.requesterPersonId;
+    if (!requesterPersonId)
+      throw new BadRequestException(
+        "A membership application requires an authenticated requester",
+      );
     return this.mutate(
       "CreateMembershipApplication",
       context,
-      input,
+      { organizationId: input.organizationId, message: input.message },
       {
         type: "MembershipApplication",
         id: "pending",
         organizationId: input.organizationId,
       },
       async (tx) => {
+        // Self-service onboarding is intentionally club-only. District
+        // authority is granted through an appointment, never through an
+        // artificial district membership (§6.6.3).
+        const organization = await tx.organization.findUnique({
+          where: { id: input.organizationId },
+          select: { id: true, type: true, status: true },
+        });
+        if (!organization || organization.status !== "ACTIVE")
+          throw new BadRequestException("Only active clubs accept requests");
+        if (organization.type !== "CLUB")
+          throw new BadRequestException(
+            "Membership applications are submitted to a club",
+          );
         // 6.8.2: a person already ACTIVE in the organization cannot open a
         // new application for it.
         const activeMembership = await tx.organizationMembership.findUnique({
           where: {
             organizationId_personId: {
               organizationId: input.organizationId,
-              personId: input.requesterPersonId,
+              personId: requesterPersonId,
             },
           },
         });
@@ -1406,8 +1452,25 @@ export class KernelService {
           throw new ConflictException(
             "Person already has an active membership in this organization",
           );
+        const openApplication = await tx.membershipApplication.findFirst({
+          where: {
+            organizationId: input.organizationId,
+            requesterPersonId,
+            status: { in: ["DRAFT", "SUBMITTED"] },
+          },
+          select: { id: true },
+        });
+        if (openApplication)
+          throw new ConflictException(
+            "Person already has an open membership application for this club",
+          );
         return tx.membershipApplication.create({
-          data: { ...input, expiresAt: this.date(input.expiresAt) },
+          data: {
+            organizationId: input.organizationId,
+            requesterPersonId,
+            message: input.message?.trim() || null,
+            expiresAt: this.date(input.expiresAt),
+          },
         });
       },
     );
@@ -1443,12 +1506,7 @@ export class KernelService {
       `${target}MembershipApplication`,
       context,
       { id, target, input },
-      {
-        type: "MembershipApplication",
-        id,
-        event: events[target],
-        payload: { applicationId: id, status: target },
-      },
+      { type: "MembershipApplication", id },
       async (tx) => {
         const application = await tx.membershipApplication.findUniqueOrThrow({
           where: { id },
@@ -1457,31 +1515,65 @@ export class KernelService {
         if (target === "REJECTED" && !input.rejectionReason && !input.reason)
           throw new BadRequestException("A rejection reason is required");
         let membershipId = application.membershipId;
+        const now = new Date();
         if (target === "APPROVED") {
-          const membership = await tx.organizationMembership.upsert({
-            where: {
-              organizationId_personId: {
-                organizationId: application.organizationId,
-                personId: application.requesterPersonId,
+          const existingMembership =
+            await tx.organizationMembership.findUnique({
+              where: {
+                organizationId_personId: {
+                  organizationId: application.organizationId,
+                  personId: application.requesterPersonId,
+                },
               },
+            });
+          if (existingMembership?.status === "ACTIVE")
+            throw new ConflictException(
+              "Person already has an active membership in this club",
+            );
+
+          const membership = existingMembership
+            ? await tx.organizationMembership.update({
+                where: { id: existingMembership.id },
+                data: {
+                  status: "ACTIVE",
+                  statusChangedAt: now,
+                  joinedAt: existingMembership.joinedAt ?? now,
+                  endedAt: null,
+                },
+              })
+            : await tx.organizationMembership.create({
+                data: {
+                  organizationId: application.organizationId,
+                  personId: application.requesterPersonId,
+                  status: "ACTIVE",
+                  joinedAt: now,
+                },
+              });
+          await tx.membershipTransition.create({
+            data: {
+              membershipId: membership.id,
+              type: existingMembership
+                ? existingMembership.status === "PENDING"
+                  ? MembershipTransitionType.ACTIVATED
+                  : MembershipTransitionType.REACTIVATED
+                : MembershipTransitionType.CREATED,
+              fromStatus: existingMembership?.status,
+              toStatus: MembershipStatus.ACTIVE,
+              effectiveAt: now,
+              performedById: this.context(context).actor.id,
+              commandId: this.context(context).commandId,
+              reasonCode: "MEMBERSHIP_APPLICATION_APPROVED",
             },
-            create: {
-              organizationId: application.organizationId,
-              personId: application.requesterPersonId,
-              status: "PENDING",
-            },
-            update: { status: "PENDING", endedAt: null },
           });
           membershipId = membership.id;
         }
-        return tx.membershipApplication.update({
+        const updated = await tx.membershipApplication.update({
           where: { id },
           data: {
             status: target,
-            submittedAt:
-              target === "SUBMITTED" ? new Date() : application.submittedAt,
+            submittedAt: target === "SUBMITTED" ? now : application.submittedAt,
             reviewedAt: ["APPROVED", "REJECTED"].includes(target)
-              ? new Date()
+              ? now
               : application.reviewedAt,
             reviewedById: ["APPROVED", "REJECTED"].includes(target)
               ? this.context(context).actor.id
@@ -1493,6 +1585,35 @@ export class KernelService {
             membershipId,
           },
         });
+        // The Notifications module consumes exactly these contractual events.
+        // Kernel deliberately records them in the transactional Outbox instead
+        // of sending mail from this command, so an approved request can never
+        // be persisted without a durable notification intent.
+        const payload: Record<string, string> = {
+          applicationId: id,
+          organizationId: application.organizationId,
+          requesterPersonId: application.requesterPersonId,
+        };
+        if (target === "APPROVED") {
+          payload.membershipId = membershipId!;
+          payload.reviewedById = this.context(context).actor.id ?? "system";
+        }
+        if (target === "REJECTED") {
+          payload.reviewedById = this.context(context).actor.id ?? "system";
+          payload.rejectionReason = input.rejectionReason ?? input.reason;
+        }
+        const event = events[target];
+        if (event)
+          await this.outbox.record(
+            tx,
+            event,
+            "MembershipApplication",
+            id,
+            payload,
+            this.context(context),
+            application.organizationId,
+          );
+        return updated;
       },
     );
   }
@@ -1939,14 +2060,86 @@ export class KernelService {
   // Service SDK read model
   // §12.2: shape consumed by KernelClient.getUserContext().
   async userContext(accountId: string) {
+    const now = new Date();
     const account = await this.prisma.userAccount.findUniqueOrThrow({
       where: { id: accountId },
       include: {
         person: {
-          include: { memberships: { include: { organization: true } } },
+          include: {
+            memberships: { include: { organization: true } },
+            roleAssignments: {
+              where: {
+                effect: AssignmentEffect.ALLOW,
+                revokedAt: null,
+                validFrom: { lte: now },
+                OR: [{ validUntil: null }, { validUntil: { gt: now } }],
+                organizationId: { not: null },
+              },
+              include: { organization: true, roleDefinition: true },
+            },
+          },
         },
       },
     });
+    const workspaceMap = new Map<
+      string,
+      {
+        organizationId: string;
+        name: string;
+        organizationType: string;
+        sources: Set<"MEMBERSHIP" | "ROLE_ASSIGNMENT">;
+        roleCodes: Set<string>;
+      }
+    >();
+    const addWorkspace = (
+      organization: { id: string; name: string; type: string },
+      source: "MEMBERSHIP" | "ROLE_ASSIGNMENT",
+      roleCode?: string,
+    ) => {
+      const workspace = workspaceMap.get(organization.id) ?? {
+        organizationId: organization.id,
+        name: organization.name,
+        organizationType: organization.type,
+        sources: new Set<"MEMBERSHIP" | "ROLE_ASSIGNMENT">(),
+        roleCodes: new Set<string>(),
+      };
+      workspace.sources.add(source);
+      if (roleCode) workspace.roleCodes.add(roleCode);
+      workspaceMap.set(organization.id, workspace);
+    };
+    for (const membership of account.person.memberships) {
+      if (membership.status === "ACTIVE")
+        addWorkspace(membership.organization, "MEMBERSHIP");
+    }
+    for (const assignment of account.person.roleAssignments) {
+      if (assignment.organization?.status === "ACTIVE")
+        addWorkspace(
+          assignment.organization,
+          "ROLE_ASSIGNMENT",
+          assignment.roleDefinition.code,
+        );
+    }
+    const districtTreeAssignments = account.person.roleAssignments.filter(
+      (assignment) =>
+        assignment.scopeType === ScopeType.ORGANIZATION_TREE &&
+        assignment.organization?.type === "DISTRICT",
+    );
+    const districtIds = districtTreeAssignments
+      .map((assignment) => assignment.organizationId)
+      .filter((id): id is string => Boolean(id));
+    if (districtIds.length) {
+      const clubs = await this.prisma.organization.findMany({
+        where: { parentId: { in: districtIds }, status: "ACTIVE" },
+        select: { id: true, name: true, type: true, parentId: true },
+      });
+      for (const club of clubs) {
+        const roleCodes = districtTreeAssignments
+          .filter((assignment) => assignment.organizationId === club.parentId)
+          .map((assignment) => assignment.roleDefinition.code);
+        for (const roleCode of roleCodes)
+          addWorkspace(club, "ROLE_ASSIGNMENT", roleCode);
+      }
+    }
     return {
       accountId: account.id,
       personId: account.personId,
@@ -1961,6 +2154,18 @@ export class KernelService {
         organizationType: membership.organization.type,
         status: membership.status,
       })),
+      workspaces: [...workspaceMap.values()]
+        .map((workspace) => ({
+          ...workspace,
+          sources: [...workspace.sources],
+          roleCodes: [...workspace.roleCodes],
+        }))
+        .sort(
+          (left, right) =>
+            Number(right.organizationType === "DISTRICT") -
+              Number(left.organizationType === "DISTRICT") ||
+            left.name.localeCompare(right.name),
+        ),
       // Monotonic snapshot marker; not tied to a per-mutation counter.
       contextVersion: Date.now(),
     };

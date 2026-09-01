@@ -190,6 +190,10 @@ Fuente: `kernel-spec.md` §12.2.
 | `memberships[].organizationId` | string | no | |
 | `memberships[].organizationType` | `"DISTRICT" \| "CLUB" \| "OTHER"` | no | |
 | `memberships[].status` | string | no | Uno de `MembershipStatus` (§5). |
+| `workspaces` | array | sí | Contextos seleccionables de la Web. Une las membresías activas con las organizaciones alcanzables por un rol vigente; no sustituye ni altera la semántica de `memberships`. |
+| `workspaces[].organizationId` / `name` / `organizationType` | string | no | Organización que puede elegirse como workspace. |
+| `workspaces[].sources` | `"MEMBERSHIP" \| "ROLE_ASSIGNMENT"`[] | no | Explica por qué la organización es seleccionable. |
+| `workspaces[].roleCodes` | string[] | no | Roles vigentes que habilitan ese workspace; vacío si sólo proviene de membresía. |
 | `contextVersion` | integer | no | Se incrementa ante cualquier cambio que afecte el contexto (nueva membresía, cambio de rol de plataforma, etc.); usarlo para decidir si una copia cacheada sigue vigente sin comparar campo a campo. |
 
 Regla explícita (§14.2): el access token JWT **no** incluye todas las

@@ -92,6 +92,10 @@ const selfServicePermissions = [
   "kernel.account.update.self",
   "kernel.person.read.self",
   "kernel.person.update.self",
+  // A verified person must be able to find an active club before they have
+  // a membership. This is directory visibility only; every club operation
+  // remains protected by its own scoped permission.
+  "kernel.organization.read",
   "kernel.application.create.self",
   "kernel.application.read.self",
   "kernel.application.cancel.self",

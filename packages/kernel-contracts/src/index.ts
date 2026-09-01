@@ -36,6 +36,14 @@ export type UserContext = {
     organizationType: "DISTRICT" | "CLUB" | "OTHER";
     status: string;
   }>;
+  /** Selectable administrative contexts, derived from memberships and roles. */
+  workspaces?: Array<{
+    organizationId: string;
+    name: string;
+    organizationType: "DISTRICT" | "CLUB" | "OTHER";
+    sources: Array<"MEMBERSHIP" | "ROLE_ASSIGNMENT">;
+    roleCodes: string[];
+  }>;
   contextVersion: number;
 };
 

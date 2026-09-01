@@ -1837,7 +1837,7 @@ export interface components {
         /**
          * @description Problem Details (RFC 9457).
          * @example {
-         *       "type": "https://api.agendai.com.ar/errors/invalid-transition",
+         *       "type": "https://api.rotaract4845.com/errors/invalid-transition",
          *       "title": "Invalid state transition",
          *       "status": 409,
          *       "code": "KERNEL_INVALID_TRANSITION",
@@ -2497,6 +2497,14 @@ export interface components {
                 organizationId: string;
                 organizationType: components["schemas"]["OrganizationType"];
                 status: string;
+            }[];
+            /** @description Contextos organizacionales que la persona puede seleccionar en la Web. Incluye membresías activas y organizaciones alcanzables por una asignación de rol vigente; no reemplaza memberships. */
+            workspaces?: {
+                organizationId: string;
+                name: string;
+                organizationType: components["schemas"]["OrganizationType"];
+                sources: ("MEMBERSHIP" | "ROLE_ASSIGNMENT")[];
+                roleCodes: string[];
             }[];
             contextVersion: number;
         };

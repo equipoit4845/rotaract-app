@@ -8,7 +8,12 @@ import {
 import { JwtService } from "@nestjs/jwt";
 import * as argon2 from "argon2";
 import { randomBytes, randomUUID } from "crypto";
-import { AccountStatus, InvitationStatus, Prisma } from "@prisma/client";
+import {
+  AccountStatus,
+  AssignmentEffect,
+  InvitationStatus,
+  Prisma,
+} from "@prisma/client";
 import { PrismaService } from "../../infrastructure/prisma/prisma.service";
 import { OutboxService } from "../outbox/outbox.service";
 import { AuditService } from "../audit/audit.service";
@@ -648,11 +653,121 @@ export class AuthService {
     return this.publicAccount(updated);
   }
   async me(accountId: string): Promise<object> {
+    const now = new Date();
     const account = await this.prisma.userAccount.findUniqueOrThrow({
       where: { id: accountId },
-      include: { person: true },
+      include: {
+        person: {
+          include: {
+            memberships: { include: { organization: true } },
+            roleAssignments: {
+              where: {
+                effect: AssignmentEffect.ALLOW,
+                revokedAt: null,
+                validFrom: { lte: now },
+                OR: [{ validUntil: null }, { validUntil: { gt: now } }],
+                organizationId: { not: null },
+              },
+              include: { organization: true, roleDefinition: true },
+            },
+          },
+        },
+      },
     });
-    return { account: this.publicAccount(account), person: account.person };
+    const workspaceMap = new Map<
+      string,
+      {
+        organizationId: string;
+        name: string;
+        organizationType: string;
+        sources: Set<"MEMBERSHIP" | "ROLE_ASSIGNMENT">;
+        roleCodes: Set<string>;
+      }
+    >();
+    const roleAssignments = account.person.roleAssignments ?? [];
+    const addWorkspace = (
+      organization: { id: string; name: string; type: string },
+      source: "MEMBERSHIP" | "ROLE_ASSIGNMENT",
+      roleCode?: string,
+    ) => {
+      const workspace = workspaceMap.get(organization.id) ?? {
+        organizationId: organization.id,
+        name: organization.name,
+        organizationType: organization.type,
+        sources: new Set<"MEMBERSHIP" | "ROLE_ASSIGNMENT">(),
+        roleCodes: new Set<string>(),
+      };
+      workspace.sources.add(source);
+      if (roleCode) workspace.roleCodes.add(roleCode);
+      workspaceMap.set(organization.id, workspace);
+    };
+    for (const membership of account.person.memberships) {
+      if (membership.status === "ACTIVE")
+        addWorkspace(membership.organization, "MEMBERSHIP");
+    }
+    for (const assignment of roleAssignments) {
+      if (assignment.organization?.status === "ACTIVE")
+        addWorkspace(
+          assignment.organization,
+          "ROLE_ASSIGNMENT",
+          assignment.roleDefinition.code,
+        );
+    }
+    // The v1 hierarchy is district -> club. A district-tree assignment is
+    // therefore also a workspace grant for each active child club.
+    const districtTreeAssignments = roleAssignments.filter(
+      (assignment) =>
+        assignment.scopeType === "ORGANIZATION_TREE" &&
+        assignment.organization?.type === "DISTRICT",
+    );
+    const districtIds = districtTreeAssignments
+      .map((assignment) => assignment.organizationId)
+      .filter((id): id is string => Boolean(id));
+    if (districtIds.length) {
+      const clubs = await this.prisma.organization.findMany({
+        where: { parentId: { in: districtIds }, status: "ACTIVE" },
+        select: { id: true, name: true, type: true, parentId: true },
+      });
+      for (const club of clubs) {
+        const roleCodes = districtTreeAssignments
+          .filter((assignment) => assignment.organizationId === club.parentId)
+          .map((assignment) => assignment.roleDefinition.code);
+        for (const roleCode of roleCodes)
+          addWorkspace(club, "ROLE_ASSIGNMENT", roleCode);
+      }
+    }
+    // This is the public UserContext declared by OpenAPI.  The Web Shell
+    // uses the active memberships to select its organization; returning the
+    // account/person database shape here left every authenticated user with
+    // an empty administrative context.
+    return {
+      accountId: account.id,
+      personId: account.personId,
+      accountStatus: account.status,
+      platformRole: account.platformRole,
+      displayName:
+        account.person.displayName ??
+        `${account.person.firstName} ${account.person.lastName}`,
+      memberships: account.person.memberships.map((membership) => ({
+        membershipId: membership.id,
+        organizationId: membership.organizationId,
+        organizationType: membership.organization.type,
+        status: membership.status,
+      })),
+      workspaces: [...workspaceMap.values()]
+        .map((workspace) => ({
+          ...workspace,
+          sources: [...workspace.sources],
+          roleCodes: [...workspace.roleCodes],
+        }))
+        .sort(
+          (left, right) =>
+            Number(right.organizationType === "DISTRICT") -
+              Number(left.organizationType === "DISTRICT") ||
+            left.name.localeCompare(right.name),
+        ),
+      contextVersion: Date.now(),
+    };
   }
   async logout(sessionId: string): Promise<void> {
     await this.prisma.$transaction(async (tx) => {

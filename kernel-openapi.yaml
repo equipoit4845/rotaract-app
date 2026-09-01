@@ -3490,6 +3490,29 @@ components:
               organizationType:
                 { $ref: "#/components/schemas/OrganizationType" }
               status: { type: string }
+        workspaces:
+          type: array
+          description: >
+            Contextos organizacionales que la persona puede seleccionar en la
+            Web. Incluye membresías activas y organizaciones alcanzables por
+            una asignación de rol vigente; no reemplaza memberships.
+          items:
+            type: object
+            required:
+              [organizationId, name, organizationType, sources, roleCodes]
+            properties:
+              organizationId: { type: string }
+              name: { type: string }
+              organizationType:
+                { $ref: "#/components/schemas/OrganizationType" }
+              sources:
+                type: array
+                items:
+                  type: string
+                  enum: [MEMBERSHIP, ROLE_ASSIGNMENT]
+              roleCodes:
+                type: array
+                items: { type: string }
         contextVersion: { type: integer }
 
     MembershipSnapshot:

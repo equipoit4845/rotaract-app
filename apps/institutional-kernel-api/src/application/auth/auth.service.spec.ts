@@ -343,3 +343,46 @@ describe("AuthService — baseline PLATFORM_USER role grant (§10.2)", () => {
     expect(prisma.roleAssignment.create).not.toHaveBeenCalled();
   });
 });
+
+describe("AuthService.me — OpenAPI UserContext", () => {
+  it("returns active context data and memberships instead of database entities", async () => {
+    const { auth } = buildAuth({
+      userAccount: {
+        findUniqueOrThrow: jest.fn().mockResolvedValue({
+          id: "account-1",
+          personId: "person-1",
+          status: "ACTIVE",
+          platformRole: "USER",
+          person: {
+            firstName: "Ada",
+            lastName: "Lovelace",
+            displayName: null,
+            memberships: [
+              {
+                id: "membership-1",
+                organizationId: "club-1",
+                status: "ACTIVE",
+                organization: { type: "CLUB" },
+              },
+            ],
+          },
+        }),
+      },
+    });
+
+    await expect(auth.me("account-1")).resolves.toMatchObject({
+      accountId: "account-1",
+      personId: "person-1",
+      accountStatus: "ACTIVE",
+      displayName: "Ada Lovelace",
+      memberships: [
+        {
+          membershipId: "membership-1",
+          organizationId: "club-1",
+          organizationType: "CLUB",
+          status: "ACTIVE",
+        },
+      ],
+    });
+  });
+});

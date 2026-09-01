@@ -153,6 +153,11 @@ describe("KernelService — appointment invariants (6.6)", () => {
 describe("KernelService — membership application invariants (6.8)", () => {
   it("rejects a new application when the person already has an active membership (6.8.2)", async () => {
     const { kernel } = buildKernel({
+      organization: {
+        findUnique: jest
+          .fn()
+          .mockResolvedValue({ id: "org-1", type: "CLUB", status: "ACTIVE" }),
+      },
       organizationMembership: {
         findUnique: jest.fn().mockResolvedValue({ status: "ACTIVE" }),
       },
@@ -164,6 +169,106 @@ describe("KernelService — membership application invariants (6.8)", () => {
         requesterPersonId: "person-1",
       }),
     ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it("binds a self-service application to the authenticated person, never to input", async () => {
+    const { kernel, prisma } = buildKernel({
+      organization: {
+        findUnique: jest
+          .fn()
+          .mockResolvedValue({ id: "club-1", type: "CLUB", status: "ACTIVE" }),
+      },
+      organizationMembership: { findUnique: jest.fn().mockResolvedValue(null) },
+      membershipApplication: {
+        findFirst: jest.fn().mockResolvedValue(null),
+        create: jest.fn().mockImplementation(({ data }: any) => ({
+          id: "application-1",
+          ...data,
+        })),
+      },
+    });
+
+    await kernel.createApplication(
+      {
+        organizationId: "club-1",
+        requesterPersonId: "forged-person-id",
+        message: "Quiero sumarme",
+      },
+      {
+        commandId: "command-1",
+        actor: { type: "USER", id: "actual-person-id" },
+        correlationId: "correlation-1",
+      },
+    );
+
+    expect(prisma.membershipApplication.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ requesterPersonId: "actual-person-id" }),
+      }),
+    );
+  });
+
+  it("approves an application by creating an ACTIVE membership and its history", async () => {
+    const application = {
+      id: "application-1",
+      organizationId: "club-1",
+      requesterPersonId: "person-1",
+      status: "SUBMITTED",
+      membershipId: null,
+      submittedAt: new Date(),
+      reviewedAt: null,
+      reviewedById: null,
+      rejectionReason: null,
+    };
+    const { kernel, prisma, outbox } = buildKernel({
+      membershipApplication: {
+        findUniqueOrThrow: jest.fn().mockResolvedValue(application),
+        update: jest.fn().mockImplementation(({ data }: any) => ({
+          ...application,
+          ...data,
+        })),
+      },
+      organizationMembership: {
+        findUnique: jest.fn().mockResolvedValue(null),
+        create: jest.fn().mockResolvedValue({ id: "membership-1" }),
+      },
+      membershipTransition: { create: jest.fn().mockResolvedValue({}) },
+    });
+
+    const approved = await kernel.transitionApplication(
+      "application-1",
+      "APPROVED",
+      {},
+      {
+        commandId: "command-1",
+        actor: { type: "USER", id: "president-person-id" },
+        correlationId: "correlation-1",
+      },
+    );
+
+    expect(prisma.organizationMembership.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: "ACTIVE", personId: "person-1" }),
+      }),
+    );
+    expect(prisma.membershipTransition.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ toStatus: "ACTIVE", type: "CREATED" }),
+      }),
+    );
+    expect(outbox.record).toHaveBeenCalledWith(
+      expect.anything(),
+      "kernel.membership-application.approved.v1",
+      "MembershipApplication",
+      "application-1",
+      expect.objectContaining({
+        membershipId: "membership-1",
+        reviewedById: "president-person-id",
+      }),
+      expect.anything(),
+      "club-1",
+    );
+    expect(approved.membershipId).toBe("membership-1");
   });
 });
 
