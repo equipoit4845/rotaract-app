@@ -5,8 +5,10 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
   OnGatewayInit,
+  ConnectedSocket,
+  MessageBody,
 } from '@nestjs/websockets';
-import { forwardRef, Inject } from '@nestjs/common';
+import { createParamDecorator, ExecutionContext, forwardRef, Inject } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Server, Socket } from 'socket.io';
 import { VoteChoice, VotingMethod } from '../prisma/client';
@@ -21,6 +23,16 @@ import { isDistrictAdmin, Role } from '../auth/role';
 import { MeetingsTokenPayload } from '../auth/meetings-token';
 
 const MEETING_ROOM_PREFIX = 'meeting:';
+
+/**
+ * The socket.io ack callback. Nest 10 drops it from the handler arguments as
+ * soon as any pipe applies (the global ValidationPipe), so it is read from the
+ * raw WS arguments: [client, data, ack?, pattern].
+ */
+const WsAck = createParamDecorator((_: unknown, ctx: ExecutionContext) => {
+  const args = ctx.getArgs();
+  return args.slice(2).find((a) => typeof a === 'function');
+});
 
 interface SocketWithData {
   id: string;
@@ -160,7 +172,10 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
       if (userId) {
         const lastTabClosed = this.trackUserDisconnect(meetingId, userId, client.id);
         if (lastTabClosed) {
-          await this.markParticipantLeft(meetingId, userId);
+          // Never let a disconnect (e.g. during shutdown) crash the process.
+          await this.markParticipantLeft(meetingId, userId).catch((err) =>
+            console.error(`markParticipantLeft failed for ${meetingId}: ${(err as Error).message}`),
+          );
         }
       }
     }
@@ -186,17 +201,50 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
   }
 
   @SubscribeMessage('join_meeting')
-  async handleJoinMeeting(client: SocketWithData, payload: { meetingId: string; userId?: string }) {
-    return this.doJoinMeeting(client, payload);
+  async handleJoinMeeting(
+    @ConnectedSocket() client: SocketWithData,
+    @MessageBody() payload: { meetingId: string; userId?: string },
+    @WsAck() ack?: unknown,
+  ) {
+    return this.withAck(await this.doJoinMeeting(client, payload ?? ({} as { meetingId: string })), ack);
   }
 
   @SubscribeMessage('meeting.join')
-  async handleMeetingJoin(client: SocketWithData, payload: { meetingId: string; userId?: string }) {
-    return this.doJoinMeeting(client, payload);
+  async handleMeetingJoin(
+    @ConnectedSocket() client: SocketWithData,
+    @MessageBody() payload: { meetingId: string; userId?: string },
+    @WsAck() ack?: unknown,
+  ) {
+    return this.withAck(await this.doJoinMeeting(client, payload ?? ({} as { meetingId: string })), ack);
+  }
+
+  /**
+   * Legacy (Nest 10) returned `{ event, data }`, which Nest *emits* to the
+   * socket (`meeting.snapshot` / `error`) instead of acking. That emission is
+   * kept as is, and the same `{ event, data }` is now also passed to the ack
+   * callback when the client sent one.
+   */
+  private withAck<T>(response: T, ack: unknown): T {
+    if (typeof ack === 'function') {
+      try {
+        (ack as (r: T) => void)(response);
+      } catch {
+        /* client went away */
+      }
+    }
+    return response;
   }
 
   @SubscribeMessage('meeting.toggleTranscription')
   async handleToggleTranscription(
+    @ConnectedSocket() client: SocketWithData,
+    @MessageBody() payload: { meetingId: string; enabled: boolean },
+    @WsAck() ack?: unknown,
+  ) {
+    return this.withAck(await this.doToggleTranscription(client, payload ?? ({} as never)), ack);
+  }
+
+  private async doToggleTranscription(
     client: SocketWithData,
     payload: { meetingId: string; enabled: boolean },
   ) {
@@ -440,7 +488,7 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
   }
 
   @SubscribeMessage('leave_meeting')
-  async handleLeaveMeeting(client: SocketWithData, payload: { meetingId: string }) {
+  async handleLeaveMeeting(@ConnectedSocket() client: SocketWithData, @MessageBody() payload: { meetingId: string }) {
     const meetingId = payload.meetingId;
     if (meetingId) {
       this.trackClubDisconnect(meetingId, client.id);
@@ -460,6 +508,14 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
 
   @SubscribeMessage('vote.submit')
   async handleVoteSubmit(
+    @ConnectedSocket() client: SocketWithData,
+    @MessageBody() payload: { meetingId: string; voteSessionId: string; choice: VoteChoice; candidateId?: string },
+    @WsAck() ack?: unknown,
+  ) {
+    return this.withAck(await this.doVoteSubmit(client, payload ?? ({} as never)), ack);
+  }
+
+  private async doVoteSubmit(
     client: SocketWithData,
     payload: { meetingId: string; voteSessionId: string; choice: VoteChoice; candidateId?: string },
   ) {
