@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { MajorityType, MotionStatus, VotingMethod } from '../prisma/client';
 import { AuditService } from '../audit/audit.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -22,12 +17,7 @@ export class MotionsService {
     private readonly directory: DirectoryService,
   ) {}
 
-  async propose(
-    meetingId: string,
-    userId: string,
-    title: string,
-    description?: string,
-  ) {
+  async propose(meetingId: string, userId: string, title: string, description?: string) {
     const meeting = await this.prisma.meeting.findUnique({
       where: { id: meetingId },
     });
@@ -187,17 +177,12 @@ export class MotionsService {
     });
 
     // Open vote session
-    const voteSession = await this.votingService.openVote(
-      meetingId,
-      topic.id,
-      actorUserId,
-      {
-        votingMethod: options.votingMethod,
-        requiredMajority: options.requiredMajority,
-        ballotType: 'YES_NO',
-        isElection: false,
-      },
-    );
+    const voteSession = await this.votingService.openVote(meetingId, topic.id, actorUserId, {
+      votingMethod: options.votingMethod,
+      requiredMajority: options.requiredMajority,
+      ballotType: 'YES_NO',
+      isElection: false,
+    });
 
     // Update motion status to VOTING
     const updated = await this.prisma.motion.update({

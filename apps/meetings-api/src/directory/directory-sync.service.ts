@@ -1,11 +1,13 @@
-import {
-  Injectable,
-  Logger,
-  OnApplicationBootstrap,
-  OnApplicationShutdown,
-} from '@nestjs/common';
+import { Injectable, Logger, OnApplicationBootstrap, OnApplicationShutdown } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { AuthorityView, KernelClient, KernelHttpError, MemberView, OrganizationView, PersonMembershipView } from './kernel-client';
+import {
+  AuthorityView,
+  KernelClient,
+  KernelHttpError,
+  MemberView,
+  OrganizationView,
+  PersonMembershipView,
+} from './kernel-client';
 
 const SYNC_STATE_ID = 'kernel';
 const DEFAULT_INTERVAL_MS = 5 * 60 * 1000;
@@ -174,6 +176,16 @@ export class DirectorySyncService implements OnApplicationBootstrap, OnApplicati
         update: { name: club.name, code: club.code, status: mapClubStatus(club.status), syncedAt },
       });
     }
+    // Clubs that left the kernel listing (or the app's scope) become INACTIVE;
+    // legacy placeholders ("legacy:club:*") are left alone.
+    await this.prisma.dirClub.updateMany({
+      where: {
+        id: { notIn: clubs.map((c) => c.id) },
+        NOT: { id: { startsWith: 'legacy:' } },
+        status: 'ACTIVE',
+      },
+      data: { status: 'INACTIVE', syncedAt },
+    });
     if (clubs.length > 0) {
       await this.prisma.clubStanding.createMany({
         data: clubs.map((c) => ({ clubId: c.id })),

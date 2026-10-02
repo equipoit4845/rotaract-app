@@ -20,7 +20,8 @@ export class VotingController {
   @Roles(Role.SECRETARY, Role.RDR)
   open(
     @Param('meetingId') meetingId: string,
-    @Body() body: {
+    @Body()
+    body: {
       topicId: string;
       votingMethod?: VotingMethod;
       requiredMajority?: MajorityType;
@@ -137,10 +138,7 @@ export class VotingController {
   @Get('vote/:voteSessionId/detailed')
   @UseGuards(RolesGuard)
   @Roles(Role.SECRETARY, Role.PRESIDENT, Role.RDR)
-  getDetailed(
-    @Param('meetingId') meetingId: string,
-    @Param('voteSessionId') voteSessionId: string,
-  ) {
+  getDetailed(@Param('meetingId') meetingId: string, @Param('voteSessionId') voteSessionId: string) {
     return this.votingService.getDetailedResult(voteSessionId);
   }
 }

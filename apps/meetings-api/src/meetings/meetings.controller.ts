@@ -82,11 +82,7 @@ export class MeetingsController {
   @UseGuards(RolesGuard)
   @Roles(Role.SECRETARY, Role.RDR)
   @UsePipes(new ValidationPipe({ whitelist: true }))
-  update(
-    @Param('id') id: string,
-    @Body() dto: UpdateMeetingDto,
-    @CurrentUser() user: CurrentUserPayload,
-  ) {
+  update(@Param('id') id: string, @Body() dto: UpdateMeetingDto, @CurrentUser() user: CurrentUserPayload) {
     return this.meetingsService.update(id, dto, user.id);
   }
 
@@ -150,8 +146,7 @@ export class MeetingsController {
     @Param('id') id: string,
     @Res({ passthrough: false }) res: import('express').Response,
   ) {
-    const { buffer, filename } =
-      await this.meetingsService.getParticipantsBulkTemplate(id);
+    const { buffer, filename } = await this.meetingsService.getParticipantsBulkTemplate(id);
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.send(buffer);

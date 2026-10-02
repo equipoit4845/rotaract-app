@@ -47,10 +47,8 @@ export class SpeakingQueueService {
       where: { id: requestId, meetingId },
     });
     if (!req) throw new NotFoundException('Solicitud no encontrada');
-    const isModerator =
-      userRole === Role.SECRETARY || userRole === Role.RDR || userRole === Role.SUPERADMIN;
-    if (req.userId !== userId && !isModerator)
-      throw new BadRequestException('No podés cancelar esta solicitud');
+    const isModerator = userRole === Role.SECRETARY || userRole === Role.RDR || userRole === Role.SUPERADMIN;
+    if (req.userId !== userId && !isModerator) throw new BadRequestException('No podés cancelar esta solicitud');
     if (req.status !== SpeakingRequestStatus.PENDING)
       throw new BadRequestException('Solo se puede cancelar una solicitud pendiente');
     await this.prisma.speakingRequest.update({
@@ -158,18 +156,19 @@ export class SpeakingQueueService {
 
     // Fetch speakers in parallel
     const speakerIds = [meeting.currentSpeakerId, meeting.nextSpeakerId].filter(Boolean) as string[];
-    const speakers = speakerIds.length > 0
-      ? await this.prisma.dirPerson.findMany({
-          where: { id: { in: speakerIds } },
-          select: { id: true, fullName: true },
-        })
-      : [];
+    const speakers =
+      speakerIds.length > 0
+        ? await this.prisma.dirPerson.findMany({
+            where: { id: { in: speakerIds } },
+            select: { id: true, fullName: true },
+          })
+        : [];
     const speakerMap = new Map(speakers.map((s) => [s.id, s]));
 
     return {
       queue: meeting.speakingRequests,
-      currentSpeaker: meeting.currentSpeakerId ? speakerMap.get(meeting.currentSpeakerId) ?? null : null,
-      nextSpeaker: meeting.nextSpeakerId ? speakerMap.get(meeting.nextSpeakerId) ?? null : null,
+      currentSpeaker: meeting.currentSpeakerId ? (speakerMap.get(meeting.currentSpeakerId) ?? null) : null,
+      nextSpeaker: meeting.nextSpeakerId ? (speakerMap.get(meeting.nextSpeakerId) ?? null) : null,
     };
   }
 }

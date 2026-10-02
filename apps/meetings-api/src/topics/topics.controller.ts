@@ -38,10 +38,7 @@ export class TopicsController {
   ) {}
 
   @Get()
-  async findAll(
-    @Param('meetingId') meetingId: string,
-    @CurrentUser() user: CurrentUserPayload,
-  ) {
+  async findAll(@Param('meetingId') meetingId: string, @CurrentUser() user: CurrentUserPayload) {
     await this.meetingsService.findOne(meetingId, user.id, user.role as Role);
     return this.topicsService.findAll(meetingId);
   }
@@ -50,10 +47,7 @@ export class TopicsController {
   @UseGuards(RolesGuard)
   @Roles(Role.SECRETARY, Role.PRESIDENT, Role.RDR)
   @UsePipes(new ValidationPipe({ whitelist: true }))
-  create(
-    @Param('meetingId') meetingId: string,
-    @Body() dto: CreateTopicDto,
-  ) {
+  create(@Param('meetingId') meetingId: string, @Body() dto: CreateTopicDto) {
     return this.topicsService.create(meetingId, dto);
   }
 
@@ -61,21 +55,14 @@ export class TopicsController {
   @UseGuards(RolesGuard)
   @Roles(Role.SECRETARY, Role.PRESIDENT, Role.RDR)
   @UsePipes(new ValidationPipe({ whitelist: true }))
-  update(
-    @Param('meetingId') meetingId: string,
-    @Param('topicId') topicId: string,
-    @Body() dto: UpdateTopicDto,
-  ) {
+  update(@Param('meetingId') meetingId: string, @Param('topicId') topicId: string, @Body() dto: UpdateTopicDto) {
     return this.topicsService.update(meetingId, topicId, dto);
   }
 
   @Delete(':topicId')
   @UseGuards(RolesGuard)
   @Roles(Role.SECRETARY, Role.PRESIDENT, Role.RDR)
-  remove(
-    @Param('meetingId') meetingId: string,
-    @Param('topicId') topicId: string,
-  ) {
+  remove(@Param('meetingId') meetingId: string, @Param('topicId') topicId: string) {
     return this.topicsService.remove(meetingId, topicId);
   }
 
@@ -83,10 +70,7 @@ export class TopicsController {
   @UseGuards(RolesGuard)
   @Roles(Role.SECRETARY, Role.PRESIDENT, Role.RDR)
   @UsePipes(new ValidationPipe({ whitelist: true }))
-  reorder(
-    @Param('meetingId') meetingId: string,
-    @Body() dto: ReorderTopicsDto,
-  ) {
+  reorder(@Param('meetingId') meetingId: string, @Body() dto: ReorderTopicsDto) {
     return this.topicsService.reorder(meetingId, dto);
   }
 
@@ -167,14 +151,6 @@ export class TopicsController {
     @Body('speakerName') speakerName: string | undefined,
     @CurrentUser() user: CurrentUserPayload,
   ) {
-    return this.topicsService.transcribeAudio(
-      meetingId,
-      topicId,
-      user.id,
-      user.fullName,
-      file,
-      user.role,
-      speakerName,
-    );
+    return this.topicsService.transcribeAudio(meetingId, topicId, user.id, user.fullName, file, user.role, speakerName);
   }
 }

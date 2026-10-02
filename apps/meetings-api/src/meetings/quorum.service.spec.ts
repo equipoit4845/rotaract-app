@@ -21,7 +21,12 @@ function setup(opts: { isDistrict?: boolean; base: string[]; present: string[] }
 describe('QuorumService (Art. 41-42)', () => {
   it('requirement is ceil(2/3 of the habilitado clubs)', async () => {
     expect(await setup({ base: ['a', 'b', 'c'], present: [] }).service.calculateQuorumRequirement()).toBe(2);
-    expect(await setup({ base: Array.from({ length: 10 }, (_, i) => `c${i}`), present: [] }).service.calculateQuorumRequirement()).toBe(7);
+    expect(
+      await setup({
+        base: Array.from({ length: 10 }, (_, i) => `c${i}`),
+        present: [],
+      }).service.calculateQuorumRequirement(),
+    ).toBe(7);
     expect(await setup({ base: [], present: [] }).service.calculateQuorumRequirement()).toBe(0);
   });
 

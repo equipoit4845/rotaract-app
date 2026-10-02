@@ -36,8 +36,7 @@ export class FilesystemStorageAdapter implements StorageAdapter {
     try {
       await fs.access(fullPath);
     } catch (error: unknown) {
-      const message =
-        error instanceof Error ? error.message : 'Error desconocido';
+      const message = error instanceof Error ? error.message : 'Error desconocido';
       throw new Error(`Archivo no encontrado en almacenamiento: ${message}`);
     }
     const { createReadStream } = await import('fs');

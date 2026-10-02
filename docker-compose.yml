@@ -124,7 +124,63 @@ services:
     depends_on:
       api: { condition: service_healthy }
 
+  # --- Reuniones distritales (apps/meetings-api) ----------------------------
+  # Own database "meetings" on the shared postgres. Created (idempotently) by
+  # this one-off service before meetings-api starts; it can also be run by
+  # hand: `docker compose run --rm meetings-db-init`. Migrations are applied
+  # by meetings-api itself on start (prisma migrate deploy).
+  meetings-db-init:
+    image: postgres:16-alpine
+    restart: "no"
+    environment:
+      PGHOST: postgres
+      PGUSER: ${POSTGRES_USER:-kernel}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
+      MEETINGS_DB_NAME: ${MEETINGS_DB_NAME:-meetings}
+    command:
+      - sh
+      - -c
+      - >-
+        psql -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname = '$$MEETINGS_DB_NAME'" | grep -q 1
+        || psql -d postgres -c "CREATE DATABASE \"$$MEETINGS_DB_NAME\""
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  meetings-api:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: infra/docker/meetings-api.Dockerfile
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3003
+      # e.g. postgresql://kernel:<POSTGRES_PASSWORD>@postgres:5432/meetings
+      MEETINGS_DATABASE_URL: ${MEETINGS_DATABASE_URL:?MEETINGS_DATABASE_URL must be set in .env}
+      # Shared with meetings-web (HS256, >= 32 chars).
+      MEETINGS_TOKEN_SECRET: ${MEETINGS_TOKEN_SECRET:?MEETINGS_TOKEN_SECRET must be set in .env}
+      MEETINGS_UPLOAD_DIR: /data/uploads
+      MEETINGS_CORS_ORIGIN: ${MEETINGS_CORS_ORIGIN:-https://reuniones.rotaract4845.com}
+      # Kernel directory sync (client_credentials, /service/* Data API).
+      KERNEL_API_URL: ${MEETINGS_KERNEL_API_URL:-http://api:3001/api/kernel/v1}
+      KERNEL_CLIENT_ID: ${MEETINGS_KERNEL_CLIENT_ID:-}
+      KERNEL_CLIENT_SECRET: ${MEETINGS_KERNEL_CLIENT_SECRET:-}
+      MEETINGS_DIRECTORY_SYNC_INTERVAL_MS: ${MEETINGS_DIRECTORY_SYNC_INTERVAL_MS:-300000}
+      # Acta AI (Gemini preferred, else OpenAI) and Whisper transcription.
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    ports: ["127.0.0.1:3003:3003"]
+    volumes: [meetings-uploads:/data/uploads]
+    depends_on:
+      postgres: { condition: service_healthy }
+      meetings-db-init: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3003/meetings-api/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+
 volumes:
   postgres-data:
   redis-data:
   nats-data:
+  meetings-uploads:

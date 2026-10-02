@@ -3,7 +3,12 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
-import { MEETINGS_TOKEN_ALGORITHM, MEETINGS_TOKEN_AUDIENCE, MEETINGS_TOKEN_ISSUER, meetingsTokenSecret } from './meetings-token';
+import {
+  MEETINGS_TOKEN_ALGORITHM,
+  MEETINGS_TOKEN_AUDIENCE,
+  MEETINGS_TOKEN_ISSUER,
+  meetingsTokenSecret,
+} from './meetings-token';
 
 @Global()
 @Module({

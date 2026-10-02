@@ -118,12 +118,13 @@ export class ActaService {
 
     // Resolve representative names
     const userIds = presentClubs.map((c) => c.representative).filter((id): id is string => !!id);
-    const users = userIds.length > 0
-      ? await this.prisma.dirPerson.findMany({
-          where: { id: { in: userIds } },
-          select: { id: true, fullName: true },
-        })
-      : [];
+    const users =
+      userIds.length > 0
+        ? await this.prisma.dirPerson.findMany({
+            where: { id: { in: userIds } },
+            select: { id: true, fullName: true },
+          })
+        : [];
     const userMap = new Map(users.map((u) => [u.id, u.fullName]));
     const attendanceClubs = presentClubs.map((c) => ({
       ...c,
@@ -261,10 +262,8 @@ export class ActaService {
       doc.on('error', reject);
 
       // Header
-      doc.fontSize(18).font('Helvetica-Bold')
-        .text('ACTA DE REUNIÓN', { align: 'center' });
-      doc.fontSize(12).font('Helvetica')
-        .text(`Distrito Rotaract 4845 R.I.`, { align: 'center' });
+      doc.fontSize(18).font('Helvetica-Bold').text('ACTA DE REUNIÓN', { align: 'center' });
+      doc.fontSize(12).font('Helvetica').text(`Distrito Rotaract 4845 R.I.`, { align: 'center' });
       doc.moveDown();
 
       // Meeting info
@@ -273,14 +272,18 @@ export class ActaService {
       const typeLabel = content.header.type === 'ORDINARY' ? 'Ordinaria' : 'Extraordinaria';
       doc.text(`Tipo: Reunión ${typeLabel}`);
       if (content.header.date) {
-        doc.text(`Fecha: ${new Date(content.header.date).toLocaleString('es-AR', { dateStyle: 'long', timeStyle: 'short' })}`);
+        doc.text(
+          `Fecha: ${new Date(content.header.date).toLocaleString('es-AR', { dateStyle: 'long', timeStyle: 'short' })}`,
+        );
       }
       if (content.header.startedAt && content.header.endedAt) {
         const start = new Date(content.header.startedAt).toLocaleTimeString('es-AR', { timeStyle: 'short' });
         const end = new Date(content.header.endedAt).toLocaleTimeString('es-AR', { timeStyle: 'short' });
         doc.text(`Horario: ${start} — ${end}`);
       }
-      doc.text(`Quórum: ${content.header.quorumMet ? 'Alcanzado' : 'No alcanzado'}${content.header.quorumRequired ? ` (${content.header.quorumRequired} requeridos)` : ''}`);
+      doc.text(
+        `Quórum: ${content.header.quorumMet ? 'Alcanzado' : 'No alcanzado'}${content.header.quorumRequired ? ` (${content.header.quorumRequired} requeridos)` : ''}`,
+      );
       if (content.header.isInformationalOnly) {
         doc.text('⚠ Reunión informativa — Sin quórum para tomar decisiones');
       }
@@ -312,16 +315,25 @@ export class ActaService {
         doc.moveDown(0.5);
         doc.font('Helvetica-Bold').text(`${topic.order}. ${topic.title}`);
         doc.font('Helvetica');
-        const typeLabels: Record<string, string> = { DISCUSSION: 'Discusión', VOTING: 'Votación', INFORMATIVE: 'Informativo' };
+        const typeLabels: Record<string, string> = {
+          DISCUSSION: 'Discusión',
+          VOTING: 'Votación',
+          INFORMATIVE: 'Informativo',
+        };
         doc.text(`Tipo: ${typeLabels[topic.type] ?? topic.type}`);
         if (topic.summary) doc.text(topic.summary);
         if (topic.vote) {
-          const majorityLabels: Record<string, string> = { SIMPLE: 'Mayoría Simple', TWO_THIRDS: 'Dos Tercios', THREE_QUARTERS: 'Tres Cuartos' };
+          const majorityLabels: Record<string, string> = {
+            SIMPLE: 'Mayoría Simple',
+            TWO_THIRDS: 'Dos Tercios',
+            THREE_QUARTERS: 'Tres Cuartos',
+          };
           const methodLabel = topic.vote.method === 'SECRET' ? 'Secreta' : 'Pública';
 
           if (topic.vote.electionType) {
             const electionLabel = topic.vote.electionType === 'RDR' ? 'Elección de RDR' : 'Elección de Sede';
-            const optionsText = topic.vote.options && topic.vote.options.length > 0 ? topic.vote.options.join(', ') : 'Ninguna';
+            const optionsText =
+              topic.vote.options && topic.vote.options.length > 0 ? topic.vote.options.join(', ') : 'Ninguna';
             doc.font('Helvetica-Bold').text(`${electionLabel} — Opciones a votar: `, { continued: true });
             doc.font('Helvetica').text(optionsText);
           }
@@ -333,11 +345,15 @@ export class ActaService {
             }
             doc.text(`  • Abstención: ${topic.vote.abstain}`);
           } else {
-            doc.text(`Votación ${methodLabel} (${majorityLabels[topic.vote.majority] ?? topic.vote.majority}): A favor: ${topic.vote.yes} | En contra: ${topic.vote.no} | Abstención: ${topic.vote.abstain}`);
+            doc.text(
+              `Votación ${methodLabel} (${majorityLabels[topic.vote.majority] ?? topic.vote.majority}): A favor: ${topic.vote.yes} | En contra: ${topic.vote.no} | Abstención: ${topic.vote.abstain}`,
+            );
           }
 
           if (topic.vote.approved !== null) {
-            doc.font('Helvetica-Bold').text(`Resultado: ${topic.vote.approved ? 'APROBADA' : 'RECHAZADA'}`, { continued: false });
+            doc
+              .font('Helvetica-Bold')
+              .text(`Resultado: ${topic.vote.approved ? 'APROBADA' : 'RECHAZADA'}`, { continued: false });
             doc.font('Helvetica');
           }
           if (topic.vote.rdrTiebreaker) {
@@ -349,7 +365,14 @@ export class ActaService {
             doc.font('Helvetica-Oblique').text('Desglose de votos individuales:');
             doc.font('Helvetica');
             for (const dv of topic.vote.detailedVotes) {
-              const choiceLabel = dv.choice === 'YES' ? 'A favor' : dv.choice === 'NO' ? 'En contra' : dv.choice === 'ABSTAIN' ? 'Abstención' : dv.choice;
+              const choiceLabel =
+                dv.choice === 'YES'
+                  ? 'A favor'
+                  : dv.choice === 'NO'
+                    ? 'En contra'
+                    : dv.choice === 'ABSTAIN'
+                      ? 'Abstención'
+                      : dv.choice;
               const candidateLabel = dv.candidateName ? ` (Candidato: ${dv.candidateName})` : '';
               doc.text(`  - ${dv.clubName}: ${choiceLabel}${candidateLabel}`);
             }
@@ -363,7 +386,9 @@ export class ActaService {
         doc.fontSize(12).font('Helvetica-Bold').text('Mociones');
         doc.fontSize(10).font('Helvetica');
         for (const motion of content.motions) {
-          const seconderText = motion.secondedByClubName ? ` (Secundada por ${motion.secondedByClubName})` : ' (Sin secundar)';
+          const seconderText = motion.secondedByClubName
+            ? ` (Secundada por ${motion.secondedByClubName})`
+            : ' (Sin secundar)';
           const motionStatusLabels: Record<string, string> = {
             PROPOSED: 'Propuesta',
             SECONDED: 'Secundada',
@@ -406,7 +431,9 @@ export class ActaService {
 
       // Footer
       doc.moveDown(2);
-      doc.fontSize(8).fillColor('#999')
+      doc
+        .fontSize(8)
+        .fillColor('#999')
         .text(`Acta generada por Mi Rotaract — ${new Date().toLocaleString('es-AR')}`, { align: 'center' });
 
       doc.end();
@@ -576,10 +603,17 @@ export class ActaService {
     const votesForMajority = counts.YES + counts.NO;
     if (votesForMajority > 0) {
       switch (vs.requiredMajority) {
-        case 'SIMPLE': approved = counts.YES > counts.NO; break;
-        case 'TWO_THIRDS': approved = counts.YES >= (votesForMajority * 2) / 3; break;
-        case 'THREE_QUARTERS': approved = counts.YES >= (votesForMajority * 3) / 4; break;
-        default: approved = counts.YES > counts.NO;
+        case 'SIMPLE':
+          approved = counts.YES > counts.NO;
+          break;
+        case 'TWO_THIRDS':
+          approved = counts.YES >= (votesForMajority * 2) / 3;
+          break;
+        case 'THREE_QUARTERS':
+          approved = counts.YES >= (votesForMajority * 3) / 4;
+          break;
+        default:
+          approved = counts.YES > counts.NO;
       }
     }
 
@@ -607,7 +641,7 @@ export class ActaService {
     let detailedVotes: { clubName: string; choice: string; candidateName?: string | null }[] | undefined;
     if (vs.votingMethod === 'PUBLIC') {
       detailedVotes = vs.votes.map((v: any) => {
-        const clubName = v.clubId ? clubNameMap.get(v.clubId) ?? 'Desconocido' : 'Desconocido';
+        const clubName = v.clubId ? (clubNameMap.get(v.clubId) ?? 'Desconocido') : 'Desconocido';
         return {
           clubName,
           choice: v.choice,

@@ -180,8 +180,7 @@ export function computeCandidateResult(
   }
 
   const isTied = !!(top && second && top.votes === second.votes && top.votes > 0);
-  const meetsThreshold =
-    top && top.votes > 0 && candidateMeetsThreshold(top.votes, threshold || top.votes, majority);
+  const meetsThreshold = top && top.votes > 0 && candidateMeetsThreshold(top.votes, threshold || top.votes, majority);
 
   let winner: CandidateResult | null = null;
   let needsRunoff = false;

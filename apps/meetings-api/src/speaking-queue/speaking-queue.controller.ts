@@ -16,10 +16,7 @@ export class SpeakingQueueController {
   ) {}
 
   @Post('request')
-  request(
-    @Param('meetingId') meetingId: string,
-    @CurrentUser() user: CurrentUserPayload,
-  ) {
+  request(@Param('meetingId') meetingId: string, @CurrentUser() user: CurrentUserPayload) {
     return this.queueService.request(meetingId, user.id);
   }
 
@@ -33,28 +30,19 @@ export class SpeakingQueueController {
   }
 
   @Get()
-  async list(
-    @Param('meetingId') meetingId: string,
-    @CurrentUser() user: CurrentUserPayload,
-  ) {
+  async list(@Param('meetingId') meetingId: string, @CurrentUser() user: CurrentUserPayload) {
     await this.meetingsService.findOne(meetingId, user.id, user.role as Role);
     return this.queueService.list(meetingId);
   }
 
   @Get('state')
-  async getState(
-    @Param('meetingId') meetingId: string,
-    @CurrentUser() user: CurrentUserPayload,
-  ) {
+  async getState(@Param('meetingId') meetingId: string, @CurrentUser() user: CurrentUserPayload) {
     await this.meetingsService.findOne(meetingId, user.id, user.role as Role);
     return this.queueService.getQueueState(meetingId);
   }
 
   @Post('release-floor')
-  releaseFloor(
-    @Param('meetingId') meetingId: string,
-    @CurrentUser() user: CurrentUserPayload,
-  ) {
+  releaseFloor(@Param('meetingId') meetingId: string, @CurrentUser() user: CurrentUserPayload) {
     return this.queueService.releaseFloor(meetingId, user.id);
   }
 

@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { MeetingStatus, MeetingType, Role } from '../prisma/client';
@@ -90,9 +86,7 @@ export class MeetingsService {
 
       const validationErrors = await validate(dto);
       if (validationErrors.length > 0) {
-        const msg = validationErrors
-          .map((e) => Object.values(e.constraints || {}).join(', '))
-          .join('; ');
+        const msg = validationErrors.map((e) => Object.values(e.constraints || {}).join(', ')).join('; ');
         result.errors.push({
           row: rowNum,
           data: row as Record<string, unknown>,
@@ -116,10 +110,7 @@ export class MeetingsService {
       try {
         const club = await this.prisma.dirClub.findFirst({
           where: {
-            OR: [
-              { id: (dto as CreateMeetingDto).clubId },
-              { code: (dto as CreateMeetingDto).clubId.toUpperCase() },
-            ],
+            OR: [{ id: (dto as CreateMeetingDto).clubId }, { code: (dto as CreateMeetingDto).clubId.toUpperCase() }],
           },
         });
         if (!club) {
@@ -329,9 +320,7 @@ export class MeetingsService {
 
   async create(dto: CreateMeetingDto, createdById: string) {
     const isDistrict = dto.isDistrictMeeting ?? true;
-    const quorumRequired = isDistrict
-      ? await this.quorum.calculateQuorumRequirement()
-      : null;
+    const quorumRequired = isDistrict ? await this.quorum.calculateQuorumRequirement() : null;
 
     const meeting = await this.prisma.meeting.create({
       data: {
@@ -460,7 +449,7 @@ export class MeetingsService {
       orderBy: { order: 'asc' },
     });
     let firstTopic = topics[0];
-    const hasAttendance = topics.some(t => t.isAttendanceTopic || t.title.toLowerCase().includes('asistencia'));
+    const hasAttendance = topics.some((t) => t.isAttendanceTopic || t.title.toLowerCase().includes('asistencia'));
     if (!hasAttendance) {
       const minOrder = topics.length > 0 ? topics[0].order - 1 : 0;
       firstTopic = await this.prisma.agendaTopic.create({
@@ -475,13 +464,18 @@ export class MeetingsService {
         },
       });
     } else {
-      const attendanceTopic = topics.find(t => t.isAttendanceTopic || t.title.toLowerCase().includes('asistencia'))!;
+      const attendanceTopic = topics.find((t) => t.isAttendanceTopic || t.title.toLowerCase().includes('asistencia'))!;
       if (attendanceTopic.id !== firstTopic.id) {
         await this.prisma.agendaTopic.update({
           where: { id: attendanceTopic.id },
           data: { order: firstTopic.order - 1, status: 'ACTIVE', isAttendanceTopic: true },
         });
-        firstTopic = { ...attendanceTopic, order: firstTopic.order - 1, status: 'ACTIVE', isAttendanceTopic: true } as any;
+        firstTopic = {
+          ...attendanceTopic,
+          order: firstTopic.order - 1,
+          status: 'ACTIVE',
+          isAttendanceTopic: true,
+        } as any;
       } else {
         await this.prisma.agendaTopic.update({
           where: { id: attendanceTopic.id },
@@ -655,8 +649,7 @@ export class MeetingsService {
   async schedule(id: string, actorUserId: string) {
     const meeting = await this.prisma.meeting.findUnique({ where: { id } });
     if (!meeting) throw new NotFoundException('Reunión no encontrada');
-    if (meeting.status !== MeetingStatus.DRAFT)
-      throw new BadRequestException('Solo se puede programar un borrador');
+    if (meeting.status !== MeetingStatus.DRAFT) throw new BadRequestException('Solo se puede programar un borrador');
     const updated = await this.prisma.meeting.update({
       where: { id },
       data: { status: MeetingStatus.SCHEDULED },
@@ -729,7 +722,7 @@ export class MeetingsService {
 
     await this.prisma.$transaction(async (tx) => {
       await tx.meetingParticipant.deleteMany({
-        where: { meetingId, clubId, userId: { not: userId } }
+        where: { meetingId, clubId, userId: { not: userId } },
       });
 
       await tx.meetingParticipant.upsert({
@@ -741,13 +734,13 @@ export class MeetingsService {
           isDelegate: false,
           canVote: true,
           attendanceStatus: 'JOINED',
-          joinedAt: new Date()
+          joinedAt: new Date(),
         },
         update: {
           clubId,
           canVote: true,
-          attendanceStatus: 'JOINED'
-        }
+          attendanceStatus: 'JOINED',
+        },
       });
 
       await tx.clubMeetingAttendance.upsert({
@@ -756,11 +749,11 @@ export class MeetingsService {
           meetingId,
           clubId,
           attendeeUserId: userId,
-          isDelegate: false
+          isDelegate: false,
         },
         update: {
-          attendeeUserId: userId
-        }
+          attendeeUserId: userId,
+        },
       });
     });
 
@@ -770,7 +763,7 @@ export class MeetingsService {
       action: 'meeting.club_representative.updated',
       entityType: 'Meeting',
       entityId: meetingId,
-      metadata: { clubId, userId }
+      metadata: { clubId, userId },
     });
 
     await this.quorum.recheckAndUpdateQuorum(meetingId);
@@ -812,10 +805,10 @@ export class MeetingsService {
       });
 
       await tx.clubMeetingAttendance.deleteMany({
-        where: { meetingId, clubId }
+        where: { meetingId, clubId },
       });
       await tx.meetingParticipant.deleteMany({
-        where: { meetingId, clubId }
+        where: { meetingId, clubId },
       });
     });
 
@@ -825,7 +818,7 @@ export class MeetingsService {
       action: 'meeting.club_attendance.removed',
       entityType: 'Meeting',
       entityId: meetingId,
-      metadata: { clubId }
+      metadata: { clubId },
     });
 
     await this.quorum.recheckAndUpdateQuorum(meetingId);

@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { CartaPoderStatus } from '../prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
@@ -45,8 +40,14 @@ export class CartaPoderService {
   }) {
     const [club, delegateUser, presidentUser] = await Promise.all([
       this.prisma.dirClub.findUnique({ where: { id: cp.clubId }, select: { id: true, name: true } }),
-      this.prisma.dirPerson.findUnique({ where: { id: cp.delegateUserId }, select: { id: true, fullName: true, email: true } }),
-      this.prisma.dirPerson.findUnique({ where: { id: cp.presidentUserId }, select: { id: true, fullName: true, email: true } }),
+      this.prisma.dirPerson.findUnique({
+        where: { id: cp.delegateUserId },
+        select: { id: true, fullName: true, email: true },
+      }),
+      this.prisma.dirPerson.findUnique({
+        where: { id: cp.presidentUserId },
+        select: { id: true, fullName: true, email: true },
+      }),
     ]);
     return { ...cp, club, delegateUser, presidentUser };
   }

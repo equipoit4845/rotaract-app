@@ -4,10 +4,7 @@ import { MeetingsModule } from '../meetings/meetings.module';
 import { RealtimeGateway } from './realtime.gateway';
 
 @Module({
-  imports: [
-    forwardRef(() => VotingModule),
-    forwardRef(() => MeetingsModule),
-  ],
+  imports: [forwardRef(() => VotingModule), forwardRef(() => MeetingsModule)],
   providers: [RealtimeGateway],
   exports: [RealtimeGateway],
 })

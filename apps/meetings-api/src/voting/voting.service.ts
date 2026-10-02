@@ -6,7 +6,15 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { BallotType, MajorityType, VoteChoice, VoteSessionStatus, VotingMethod, MotionStatus, Prisma } from '../prisma/client';
+import {
+  BallotType,
+  MajorityType,
+  VoteChoice,
+  VoteSessionStatus,
+  VotingMethod,
+  MotionStatus,
+  Prisma,
+} from '../prisma/client';
 import { AuditService } from '../audit/audit.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
@@ -92,7 +100,7 @@ export class VotingService {
         openedById: userId,
         votingMethod: options?.votingMethod ?? VotingMethod.PUBLIC,
         requiredMajority: options?.requiredMajority ?? MajorityType.SIMPLE,
-        isElection: options?.isElection ?? (ballotType === BallotType.CANDIDATE),
+        isElection: options?.isElection ?? ballotType === BallotType.CANDIDATE,
         electionType: options?.electionType ?? null,
         ballotType,
         eligibleClubIds: eligibleClubIds.length > 0 ? JSON.stringify(eligibleClubIds) : null,
@@ -154,10 +162,7 @@ export class VotingService {
       where: { id: voteSessionId, meetingId },
     });
     if (!session) throw new NotFoundException('Sesión de votación no encontrada');
-    if (session.status !== VoteSessionStatus.OPEN)
-      throw new BadRequestException('La votación ya está cerrada');
-
-
+    if (session.status !== VoteSessionStatus.OPEN) throw new BadRequestException('La votación ya está cerrada');
 
     const updated = await this.prisma.voteSession.update({
       where: { id: voteSessionId },
@@ -184,9 +189,7 @@ export class VotingService {
       where: { voteSessionId },
     });
     if (motion) {
-      const isApproved = result.ballotType === BallotType.CANDIDATE
-        ? !!candidateResult?.winner
-        : !!result.approved;
+      const isApproved = result.ballotType === BallotType.CANDIDATE ? !!candidateResult?.winner : !!result.approved;
       await this.prisma.motion.update({
         where: { id: motion.id },
         data: {
@@ -212,20 +215,13 @@ export class VotingService {
     return { ...updated, result: { ...result, candidateResult } };
   }
 
-  async submitVote(
-    meetingId: string,
-    voteSessionId: string,
-    userId: string,
-    choice: VoteChoice,
-    candidateId?: string,
-  ) {
+  async submitVote(meetingId: string, voteSessionId: string, userId: string, choice: VoteChoice, candidateId?: string) {
     const [session, meeting] = await Promise.all([
       this.prisma.voteSession.findFirst({ where: { id: voteSessionId, meetingId } }),
       this.prisma.meeting.findUnique({ where: { id: meetingId } }),
     ]);
     if (!session) throw new NotFoundException('Sesión de votación no encontrada');
-    if (session.status !== VoteSessionStatus.OPEN)
-      throw new BadRequestException('La votación no está abierta');
+    if (session.status !== VoteSessionStatus.OPEN) throw new BadRequestException('La votación no está abierta');
     if (!meeting) throw new NotFoundException('Reunión no encontrada');
 
     if (meeting.isInformationalOnly) {
@@ -234,9 +230,7 @@ export class VotingService {
 
     // Art. 49: RDR votes only on tie. Block regular vote submissions.
     if (await this.directory.hasDistrictRole(userId, 'RDR')) {
-      throw new ForbiddenException(
-        'El RDR no puede votar en votaciones ordinarias, solo en desempates (Art. 49).',
-      );
+      throw new ForbiddenException('El RDR no puede votar en votaciones ordinarias, solo en desempates (Art. 49).');
     }
 
     // For candidate votes, validate candidateId (only if choice is not ABSTAIN)
@@ -321,7 +315,14 @@ export class VotingService {
     try {
       vote = await this.prisma.vote.upsert({
         where: { voteSessionId_userId: { voteSessionId, userId } },
-        create: { voteSessionId, userId, clubId: voteClubId, ballotClubId, choice: effectiveChoice, candidateId: candidateId ?? null },
+        create: {
+          voteSessionId,
+          userId,
+          clubId: voteClubId,
+          ballotClubId,
+          choice: effectiveChoice,
+          candidateId: candidateId ?? null,
+        },
         update: { choice: effectiveChoice, clubId: voteClubId, ballotClubId, candidateId: candidateId ?? null },
       });
     } catch (err) {
@@ -417,9 +418,7 @@ export class VotingService {
     }
 
     if (!representativeUserId) {
-      throw new BadRequestException(
-        'No se encontró un presidente ni delegado verificado para este club',
-      );
+      throw new BadRequestException('No se encontró un presidente ni delegado verificado para este club');
     }
 
     let participant = await this.prisma.meetingParticipant.findUnique({
@@ -449,13 +448,7 @@ export class VotingService {
       });
     }
 
-    const voteResult = await this.submitVote(
-      meetingId,
-      voteSessionId,
-      representativeUserId,
-      choice,
-      candidateId,
-    );
+    const voteResult = await this.submitVote(meetingId, voteSessionId, representativeUserId, choice, candidateId);
 
     await this.audit.log({
       meetingId,
@@ -619,7 +612,9 @@ export class VotingService {
 
     const candResult = await this.evaluateCandidateResult(voteSessionId);
     if (!candResult?.isTied) {
-      throw new BadRequestException('No hay empate entre candidatos. El RDR solo interviene en caso de empate (Art. 49)');
+      throw new BadRequestException(
+        'No hay empate entre candidatos. El RDR solo interviene en caso de empate (Art. 49)',
+      );
     }
 
     // Validate candidate is one of the tied top candidates

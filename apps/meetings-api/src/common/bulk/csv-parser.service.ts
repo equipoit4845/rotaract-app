@@ -18,9 +18,7 @@ export class CsvParserService {
    */
   parse(buffer: Buffer): ParsedCsvRow[] {
     if (buffer.length > MAX_FILE_SIZE_BYTES) {
-      throw new BadRequestException(
-        `El archivo excede el tamaño máximo de ${MAX_FILE_SIZE_BYTES / 1024 / 1024} MB`,
-      );
+      throw new BadRequestException(`El archivo excede el tamaño máximo de ${MAX_FILE_SIZE_BYTES / 1024 / 1024} MB`);
     }
 
     let content = buffer.toString('utf8');
@@ -33,9 +31,7 @@ export class CsvParserService {
       throw new BadRequestException('El archivo CSV está vacío');
     }
     if (lines.length > MAX_ROWS + 1) {
-      throw new BadRequestException(
-        `El archivo excede el máximo de ${MAX_ROWS} filas de datos`,
-      );
+      throw new BadRequestException(`El archivo excede el máximo de ${MAX_ROWS} filas de datos`);
     }
 
     const headers = this.parseRow(lines[0]);

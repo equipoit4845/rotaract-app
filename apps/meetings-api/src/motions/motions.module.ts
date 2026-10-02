@@ -7,12 +7,7 @@ import { MotionsController } from './motions.controller';
 import { MotionsService } from './motions.service';
 
 @Module({
-  imports: [
-    forwardRef(() => MeetingsModule),
-    AuditModule,
-    VotingModule,
-    forwardRef(() => RealtimeModule),
-  ],
+  imports: [forwardRef(() => MeetingsModule), AuditModule, VotingModule, forwardRef(() => RealtimeModule)],
   controllers: [MotionsController],
   providers: [MotionsService],
   exports: [MotionsService],

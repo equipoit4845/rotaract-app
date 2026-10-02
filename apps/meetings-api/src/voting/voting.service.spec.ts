@@ -4,7 +4,16 @@ import { VotingService } from './voting.service';
 
 type Over = Record<string, unknown>;
 
-function makeService(over: { session?: Over; meeting?: Over; participant?: Over | null; votes?: Over[]; existingClubVoter?: Over | null; isRdr?: boolean } = {}) {
+function makeService(
+  over: {
+    session?: Over;
+    meeting?: Over;
+    participant?: Over | null;
+    votes?: Over[];
+    existingClubVoter?: Over | null;
+    isRdr?: boolean;
+  } = {},
+) {
   const session = {
     id: 'vs1',
     meetingId: 'm1',
@@ -29,12 +38,16 @@ function makeService(over: { session?: Over; meeting?: Over; participant?: Over 
       update: jest.fn().mockResolvedValue(session),
     },
     meeting: {
-      findUnique: jest.fn().mockResolvedValue({ id: 'm1', isDistrictMeeting: true, isInformationalOnly: false, ...over.meeting }),
+      findUnique: jest
+        .fn()
+        .mockResolvedValue({ id: 'm1', isDistrictMeeting: true, isInformationalOnly: false, ...over.meeting }),
     },
     meetingParticipant: {
-      findUnique: jest.fn().mockResolvedValue(
-        over.participant === undefined ? { userId: 'u1', clubId: 'clubA', canVote: true } : over.participant,
-      ),
+      findUnique: jest
+        .fn()
+        .mockResolvedValue(
+          over.participant === undefined ? { userId: 'u1', clubId: 'clubA', canVote: true } : over.participant,
+        ),
       findFirst: jest.fn().mockResolvedValue(over.existingClubVoter ?? null),
       update: jest.fn(),
     },
@@ -74,7 +87,9 @@ describe('VotingService.submitVote — one vote per club', () => {
       votes: [{ userId: 'u2' }],
       existingClubVoter: { userId: 'u2', clubId: 'clubA' },
     });
-    await expect(service.submitVote('m1', 'vs1', 'u1', 'YES')).rejects.toThrow('Tu club ya emitió un voto en esta votación');
+    await expect(service.submitVote('m1', 'vs1', 'u1', 'YES')).rejects.toThrow(
+      'Tu club ya emitió un voto en esta votación',
+    );
   });
 
   it('lets the same user change their vote (upsert)', async () => {
@@ -96,7 +111,9 @@ describe('VotingService.submitVote — one vote per club', () => {
       }),
     );
     await expect(service.submitVote('m1', 'vs1', 'u1', 'YES')).rejects.toBeInstanceOf(ForbiddenException);
-    await expect(service.submitVote('m1', 'vs1', 'u1', 'YES')).rejects.toThrow('Tu club ya emitió un voto en esta votación');
+    await expect(service.submitVote('m1', 'vs1', 'u1', 'YES')).rejects.toThrow(
+      'Tu club ya emitió un voto en esta votación',
+    );
   });
 
   it('SECRET votes keep clubId null but still carry the ballot club', async () => {
@@ -130,12 +147,16 @@ describe('VotingService.submitVote — one vote per club', () => {
 
   it('no quorum -> no votes (Art. 42)', async () => {
     const { service } = makeService({ meeting: { isInformationalOnly: true } });
-    await expect(service.submitVote('m1', 'vs1', 'u1', 'YES')).rejects.toThrow('No se pueden emitir votos sin quórum (Art. 42).');
+    await expect(service.submitVote('m1', 'vs1', 'u1', 'YES')).rejects.toThrow(
+      'No se pueden emitir votos sin quórum (Art. 42).',
+    );
   });
 
   it('participants without voting rights are rejected', async () => {
     const { service } = makeService({ participant: null });
-    await expect(service.submitVote('m1', 'vs1', 'u1', 'YES')).rejects.toThrow('No tenés derecho a votar en esta reunión');
+    await expect(service.submitVote('m1', 'vs1', 'u1', 'YES')).rejects.toThrow(
+      'No tenés derecho a votar en esta reunión',
+    );
   });
 });
 
@@ -152,7 +173,9 @@ describe('VotingService tiebreaks and runoff', () => {
   it('YES_NO tiebreak applies once', async () => {
     const { service, prisma } = makeService({ session: { status: 'CLOSED', rdrTiebreakerUsed: true } });
     prisma.vote.groupBy.mockResolvedValue([]);
-    await expect(service.submitRdrTiebreaker('m1', 'vs1', 'rdr', 'YES')).rejects.toThrow('El desempate del RDR ya fue utilizado');
+    await expect(service.submitRdrTiebreaker('m1', 'vs1', 'rdr', 'YES')).rejects.toThrow(
+      'El desempate del RDR ya fue utilizado',
+    );
   });
 
   it('YES_NO tiebreak on a tie stores the RDR choice', async () => {

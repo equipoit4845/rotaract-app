@@ -110,7 +110,8 @@ export class KernelClient {
   }
 
   async get<T>(path: string, query?: Record<string, string | number | boolean | undefined>): Promise<T> {
-    if (!this.configured) throw new Error('Kernel client not configured (KERNEL_API_URL / KERNEL_CLIENT_ID / KERNEL_CLIENT_SECRET)');
+    if (!this.configured)
+      throw new Error('Kernel client not configured (KERNEL_API_URL / KERNEL_CLIENT_ID / KERNEL_CLIENT_SECRET)');
     const url = new URL(`${this.baseUrl}${path}`);
     for (const [k, v] of Object.entries(query ?? {})) {
       if (v !== undefined) url.searchParams.set(k, String(v));
@@ -142,7 +143,7 @@ export class KernelClient {
     do {
       const page = await this.get<Page<T>>(path, { ...query, limit: 100, cursor });
       items.push(...page.items);
-      cursor = page.pageInfo.hasMore ? page.pageInfo.nextCursor ?? undefined : undefined;
+      cursor = page.pageInfo.hasMore ? (page.pageInfo.nextCursor ?? undefined) : undefined;
     } while (cursor);
     return items;
   }

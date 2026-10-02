@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Role } from '../prisma/client';
 import { CurrentUser, CurrentUserPayload } from '../auth/current-user.decorator';
@@ -34,10 +25,7 @@ export class CartaPoderController {
   /** Secretary/RDR: list all delegations for a meeting */
   @Get()
   @Roles(Role.SECRETARY, Role.RDR, Role.PRESIDENT)
-  findAll(
-    @Param('meetingId') meetingId: string,
-    @CurrentUser() user: CurrentUserPayload,
-  ) {
+  findAll(@Param('meetingId') meetingId: string, @CurrentUser() user: CurrentUserPayload) {
     // PRESIDENT can only see their own club's delegations (filtered client-side from full list for SECRETARY/RDR)
     return this.cartaPoderService.findByMeeting(meetingId);
   }
@@ -57,11 +45,7 @@ export class CartaPoderController {
 
   @Patch(':cpId/verify')
   @Roles(Role.SECRETARY)
-  verify(
-    @Param('meetingId') meetingId: string,
-    @Param('cpId') cpId: string,
-    @CurrentUser() user: CurrentUserPayload,
-  ) {
+  verify(@Param('meetingId') meetingId: string, @Param('cpId') cpId: string, @CurrentUser() user: CurrentUserPayload) {
     return this.cartaPoderService.verify(meetingId, cpId, user.id);
   }
 
@@ -78,11 +62,7 @@ export class CartaPoderController {
 
   @Delete(':cpId')
   @Roles(Role.SECRETARY, Role.RDR)
-  remove(
-    @Param('meetingId') meetingId: string,
-    @Param('cpId') cpId: string,
-    @CurrentUser() user: CurrentUserPayload,
-  ) {
+  remove(@Param('meetingId') meetingId: string, @Param('cpId') cpId: string, @CurrentUser() user: CurrentUserPayload) {
     return this.cartaPoderService.remove(meetingId, cpId, user.id);
   }
 }

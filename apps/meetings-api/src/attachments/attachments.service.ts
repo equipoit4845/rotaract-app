@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  ForbiddenException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import * as crypto from 'crypto';
 import * as path from 'path';
 import { Readable } from 'stream';

@@ -37,8 +37,12 @@ describe('computeYesNoResult', () => {
 
   it('ABSOLUTE is measured over the eligible clubs', () => {
     // 10 eligible: 6 > 5 approves, 5 does not, even if no=0
-    expect(computeYesNoResult('s', yesNo({ requiredMajority: 'ABSOLUTE', eligibleClubCount: 10 }), counts(6, 1)).approved).toBe(true);
-    expect(computeYesNoResult('s', yesNo({ requiredMajority: 'ABSOLUTE', eligibleClubCount: 10 }), counts(5, 0)).approved).toBe(false);
+    expect(
+      computeYesNoResult('s', yesNo({ requiredMajority: 'ABSOLUTE', eligibleClubCount: 10 }), counts(6, 1)).approved,
+    ).toBe(true);
+    expect(
+      computeYesNoResult('s', yesNo({ requiredMajority: 'ABSOLUTE', eligibleClubCount: 10 }), counts(5, 0)).approved,
+    ).toBe(false);
   });
 
   it('ABSOLUTE falls back to yes+no when there is no eligible count', () => {
@@ -79,7 +83,15 @@ describe('computeYesNoResult', () => {
 
   it('maskSecretResult hides counts but keeps total', () => {
     const masked = maskSecretResult(computeYesNoResult('s', yesNo({ votingMethod: 'SECRET' }), counts(3, 1)));
-    expect(masked).toMatchObject({ yes: 0, no: 0, abstain: 0, total: 4, approved: null, isTied: null, candidateResult: null });
+    expect(masked).toMatchObject({
+      yes: 0,
+      no: 0,
+      abstain: 0,
+      total: 4,
+      approved: null,
+      isTied: null,
+      candidateResult: null,
+    });
   });
 });
 
@@ -131,10 +143,20 @@ describe('computeCandidateResult', () => {
   });
 
   it('TWO_THIRDS and THREE_QUARTERS thresholds', () => {
-    expect(computeCandidateResult(cand({ requiredMajority: 'TWO_THIRDS', eligibleClubCount: 9 }), vc(6, 3)).winner?.candidateId).toBe('a');
-    expect(computeCandidateResult(cand({ requiredMajority: 'TWO_THIRDS', eligibleClubCount: 9 }), vc(5, 4)).needsRunoff).toBe(true);
-    expect(computeCandidateResult(cand({ requiredMajority: 'THREE_QUARTERS', eligibleClubCount: 8 }), vc(6, 2)).winner?.candidateId).toBe('a');
-    expect(computeCandidateResult(cand({ requiredMajority: 'THREE_QUARTERS', eligibleClubCount: 8 }), vc(5, 3)).needsRunoff).toBe(true);
+    expect(
+      computeCandidateResult(cand({ requiredMajority: 'TWO_THIRDS', eligibleClubCount: 9 }), vc(6, 3)).winner
+        ?.candidateId,
+    ).toBe('a');
+    expect(
+      computeCandidateResult(cand({ requiredMajority: 'TWO_THIRDS', eligibleClubCount: 9 }), vc(5, 4)).needsRunoff,
+    ).toBe(true);
+    expect(
+      computeCandidateResult(cand({ requiredMajority: 'THREE_QUARTERS', eligibleClubCount: 8 }), vc(6, 2)).winner
+        ?.candidateId,
+    ).toBe('a');
+    expect(
+      computeCandidateResult(cand({ requiredMajority: 'THREE_QUARTERS', eligibleClubCount: 8 }), vc(5, 3)).needsRunoff,
+    ).toBe(true);
   });
 
   it('a tie at the top in round 1 needs a runoff', () => {

@@ -31,7 +31,9 @@ export class AIService {
     const openaiKey = process.env.OPENAI_API_KEY;
 
     if (!geminiKey && !openaiKey) {
-      this.logger.warn('No GEMINI_API_KEY or OPENAI_API_KEY found. AI summarization will fallback to a simple template.');
+      this.logger.warn(
+        'No GEMINI_API_KEY or OPENAI_API_KEY found. AI summarization will fallback to a simple template.',
+      );
       return this.generateFallbackSummary(topicTitle, transcriptions, voteDetails, motions);
     }
 

@@ -39,10 +39,7 @@ export class TimersController {
   }
 
   @Get('active')
-  async getActive(
-    @Param('meetingId') meetingId: string,
-    @CurrentUser() user: CurrentUserPayload,
-  ) {
+  async getActive(@Param('meetingId') meetingId: string, @CurrentUser() user: CurrentUserPayload) {
     await this.meetingsService.findOne(meetingId, user.id, user.role as Role);
     return this.timersService.getActiveTimer(meetingId);
   }

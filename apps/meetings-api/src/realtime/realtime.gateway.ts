@@ -244,17 +244,17 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
     return this.withAck(await this.doToggleTranscription(client, payload ?? ({} as never)), ack);
   }
 
-  private async doToggleTranscription(
-    client: SocketWithData,
-    payload: { meetingId: string; enabled: boolean },
-  ) {
+  private async doToggleTranscription(client: SocketWithData, payload: { meetingId: string; enabled: boolean }) {
     const userId = client.data?.userId || this.getUserIdFromClient(client);
     if (!userId) {
       return { event: 'error', data: { message: 'No autenticado' } };
     }
     const role = await this.directory.getRole(userId);
     if (!isDistrictAdmin(role)) {
-      return { event: 'error', data: { message: 'No autorizado. Solo el secretario distrital puede habilitar/deshabilitar la transcripción.' } };
+      return {
+        event: 'error',
+        data: { message: 'No autorizado. Solo el secretario distrital puede habilitar/deshabilitar la transcripción.' },
+      };
     }
 
     const { meetingId, enabled } = payload;
@@ -267,10 +267,7 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
     return { event: 'meeting.transcriptionToggled', data: { enabled } };
   }
 
-  private async doJoinMeeting(
-    client: SocketWithData,
-    payload: { meetingId: string; userId?: string },
-  ) {
+  private async doJoinMeeting(client: SocketWithData, payload: { meetingId: string; userId?: string }) {
     const { meetingId } = payload;
     if (!meetingId) {
       return { event: 'error', data: { message: 'meetingId required' } };
@@ -355,7 +352,8 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
       const isParticipant = await this.prisma.meetingParticipant.findFirst({
         where: { meetingId, userId },
       });
-      const isModerator = user?.role === 'SECRETARY' || user?.role === 'PRESIDENT' || user?.role === 'RDR' || user?.role === 'SUPERADMIN';
+      const isModerator =
+        user?.role === 'SECRETARY' || user?.role === 'PRESIDENT' || user?.role === 'RDR' || user?.role === 'SUPERADMIN';
       if (!isParticipant && !isModerator) {
         return { event: 'error', data: { message: 'No tenés acceso a esta reunión' } };
       }
@@ -396,7 +394,9 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
         try {
           await this.prisma.meetingParticipant.delete({ where: { id: participant.id } });
           await this.broadcastSnapshot(meetingId);
-        } catch { /* non-blocking */ }
+        } catch {
+          /* non-blocking */
+        }
       }
     } else {
       if (!participant && targetClubId) {
@@ -433,7 +433,11 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
           clubId = membership?.clubId ?? null;
           await this.prisma.meetingParticipant.update({
             where: { id: participant.id },
-            data: { ...(clubId ? { clubId } : {}), attendanceStatus: 'JOINED', ...(participant.joinedAt ? {} : { joinedAt: new Date() }) },
+            data: {
+              ...(clubId ? { clubId } : {}),
+              attendanceStatus: 'JOINED',
+              ...(participant.joinedAt ? {} : { joinedAt: new Date() }),
+            },
           });
         } else {
           await this.prisma.meetingParticipant.update({
@@ -449,7 +453,9 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
             try {
               await this.quorumService.recordClubAttendance(meetingId, clubId, userId, participant.isDelegate);
               await this.quorumService.recheckAndUpdateQuorum(meetingId);
-            } catch { /* non-blocking */ }
+            } catch {
+              /* non-blocking */
+            }
           }
         }
 
@@ -536,7 +542,10 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
       const result = await this.votingService.submitVote(meetingId, voteSessionId, userId, choice, candidateId);
       return { event: 'vote.confirmed', data: result };
     } catch (err: unknown) {
-      const message = err && typeof err === 'object' && 'message' in err ? String((err as { message: unknown }).message) : 'Error al registrar el voto';
+      const message =
+        err && typeof err === 'object' && 'message' in err
+          ? String((err as { message: unknown }).message)
+          : 'Error al registrar el voto';
       return { event: 'error', data: { message } };
     }
   }
@@ -594,99 +603,113 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
       },
     });
     if (!meeting) return null;
-    const currentTopic = meeting.currentTopicId
-      ? meeting.topics.find((t) => t.id === meeting.currentTopicId)
-      : null;
+    const currentTopic = meeting.currentTopicId ? meeting.topics.find((t) => t.id === meeting.currentTopicId) : null;
     const openVoteSession = meeting.voteSessions[0];
 
     // Run all independent queries in parallel
-    const [ownVote, voteResult, activeTimers, currentSpeaker, nextSpeaker, votedClubs, motions, enabledClubs] = await Promise.all([
-      // Own vote
-      userId && openVoteSession
-        ? this.prisma.vote.findUnique({
-            where: { voteSessionId_userId: { voteSessionId: openVoteSession.id, userId } },
-          }).then((v) => v ? { voteSessionId: v.voteSessionId, choice: v.choice, candidateId: v.candidateId } : null)
-        : Promise.resolve(null),
-      // Vote result
-      openVoteSession
-        ? this.votingService.getResult(openVoteSession.id).then((res) => {
-            if (openVoteSession.votingMethod === VotingMethod.SECRET) {
-              return {
-                voteSessionId: res.voteSessionId,
-                yes: 0,
-                no: 0,
-                abstain: 0,
-                total: res.total,
-                approved: null,
-                isTied: null,
-                requiredMajority: res.requiredMajority,
-                ballotType: res.ballotType,
-                round: res.round,
-                candidateResult: null,
-              };
-            }
-            return res;
-          }).catch(() => null)
-        : meeting.currentTopicId
-          ? this.prisma.voteSession.findFirst({
-              where: { meetingId, topicId: meeting.currentTopicId, status: 'CLOSED' },
-              orderBy: { closedAt: 'desc' },
-              select: { id: true },
-            }).then(async (lastClosed) => {
-              if (!lastClosed) return null;
-              try {
-                return await this.votingService.getResult(lastClosed.id);
-              } catch (e) {
-                return null;
-              }
+    const [ownVote, voteResult, activeTimers, currentSpeaker, nextSpeaker, votedClubs, motions, enabledClubs] =
+      await Promise.all([
+        // Own vote
+        userId && openVoteSession
+          ? this.prisma.vote
+              .findUnique({
+                where: { voteSessionId_userId: { voteSessionId: openVoteSession.id, userId } },
+              })
+              .then((v) =>
+                v ? { voteSessionId: v.voteSessionId, choice: v.choice, candidateId: v.candidateId } : null,
+              )
+          : Promise.resolve(null),
+        // Vote result
+        openVoteSession
+          ? this.votingService
+              .getResult(openVoteSession.id)
+              .then((res) => {
+                if (openVoteSession.votingMethod === VotingMethod.SECRET) {
+                  return {
+                    voteSessionId: res.voteSessionId,
+                    yes: 0,
+                    no: 0,
+                    abstain: 0,
+                    total: res.total,
+                    approved: null,
+                    isTied: null,
+                    requiredMajority: res.requiredMajority,
+                    ballotType: res.ballotType,
+                    round: res.round,
+                    candidateResult: null,
+                  };
+                }
+                return res;
+              })
+              .catch(() => null)
+          : meeting.currentTopicId
+            ? this.prisma.voteSession
+                .findFirst({
+                  where: { meetingId, topicId: meeting.currentTopicId, status: 'CLOSED' },
+                  orderBy: { closedAt: 'desc' },
+                  select: { id: true },
+                })
+                .then(async (lastClosed) => {
+                  if (!lastClosed) return null;
+                  try {
+                    return await this.votingService.getResult(lastClosed.id);
+                  } catch (e) {
+                    return null;
+                  }
+                })
+            : Promise.resolve(null),
+        // Timers
+        this.prisma.timerSession.findMany({
+          where: { meetingId, endedAt: null },
+          orderBy: { startedAt: 'desc' },
+        }),
+        // Current speaker
+        meeting.currentSpeakerId
+          ? this.prisma.dirPerson.findUnique({
+              where: { id: meeting.currentSpeakerId },
+              select: { id: true, fullName: true },
             })
           : Promise.resolve(null),
-      // Timers
-      this.prisma.timerSession.findMany({
-        where: { meetingId, endedAt: null },
-        orderBy: { startedAt: 'desc' },
-      }),
-      // Current speaker
-      meeting.currentSpeakerId
-        ? this.prisma.dirPerson.findUnique({ where: { id: meeting.currentSpeakerId }, select: { id: true, fullName: true } })
-        : Promise.resolve(null),
-      // Next speaker
-      meeting.nextSpeakerId
-        ? this.prisma.dirPerson.findUnique({ where: { id: meeting.nextSpeakerId }, select: { id: true, fullName: true } })
-        : Promise.resolve(null),
-      // Voted clubs in active session (handles secret votes where clubId is null in Vote table)
-      openVoteSession
-        ? this.prisma.vote.findMany({
-            where: { voteSessionId: openVoteSession.id },
-            select: { userId: true },
-          }).then(async (votes) => {
-            const voterUserIds = votes.map((v) => v.userId);
-            const participants = await this.prisma.meetingParticipant.findMany({
-              where: {
-                meetingId,
-                userId: { in: voterUserIds },
-              },
-              select: { clubId: true },
-            });
-            return participants.map((p) => ({ clubId: p.clubId }));
-          })
-        : Promise.resolve([]),
-      // Motions
-      this.prisma.motion.findMany({
-        where: { meetingId },
-        orderBy: { createdAt: 'asc' },
-        include: {
-          proposedByClub: { select: { id: true, name: true } },
-          secondedByClub: { select: { id: true, name: true } },
-        },
-      }),
-      // Enabled Clubs
-      this.getCachedEnabledClubs(),
-    ]);
+        // Next speaker
+        meeting.nextSpeakerId
+          ? this.prisma.dirPerson.findUnique({
+              where: { id: meeting.nextSpeakerId },
+              select: { id: true, fullName: true },
+            })
+          : Promise.resolve(null),
+        // Voted clubs in active session (handles secret votes where clubId is null in Vote table)
+        openVoteSession
+          ? this.prisma.vote
+              .findMany({
+                where: { voteSessionId: openVoteSession.id },
+                select: { userId: true },
+              })
+              .then(async (votes) => {
+                const voterUserIds = votes.map((v) => v.userId);
+                const participants = await this.prisma.meetingParticipant.findMany({
+                  where: {
+                    meetingId,
+                    userId: { in: voterUserIds },
+                  },
+                  select: { clubId: true },
+                });
+                return participants.map((p) => ({ clubId: p.clubId }));
+              })
+          : Promise.resolve([]),
+        // Motions
+        this.prisma.motion.findMany({
+          where: { meetingId },
+          orderBy: { createdAt: 'asc' },
+          include: {
+            proposedByClub: { select: { id: true, name: true } },
+            secondedByClub: { select: { id: true, name: true } },
+          },
+        }),
+        // Enabled Clubs
+        this.getCachedEnabledClubs(),
+      ]);
 
-    const votedClubIds = votedClubs
-      .map((vc) => vc.clubId)
-      .filter((id): id is string => typeof id === 'string');
+    const votedClubIds = votedClubs.map((vc) => vc.clubId).filter((id): id is string => typeof id === 'string');
 
     const now = Date.now();
     const timers = activeTimers.map((t) => {
@@ -705,9 +728,7 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
     });
     // Quórum autoritativo: present/required/met salen todos de checkQuorum
     // (clubes habilitados; los moderadores no registran asistencia y no cuentan).
-    const quorumStatus = meeting.isDistrictMeeting
-      ? await this.quorumService.checkQuorum(meetingId)
-      : null;
+    const quorumStatus = meeting.isDistrictMeeting ? await this.quorumService.checkQuorum(meetingId) : null;
 
     return {
       meeting: {
@@ -726,13 +747,15 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
         endedAt: meeting.endedAt?.toISOString() ?? null,
         transcriptionEnabled: meeting.transcriptionEnabled,
       },
-      quorum: quorumStatus ? {
-        required: quorumStatus.required,
-        present: quorumStatus.present,
-        met: quorumStatus.met,
-        isInformationalOnly: quorumStatus.isInformationalOnly,
-        connected: this.getConnectedClubCount(meetingId),
-      } : null,
+      quorum: quorumStatus
+        ? {
+            required: quorumStatus.required,
+            present: quorumStatus.present,
+            met: quorumStatus.met,
+            isInformationalOnly: quorumStatus.isInformationalOnly,
+            connected: this.getConnectedClubCount(meetingId),
+          }
+        : null,
       currentTopic: currentTopic
         ? {
             id: currentTopic.id,
@@ -813,9 +836,10 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
       clubAttendance: enabledClubs
         .map((club) => {
           const attendance = meeting.clubAttendances.find((a) => a.clubId === club.id);
-          const participant = attendance && attendance.attendeeUserId
-            ? meeting.participants.find((p) => p.userId === attendance.attendeeUserId)
-            : null;
+          const participant =
+            attendance && attendance.attendeeUserId
+              ? meeting.participants.find((p) => p.userId === attendance.attendeeUserId)
+              : null;
 
           const isConnected = this.getConnectedClubIds(meetingId).includes(club.id);
           const isPresent = !!attendance;

@@ -39,7 +39,12 @@ export abstract class BulkImporter<TDto> {
         const message = err instanceof Error ? err.message : String(err);
         this.logger.error(`persist() failed: ${message}`);
         if (mode === 'strict') {
-          return this.buildResult(rows.length, [], [...errors, { row: 0, data: {}, message: `Persist error: ${message}` }], mode);
+          return this.buildResult(
+            rows.length,
+            [],
+            [...errors, { row: 0, data: {}, message: `Persist error: ${message}` }],
+            mode,
+          );
         }
       }
     }

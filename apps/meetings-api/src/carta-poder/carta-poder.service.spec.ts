@@ -2,18 +2,39 @@ import { CartaPoderService } from './carta-poder.service';
 
 const DAY = 24 * 3600 * 1000;
 
-function setup(over: { meeting?: Record<string, unknown> | null; existing?: unknown; delegate?: boolean; isPresident?: boolean; cp?: Record<string, unknown> } = {}) {
+function setup(
+  over: {
+    meeting?: Record<string, unknown> | null;
+    existing?: unknown;
+    delegate?: boolean;
+    isPresident?: boolean;
+    cp?: Record<string, unknown>;
+  } = {},
+) {
   const prisma = {
     meeting: {
-      findUnique: jest.fn().mockResolvedValue(
-        over.meeting === null ? null : { id: 'm1', scheduledAt: null, status: 'DRAFT', ...over.meeting },
-      ),
+      findUnique: jest
+        .fn()
+        .mockResolvedValue(
+          over.meeting === null ? null : { id: 'm1', scheduledAt: null, status: 'DRAFT', ...over.meeting },
+        ),
     },
     cartaPoder: {
       findUnique: jest.fn().mockResolvedValue(over.existing ?? null),
-      findFirst: jest.fn().mockResolvedValue({ id: 'cp1', meetingId: 'm1', clubId: 'clubA', delegateUserId: 'd1', status: 'PENDING_SECRETARY', ...over.cp }),
+      findFirst: jest.fn().mockResolvedValue({
+        id: 'cp1',
+        meetingId: 'm1',
+        clubId: 'clubA',
+        delegateUserId: 'd1',
+        status: 'PENDING_SECRETARY',
+        ...over.cp,
+      }),
       create: jest.fn().mockImplementation(({ data }) => Promise.resolve({ id: 'cp1', ...data })),
-      update: jest.fn().mockImplementation(({ data }) => Promise.resolve({ id: 'cp1', clubId: 'clubA', presidentUserId: 'p1', delegateUserId: 'd1', ...data })),
+      update: jest
+        .fn()
+        .mockImplementation(({ data }) =>
+          Promise.resolve({ id: 'cp1', clubId: 'clubA', presidentUserId: 'p1', delegateUserId: 'd1', ...data }),
+        ),
     },
     dirPerson: { findUnique: jest.fn().mockResolvedValue(over.delegate === false ? null : { id: 'd1' }) },
     dirClub: { findUnique: jest.fn().mockResolvedValue({ id: 'clubA', name: 'Club A' }) },

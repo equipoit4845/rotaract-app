@@ -35,7 +35,7 @@ export class TopicsService {
       .aggregate({ where: { meetingId }, _max: { order: true } })
       .then((r) => r._max.order ?? -1);
 
-    let targetOrder = dto.order ?? (maxOrder + 1);
+    let targetOrder = dto.order ?? maxOrder + 1;
 
     // If meeting is live/paused, ensure any new topic is placed after the attendance topic
     if (meeting.status === 'LIVE' || meeting.status === 'PAUSED') {
@@ -104,7 +104,7 @@ export class TopicsService {
 
     let targetTopicIds = [...dto.topicIds];
     if (meeting.status === 'LIVE' || meeting.status === 'PAUSED') {
-      const attendanceTopic = topics.find(t => t.title.toLowerCase().includes('asistencia'));
+      const attendanceTopic = topics.find((t) => t.title.toLowerCase().includes('asistencia'));
       if (attendanceTopic) {
         const index = targetTopicIds.indexOf(attendanceTopic.id);
         if (index > -1) {
@@ -130,7 +130,7 @@ export class TopicsService {
     if (!meeting) throw new NotFoundException('Reunión no encontrada');
     if (meeting.status !== MeetingStatus.LIVE && meeting.status !== MeetingStatus.PAUSED)
       throw new BadRequestException('Solo se puede cambiar el tema actual en reunión en vivo o pausada');
-    
+
     if (topicId) {
       await this.assertTopicInMeeting(meetingId, topicId);
 
@@ -238,7 +238,9 @@ export class TopicsService {
           rows.push(data);
         });
       } catch (err) {
-        throw new BadRequestException(`Error al procesar el archivo Excel: ${err instanceof Error ? err.message : 'formato inválido'}`);
+        throw new BadRequestException(
+          `Error al procesar el archivo Excel: ${err instanceof Error ? err.message : 'formato inválido'}`,
+        );
       }
     } else {
       // Parse as CSV
@@ -264,10 +266,25 @@ export class TopicsService {
       return result;
     }
 
-    const titleKey = headers.find((h) => h.toLowerCase() === 'title' || h.toLowerCase() === 'titulo' || h.toLowerCase() === 'título') || 'title';
-    const descKey = headers.find((h) => h.toLowerCase() === 'description' || h.toLowerCase() === 'descripcion' || h.toLowerCase() === 'descripción') || 'description';
+    const titleKey =
+      headers.find(
+        (h) => h.toLowerCase() === 'title' || h.toLowerCase() === 'titulo' || h.toLowerCase() === 'título',
+      ) || 'title';
+    const descKey =
+      headers.find(
+        (h) =>
+          h.toLowerCase() === 'description' || h.toLowerCase() === 'descripcion' || h.toLowerCase() === 'descripción',
+      ) || 'description';
     const typeKey = headers.find((h) => h.toLowerCase() === 'type' || h.toLowerCase() === 'tipo') || 'type';
-    const durationKey = headers.find((h) => h.toLowerCase() === 'durationmin' || h.toLowerCase() === 'duracionmin' || h.toLowerCase() === 'duraciónmin' || h.toLowerCase() === 'duracion' || h.toLowerCase() === 'duración') || 'durationMin';
+    const durationKey =
+      headers.find(
+        (h) =>
+          h.toLowerCase() === 'durationmin' ||
+          h.toLowerCase() === 'duracionmin' ||
+          h.toLowerCase() === 'duraciónmin' ||
+          h.toLowerCase() === 'duracion' ||
+          h.toLowerCase() === 'duración',
+      ) || 'durationMin';
 
     let currentOrder = await this.prisma.agendaTopic
       .aggregate({ where: { meetingId }, _max: { order: true } })
@@ -353,13 +370,21 @@ export class TopicsService {
     }
 
     if (result.errors.length > 0) {
-      result.reportCsv = this.csvParser.generateReportCsv(['title', 'description', 'type', 'durationMin'], result.errors);
+      result.reportCsv = this.csvParser.generateReportCsv(
+        ['title', 'description', 'type', 'durationMin'],
+        result.errors,
+      );
     }
 
     return result;
   }
 
-  private abortStrict(rows: Record<string, string>[], index: number, result: BulkImportResult, reason: string): BulkImportResult {
+  private abortStrict(
+    rows: Record<string, string>[],
+    index: number,
+    result: BulkImportResult,
+    reason: string,
+  ): BulkImportResult {
     for (let j = index + 1; j < rows.length; j++) {
       result.errors.push({
         row: j + 2,
@@ -469,7 +494,7 @@ export class TopicsService {
     const windowMs = 60 * 1000; // 1 minute
     const maxRequests = 25; // max 25 audio chunks per minute
     let userRequests = this.rateLimits.get(userId) || [];
-    userRequests = userRequests.filter(timestamp => now - timestamp < windowMs);
+    userRequests = userRequests.filter((timestamp) => now - timestamp < windowMs);
     if (userRequests.length >= maxRequests) {
       throw new BadRequestException('Límite de transcripción excedido. Por favor intente más tarde.');
     }

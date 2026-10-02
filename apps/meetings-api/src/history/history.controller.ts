@@ -24,20 +24,14 @@ export class HistoryController {
   }
 
   @Get('meetings/:meetingId')
-  async getMeeting(
-    @Param('meetingId') meetingId: string,
-    @CurrentUser() user: CurrentUserPayload,
-  ) {
+  async getMeeting(@Param('meetingId') meetingId: string, @CurrentUser() user: CurrentUserPayload) {
     return this.meetingsService.findOne(meetingId, user.id, user.role as Role);
   }
 
   @Get('meetings/:meetingId/votes')
   @UseGuards(RolesGuard)
   @Roles(Role.SECRETARY, Role.PRESIDENT, Role.RDR)
-  async getVoteSessions(
-    @Param('meetingId') meetingId: string,
-    @CurrentUser() user: CurrentUserPayload,
-  ) {
+  async getVoteSessions(@Param('meetingId') meetingId: string, @CurrentUser() user: CurrentUserPayload) {
     await this.meetingsService.findOne(meetingId, user.id, user.role as Role);
     const sessions = await this.prisma.voteSession.findMany({
       where: { meetingId },
@@ -55,10 +49,7 @@ export class HistoryController {
   }
 
   @Get('meetings/:meetingId/audit')
-  async getAudit(
-    @Param('meetingId') meetingId: string,
-    @CurrentUser() user: CurrentUserPayload,
-  ) {
+  async getAudit(@Param('meetingId') meetingId: string, @CurrentUser() user: CurrentUserPayload) {
     await this.meetingsService.findOne(meetingId, user.id, user.role as Role);
     return this.auditService.findByMeeting(meetingId);
   }
