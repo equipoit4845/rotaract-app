@@ -1,0 +1,24 @@
+name: {{DART_PACKAGE}}
+description: App Flutter conectada a Mi Rotaract ("Ingresar con Mi Rotaract" + padrón del club).
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # OAuth 2.0 + OIDC con PKCE en el navegador del sistema (Custom Tabs / ASWebAuthenticationSession).
+  flutter_appauth: ^9.0.0
+  # Refresh token en Keychain (iOS/macOS) / Keystore (Android). Nunca en SharedPreferences.
+  flutter_secure_storage: ^9.2.2
+  http: ^1.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true

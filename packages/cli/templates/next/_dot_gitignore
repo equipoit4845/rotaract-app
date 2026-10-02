@@ -1,0 +1,10 @@
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# Secretos: nunca al repositorio.
+.env
+.env.local
+.env.*.local

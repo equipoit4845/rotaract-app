@@ -9,3 +9,6 @@ coverage
 postgres-data
 redis-data
 nats-data
+.claude
+**/.venv
+**/__pycache__

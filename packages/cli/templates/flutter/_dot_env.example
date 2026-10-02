@@ -1,0 +1,14 @@
+# Configuración PÚBLICA de la app Flutter (se compila dentro del binario).
+# Copiala a dart_defines.json (JSON) o pasala con --dart-define. Ver README.
+#
+# ⚠ NUNCA uses acá el .env.local que escribe `mirotaract dev up`: tiene el
+#   secreto de la app de servidor. Esta app es PUBLIC y no lleva secretos.
+
+# API del kernel = issuer OIDC.
+MIROTARACT_ISSUER=https://api.rotaract4845.com/api/kernel/v1
+# client_id de la app PUBLIC (móvil). En local: MIROTARACT_PUBLIC_CLIENT_ID de `mirotaract dev status`.
+MIROTARACT_CLIENT_ID=mra_xxxxxxxxxxxxxxxxxxxx
+# Dirección de regreso registrada (https con App Links / Universal Links).
+MIROTARACT_REDIRECT_URI=https://tu-dominio.org/auth/mobile-callback
+# Tu backend (plantilla next o fastapi) con GET /api/members.
+BACKEND_URL=https://tu-backend.org

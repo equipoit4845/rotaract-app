@@ -1,0 +1,6 @@
+{
+  "MIROTARACT_ISSUER": "https://api.rotaract4845.com/api/kernel/v1",
+  "MIROTARACT_CLIENT_ID": "mra_xxxxxxxxxxxxxxxxxxxx",
+  "MIROTARACT_REDIRECT_URI": "https://tu-dominio.org/auth/mobile-callback",
+  "BACKEND_URL": "https://tu-backend.org"
+}

@@ -25,6 +25,10 @@ contratos públicos son [`kernel-openapi.yaml`](../kernel-openapi.yaml),
 - [Contrato de UI para módulos externos](module-ui-contract.md): qué
   instala un módulo, CSS isolation, `ModuleFrame`, compatibilidad de
   versiones y reglas de PR.
+- [CLI y kernel local](14-cli-and-local-kernel.md): `mirotaract init`,
+  `dev`, `gen types` y `webhooks listen`; distrito sintético
+  (`prisma/seed-synthetic.ts`) y compose `mirotaract-dev`. Guía para
+  desarrolladores: [developers/cli.md](developers/cli.md).
 - [Validación v1 del Design System](design-system-v1-validation.md):
   veredicto por área con comandos y resultados reales — no afirmaciones sin
   evidencia.

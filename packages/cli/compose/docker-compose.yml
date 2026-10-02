@@ -1,0 +1,133 @@
+# Kernel local de Mi Rotaract para desarrollo (`mirotaract dev`).
+#
+# Lo usa la CLI con `docker compose -p mirotaract-dev`, así nunca choca con
+# el proyecto de producción (`rotaract-app`). Todas las variables vienen del
+# archivo que escribe la CLI (~/.mirotaract/dev/dev.env); no hay secretos
+# reales acá: es un entorno descartable con datos sintéticos.
+#
+# Imágenes: por defecto se construyen desde un checkout del kernel
+# (docker-compose.build.yml, `--kernel-repo`). Para usar imágenes publicadas,
+# definí MIROTARACT_API_IMAGE / MIROTARACT_WEB_IMAGE y `--no-build`.
+#
+# Puertos: la API y la web escuchan DENTRO del contenedor en los mismos
+# puertos que en tu máquina, y la web comparte la red de la API
+# (`network_mode: service:api`). Así `http://localhost:<api>` funciona igual
+# desde tu navegador, desde tu app y desde el servidor de la web (que tiene
+# la URL de la API fija en el build).
+name: mirotaract-dev
+
+x-kernel-env: &kernel-env
+  KERNEL_DATABASE_URL: postgresql://kernel:${MIROTARACT_DEV_DB_PASSWORD:?}@postgres:5432/kernel
+  KERNEL_DIRECT_URL: postgresql://kernel:${MIROTARACT_DEV_DB_PASSWORD:?}@postgres:5432/kernel
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: kernel
+      POSTGRES_PASSWORD: ${MIROTARACT_DEV_DB_PASSWORD:?}
+      POSTGRES_DB: kernel
+    volumes: [pgdata:/var/lib/postgresql/data]
+    labels: { org.mirotaract.dev: "true" }
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kernel -d kernel"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  nats:
+    image: nats:2.10-alpine
+    restart: unless-stopped
+    command: ["-js", "-m", "8222"]
+    labels: { org.mirotaract.dev: "true" }
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8222/healthz"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  # One-off: migraciones + seed base + distrito sintético. La CLI lo corre con
+  # `docker compose run --rm setup` y lee las credenciales de su salida.
+  setup:
+    image: ${MIROTARACT_API_IMAGE:-mirotaract-dev/kernel-api:local}
+    profiles: ["setup"]
+    working_dir: /workspace/apps/institutional-kernel-api
+    environment:
+      <<: *kernel-env
+      NODE_ENV: development
+      MIROTARACT_SANDBOX_REDIRECT_URIS: ${MIROTARACT_DEV_REDIRECT_URIS:-}
+    command:
+      - sh
+      - -c
+      - >-
+        set -e;
+        ../../node_modules/.bin/prisma migrate deploy --schema ../../prisma/schema.prisma 1>&2;
+        ../../node_modules/.bin/tsx ../../prisma/seed.ts 1>&2;
+        ../../node_modules/.bin/tsx ../../prisma/seed-synthetic.ts --json
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  api:
+    image: ${MIROTARACT_API_IMAGE:-mirotaract-dev/kernel-api:local}
+    restart: unless-stopped
+    environment:
+      <<: *kernel-env
+      NODE_ENV: production
+      PORT: ${MIROTARACT_DEV_API_PORT:-54321}
+      NATS_URL: nats://nats:4222
+      JWT_SECRET: ${MIROTARACT_DEV_JWT_SECRET:?}
+      KERNEL_SIGNING_KEY_SECRET: ${MIROTARACT_DEV_SIGNING_KEY_SECRET:?}
+      KERNEL_ISSUER_URL: http://localhost:${MIROTARACT_DEV_API_PORT:-54321}/api/kernel/v1
+      KERNEL_PUBLIC_WEB_URL: http://localhost:${MIROTARACT_DEV_WEB_PORT:-54322}
+      KERNEL_CORS_ORIGINS: http://localhost:${MIROTARACT_DEV_WEB_PORT:-54322},${MIROTARACT_DEV_APP_ORIGINS:-http://localhost:3000}
+      # Un solo proceso hace de API y de worker (outbox, vencimientos, entregas).
+      KERNEL_JOBS_ENABLED: "true"
+      KERNEL_JOBS_INTERVAL_MS: "5000"
+      KERNEL_RATE_LIMIT_ENABLED: "false"
+      # E7: stream de webhooks para `mirotaract webhooks listen` y endpoints http://localhost.
+      KERNEL_WEBHOOK_STREAM_ENABLED: "true"
+      KERNEL_WEBHOOKS_ALLOW_INSECURE: "true"
+      # Sin correo real: los mails de verificación no salen.
+      CLICKMAIL_API_KEY: ""
+    ports:
+      - "127.0.0.1:${MIROTARACT_DEV_API_PORT:-54321}:${MIROTARACT_DEV_API_PORT:-54321}"
+      - "127.0.0.1:${MIROTARACT_DEV_WEB_PORT:-54322}:${MIROTARACT_DEV_WEB_PORT:-54322}"
+    labels: { org.mirotaract.dev: "true" }
+    depends_on:
+      postgres: { condition: service_healthy }
+      nats: { condition: service_healthy }
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q --spider http://127.0.0.1:$${PORT}/health/live || exit 1",
+        ]
+      interval: 3s
+      timeout: 3s
+      retries: 60
+      start_period: 10s
+
+  web:
+    image: ${MIROTARACT_WEB_IMAGE:-mirotaract-dev/kernel-web:local-${MIROTARACT_DEV_API_PORT:-54321}}
+    restart: unless-stopped
+    network_mode: "service:api"
+    environment:
+      PORT: ${MIROTARACT_DEV_WEB_PORT:-54322}
+      HOSTNAME: 0.0.0.0
+    labels: { org.mirotaract.dev: "true" }
+    depends_on:
+      api: { condition: service_healthy }
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://127.0.0.1:$${PORT}/login || exit 1",
+        ]
+      interval: 3s
+      timeout: 5s
+      retries: 60
+      start_period: 10s
+
+volumes:
+  pgdata:

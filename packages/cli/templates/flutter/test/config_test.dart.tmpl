@@ -1,0 +1,14 @@
+import 'package:flutter_test/flutter_test.dart';
+
+import 'package:{{DART_PACKAGE}}/src/config.dart';
+
+void main() {
+  test('sin --dart-define avisa qué falta configurar', () {
+    expect(AppConfig.missing(), containsAll(['MIROTARACT_CLIENT_ID', 'MIROTARACT_REDIRECT_URI']));
+  });
+
+  test('pide solo los scopes que usa (sin secretos ni scopes de servicio)', () {
+    expect(AppConfig.scopes, ['openid', 'profile', 'memberships']);
+    expect(AppConfig.scopes.where((s) => s.startsWith('kernel.service.')), isEmpty);
+  });
+}
