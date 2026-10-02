@@ -134,6 +134,18 @@
       "id": "oidc.public_client",
       "description": "App PUBLIC (sin secreto): code + PKCE con MR_PUBLIC_CLIENT_ID.",
       "expected": "exchangeCode devuelve claims verificados con aud == MR_PUBLIC_CLIENT_ID."
+    },
+    {
+      "id": "webhooks.signature_vectors",
+      "offline": true,
+      "description": "verifyWebhook / verify_webhook con cada vector de webhook-vectors.json (firma HMAC con marca de tiempo, rotación, tolerancia, cuerpo crudo). No necesita kernel.",
+      "expected": "Los vectores válidos devuelven el evento con id y type esperados; los inválidos fallan con MiRotaractWebhookError y el code esperado."
+    },
+    {
+      "id": "webhooks.event_catalog",
+      "requires": "E7",
+      "description": "GET {MR_BASE_URL}/events/catalog (público, sin credenciales).",
+      "expected": "Incluye membership.activated.v1 con scope kernel.service.memberships.read y un ejemplo con id evt_..., type, createdAt, organizationId y data."
     }
   ]
 }

@@ -34,5 +34,32 @@ export {
   type PageInfo,
   type NotModified,
 } from "./pagination.ts";
+export {
+  verifyWebhook,
+  createWebhookHandler,
+  MiRotaractWebhookError,
+  WEBHOOK_ID_HEADER,
+  WEBHOOK_TIMESTAMP_HEADER,
+  WEBHOOK_SIGNATURE_HEADER,
+  DEFAULT_WEBHOOK_TOLERANCE_SEC,
+  type MiRotaractWebhookErrorCode,
+  type MiRotaractEvent,
+  type MiRotaractWebhookEvent,
+  type WebhookEventType,
+  type VerifyWebhookOptions,
+  type WebhookHandlerOptions,
+  type WebhookHeadersLike,
+  type MembershipEventData,
+  type MembershipCreatedEvent,
+  type MembershipActivatedEvent,
+  type MembershipEndedEvent,
+  type AppointmentActivatedEvent,
+  type AppointmentEndedEvent,
+  type OrganizationUpdatedEvent,
+  type OrganizationArchivedEvent,
+  type PersonUpdatedEvent,
+  type PeriodCreatedEvent,
+  type PingEvent,
+} from "./webhooks.ts";
 export { SDK_VERSION, type FetchLike, type HttpOptions } from "./http.ts";
 export type * from "./types.ts";

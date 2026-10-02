@@ -24,6 +24,8 @@ from mirotaract import (
     MiRotaractApiError,
     MiRotaractAuth,
     MiRotaractOAuthError,
+    MiRotaractWebhookError,
+    verify_webhook,
 )
 
 SCOPE = "openid profile email memberships positions"
@@ -319,6 +321,51 @@ class Runner:
         aud = tokens.claims["aud"]
         check(env("MR_PUBLIC_CLIENT_ID") in (aud if isinstance(aud, list) else [aud]), f"aud {aud}")
 
+    def webhooks_signature_vectors(self) -> None:
+        vectors = json.loads((HERE / "webhook-vectors.json").read_text(encoding="utf-8"))["vectors"]
+        for vector in vectors:
+            def run(vector=vector):
+                return verify_webhook(
+                    vector["body"].encode("utf-8"),
+                    vector["headers"],
+                    vector["secret"],
+                    vector.get("toleranceSec", 300),
+                    now=vector["now"],
+                )
+
+            if vector["expected"]["valid"]:
+                event = run()
+                check(
+                    event["id"] == vector["expected"]["eventId"] and event["type"] == vector["expected"]["type"],
+                    f"{vector['name']}: evento {event['id']} {event['type']}",
+                )
+            else:
+                expect_error(
+                    run,
+                    lambda e, vector=vector: isinstance(e, MiRotaractWebhookError)
+                    and e.code == vector["expected"]["error"],
+                    f"{vector['name']}: {vector['expected']['error']}",
+                )
+
+    def webhooks_event_catalog(self) -> None:
+        base = (env("MR_BASE_URL") or "").rstrip("/")
+        response = httpx.get(f"{base}/events/catalog")
+        if response.status_code == 404:
+            raise MiRotaractApiError(404, {"title": "Not Found"})
+        check(response.status_code == 200, f"HTTP {response.status_code}")
+        entry = next((e for e in response.json()["events"] if e["type"] == "membership.activated.v1"), None)
+        check(entry, "falta membership.activated.v1")
+        check(entry["scope"] == "kernel.service.memberships.read", f"scope {entry['scope']}")
+        example = entry["example"]
+        check(
+            example["id"].startswith("evt_")
+            and example["type"] == entry["type"]
+            and example["createdAt"]
+            and example["organizationId"]
+            and isinstance(example["data"], dict),
+            "ejemplo incompleto",
+        )
+
 
 def main() -> int:
     parser = argparse.ArgumentParser()
@@ -337,7 +384,8 @@ def main() -> int:
         try:
             if method is None:
                 raise AssertionError("escenario no implementado en este runner")
-            need("MR_BASE_URL", "MR_CLIENT_ID", "MR_CLIENT_SECRET", "MR_ORG_ID", "MR_OTHER_ORG_ID")
+            if not scenario.get("offline"):
+                need("MR_BASE_URL", "MR_CLIENT_ID", "MR_CLIENT_SECRET", "MR_ORG_ID", "MR_OTHER_ORG_ID")
             method()
         except Skip as skip:
             status, detail = "SKIP", str(skip)

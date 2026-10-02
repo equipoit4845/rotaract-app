@@ -5,6 +5,7 @@
 - ``MiRotaractAuth`` / ``AsyncMiRotaractAuth``: "Ingresar con Mi Rotaract"
   (OAuth 2.0 + PKCE + OpenID Connect).
 - ``mirotaract.fastapi.require_user``: dependencia para FastAPI.
+- ``verify_webhook``: verifica la firma de un webhook de Mi Rotaract.
 """
 
 from ._http import SDK_VERSION
@@ -21,6 +22,10 @@ from .errors import (
     MiRotaractConfigError,
     MiRotaractError,
     MiRotaractOAuthError,
+)
+from .webhooks import (
+    MiRotaractWebhookError,
+    verify_webhook,
 )
 from .pagination import AsyncPaginator, NotModified, Page, SyncPaginator
 from .types import (
@@ -49,6 +54,8 @@ __all__ = [
     "MiRotaractApiError",
     "MiRotaractOAuthError",
     "MiRotaractConfigError",
+    "MiRotaractWebhookError",
+    "verify_webhook",
     "Page",
     "NotModified",
     "SyncPaginator",

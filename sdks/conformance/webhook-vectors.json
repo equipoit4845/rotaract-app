@@ -1,0 +1,344 @@
+{
+  "version": 1,
+  "description": "Vectores de firma de webhooks de Mi Rotaract (docs/13-events-and-webhooks.md). MiRotaract-Signature = lista separada por comas de v1=<hex HMAC-SHA256(secret, \"<timestamp>.<cuerpo crudo>\")>; la clave HMAC es el secreto completo (\"whsec_...\") en UTF-8. Cada SDK verifica todos: verifyWebhook({ payload: body, headers, secret, toleranceSec, now }) en JS y verify_webhook(body.encode(), headers, secret, tolerance=, now=) en Python. `now` está en segundos Unix. `expected.error` es el código de MiRotaractWebhookError.",
+  "algorithm": "HMAC-SHA256",
+  "defaultToleranceSec": 300,
+  "errorCodes": [
+    "missing_header",
+    "invalid_timestamp",
+    "timestamp_out_of_tolerance",
+    "invalid_signature",
+    "invalid_payload"
+  ],
+  "vectors": [
+    {
+      "name": "valid",
+      "description": "Firma correcta con el secreto vigente; cuerpo con caracteres no ASCII (UTF-8).",
+      "secret": "whsec_dGVzdC1zZWNyZXQtZm9yLWNvbmZvcm1hbmNlLXZlY3RvcnMtMDE",
+      "now": 1790985603,
+      "body": "{\"id\":\"evt_cm1vectormembership0001\",\"type\":\"membership.activated.v1\",\"createdAt\":\"2026-10-02T23:59:58.000Z\",\"organizationId\":\"cm1clubsanlorenzo0000000\",\"data\":{\"membership\":{\"membershipId\":\"cm1membershipanaperez000\",\"organizationId\":\"cm1clubsanlorenzo0000000\",\"personId\":\"cm1personanaperez0000000\",\"status\":\"ACTIVE\",\"joinedAt\":\"2026-10-02T23:59:58.000Z\",\"memberNumber\":null,\"person\":{\"id\":\"cm1personanaperez0000000\",\"displayName\":\"Ana Pérez Ñandutí\",\"firstName\":\"Ana\",\"lastName\":\"Pérez Ñandutí\",\"avatarUrl\":null,\"updatedAt\":\"2026-10-02T23:59:58.000Z\"},\"updatedAt\":\"2026-10-02T23:59:58.000Z\"},\"previousStatus\":\"PENDING\"}}",
+      "headers": {
+        "MiRotaract-Webhook-Id": "evt_cm1vectormembership0001",
+        "MiRotaract-Webhook-Timestamp": "1790985600",
+        "MiRotaract-Signature": "v1=e8051b9fa42026ffd5409100d18344706ff72c901085a97c7a5290f64ee28477",
+        "User-Agent": "MiRotaract-Webhooks/1",
+        "Content-Type": "application/json"
+      },
+      "expected": {
+        "valid": true,
+        "eventId": "evt_cm1vectormembership0001",
+        "type": "membership.activated.v1"
+      }
+    },
+    {
+      "name": "valid_lowercase_headers",
+      "description": "Los nombres de cabecera no distinguen mayúsculas (Node, Express y Python los pasan en minúscula).",
+      "secret": "whsec_dGVzdC1zZWNyZXQtZm9yLWNvbmZvcm1hbmNlLXZlY3RvcnMtMDE",
+      "now": 1790985600,
+      "body": "{\"id\":\"evt_0f1e2d3c4b5a69788796a5b4\",\"type\":\"ping.v1\",\"createdAt\":\"2026-10-03T00:00:00.000Z\",\"organizationId\":\"cm1clubsanlorenzo0000000\",\"data\":{\"message\":\"Hola desde Mi Rotaract\",\"appId\":\"cm1app\",\"endpointId\":\"cm1endpoint\"}}",
+      "headers": {
+        "mirotaract-webhook-id": "evt_0f1e2d3c4b5a69788796a5b4",
+        "mirotaract-webhook-timestamp": "1790985600",
+        "mirotaract-signature": "v1=fbbf1125b02b3fac0706160c1af020cabe01a18c9ac43eac9b1028a36ac28360",
+        "user-agent": "MiRotaract-Webhooks/1",
+        "content-type": "application/json"
+      },
+      "expected": {
+        "valid": true,
+        "eventId": "evt_0f1e2d3c4b5a69788796a5b4",
+        "type": "ping.v1"
+      }
+    },
+    {
+      "name": "valid_rotation_new_secret",
+      "description": "Durante una rotación llegan dos firmas; el receptor que ya tiene el secreto nuevo acepta.",
+      "secret": "whsec_dGVzdC1zZWNyZXQtZm9yLWNvbmZvcm1hbmNlLXZlY3RvcnMtMDE",
+      "now": 1790985600,
+      "body": "{\"id\":\"evt_cm1vectormembership0001\",\"type\":\"membership.activated.v1\",\"createdAt\":\"2026-10-02T23:59:58.000Z\",\"organizationId\":\"cm1clubsanlorenzo0000000\",\"data\":{\"membership\":{\"membershipId\":\"cm1membershipanaperez000\",\"organizationId\":\"cm1clubsanlorenzo0000000\",\"personId\":\"cm1personanaperez0000000\",\"status\":\"ACTIVE\",\"joinedAt\":\"2026-10-02T23:59:58.000Z\",\"memberNumber\":null,\"person\":{\"id\":\"cm1personanaperez0000000\",\"displayName\":\"Ana Pérez Ñandutí\",\"firstName\":\"Ana\",\"lastName\":\"Pérez Ñandutí\",\"avatarUrl\":null,\"updatedAt\":\"2026-10-02T23:59:58.000Z\"},\"updatedAt\":\"2026-10-02T23:59:58.000Z\"},\"previousStatus\":\"PENDING\"}}",
+      "headers": {
+        "MiRotaract-Webhook-Id": "evt_cm1vectormembership0001",
+        "MiRotaract-Webhook-Timestamp": "1790985600",
+        "MiRotaract-Signature": "v1=e8051b9fa42026ffd5409100d18344706ff72c901085a97c7a5290f64ee28477,v1=cbe5608823f0d04c93a62017b20d6cc2f2175e47e425e5d0e3aa1bb79539f373",
+        "User-Agent": "MiRotaract-Webhooks/1",
+        "Content-Type": "application/json"
+      },
+      "expected": {
+        "valid": true,
+        "eventId": "evt_cm1vectormembership0001",
+        "type": "membership.activated.v1"
+      }
+    },
+    {
+      "name": "valid_rotation_old_secret",
+      "description": "Durante una rotación, el receptor que todavía tiene el secreto anterior también acepta.",
+      "secret": "whsec_b2xkLXNlY3JldC1yb3RhdGVkLW91dC1kdXJpbmctZ3JhY2UtMDI",
+      "now": 1790985600,
+      "body": "{\"id\":\"evt_cm1vectormembership0001\",\"type\":\"membership.activated.v1\",\"createdAt\":\"2026-10-02T23:59:58.000Z\",\"organizationId\":\"cm1clubsanlorenzo0000000\",\"data\":{\"membership\":{\"membershipId\":\"cm1membershipanaperez000\",\"organizationId\":\"cm1clubsanlorenzo0000000\",\"personId\":\"cm1personanaperez0000000\",\"status\":\"ACTIVE\",\"joinedAt\":\"2026-10-02T23:59:58.000Z\",\"memberNumber\":null,\"person\":{\"id\":\"cm1personanaperez0000000\",\"displayName\":\"Ana Pérez Ñandutí\",\"firstName\":\"Ana\",\"lastName\":\"Pérez Ñandutí\",\"avatarUrl\":null,\"updatedAt\":\"2026-10-02T23:59:58.000Z\"},\"updatedAt\":\"2026-10-02T23:59:58.000Z\"},\"previousStatus\":\"PENDING\"}}",
+      "headers": {
+        "MiRotaract-Webhook-Id": "evt_cm1vectormembership0001",
+        "MiRotaract-Webhook-Timestamp": "1790985600",
+        "MiRotaract-Signature": "v1=e8051b9fa42026ffd5409100d18344706ff72c901085a97c7a5290f64ee28477, v1=cbe5608823f0d04c93a62017b20d6cc2f2175e47e425e5d0e3aa1bb79539f373",
+        "User-Agent": "MiRotaract-Webhooks/1",
+        "Content-Type": "application/json"
+      },
+      "expected": {
+        "valid": true,
+        "eventId": "evt_cm1vectormembership0001",
+        "type": "membership.activated.v1"
+      }
+    },
+    {
+      "name": "valid_at_tolerance_edge",
+      "description": "Exactamente 300 s de diferencia todavía es válido.",
+      "secret": "whsec_dGVzdC1zZWNyZXQtZm9yLWNvbmZvcm1hbmNlLXZlY3RvcnMtMDE",
+      "now": 1790985900,
+      "body": "{\"id\":\"evt_0f1e2d3c4b5a69788796a5b4\",\"type\":\"ping.v1\",\"createdAt\":\"2026-10-03T00:00:00.000Z\",\"organizationId\":\"cm1clubsanlorenzo0000000\",\"data\":{\"message\":\"Hola desde Mi Rotaract\",\"appId\":\"cm1app\",\"endpointId\":\"cm1endpoint\"}}",
+      "headers": {
+        "MiRotaract-Webhook-Id": "evt_0f1e2d3c4b5a69788796a5b4",
+        "MiRotaract-Webhook-Timestamp": "1790985600",
+        "MiRotaract-Signature": "v1=fbbf1125b02b3fac0706160c1af020cabe01a18c9ac43eac9b1028a36ac28360",
+        "User-Agent": "MiRotaract-Webhooks/1",
+        "Content-Type": "application/json"
+      },
+      "expected": {
+        "valid": true,
+        "eventId": "evt_0f1e2d3c4b5a69788796a5b4",
+        "type": "ping.v1"
+      }
+    },
+    {
+      "name": "wrong_secret",
+      "description": "Firmado con otro secreto.",
+      "secret": "whsec_b2xkLXNlY3JldC1yb3RhdGVkLW91dC1kdXJpbmctZ3JhY2UtMDI",
+      "now": 1790985600,
+      "body": "{\"id\":\"evt_cm1vectormembership0001\",\"type\":\"membership.activated.v1\",\"createdAt\":\"2026-10-02T23:59:58.000Z\",\"organizationId\":\"cm1clubsanlorenzo0000000\",\"data\":{\"membership\":{\"membershipId\":\"cm1membershipanaperez000\",\"organizationId\":\"cm1clubsanlorenzo0000000\",\"personId\":\"cm1personanaperez0000000\",\"status\":\"ACTIVE\",\"joinedAt\":\"2026-10-02T23:59:58.000Z\",\"memberNumber\":null,\"person\":{\"id\":\"cm1personanaperez0000000\",\"displayName\":\"Ana Pérez Ñandutí\",\"firstName\":\"Ana\",\"lastName\":\"Pérez Ñandutí\",\"avatarUrl\":null,\"updatedAt\":\"2026-10-02T23:59:58.000Z\"},\"updatedAt\":\"2026-10-02T23:59:58.000Z\"},\"previousStatus\":\"PENDING\"}}",
+      "headers": {
+        "MiRotaract-Webhook-Id": "evt_cm1vectormembership0001",
+        "MiRotaract-Webhook-Timestamp": "1790985600",
+        "MiRotaract-Signature": "v1=e8051b9fa42026ffd5409100d18344706ff72c901085a97c7a5290f64ee28477",
+        "User-Agent": "MiRotaract-Webhooks/1",
+        "Content-Type": "application/json"
+      },
+      "expected": {
+        "valid": false,
+        "error": "invalid_signature"
+      }
+    },
+    {
+      "name": "tampered_body",
+      "description": "El cuerpo cambió después de firmarse (un espacio de más).",
+      "secret": "whsec_dGVzdC1zZWNyZXQtZm9yLWNvbmZvcm1hbmNlLXZlY3RvcnMtMDE",
+      "now": 1790985600,
+      "body": "{\"id\":\"evt_cm1vectormembership0001\",\"type\":\"membership.activated.v1\",\"createdAt\":\"2026-10-02T23:59:58.000Z\",\"organizationId\":\"cm1clubsanlorenzo0000000\",\"data\":{\"membership\":{\"membershipId\":\"cm1membershipanaperez000\",\"organizationId\":\"cm1clubsanlorenzo0000000\",\"personId\":\"cm1personanaperez0000000\",\"status\":\"ACTIVE\",\"joinedAt\":\"2026-10-02T23:59:58.000Z\",\"memberNumber\":null,\"person\":{\"id\":\"cm1personanaperez0000000\",\"displayName\":\"Ana Pérez Ñandutí\",\"firstName\":\"Ana\",\"lastName\":\"Pérez Ñandutí\",\"avatarUrl\":null,\"updatedAt\":\"2026-10-02T23:59:58.000Z\"},\"updatedAt\":\"2026-10-02T23:59:58.000Z\"},\"previousStatus\":\"PENDING\"}} ",
+      "headers": {
+        "MiRotaract-Webhook-Id": "evt_cm1vectormembership0001",
+        "MiRotaract-Webhook-Timestamp": "1790985600",
+        "MiRotaract-Signature": "v1=e8051b9fa42026ffd5409100d18344706ff72c901085a97c7a5290f64ee28477",
+        "User-Agent": "MiRotaract-Webhooks/1",
+        "Content-Type": "application/json"
+      },
+      "expected": {
+        "valid": false,
+        "error": "invalid_signature"
+      }
+    },
+    {
+      "name": "reencoded_body",
+      "description": "El cuerpo se volvió a serializar (JSON.parse + JSON.stringify con espacios): hay que verificar los bytes crudos.",
+      "secret": "whsec_dGVzdC1zZWNyZXQtZm9yLWNvbmZvcm1hbmNlLXZlY3RvcnMtMDE",
+      "now": 1790985600,
+      "body": "{\n  \"id\": \"evt_cm1vectormembership0001\",\n  \"type\": \"membership.activated.v1\",\n  \"createdAt\": \"2026-10-02T23:59:58.000Z\",\n  \"organizationId\": \"cm1clubsanlorenzo0000000\",\n  \"data\": {\n    \"membership\": {\n      \"membershipId\": \"cm1membershipanaperez000\",\n      \"organizationId\": \"cm1clubsanlorenzo0000000\",\n      \"personId\": \"cm1personanaperez0000000\",\n      \"status\": \"ACTIVE\",\n      \"joinedAt\": \"2026-10-02T23:59:58.000Z\",\n      \"memberNumber\": null,\n      \"person\": {\n        \"id\": \"cm1personanaperez0000000\",\n        \"displayName\": \"Ana Pérez Ñandutí\",\n        \"firstName\": \"Ana\",\n        \"lastName\": \"Pérez Ñandutí\",\n        \"avatarUrl\": null,\n        \"updatedAt\": \"2026-10-02T23:59:58.000Z\"\n      },\n      \"updatedAt\": \"2026-10-02T23:59:58.000Z\"\n    },\n    \"previousStatus\": \"PENDING\"\n  }\n}",
+      "headers": {
+        "MiRotaract-Webhook-Id": "evt_cm1vectormembership0001",
+        "MiRotaract-Webhook-Timestamp": "1790985600",
+        "MiRotaract-Signature": "v1=e8051b9fa42026ffd5409100d18344706ff72c901085a97c7a5290f64ee28477",
+        "User-Agent": "MiRotaract-Webhooks/1",
+        "Content-Type": "application/json"
+      },
+      "expected": {
+        "valid": false,
+        "error": "invalid_signature"
+      }
+    },
+    {
+      "name": "timestamp_too_old",
+      "description": "Más de 300 s en el pasado (posible reenvío de un mensaje capturado).",
+      "secret": "whsec_dGVzdC1zZWNyZXQtZm9yLWNvbmZvcm1hbmNlLXZlY3RvcnMtMDE",
+      "now": 1790985901,
+      "body": "{\"id\":\"evt_cm1vectormembership0001\",\"type\":\"membership.activated.v1\",\"createdAt\":\"2026-10-02T23:59:58.000Z\",\"organizationId\":\"cm1clubsanlorenzo0000000\",\"data\":{\"membership\":{\"membershipId\":\"cm1membershipanaperez000\",\"organizationId\":\"cm1clubsanlorenzo0000000\",\"personId\":\"cm1personanaperez0000000\",\"status\":\"ACTIVE\",\"joinedAt\":\"2026-10-02T23:59:58.000Z\",\"memberNumber\":null,\"person\":{\"id\":\"cm1personanaperez0000000\",\"displayName\":\"Ana Pérez Ñandutí\",\"firstName\":\"Ana\",\"lastName\":\"Pérez Ñandutí\",\"avatarUrl\":null,\"updatedAt\":\"2026-10-02T23:59:58.000Z\"},\"updatedAt\":\"2026-10-02T23:59:58.000Z\"},\"previousStatus\":\"PENDING\"}}",
+      "headers": {
+        "MiRotaract-Webhook-Id": "evt_cm1vectormembership0001",
+        "MiRotaract-Webhook-Timestamp": "1790985600",
+        "MiRotaract-Signature": "v1=e8051b9fa42026ffd5409100d18344706ff72c901085a97c7a5290f64ee28477",
+        "User-Agent": "MiRotaract-Webhooks/1",
+        "Content-Type": "application/json"
+      },
+      "expected": {
+        "valid": false,
+        "error": "timestamp_out_of_tolerance"
+      }
+    },
+    {
+      "name": "timestamp_in_future",
+      "description": "Más de 300 s en el futuro.",
+      "secret": "whsec_dGVzdC1zZWNyZXQtZm9yLWNvbmZvcm1hbmNlLXZlY3RvcnMtMDE",
+      "now": 1790985299,
+      "body": "{\"id\":\"evt_cm1vectormembership0001\",\"type\":\"membership.activated.v1\",\"createdAt\":\"2026-10-02T23:59:58.000Z\",\"organizationId\":\"cm1clubsanlorenzo0000000\",\"data\":{\"membership\":{\"membershipId\":\"cm1membershipanaperez000\",\"organizationId\":\"cm1clubsanlorenzo0000000\",\"personId\":\"cm1personanaperez0000000\",\"status\":\"ACTIVE\",\"joinedAt\":\"2026-10-02T23:59:58.000Z\",\"memberNumber\":null,\"person\":{\"id\":\"cm1personanaperez0000000\",\"displayName\":\"Ana Pérez Ñandutí\",\"firstName\":\"Ana\",\"lastName\":\"Pérez Ñandutí\",\"avatarUrl\":null,\"updatedAt\":\"2026-10-02T23:59:58.000Z\"},\"updatedAt\":\"2026-10-02T23:59:58.000Z\"},\"previousStatus\":\"PENDING\"}}",
+      "headers": {
+        "MiRotaract-Webhook-Id": "evt_cm1vectormembership0001",
+        "MiRotaract-Webhook-Timestamp": "1790985600",
+        "MiRotaract-Signature": "v1=e8051b9fa42026ffd5409100d18344706ff72c901085a97c7a5290f64ee28477",
+        "User-Agent": "MiRotaract-Webhooks/1",
+        "Content-Type": "application/json"
+      },
+      "expected": {
+        "valid": false,
+        "error": "timestamp_out_of_tolerance"
+      }
+    },
+    {
+      "name": "timestamp_replaced",
+      "description": "Alguien cambió la marca de tiempo para que entre en la tolerancia: la firma ya no coincide.",
+      "secret": "whsec_dGVzdC1zZWNyZXQtZm9yLWNvbmZvcm1hbmNlLXZlY3RvcnMtMDE",
+      "now": 1790986600,
+      "body": "{\"id\":\"evt_cm1vectormembership0001\",\"type\":\"membership.activated.v1\",\"createdAt\":\"2026-10-02T23:59:58.000Z\",\"organizationId\":\"cm1clubsanlorenzo0000000\",\"data\":{\"membership\":{\"membershipId\":\"cm1membershipanaperez000\",\"organizationId\":\"cm1clubsanlorenzo0000000\",\"personId\":\"cm1personanaperez0000000\",\"status\":\"ACTIVE\",\"joinedAt\":\"2026-10-02T23:59:58.000Z\",\"memberNumber\":null,\"person\":{\"id\":\"cm1personanaperez0000000\",\"displayName\":\"Ana Pérez Ñandutí\",\"firstName\":\"Ana\",\"lastName\":\"Pérez Ñandutí\",\"avatarUrl\":null,\"updatedAt\":\"2026-10-02T23:59:58.000Z\"},\"updatedAt\":\"2026-10-02T23:59:58.000Z\"},\"previousStatus\":\"PENDING\"}}",
+      "headers": {
+        "MiRotaract-Webhook-Id": "evt_cm1vectormembership0001",
+        "MiRotaract-Webhook-Timestamp": "1790986600",
+        "MiRotaract-Signature": "v1=e8051b9fa42026ffd5409100d18344706ff72c901085a97c7a5290f64ee28477",
+        "User-Agent": "MiRotaract-Webhooks/1",
+        "Content-Type": "application/json"
+      },
+      "expected": {
+        "valid": false,
+        "error": "invalid_signature"
+      }
+    },
+    {
+      "name": "custom_tolerance",
+      "description": "Con toleranceSec = 600, 500 s de diferencia es válido.",
+      "secret": "whsec_dGVzdC1zZWNyZXQtZm9yLWNvbmZvcm1hbmNlLXZlY3RvcnMtMDE",
+      "now": 1790986100,
+      "toleranceSec": 600,
+      "body": "{\"id\":\"evt_0f1e2d3c4b5a69788796a5b4\",\"type\":\"ping.v1\",\"createdAt\":\"2026-10-03T00:00:00.000Z\",\"organizationId\":\"cm1clubsanlorenzo0000000\",\"data\":{\"message\":\"Hola desde Mi Rotaract\",\"appId\":\"cm1app\",\"endpointId\":\"cm1endpoint\"}}",
+      "headers": {
+        "MiRotaract-Webhook-Id": "evt_0f1e2d3c4b5a69788796a5b4",
+        "MiRotaract-Webhook-Timestamp": "1790985600",
+        "MiRotaract-Signature": "v1=fbbf1125b02b3fac0706160c1af020cabe01a18c9ac43eac9b1028a36ac28360",
+        "User-Agent": "MiRotaract-Webhooks/1",
+        "Content-Type": "application/json"
+      },
+      "expected": {
+        "valid": true,
+        "eventId": "evt_0f1e2d3c4b5a69788796a5b4",
+        "type": "ping.v1"
+      }
+    },
+    {
+      "name": "missing_signature",
+      "description": "Falta MiRotaract-Signature.",
+      "secret": "whsec_dGVzdC1zZWNyZXQtZm9yLWNvbmZvcm1hbmNlLXZlY3RvcnMtMDE",
+      "now": 1790985600,
+      "body": "{\"id\":\"evt_cm1vectormembership0001\",\"type\":\"membership.activated.v1\",\"createdAt\":\"2026-10-02T23:59:58.000Z\",\"organizationId\":\"cm1clubsanlorenzo0000000\",\"data\":{\"membership\":{\"membershipId\":\"cm1membershipanaperez000\",\"organizationId\":\"cm1clubsanlorenzo0000000\",\"personId\":\"cm1personanaperez0000000\",\"status\":\"ACTIVE\",\"joinedAt\":\"2026-10-02T23:59:58.000Z\",\"memberNumber\":null,\"person\":{\"id\":\"cm1personanaperez0000000\",\"displayName\":\"Ana Pérez Ñandutí\",\"firstName\":\"Ana\",\"lastName\":\"Pérez Ñandutí\",\"avatarUrl\":null,\"updatedAt\":\"2026-10-02T23:59:58.000Z\"},\"updatedAt\":\"2026-10-02T23:59:58.000Z\"},\"previousStatus\":\"PENDING\"}}",
+      "headers": {
+        "MiRotaract-Webhook-Id": "evt_cm1vectormembership0001",
+        "MiRotaract-Webhook-Timestamp": "1790985600",
+        "User-Agent": "MiRotaract-Webhooks/1",
+        "Content-Type": "application/json"
+      },
+      "expected": {
+        "valid": false,
+        "error": "missing_header"
+      }
+    },
+    {
+      "name": "missing_timestamp",
+      "description": "Falta MiRotaract-Webhook-Timestamp.",
+      "secret": "whsec_dGVzdC1zZWNyZXQtZm9yLWNvbmZvcm1hbmNlLXZlY3RvcnMtMDE",
+      "now": 1790985600,
+      "body": "{\"id\":\"evt_cm1vectormembership0001\",\"type\":\"membership.activated.v1\",\"createdAt\":\"2026-10-02T23:59:58.000Z\",\"organizationId\":\"cm1clubsanlorenzo0000000\",\"data\":{\"membership\":{\"membershipId\":\"cm1membershipanaperez000\",\"organizationId\":\"cm1clubsanlorenzo0000000\",\"personId\":\"cm1personanaperez0000000\",\"status\":\"ACTIVE\",\"joinedAt\":\"2026-10-02T23:59:58.000Z\",\"memberNumber\":null,\"person\":{\"id\":\"cm1personanaperez0000000\",\"displayName\":\"Ana Pérez Ñandutí\",\"firstName\":\"Ana\",\"lastName\":\"Pérez Ñandutí\",\"avatarUrl\":null,\"updatedAt\":\"2026-10-02T23:59:58.000Z\"},\"updatedAt\":\"2026-10-02T23:59:58.000Z\"},\"previousStatus\":\"PENDING\"}}",
+      "headers": {
+        "MiRotaract-Webhook-Id": "evt_cm1vectormembership0001",
+        "MiRotaract-Signature": "v1=e8051b9fa42026ffd5409100d18344706ff72c901085a97c7a5290f64ee28477",
+        "User-Agent": "MiRotaract-Webhooks/1",
+        "Content-Type": "application/json"
+      },
+      "expected": {
+        "valid": false,
+        "error": "missing_header"
+      }
+    },
+    {
+      "name": "non_numeric_timestamp",
+      "description": "La marca de tiempo no es un entero.",
+      "secret": "whsec_dGVzdC1zZWNyZXQtZm9yLWNvbmZvcm1hbmNlLXZlY3RvcnMtMDE",
+      "now": 1790985600,
+      "body": "{\"id\":\"evt_cm1vectormembership0001\",\"type\":\"membership.activated.v1\",\"createdAt\":\"2026-10-02T23:59:58.000Z\",\"organizationId\":\"cm1clubsanlorenzo0000000\",\"data\":{\"membership\":{\"membershipId\":\"cm1membershipanaperez000\",\"organizationId\":\"cm1clubsanlorenzo0000000\",\"personId\":\"cm1personanaperez0000000\",\"status\":\"ACTIVE\",\"joinedAt\":\"2026-10-02T23:59:58.000Z\",\"memberNumber\":null,\"person\":{\"id\":\"cm1personanaperez0000000\",\"displayName\":\"Ana Pérez Ñandutí\",\"firstName\":\"Ana\",\"lastName\":\"Pérez Ñandutí\",\"avatarUrl\":null,\"updatedAt\":\"2026-10-02T23:59:58.000Z\"},\"updatedAt\":\"2026-10-02T23:59:58.000Z\"},\"previousStatus\":\"PENDING\"}}",
+      "headers": {
+        "MiRotaract-Webhook-Id": "evt_cm1vectormembership0001",
+        "MiRotaract-Webhook-Timestamp": "2026-10-03T00:00:00Z",
+        "MiRotaract-Signature": "v1=e8051b9fa42026ffd5409100d18344706ff72c901085a97c7a5290f64ee28477",
+        "User-Agent": "MiRotaract-Webhooks/1",
+        "Content-Type": "application/json"
+      },
+      "expected": {
+        "valid": false,
+        "error": "invalid_timestamp"
+      }
+    },
+    {
+      "name": "unknown_scheme_only",
+      "description": "Solo firmas de un esquema desconocido (v0=): se ignoran, no hay ninguna v1 válida.",
+      "secret": "whsec_dGVzdC1zZWNyZXQtZm9yLWNvbmZvcm1hbmNlLXZlY3RvcnMtMDE",
+      "now": 1790985600,
+      "body": "{\"id\":\"evt_cm1vectormembership0001\",\"type\":\"membership.activated.v1\",\"createdAt\":\"2026-10-02T23:59:58.000Z\",\"organizationId\":\"cm1clubsanlorenzo0000000\",\"data\":{\"membership\":{\"membershipId\":\"cm1membershipanaperez000\",\"organizationId\":\"cm1clubsanlorenzo0000000\",\"personId\":\"cm1personanaperez0000000\",\"status\":\"ACTIVE\",\"joinedAt\":\"2026-10-02T23:59:58.000Z\",\"memberNumber\":null,\"person\":{\"id\":\"cm1personanaperez0000000\",\"displayName\":\"Ana Pérez Ñandutí\",\"firstName\":\"Ana\",\"lastName\":\"Pérez Ñandutí\",\"avatarUrl\":null,\"updatedAt\":\"2026-10-02T23:59:58.000Z\"},\"updatedAt\":\"2026-10-02T23:59:58.000Z\"},\"previousStatus\":\"PENDING\"}}",
+      "headers": {
+        "MiRotaract-Webhook-Id": "evt_cm1vectormembership0001",
+        "MiRotaract-Webhook-Timestamp": "1790985600",
+        "MiRotaract-Signature": "v0=e8051b9fa42026ffd5409100d18344706ff72c901085a97c7a5290f64ee28477",
+        "User-Agent": "MiRotaract-Webhooks/1",
+        "Content-Type": "application/json"
+      },
+      "expected": {
+        "valid": false,
+        "error": "invalid_signature"
+      }
+    },
+    {
+      "name": "malformed_hex",
+      "description": "La firma no es hexadecimal.",
+      "secret": "whsec_dGVzdC1zZWNyZXQtZm9yLWNvbmZvcm1hbmNlLXZlY3RvcnMtMDE",
+      "now": 1790985600,
+      "body": "{\"id\":\"evt_cm1vectormembership0001\",\"type\":\"membership.activated.v1\",\"createdAt\":\"2026-10-02T23:59:58.000Z\",\"organizationId\":\"cm1clubsanlorenzo0000000\",\"data\":{\"membership\":{\"membershipId\":\"cm1membershipanaperez000\",\"organizationId\":\"cm1clubsanlorenzo0000000\",\"personId\":\"cm1personanaperez0000000\",\"status\":\"ACTIVE\",\"joinedAt\":\"2026-10-02T23:59:58.000Z\",\"memberNumber\":null,\"person\":{\"id\":\"cm1personanaperez0000000\",\"displayName\":\"Ana Pérez Ñandutí\",\"firstName\":\"Ana\",\"lastName\":\"Pérez Ñandutí\",\"avatarUrl\":null,\"updatedAt\":\"2026-10-02T23:59:58.000Z\"},\"updatedAt\":\"2026-10-02T23:59:58.000Z\"},\"previousStatus\":\"PENDING\"}}",
+      "headers": {
+        "MiRotaract-Webhook-Id": "evt_cm1vectormembership0001",
+        "MiRotaract-Webhook-Timestamp": "1790985600",
+        "MiRotaract-Signature": "v1=not-hex-at-all",
+        "User-Agent": "MiRotaract-Webhooks/1",
+        "Content-Type": "application/json"
+      },
+      "expected": {
+        "valid": false,
+        "error": "invalid_signature"
+      }
+    },
+    {
+      "name": "not_json",
+      "description": "Firma correcta pero el cuerpo no es JSON.",
+      "secret": "whsec_dGVzdC1zZWNyZXQtZm9yLWNvbmZvcm1hbmNlLXZlY3RvcnMtMDE",
+      "now": 1790985600,
+      "body": "hola",
+      "headers": {
+        "MiRotaract-Webhook-Id": "evt_0f1e2d3c4b5a69788796a5b4",
+        "MiRotaract-Webhook-Timestamp": "1790985600",
+        "MiRotaract-Signature": "v1=f0d68f1e98f7f7a621520478150037ca12e9fb48736aefa17cec990911bfdc21",
+        "User-Agent": "MiRotaract-Webhooks/1",
+        "Content-Type": "application/json"
+      },
+      "expected": {
+        "valid": false,
+        "error": "invalid_payload"
+      }
+    }
+  ]
+}

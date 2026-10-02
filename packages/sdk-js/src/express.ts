@@ -1,6 +1,11 @@
 import type { MiRotaractAuth } from "./auth.ts";
 import { MiRotaractError, MiRotaractOAuthError } from "./errors.ts";
 import type { UserInfo } from "./types.ts";
+import {
+  MiRotaractWebhookError,
+  verifyWebhook,
+  type MiRotaractEvent,
+} from "./webhooks.ts";
 
 /**
  * Express adapter (no dependency on express: works with any connect-style
@@ -145,4 +150,98 @@ export function requireMiRotaractUser(options: RequireUserOptions) {
       next(error);
     }
   };
+}
+
+// --- Webhooks ----------------------------------------------------------------
+
+export type WebhookRequestLike = RequestLike & {
+  body?: unknown;
+  miRotaractEvent?: MiRotaractEvent;
+  on?: (event: string, listener: (...args: any[]) => void) => unknown;
+};
+
+/**
+ * Verifies Mi Rotaract webhooks on an Express route. Needs the RAW body:
+ * mount it with `express.raw({ type: "application/json" })` (or let it read
+ * the stream when no body parser ran). A body already parsed by
+ * `express.json()` can't be verified and is rejected with 400.
+ *
+ * ```ts
+ * app.post("/webhooks/mirotaract",
+ *   express.raw({ type: "application/json" }),
+ *   miRotaractWebhook({ secret: process.env.MIROTARACT_WEBHOOK_SECRET! }),
+ *   (req, res) => { handle(req.miRotaractEvent); res.sendStatus(200); });
+ * ```
+ *
+ * On success `req.miRotaractEvent` is the verified event; otherwise 400 with
+ * `{ error: <code> }` (no retry will fix a bad signature).
+ */
+export function miRotaractWebhook(options: {
+  secret: string | readonly string[];
+  toleranceSec?: number;
+}) {
+  return async function verifyMiRotaractWebhook(
+    req: WebhookRequestLike,
+    res: ResponseLike,
+    next: NextFunction,
+  ) {
+    try {
+      let payload: string | Uint8Array;
+      if (typeof req.body === "string" || req.body instanceof Uint8Array)
+        payload = req.body;
+      else if (
+        req.body !== undefined &&
+        req.body !== null &&
+        Object.keys(req.body as object).length > 0
+      )
+        return void res.status(400).json({
+          error: "invalid_payload",
+          error_description:
+            'El cuerpo ya fue parseado (express.json()): usá express.raw({ type: "application/json" }) en esta ruta',
+        });
+      else payload = await readStream(req);
+      req.miRotaractEvent = await verifyWebhook({
+        payload,
+        headers: req.headers,
+        secret: options.secret,
+        toleranceSec: options.toleranceSec,
+      });
+      next();
+    } catch (error) {
+      if (error instanceof MiRotaractWebhookError)
+        return void res
+          .status(400)
+          .json({ error: error.code, error_description: error.message });
+      next(error);
+    }
+  };
+}
+
+function readStream(req: WebhookRequestLike): Promise<Uint8Array> {
+  return new Promise((resolve, reject) => {
+    if (typeof req.on !== "function")
+      return reject(
+        new MiRotaractWebhookError(
+          "invalid_payload",
+          "No hay cuerpo para verificar",
+        ),
+      );
+    const chunks: Uint8Array[] = [];
+    req.on("data", (chunk: Uint8Array | string) =>
+      chunks.push(
+        typeof chunk === "string" ? new TextEncoder().encode(chunk) : chunk,
+      ),
+    );
+    req.on("end", () => {
+      const size = chunks.reduce((total, chunk) => total + chunk.length, 0);
+      const out = new Uint8Array(size);
+      let offset = 0;
+      for (const chunk of chunks) {
+        out.set(chunk, offset);
+        offset += chunk.length;
+      }
+      resolve(out);
+    });
+    req.on("error", reject);
+  });
 }

@@ -10,8 +10,14 @@ import { readFileSync } from "node:fs";
 const sdkPath =
   process.env.MR_SDK_JS_PATH ??
   new URL("../../packages/sdk-js/dist/esm/index.js", import.meta.url).href;
-const { MiRotaract, MiRotaractAuth, MiRotaractApiError, MiRotaractOAuthError } =
-  await import(sdkPath);
+const {
+  MiRotaract,
+  MiRotaractAuth,
+  MiRotaractApiError,
+  MiRotaractOAuthError,
+  MiRotaractWebhookError,
+  verifyWebhook,
+} = await import(sdkPath);
 
 const spec = JSON.parse(
   readFileSync(new URL("./scenarios.json", import.meta.url), "utf8"),
@@ -397,6 +403,60 @@ const scenarios = {
       : [result.claims.aud];
     check(aud.includes(env.MR_PUBLIC_CLIENT_ID), `aud ${aud}`);
   },
+  async "webhooks.signature_vectors"() {
+    const { vectors } = JSON.parse(
+      readFileSync(new URL("./webhook-vectors.json", import.meta.url), "utf8"),
+    );
+    for (const vector of vectors) {
+      const run = () =>
+        verifyWebhook({
+          payload: vector.body,
+          headers: vector.headers,
+          secret: vector.secret,
+          toleranceSec: vector.toleranceSec,
+          now: vector.now,
+        });
+      if (vector.expected.valid) {
+        const event = await run();
+        check(
+          event.id === vector.expected.eventId &&
+            event.type === vector.expected.type,
+          `${vector.name}: evento ${event.id} ${event.type}`,
+        );
+      } else
+        await expectError(
+          run(),
+          (e) =>
+            e instanceof MiRotaractWebhookError &&
+            e.code === vector.expected.error,
+          `${vector.name}: ${vector.expected.error}`,
+        );
+    }
+  },
+  async "webhooks.event_catalog"() {
+    const response = await fetch(`${BASE}/events/catalog`);
+    if (response.status === 404)
+      throw new MiRotaractApiError(404, { title: "Not Found" });
+    check(response.ok, `HTTP ${response.status}`);
+    const catalog = await response.json();
+    const entry = catalog.events.find(
+      (e) => e.type === "membership.activated.v1",
+    );
+    check(entry, "falta membership.activated.v1");
+    check(
+      entry.scope === "kernel.service.memberships.read",
+      `scope ${entry.scope}`,
+    );
+    const ex = entry.example;
+    check(
+      /^evt_/.test(ex.id) &&
+        ex.type === entry.type &&
+        ex.createdAt &&
+        ex.organizationId &&
+        ex.data,
+      "ejemplo incompleto",
+    );
+  },
 };
 
 // --- Runner -----------------------------------------------------------------
@@ -408,14 +468,16 @@ for (const scenario of spec.scenarios) {
   let detail = "";
   try {
     if (!run) throw new Error("escenario no implementado en este runner");
-    need(
-      "MR_BASE_URL",
-      "MR_CLIENT_ID",
-      "MR_CLIENT_SECRET",
-      "MR_ORG_ID",
-      "MR_OTHER_ORG_ID",
-    );
-    if (!client) client = newClient();
+    if (!scenario.offline) {
+      need(
+        "MR_BASE_URL",
+        "MR_CLIENT_ID",
+        "MR_CLIENT_SECRET",
+        "MR_ORG_ID",
+        "MR_OTHER_ORG_ID",
+      );
+      if (!client) client = newClient();
+    }
     await run();
   } catch (error) {
     if (error instanceof Skip) [status, detail] = ["SKIP", error.message];

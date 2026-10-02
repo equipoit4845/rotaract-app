@@ -310,3 +310,10 @@ function pickUser(claims: IdTokenClaims): SessionUser {
     if (claims[key] !== undefined) user[key] = claims[key];
   return user as SessionUser;
 }
+
+/**
+ * Webhook route for the App Router:
+ * `export const POST = createWebhookHandler({ secret, onEvent })` in
+ * `app/api/webhooks/route.ts`. Same as the package root export.
+ */
+export { createWebhookHandler } from "./webhooks.ts";
