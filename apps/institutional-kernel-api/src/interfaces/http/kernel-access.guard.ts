@@ -45,8 +45,22 @@ const publicOperations = new Set([
   "live",
   "ready",
   "version",
+  // OpenID Connect discovery (docs/11-developer-platform-auth.md)
+  "openidConfiguration",
+  "jwks",
+  // OAuth endpoints authenticate the *client* (or an OIDC access token via
+  // OidcAccessGuard), never a platform session.
+  "getPublicDeveloperApp",
+  "issueOAuthToken",
+  "revokeOAuthToken",
+  "getOAuthUserInfo",
 ]);
 const accountOperations = new Set([
+  // A person acting on their own OAuth consents (any signed-in account).
+  "getAuthorizationContext",
+  "authorizeOAuthRequest",
+  "listOAuthConsents",
+  "revokeOAuthConsent",
   "logout",
   "logoutAll",
   "me",
@@ -56,6 +70,12 @@ const accountOperations = new Set([
   "revoke",
 ]);
 const idempotentMutations = new Set([
+  "createDeveloperApp",
+  "updateDeveloperApp",
+  "rotateDeveloperAppSecret",
+  "suspendDeveloperApp",
+  "activateDeveloperApp",
+  "revokeDeveloperApp",
   "createPerson",
   "updatePerson",
   "archivePerson",
@@ -174,6 +194,16 @@ const permissionByHandler: Record<string, string> = {
   createPosition: "kernel.position.create",
   listPositions: "kernel.position.read",
   listPositionPermissions: "kernel.position.read",
+  // Developer platform (docs/11-developer-platform-auth.md)
+  listDeveloperApps: "kernel.app.read",
+  getDeveloperApp: "kernel.app.read",
+  createDeveloperApp: "kernel.app.manage",
+  updateDeveloperApp: "kernel.app.manage",
+  rotateDeveloperAppSecret: "kernel.app.manage",
+  revokeDeveloperAppSecret: "kernel.app.manage",
+  suspendDeveloperApp: "kernel.app.manage",
+  activateDeveloperApp: "kernel.app.manage",
+  revokeDeveloperApp: "kernel.app.manage",
   // Fallback defaults only: canActivate() overrides these with the
   // position's own editPermissionCode when the position can be resolved —
   // see the positionHandlers special-case.
@@ -495,7 +525,26 @@ async function existingPositionOwnerOrganization(
   return [position?.ownerOrganizationId ?? undefined];
 }
 
+// An app is governed from the organization it is bound to.
+async function developerAppOrganization(
+  prisma: PrismaService,
+  request: AuthenticatedRequest & Request,
+): Promise<Array<string | undefined> | undefined> {
+  const app = await prisma.developerApp.findUnique({
+    where: { id: String(request.params.appId) },
+    select: { organizationId: true },
+  });
+  return app ? [app.organizationId] : undefined;
+}
+
 const organizationResolverByHandler: Record<string, OrganizationResolver> = {
+  getDeveloperApp: developerAppOrganization,
+  updateDeveloperApp: developerAppOrganization,
+  rotateDeveloperAppSecret: developerAppOrganization,
+  revokeDeveloperAppSecret: developerAppOrganization,
+  suspendDeveloperApp: developerAppOrganization,
+  activateDeveloperApp: developerAppOrganization,
+  revokeDeveloperApp: developerAppOrganization,
   createPosition: positionOwnerOrganization,
   listPositionPermissions: existingPositionOwnerOrganization,
   updateMembership: membershipOrganization,

@@ -55,6 +55,15 @@ tags:
       APIs exclusivas para servicios consumidores autenticados con
       identidad de servicio (audiencia `institutional-kernel`).
       No accesibles con token de usuario.
+  - name: DeveloperApps
+    description: >
+      Apps que los comités construyen sobre el kernel (E2). Las registra el
+      distrito; cada app queda atada a una organización y a un conjunto de
+      scopes.
+  - name: OAuth
+    description: >
+      "Ingresar con Mi Rotaract" (E3): proveedor OAuth 2.0 / OpenID Connect,
+      tokens firmados con ES256 y verificables con el JWKS público.
 
 security:
   - bearerAuth: []
@@ -2517,6 +2526,411 @@ paths:
               schema: { $ref: "#/components/schemas/ModuleInstallation" }
         "404": { $ref: "#/components/responses/NotFound" }
 
+  # --- Developer platform: discovery (E3) --------------------------------
+
+  /.well-known/openid-configuration:
+    get:
+      operationId: getOpenIdConfiguration
+      tags: [OAuth]
+      summary: Documento de discovery de OpenID Connect
+      security: []
+      x-required-permission: null
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OpenIdConfiguration" }
+
+  /.well-known/jwks.json:
+    get:
+      operationId: getJwks
+      tags: [OAuth]
+      summary: Claves públicas para verificar tokens (JWKS)
+      description: >
+        Incluye la clave activa y las retiradas en los últimos 30 días, para
+        que los tokens firmados antes de una rotación sigan verificando.
+      security: []
+      x-required-permission: null
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Jwks" }
+
+  # --- Developer apps (E2) -----------------------------------------------
+
+  /developer/apps:
+    get:
+      operationId: listDeveloperApps
+      tags: [DeveloperApps]
+      summary: Listar las apps registradas en una organización
+      x-required-permission: kernel.app.read
+      parameters:
+        - name: organizationId
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/DeveloperApp" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    post:
+      operationId: createDeveloperApp
+      tags: [DeveloperApps]
+      summary: Registrar una app
+      description: >
+        Una app CONFIDENTIAL recibe su secreto en esta respuesta, una única
+        vez. Una app PUBLIC (SPA o móvil) no tiene secreto, usa PKCE y no puede
+        pedir client_credentials ni scopes de servicio.
+      x-required-permission: kernel.app.manage
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateDeveloperAppRequest" }
+      responses:
+        "201":
+          description: Creada.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CreatedDeveloperApp" }
+        "400": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /developer/apps/{appId}:
+    get:
+      operationId: getDeveloperApp
+      tags: [DeveloperApps]
+      summary: Ver una app
+      x-required-permission: kernel.app.read
+      parameters:
+        - $ref: "#/components/parameters/appId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DeveloperApp" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      operationId: updateDeveloperApp
+      tags: [DeveloperApps]
+      summary: Editar nombre, descripción, scopes o URLs de retorno
+      x-required-permission: kernel.app.manage
+      parameters:
+        - $ref: "#/components/parameters/appId"
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateDeveloperAppRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DeveloperApp" }
+        "400": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /developer/apps/{appId}/secrets:
+    post:
+      operationId: rotateDeveloperAppSecret
+      tags: [DeveloperApps]
+      summary: Crear un secreto nuevo (rotación)
+      description: >
+        Devuelve el secreto nuevo una única vez. El secreto anterior sigue
+        siendo válido 7 días o hasta que se revoque, para rotar sin cortar el
+        servicio. Nunca hay más de dos secretos vigentes.
+      x-required-permission: kernel.app.manage
+      parameters:
+        - $ref: "#/components/parameters/appId"
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema: { type: string }
+      responses:
+        "201":
+          description: Creado.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DeveloperAppSecretCreated" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  /developer/apps/{appId}/secrets/{secretId}:
+    delete:
+      operationId: revokeDeveloperAppSecret
+      tags: [DeveloperApps]
+      summary: Revocar un secreto
+      x-required-permission: kernel.app.manage
+      parameters:
+        - $ref: "#/components/parameters/appId"
+        - name: secretId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204": { description: Revocado. }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /developer/apps/{appId}/suspend:
+    post:
+      operationId: suspendDeveloperApp
+      tags: [DeveloperApps]
+      summary: Pausar una app (deja de obtener tokens)
+      x-required-permission: kernel.app.manage
+      parameters:
+        - $ref: "#/components/parameters/appId"
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema: { type: string }
+      responses:
+        "201":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DeveloperApp" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  /developer/apps/{appId}/activate:
+    post:
+      operationId: activateDeveloperApp
+      tags: [DeveloperApps]
+      summary: Reactivar una app pausada
+      x-required-permission: kernel.app.manage
+      parameters:
+        - $ref: "#/components/parameters/appId"
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema: { type: string }
+      responses:
+        "201":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DeveloperApp" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  /developer/apps/{appId}/revoke:
+    post:
+      operationId: revokeDeveloperApp
+      tags: [DeveloperApps]
+      summary: Revocar una app definitivamente
+      description: >
+        Terminal. Revoca sus secretos, sus refresh tokens y los
+        consentimientos otorgados por las personas.
+      x-required-permission: kernel.app.manage
+      parameters:
+        - $ref: "#/components/parameters/appId"
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema: { type: string }
+      responses:
+        "201":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DeveloperApp" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  # --- OAuth 2.0 / OIDC (E3) ---------------------------------------------
+
+  /oauth/apps/{clientId}:
+    get:
+      operationId: getPublicDeveloperApp
+      tags: [OAuth]
+      summary: Datos públicos de una app (para la pantalla de consentimiento)
+      security: []
+      x-required-permission: null
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PublicDeveloperApp" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /oauth/authorize/context:
+    get:
+      operationId: getAuthorizationContext
+      tags: [OAuth]
+      summary: Validar un pedido de autorización y describirlo
+      description: >
+        La Web lo llama con los parámetros de /oauth/authorize antes de
+        mostrar el consentimiento. Valida client_id, redirect_uri (coincidencia
+        exacta), scopes permitidos a la app y PKCE S256. Indica si la persona
+        ya había otorgado esos scopes.
+      x-required-permission: null
+      parameters:
+        - { name: client_id, in: query, required: true, schema: { type: string } }
+        - { name: redirect_uri, in: query, required: true, schema: { type: string } }
+        - { name: scope, in: query, required: true, schema: { type: string } }
+        - { name: response_type, in: query, required: true, schema: { type: string, enum: [code] } }
+        - { name: code_challenge, in: query, required: true, schema: { type: string } }
+        - { name: code_challenge_method, in: query, required: true, schema: { type: string, enum: [S256] } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthorizationContext" }
+        "400": { $ref: "#/components/responses/Error" }
+
+  /oauth/authorize:
+    post:
+      operationId: authorizeOAuthRequest
+      tags: [OAuth]
+      summary: Aprobar o rechazar un pedido de autorización
+      description: >
+        Con decision=approve guarda el consentimiento, emite un código de un
+        solo uso (60 s) atado a la app, la redirect_uri y el code_challenge,
+        y devuelve la URL de retorno con code y state. Con decision=deny
+        devuelve la URL de retorno con error=access_denied.
+      x-required-permission: null
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AuthorizeRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthorizeResponse" }
+        "400": { $ref: "#/components/responses/Error" }
+
+  /oauth/token:
+    post:
+      operationId: issueOAuthToken
+      tags: [OAuth]
+      summary: Emitir tokens (client_credentials, authorization_code, refresh_token)
+      description: >
+        Autenticación del cliente por HTTP Basic (client_secret_basic), por
+        client_id + client_secret en el body (client_secret_post), o solo
+        client_id para apps PUBLIC con PKCE. Los errores siguen RFC 6749
+        §5.2 (`{ error, error_description }`), no Problem Details.
+      security: []
+      x-required-permission: null
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema: { $ref: "#/components/schemas/TokenRequest" }
+          application/json:
+            schema: { $ref: "#/components/schemas/TokenRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TokenResponse" }
+        "400":
+          description: Pedido inválido.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OAuthError" }
+        "401":
+          description: Cliente no autenticado.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OAuthError" }
+
+  /oauth/revoke:
+    post:
+      operationId: revokeOAuthToken
+      tags: [OAuth]
+      summary: Revocar un refresh token (RFC 7009)
+      description: Responde 200 aunque el token no exista, como indica RFC 7009.
+      security: []
+      x-required-permission: null
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema: { $ref: "#/components/schemas/RevokeTokenRequest" }
+          application/json:
+            schema: { $ref: "#/components/schemas/RevokeTokenRequest" }
+      responses:
+        "200": { description: Revocado o inexistente. }
+        "401":
+          description: Cliente no autenticado.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OAuthError" }
+
+  /oauth/userinfo:
+    get:
+      operationId: getOAuthUserInfo
+      tags: [OAuth]
+      summary: Datos de la persona según los scopes otorgados
+      security:
+        - oidcAccessToken: []
+      x-required-permission: null
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserInfo" }
+        "401":
+          description: Token ausente, vencido o revocado.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OAuthError" }
+
+  /oauth/consents:
+    get:
+      operationId: listOAuthConsents
+      tags: [OAuth]
+      summary: Apps a las que la persona autenticada dio acceso
+      x-required-permission: null
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/OAuthConsent" }
+
+  /oauth/consents/{appId}:
+    delete:
+      operationId: revokeOAuthConsent
+      tags: [OAuth]
+      summary: Quitarle el acceso a una app
+      description: Revoca el consentimiento y todos los refresh tokens de esa app para la persona.
+      x-required-permission: null
+      parameters:
+        - $ref: "#/components/parameters/appId"
+      responses:
+        "204": { description: Revocado. }
+        "404": { $ref: "#/components/responses/NotFound" }
+
 components:
   securitySchemes:
     bearerAuth:
@@ -2537,7 +2951,20 @@ components:
         `institutional-kernel`. Requerido para todos los endpoints bajo
         `/service/*`; el kernel rechaza estas rutas con token de usuario.
 
+    oidcAccessToken:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        Access token emitido por `POST /oauth/token` a una app de terceros
+        (ES256, `token_use: user`). Solo sirve para `/oauth/userinfo`.
+
   parameters:
+    appId:
+      name: appId
+      in: path
+      required: true
+      schema: { type: string }
     personId:
       name: personId
       in: path
@@ -2640,6 +3067,11 @@ components:
       schema: { type: string }
 
   responses:
+    Error:
+      description: Pedido inválido.
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Error" }
     NotFound:
       description: Recurso inexistente.
       content:
@@ -3606,3 +4038,230 @@ components:
             startDate: { type: string, format: date }
             endDate: { type: string, format: date }
             status: { type: string, enum: [ACTIVE] }
+
+    # --- Developer platform (E2/E3) -------------------------------------
+
+    DeveloperAppType:
+      type: string
+      enum: [CONFIDENTIAL, PUBLIC]
+      description: CONFIDENTIAL = servidor con secreto; PUBLIC = SPA o móvil con PKCE.
+    DeveloperAppStatus:
+      type: string
+      enum: [ACTIVE, SUSPENDED, REVOKED]
+    DeveloperAppSecretSummary:
+      type: object
+      required: [id, hint, createdAt]
+      properties:
+        id: { type: string }
+        hint: { type: string, description: Últimos 4 caracteres. }
+        createdAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time, nullable: true }
+        revokedAt: { type: string, format: date-time, nullable: true }
+        lastUsedAt: { type: string, format: date-time, nullable: true }
+    DeveloperApp:
+      type: object
+      required: [id, clientId, name, type, status, organizationId, ownerPersonId, grantTypes, scopes, redirectUris, secrets, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        clientId: { type: string }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        type: { $ref: "#/components/schemas/DeveloperAppType" }
+        status: { $ref: "#/components/schemas/DeveloperAppStatus" }
+        organizationId: { type: string }
+        ownerPersonId: { type: string }
+        grantTypes:
+          type: array
+          items: { type: string, enum: [client_credentials, authorization_code, refresh_token] }
+        scopes: { type: array, items: { type: string } }
+        redirectUris: { type: array, items: { type: string } }
+        secrets:
+          type: array
+          items: { $ref: "#/components/schemas/DeveloperAppSecretSummary" }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        suspendedAt: { type: string, format: date-time, nullable: true }
+        revokedAt: { type: string, format: date-time, nullable: true }
+    CreateDeveloperAppRequest:
+      type: object
+      required: [name, type, organizationId, grantTypes, scopes]
+      properties:
+        name: { type: string, minLength: 2, maxLength: 80 }
+        description: { type: string, nullable: true, maxLength: 500 }
+        type: { $ref: "#/components/schemas/DeveloperAppType" }
+        organizationId:
+          type: string
+          description: Organización a la que queda atada la app (club o distrito).
+        grantTypes:
+          type: array
+          minItems: 1
+          items: { type: string, enum: [client_credentials, authorization_code, refresh_token] }
+        scopes: { type: array, minItems: 1, items: { type: string } }
+        redirectUris:
+          type: array
+          items: { type: string }
+          description: Obligatorio con authorization_code. https, o http solo para localhost.
+    UpdateDeveloperAppRequest:
+      type: object
+      properties:
+        name: { type: string, minLength: 2, maxLength: 80 }
+        description: { type: string, nullable: true, maxLength: 500 }
+        scopes: { type: array, minItems: 1, items: { type: string } }
+        redirectUris: { type: array, items: { type: string } }
+    DeveloperAppSecretCreated:
+      type: object
+      required: [secretId, secret, hint, createdAt]
+      properties:
+        secretId: { type: string }
+        secret: { type: string, description: Se muestra una única vez. }
+        hint: { type: string }
+        createdAt: { type: string, format: date-time }
+    CreatedDeveloperApp:
+      type: object
+      required: [app]
+      properties:
+        app: { $ref: "#/components/schemas/DeveloperApp" }
+        clientSecret:
+          type: string
+          nullable: true
+          description: Solo para apps CONFIDENTIAL; se muestra una única vez.
+    PublicDeveloperApp:
+      type: object
+      required: [clientId, name, type, organizationName]
+      properties:
+        clientId: { type: string }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        type: { $ref: "#/components/schemas/DeveloperAppType" }
+        organizationName: { type: string }
+    ScopeDescription:
+      type: object
+      required: [scope, label]
+      properties:
+        scope: { type: string }
+        label: { type: string }
+    AuthorizationContext:
+      type: object
+      required: [app, scopes, alreadyGranted]
+      properties:
+        app: { $ref: "#/components/schemas/PublicDeveloperApp" }
+        scopes:
+          type: array
+          items: { $ref: "#/components/schemas/ScopeDescription" }
+        alreadyGranted: { type: boolean }
+    AuthorizeRequest:
+      type: object
+      required: [clientId, redirectUri, scope, codeChallenge, codeChallengeMethod, decision]
+      properties:
+        clientId: { type: string }
+        redirectUri: { type: string }
+        scope: { type: string }
+        state: { type: string, nullable: true }
+        nonce: { type: string, nullable: true }
+        codeChallenge: { type: string }
+        codeChallengeMethod: { type: string, enum: [S256] }
+        decision: { type: string, enum: [approve, deny] }
+    AuthorizeResponse:
+      type: object
+      required: [redirectTo]
+      properties:
+        redirectTo: { type: string }
+    TokenRequest:
+      type: object
+      required: [grant_type]
+      properties:
+        grant_type: { type: string, enum: [client_credentials, authorization_code, refresh_token] }
+        client_id: { type: string }
+        client_secret: { type: string }
+        scope: { type: string }
+        code: { type: string }
+        redirect_uri: { type: string }
+        code_verifier: { type: string }
+        refresh_token: { type: string }
+    TokenResponse:
+      type: object
+      required: [access_token, token_type, expires_in, scope]
+      properties:
+        access_token: { type: string }
+        token_type: { type: string, enum: [Bearer] }
+        expires_in: { type: integer }
+        scope: { type: string }
+        id_token: { type: string }
+        refresh_token: { type: string }
+    RevokeTokenRequest:
+      type: object
+      required: [token]
+      properties:
+        token: { type: string }
+        token_type_hint: { type: string }
+        client_id: { type: string }
+        client_secret: { type: string }
+    OAuthError:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          enum: [invalid_request, invalid_client, invalid_grant, unauthorized_client, unsupported_grant_type, invalid_scope, invalid_token, access_denied]
+        error_description: { type: string }
+    UserInfo:
+      type: object
+      required: [sub]
+      properties:
+        sub: { type: string, description: personId estable. }
+        name: { type: string }
+        given_name: { type: string }
+        family_name: { type: string }
+        picture: { type: string, nullable: true }
+        email: { type: string }
+        email_verified: { type: boolean }
+        memberships:
+          type: array
+          items:
+            type: object
+            required: [organizationId, organizationName, organizationType, status]
+            properties:
+              organizationId: { type: string }
+              organizationName: { type: string }
+              organizationType: { type: string }
+              status: { type: string }
+        positions:
+          type: array
+          items:
+            type: object
+            required: [organizationId, positionCode, positionName, periodId]
+            properties:
+              organizationId: { type: string }
+              positionCode: { type: string }
+              positionName: { type: string }
+              periodId: { type: string }
+    OAuthConsent:
+      type: object
+      required: [appId, clientId, appName, organizationName, scopes, grantedAt]
+      properties:
+        appId: { type: string }
+        clientId: { type: string }
+        appName: { type: string }
+        organizationName: { type: string }
+        scopes:
+          type: array
+          items: { $ref: "#/components/schemas/ScopeDescription" }
+        grantedAt: { type: string, format: date-time }
+    OpenIdConfiguration:
+      type: object
+      required: [issuer, authorization_endpoint, token_endpoint, jwks_uri]
+      additionalProperties: true
+      properties:
+        issuer: { type: string }
+        authorization_endpoint: { type: string }
+        token_endpoint: { type: string }
+        userinfo_endpoint: { type: string }
+        revocation_endpoint: { type: string }
+        jwks_uri: { type: string }
+    Jwks:
+      type: object
+      required: [keys]
+      properties:
+        keys:
+          type: array
+          items: { type: object, additionalProperties: true }

@@ -161,6 +161,10 @@ model Person {
   cancelledTransfers    MembershipTransfer[]     @relation("TransferCanceller")
   createdAppointments   Appointment[]            @relation("AppointmentCreator")
   revokedAppointments   Appointment[]            @relation("AppointmentRevoker")
+  ownedDeveloperApps    DeveloperApp[]           @relation("DeveloperAppOwner")
+  oauthConsents         OAuthConsent[]
+  oauthCodes            OAuthAuthorizationCode[]
+  oauthRefreshTokens    OAuthRefreshToken[]
 
   @@index([primaryEmail])
   @@index([lastName, firstName])
@@ -271,6 +275,7 @@ model Organization {
   roleAssignments     RoleAssignment[]
   moduleInstallations ModuleInstallation[]
   positionDefinitions PositionDefinition[]     @relation("PositionCatalogOwner")
+  developerApps       DeveloperApp[]
 
   @@index([parentId])
   @@index([type, status])
@@ -675,4 +680,147 @@ model KernelAuditLog {
   @@index([resourceType, resourceId, occurredAt])
   @@index([organizationId, occurredAt])
   @@index([action, occurredAt])
+}
+
+// ---------------------------------------------------------------------------
+// Developer platform (E2 apps & credentials, E3 "Ingresar con Mi Rotaract").
+// See docs/11-developer-platform-auth.md.
+// ---------------------------------------------------------------------------
+
+enum DeveloperAppType {
+  CONFIDENTIAL // server-side app: has a client secret
+  PUBLIC // SPA / mobile: no secret, PKCE only
+}
+
+enum DeveloperAppStatus {
+  ACTIVE
+  SUSPENDED
+  REVOKED
+}
+
+enum SigningKeyStatus {
+  ACTIVE
+  RETIRED
+}
+
+/// An application built by a committee on top of the Kernel. Bound to one
+/// organization: a club app sees that club; a district app sees the tree.
+model DeveloperApp {
+  id             String             @id @default(cuid())
+  clientId       String             @unique
+  name           String
+  description    String?
+  type           DeveloperAppType
+  status         DeveloperAppStatus @default(ACTIVE)
+  organizationId String
+  ownerPersonId  String
+  /// "client_credentials" | "authorization_code" | "refresh_token"
+  grantTypes     String[]
+  /// OIDC scopes (openid, profile, email, memberships, positions) and/or
+  /// service scopes (kernel.service.*).
+  scopes         String[]
+  redirectUris   String[]
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  suspendedAt    DateTime?
+  revokedAt      DateTime?
+
+  organization  Organization             @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  owner         Person                   @relation("DeveloperAppOwner", fields: [ownerPersonId], references: [id], onDelete: Restrict)
+  secrets       DeveloperAppSecret[]
+  consents      OAuthConsent[]
+  codes         OAuthAuthorizationCode[]
+  refreshTokens OAuthRefreshToken[]
+
+  @@index([organizationId])
+  @@index([status])
+}
+
+/// Up to two secrets are valid at once so a rotation never cuts service.
+model DeveloperAppSecret {
+  id         String    @id @default(cuid())
+  appId      String
+  secretHash String
+  /// Last 4 characters, to tell secrets apart in the console.
+  hint       String
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime?
+  revokedAt  DateTime?
+  lastUsedAt DateTime?
+
+  app DeveloperApp @relation(fields: [appId], references: [id], onDelete: Cascade)
+
+  @@index([appId])
+}
+
+model OAuthConsent {
+  id        String    @id @default(cuid())
+  personId  String
+  appId     String
+  scopes    String[]
+  grantedAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  revokedAt DateTime?
+
+  person Person       @relation(fields: [personId], references: [id], onDelete: Cascade)
+  app    DeveloperApp @relation(fields: [appId], references: [id], onDelete: Cascade)
+
+  @@unique([personId, appId])
+}
+
+/// Single-use, short-lived (60 s); only its SHA-256 is stored.
+model OAuthAuthorizationCode {
+  id                  String    @id @default(cuid())
+  codeHash            String    @unique
+  appId               String
+  personId            String
+  accountId           String
+  redirectUri         String
+  scopes              String[]
+  codeChallenge       String
+  codeChallengeMethod String
+  nonce               String?
+  authTime            DateTime
+  expiresAt           DateTime
+  consumedAt          DateTime?
+  createdAt           DateTime  @default(now())
+
+  app    DeveloperApp @relation(fields: [appId], references: [id], onDelete: Cascade)
+  person Person       @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+}
+
+/// Opaque, rotated on every use; only its SHA-256 is stored.
+model OAuthRefreshToken {
+  id           String    @id @default(cuid())
+  tokenHash    String    @unique
+  appId        String
+  personId     String
+  accountId    String
+  scopes       String[]
+  authTime     DateTime
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  replacedById String?
+  createdAt    DateTime  @default(now())
+
+  app    DeveloperApp @relation(fields: [appId], references: [id], onDelete: Cascade)
+  person Person       @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@index([appId, personId])
+}
+
+/// Asymmetric keys for tokens third parties verify (ES256). The private key
+/// is stored encrypted (AES-256-GCM, KERNEL_SIGNING_KEY_SECRET).
+model SigningKey {
+  kid           String           @id
+  alg           String
+  status        SigningKeyStatus @default(ACTIVE)
+  publicJwk     Json
+  privateKeyEnc String
+  createdAt     DateTime         @default(now())
+  retiredAt     DateTime?
+
+  @@index([status])
 }

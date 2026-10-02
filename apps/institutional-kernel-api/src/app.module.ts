@@ -31,6 +31,14 @@ import { KernelAccessGuard } from "./interfaces/http/kernel-access.guard";
 import { NotificationService } from "./application/notifications/notification.service";
 import { OpenApiValidationInterceptor } from "./interfaces/http/openapi-validation.interceptor";
 import { OpenApiValidationService } from "./interfaces/http/openapi-validation.service";
+import { SigningKeyService } from "./infrastructure/crypto/signing-key.service";
+import { WellKnownController } from "./interfaces/http/well-known.controller";
+import { DeveloperAppsController } from "./interfaces/http/developer-apps.controller";
+import { OAuthController } from "./interfaces/http/oauth.controller";
+import { DeveloperAppsService } from "./application/developer-apps/developer-apps.service";
+import { ClientCredentialsGrant } from "./application/oauth/client-credentials.grant";
+import { OidcService } from "./application/oauth/oidc.service";
+import { OidcAccessGuard } from "./application/oauth/oidc-access.guard";
 
 @Module({
   imports: [
@@ -57,6 +65,9 @@ import { OpenApiValidationService } from "./interfaces/http/openapi-validation.s
     AuthorizationController,
     WorkflowController,
     ServiceController,
+    WellKnownController,
+    DeveloperAppsController,
+    OAuthController,
   ],
   providers: [
     HealthService,
@@ -74,6 +85,11 @@ import { OpenApiValidationService } from "./interfaces/http/openapi-validation.s
     HttpCommandContextFactory,
     NotificationService,
     OpenApiValidationService,
+    SigningKeyService,
+    DeveloperAppsService,
+    ClientCredentialsGrant,
+    OidcService,
+    OidcAccessGuard,
     { provide: APP_INTERCEPTOR, useClass: OpenApiValidationInterceptor },
     { provide: APP_GUARD, useClass: KernelAccessGuard },
   ],

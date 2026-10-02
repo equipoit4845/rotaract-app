@@ -50,6 +50,10 @@ services:
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       NATS_URL: ${NATS_URL:-nats://nats:4222}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set in .env}
+      # Developer platform (docs/11-developer-platform-auth.md): encrypts the
+      # ES256 signing keys at rest; the issuer is the public API base URL.
+      KERNEL_SIGNING_KEY_SECRET: ${KERNEL_SIGNING_KEY_SECRET:?KERNEL_SIGNING_KEY_SECRET must be set in .env}
+      KERNEL_ISSUER_URL: ${KERNEL_ISSUER_URL:-http://localhost:3001/api/kernel/v1}
       KERNEL_CORS_ORIGINS: ${KERNEL_CORS_ORIGINS:-https://app.rotaract4845.com,http://localhost:3000}
       KERNEL_SERVICE_API_KEY: ${KERNEL_SERVICE_API_KEY:-}
       KERNEL_JOBS_ENABLED: "false"
@@ -81,6 +85,8 @@ services:
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       NATS_URL: ${NATS_URL:-nats://nats:4222}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set in .env}
+      KERNEL_SIGNING_KEY_SECRET: ${KERNEL_SIGNING_KEY_SECRET:?KERNEL_SIGNING_KEY_SECRET must be set in .env}
+      KERNEL_ISSUER_URL: ${KERNEL_ISSUER_URL:-http://localhost:3001/api/kernel/v1}
       KERNEL_JOBS_ENABLED: "true"
     depends_on:
       postgres: { condition: service_healthy }

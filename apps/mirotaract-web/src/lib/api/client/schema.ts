@@ -1850,6 +1850,324 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/.well-known/openid-configuration": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Documento de discovery de OpenID Connect */
+        get: operations["getOpenIdConfiguration"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/.well-known/jwks.json": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Claves públicas para verificar tokens (JWKS)
+         * @description Incluye la clave activa y las retiradas en los últimos 30 días, para que los tokens firmados antes de una rotación sigan verificando.
+         */
+        get: operations["getJwks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/developer/apps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar las apps registradas en una organización */
+        get: operations["listDeveloperApps"];
+        put?: never;
+        /**
+         * Registrar una app
+         * @description Una app CONFIDENTIAL recibe su secreto en esta respuesta, una única vez. Una app PUBLIC (SPA o móvil) no tiene secreto, usa PKCE y no puede pedir client_credentials ni scopes de servicio.
+         */
+        post: operations["createDeveloperApp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/developer/apps/{appId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ver una app */
+        get: operations["getDeveloperApp"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Editar nombre, descripción, scopes o URLs de retorno */
+        patch: operations["updateDeveloperApp"];
+        trace?: never;
+    };
+    "/developer/apps/{appId}/secrets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Crear un secreto nuevo (rotación)
+         * @description Devuelve el secreto nuevo una única vez. El secreto anterior sigue siendo válido 7 días o hasta que se revoque, para rotar sin cortar el servicio. Nunca hay más de dos secretos vigentes.
+         */
+        post: operations["rotateDeveloperAppSecret"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/developer/apps/{appId}/secrets/{secretId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revocar un secreto */
+        delete: operations["revokeDeveloperAppSecret"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/developer/apps/{appId}/suspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Pausar una app (deja de obtener tokens) */
+        post: operations["suspendDeveloperApp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/developer/apps/{appId}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reactivar una app pausada */
+        post: operations["activateDeveloperApp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/developer/apps/{appId}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Revocar una app definitivamente
+         * @description Terminal. Revoca sus secretos, sus refresh tokens y los consentimientos otorgados por las personas.
+         */
+        post: operations["revokeDeveloperApp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/oauth/apps/{clientId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Datos públicos de una app (para la pantalla de consentimiento) */
+        get: operations["getPublicDeveloperApp"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/oauth/authorize/context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Validar un pedido de autorización y describirlo
+         * @description La Web lo llama con los parámetros de /oauth/authorize antes de mostrar el consentimiento. Valida client_id, redirect_uri (coincidencia exacta), scopes permitidos a la app y PKCE S256. Indica si la persona ya había otorgado esos scopes.
+         */
+        get: operations["getAuthorizationContext"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/oauth/authorize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Aprobar o rechazar un pedido de autorización
+         * @description Con decision=approve guarda el consentimiento, emite un código de un solo uso (60 s) atado a la app, la redirect_uri y el code_challenge, y devuelve la URL de retorno con code y state. Con decision=deny devuelve la URL de retorno con error=access_denied.
+         */
+        post: operations["authorizeOAuthRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/oauth/token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Emitir tokens (client_credentials, authorization_code, refresh_token)
+         * @description Autenticación del cliente por HTTP Basic (client_secret_basic), por client_id + client_secret en el body (client_secret_post), o solo client_id para apps PUBLIC con PKCE. Los errores siguen RFC 6749 §5.2 (`{ error, error_description }`), no Problem Details.
+         */
+        post: operations["issueOAuthToken"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/oauth/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Revocar un refresh token (RFC 7009)
+         * @description Responde 200 aunque el token no exista, como indica RFC 7009.
+         */
+        post: operations["revokeOAuthToken"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/oauth/userinfo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Datos de la persona según los scopes otorgados */
+        get: operations["getOAuthUserInfo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/oauth/consents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Apps a las que la persona autenticada dio acceso */
+        get: operations["listOAuthConsents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/oauth/consents/{appId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Quitarle el acceso a una app
+         * @description Revoca el consentimiento y todos los refresh tokens de esa app para la persona.
+         */
+        delete: operations["revokeOAuthConsent"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2580,8 +2898,197 @@ export interface components {
                 status: "ACTIVE";
             } | null;
         };
+        /**
+         * @description CONFIDENTIAL = servidor con secreto; PUBLIC = SPA o móvil con PKCE.
+         * @enum {string}
+         */
+        DeveloperAppType: "CONFIDENTIAL" | "PUBLIC";
+        /** @enum {string} */
+        DeveloperAppStatus: "ACTIVE" | "SUSPENDED" | "REVOKED";
+        DeveloperAppSecretSummary: {
+            id: string;
+            /** @description Últimos 4 caracteres. */
+            hint: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            expiresAt?: string | null;
+            /** Format: date-time */
+            revokedAt?: string | null;
+            /** Format: date-time */
+            lastUsedAt?: string | null;
+        };
+        DeveloperApp: {
+            id: string;
+            clientId: string;
+            name: string;
+            description?: string | null;
+            type: components["schemas"]["DeveloperAppType"];
+            status: components["schemas"]["DeveloperAppStatus"];
+            organizationId: string;
+            ownerPersonId: string;
+            grantTypes: ("client_credentials" | "authorization_code" | "refresh_token")[];
+            scopes: string[];
+            redirectUris: string[];
+            secrets: components["schemas"]["DeveloperAppSecretSummary"][];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            suspendedAt?: string | null;
+            /** Format: date-time */
+            revokedAt?: string | null;
+        };
+        CreateDeveloperAppRequest: {
+            name: string;
+            description?: string | null;
+            type: components["schemas"]["DeveloperAppType"];
+            /** @description Organización a la que queda atada la app (club o distrito). */
+            organizationId: string;
+            grantTypes: ("client_credentials" | "authorization_code" | "refresh_token")[];
+            scopes: string[];
+            /** @description Obligatorio con authorization_code. https, o http solo para localhost. */
+            redirectUris?: string[];
+        };
+        UpdateDeveloperAppRequest: {
+            name?: string;
+            description?: string | null;
+            scopes?: string[];
+            redirectUris?: string[];
+        };
+        DeveloperAppSecretCreated: {
+            secretId: string;
+            /** @description Se muestra una única vez. */
+            secret: string;
+            hint: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        CreatedDeveloperApp: {
+            app: components["schemas"]["DeveloperApp"];
+            /** @description Solo para apps CONFIDENTIAL; se muestra una única vez. */
+            clientSecret?: string | null;
+        };
+        PublicDeveloperApp: {
+            clientId: string;
+            name: string;
+            description?: string | null;
+            type: components["schemas"]["DeveloperAppType"];
+            organizationName: string;
+        };
+        ScopeDescription: {
+            scope: string;
+            label: string;
+        };
+        AuthorizationContext: {
+            app: components["schemas"]["PublicDeveloperApp"];
+            scopes: components["schemas"]["ScopeDescription"][];
+            alreadyGranted: boolean;
+        };
+        AuthorizeRequest: {
+            clientId: string;
+            redirectUri: string;
+            scope: string;
+            state?: string | null;
+            nonce?: string | null;
+            codeChallenge: string;
+            /** @enum {string} */
+            codeChallengeMethod: "S256";
+            /** @enum {string} */
+            decision: "approve" | "deny";
+        };
+        AuthorizeResponse: {
+            redirectTo: string;
+        };
+        TokenRequest: {
+            /** @enum {string} */
+            grant_type: "client_credentials" | "authorization_code" | "refresh_token";
+            client_id?: string;
+            client_secret?: string;
+            scope?: string;
+            code?: string;
+            redirect_uri?: string;
+            code_verifier?: string;
+            refresh_token?: string;
+        };
+        TokenResponse: {
+            access_token: string;
+            /** @enum {string} */
+            token_type: "Bearer";
+            expires_in: number;
+            scope: string;
+            id_token?: string;
+            refresh_token?: string;
+        };
+        RevokeTokenRequest: {
+            token: string;
+            token_type_hint?: string;
+            client_id?: string;
+            client_secret?: string;
+        };
+        OAuthError: {
+            /** @enum {string} */
+            error: "invalid_request" | "invalid_client" | "invalid_grant" | "unauthorized_client" | "unsupported_grant_type" | "invalid_scope" | "invalid_token" | "access_denied";
+            error_description?: string;
+        };
+        UserInfo: {
+            /** @description personId estable. */
+            sub: string;
+            name?: string;
+            given_name?: string;
+            family_name?: string;
+            picture?: string | null;
+            email?: string;
+            email_verified?: boolean;
+            memberships?: {
+                organizationId: string;
+                organizationName: string;
+                organizationType: string;
+                status: string;
+            }[];
+            positions?: {
+                organizationId: string;
+                positionCode: string;
+                positionName: string;
+                periodId: string;
+            }[];
+        };
+        OAuthConsent: {
+            appId: string;
+            clientId: string;
+            appName: string;
+            organizationName: string;
+            scopes: components["schemas"]["ScopeDescription"][];
+            /** Format: date-time */
+            grantedAt: string;
+        };
+        OpenIdConfiguration: {
+            issuer: string;
+            authorization_endpoint: string;
+            token_endpoint: string;
+            userinfo_endpoint?: string;
+            revocation_endpoint?: string;
+            jwks_uri: string;
+        } & {
+            [key: string]: unknown;
+        };
+        Jwks: {
+            keys: {
+                [key: string]: unknown;
+            }[];
+        };
     };
     responses: {
+        /** @description Pedido inválido. */
+        Error: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Error"];
+            };
+        };
         /** @description Recurso inexistente. */
         NotFound: {
             headers: {
@@ -2611,6 +3118,7 @@ export interface components {
         };
     };
     parameters: {
+        appId: string;
         personId: string;
         organizationId: string;
         membershipId: string;
@@ -5667,6 +6175,493 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ModuleInstallation"];
                 };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    getOpenIdConfiguration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OpenIdConfiguration"];
+                };
+            };
+        };
+    };
+    getJwks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Jwks"];
+                };
+            };
+        };
+    };
+    listDeveloperApps: {
+        parameters: {
+            query: {
+                organizationId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeveloperApp"][];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    createDeveloperApp: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDeveloperAppRequest"];
+            };
+        };
+        responses: {
+            /** @description Creada. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedDeveloperApp"];
+                };
+            };
+            400: components["responses"]["Error"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    getDeveloperApp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                appId: components["parameters"]["appId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeveloperApp"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    updateDeveloperApp: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                appId: components["parameters"]["appId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateDeveloperAppRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeveloperApp"];
+                };
+            };
+            400: components["responses"]["Error"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    rotateDeveloperAppSecret: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                appId: components["parameters"]["appId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Creado. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeveloperAppSecretCreated"];
+                };
+            };
+            409: components["responses"]["InvalidTransition"];
+        };
+    };
+    revokeDeveloperAppSecret: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                appId: components["parameters"]["appId"];
+                secretId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Revocado. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    suspendDeveloperApp: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                appId: components["parameters"]["appId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeveloperApp"];
+                };
+            };
+            409: components["responses"]["InvalidTransition"];
+        };
+    };
+    activateDeveloperApp: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                appId: components["parameters"]["appId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeveloperApp"];
+                };
+            };
+            409: components["responses"]["InvalidTransition"];
+        };
+    };
+    revokeDeveloperApp: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                appId: components["parameters"]["appId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeveloperApp"];
+                };
+            };
+            409: components["responses"]["InvalidTransition"];
+        };
+    };
+    getPublicDeveloperApp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clientId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicDeveloperApp"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    getAuthorizationContext: {
+        parameters: {
+            query: {
+                client_id: string;
+                redirect_uri: string;
+                scope: string;
+                response_type: "code";
+                code_challenge: string;
+                code_challenge_method: "S256";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthorizationContext"];
+                };
+            };
+            400: components["responses"]["Error"];
+        };
+    };
+    authorizeOAuthRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AuthorizeRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthorizeResponse"];
+                };
+            };
+            400: components["responses"]["Error"];
+        };
+    };
+    issueOAuthToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/x-www-form-urlencoded": components["schemas"]["TokenRequest"];
+                "application/json": components["schemas"]["TokenRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenResponse"];
+                };
+            };
+            /** @description Pedido inválido. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OAuthError"];
+                };
+            };
+            /** @description Cliente no autenticado. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OAuthError"];
+                };
+            };
+        };
+    };
+    revokeOAuthToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/x-www-form-urlencoded": components["schemas"]["RevokeTokenRequest"];
+                "application/json": components["schemas"]["RevokeTokenRequest"];
+            };
+        };
+        responses: {
+            /** @description Revocado o inexistente. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Cliente no autenticado. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OAuthError"];
+                };
+            };
+        };
+    };
+    getOAuthUserInfo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserInfo"];
+                };
+            };
+            /** @description Token ausente, vencido o revocado. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OAuthError"];
+                };
+            };
+        };
+    };
+    listOAuthConsents: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OAuthConsent"][];
+                };
+            };
+        };
+    };
+    revokeOAuthConsent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                appId: components["parameters"]["appId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Revocado. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             404: components["responses"]["NotFound"];
         };

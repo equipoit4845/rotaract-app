@@ -63,6 +63,10 @@ const permissionCodes = [
   "kernel.module.configure",
   "kernel.module.disable",
   "kernel.audit.read",
+  // Developer platform (docs/11-developer-platform-auth.md): register and
+  // govern the apps committees build on top of the Kernel.
+  "kernel.app.read",
+  "kernel.app.manage",
 ];
 const roles = [
   "PLATFORM_USER",
@@ -141,6 +145,8 @@ const rolePermissions: Record<string, string[]> = {
     "kernel.module.configure",
     "kernel.module.disable",
     "kernel.audit.read",
+    "kernel.app.read",
+    "kernel.app.manage",
   ],
   DISTRICT_SECRETARY: [
     ...selfServicePermissions,

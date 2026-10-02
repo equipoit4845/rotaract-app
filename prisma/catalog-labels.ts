@@ -75,4 +75,6 @@ export const permissionNames: Record<string, string> = {
   "kernel.module.configure": "Configurar módulos",
   "kernel.module.disable": "Desactivar módulos",
   "kernel.audit.read": "Ver auditoría",
+  "kernel.app.read": "Ver las apps conectadas al distrito",
+  "kernel.app.manage": "Registrar y administrar apps",
 };
