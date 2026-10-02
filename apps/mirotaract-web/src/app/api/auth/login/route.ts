@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import {
+  forwardedClientHeaders,
   kernelBaseUrl,
   setRefreshCookie,
 } from "@/lib/api/client/session-cookie.server";
@@ -10,7 +11,10 @@ export async function POST(request: Request) {
 
   const kernelResponse = await fetch(`${kernelBaseUrl()}/auth/login`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: {
+      "content-type": "application/json",
+      ...forwardedClientHeaders(request),
+    },
     body: JSON.stringify(credentials),
   });
 

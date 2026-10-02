@@ -14,3 +14,6 @@ process.env.CLICKMAIL_API_KEY ??= "";
 // validation is exercised in its dedicated contract test to retain useful
 // application-level failure diagnostics in the rest of the suite.
 process.env.KERNEL_OPENAPI_RUNTIME_VALIDATION ??= "true";
+// Many suites log in repeatedly from one address; rate limiting is exercised
+// on its own in test/rate-limit.e2e-spec.ts.
+process.env.KERNEL_RATE_LIMIT_ENABLED ??= "false";

@@ -4,11 +4,12 @@ import { NextResponse } from "next/server";
 import {
   REFRESH_COOKIE,
   clearRefreshCookie,
+  forwardedClientHeaders,
   kernelBaseUrl,
   setRefreshCookie,
 } from "@/lib/api/client/session-cookie.server";
 
-export async function POST() {
+export async function POST(request: Request) {
   const refreshToken = (await cookies()).get(REFRESH_COOKIE)?.value;
   if (!refreshToken) {
     return NextResponse.json(
@@ -19,7 +20,10 @@ export async function POST() {
 
   const kernelResponse = await fetch(`${kernelBaseUrl()}/auth/refresh`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: {
+      "content-type": "application/json",
+      ...forwardedClientHeaders(request),
+    },
     body: JSON.stringify({ refreshToken }),
   });
 

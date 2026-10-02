@@ -40,6 +40,7 @@ import { ClientCredentialsGrant } from "./application/oauth/client-credentials.g
 import { ClientAuthenticator } from "./application/oauth/client-authenticator";
 import { OidcService } from "./application/oauth/oidc.service";
 import { OidcAccessGuard } from "./application/oauth/oidc-access.guard";
+import { KernelThrottlerGuard } from "./interfaces/http/kernel-throttler.guard";
 import { DataApiService } from "./application/data-api/data-api.service";
 
 @Module({
@@ -95,6 +96,9 @@ import { DataApiService } from "./application/data-api/data-api.service";
     OidcService,
     OidcAccessGuard,
     { provide: APP_INTERCEPTOR, useClass: OpenApiValidationInterceptor },
+    // Order matters: rate limiting runs before authentication, so floods are
+    // rejected before any token verification or database work.
+    { provide: APP_GUARD, useClass: KernelThrottlerGuard },
     { provide: APP_GUARD, useClass: KernelAccessGuard },
   ],
 })

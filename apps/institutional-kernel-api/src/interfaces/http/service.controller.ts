@@ -36,10 +36,28 @@ export class ServiceController {
     private readonly kernel: KernelService,
     private readonly data: DataApiService,
   ) {}
-  @Get("users/:accountId/context") userContext(
+  /**
+   * The person is in the app's scope (checked by ServiceApiGuard), but their
+   * memberships and workspaces elsewhere are not: a club app only sees its
+   * own club.
+   */
+  @Get("users/:accountId/context") async userContext(
     @Param("accountId") accountId: string,
+    @Req() request: ServiceRequest,
   ) {
-    return this.kernel.userContext(accountId);
+    const context = await this.kernel.userContext(accountId);
+    const allowed = request.service.allowedOrganizationIds;
+    if (!allowed) return context;
+    const visible = new Set(allowed);
+    return {
+      ...context,
+      memberships: context.memberships.filter((m) =>
+        visible.has(m.organizationId),
+      ),
+      workspaces: context.workspaces?.filter((w) =>
+        visible.has(w.organizationId),
+      ),
+    };
   }
 
   // --- Data API v1 (docs/12-data-api-and-sdks.md §E4) -------------------

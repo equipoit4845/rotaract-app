@@ -37,3 +37,18 @@ export function kernelBaseUrl(): string {
   if (!url) throw new Error("NEXT_PUBLIC_KERNEL_API_URL is not configured");
   return url;
 }
+
+/**
+ * Forwards the end user's IP to the Kernel, which rate-limits by client.
+ * Without it every login/refresh would come from this server's address and
+ * share a single bucket. The Web sits behind the same Cloudflare tunnel, so
+ * CF-Connecting-IP carries the real client.
+ */
+export function forwardedClientHeaders(
+  request: Request,
+): Record<string, string> {
+  const ip =
+    request.headers.get("cf-connecting-ip") ??
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  return ip ? { "x-forwarded-for": ip } : {};
+}

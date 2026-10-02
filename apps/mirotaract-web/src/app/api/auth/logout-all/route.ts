@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import {
   clearRefreshCookie,
+  forwardedClientHeaders,
   kernelBaseUrl,
 } from "@/lib/api/client/session-cookie.server";
 
@@ -11,7 +12,7 @@ export async function POST(request: Request) {
   if (authorization) {
     await fetch(`${kernelBaseUrl()}/auth/logout-all`, {
       method: "POST",
-      headers: { authorization },
+      headers: { authorization, ...forwardedClientHeaders(request) },
     }).catch(() => undefined);
   }
 
