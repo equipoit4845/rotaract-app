@@ -136,10 +136,15 @@ export class ServiceController {
   ) {
     return this.kernel.servicePeriodSnapshot(organizationId);
   }
-  @Post("authorization/check") check(@Body() body: any) {
+  // The contract (and kernel-spec §9.8) answers a decision with 200, not 201.
+  @Post("authorization/check")
+  @HttpCode(200)
+  check(@Body() body: any) {
     return this.kernel.checkAuthorization(body);
   }
-  @Post("authorization/batch-check") batch(@Body() body: any) {
+  @Post("authorization/batch-check")
+  @HttpCode(200)
+  batch(@Body() body: any) {
     return this.kernel.batchCheckAuthorization(body);
   }
   @Get("modules/:moduleId/installations/:organizationId") installation(

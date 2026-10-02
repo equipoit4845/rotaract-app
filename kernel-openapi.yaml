@@ -2422,6 +2422,7 @@ paths:
               schema: { $ref: "#/components/schemas/MemberViewPage" }
         "304": { description: Sin cambios desde el ETag enviado. }
         "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
 
   /service/organizations/{organizationId}/authorities:
     get:
@@ -2432,6 +2433,7 @@ paths:
       x-service-only: true
       x-required-scope: kernel.service.authorities.read
       parameters:
+        - $ref: "#/components/parameters/ifNoneMatch"
         - $ref: "#/components/parameters/organizationId"
         - name: includeDescendants
           in: query
@@ -2440,12 +2442,16 @@ paths:
       responses:
         "200":
           description: OK
+          headers:
+            ETag: { schema: { type: string } }
           content:
             application/json:
               schema:
                 type: array
                 items: { $ref: "#/components/schemas/AuthorityView" }
         "403": { $ref: "#/components/responses/Forbidden" }
+        "304": { description: Sin cambios desde el ETag enviado. }
+        "404": { $ref: "#/components/responses/NotFound" }
 
   /service/organizations/{organizationId}/periods:
     get:
@@ -2456,17 +2462,22 @@ paths:
       x-service-only: true
       x-required-scope: kernel.service.periods.read
       parameters:
+        - $ref: "#/components/parameters/ifNoneMatch"
         - $ref: "#/components/parameters/organizationId"
         - { name: status, in: query, schema: { $ref: "#/components/schemas/PeriodStatus" } }
       responses:
         "200":
           description: OK
+          headers:
+            ETag: { schema: { type: string } }
           content:
             application/json:
               schema:
                 type: array
                 items: { $ref: "#/components/schemas/PeriodView" }
         "403": { $ref: "#/components/responses/Forbidden" }
+        "304": { description: Sin cambios desde el ETag enviado. }
+        "404": { $ref: "#/components/responses/NotFound" }
 
   /service/persons/batch:
     post:
@@ -2500,6 +2511,8 @@ paths:
               schema:
                 type: array
                 items: { $ref: "#/components/schemas/PersonView" }
+        "400": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Forbidden" }
 
   /service/persons/{personId}/memberships:
     get:
@@ -2510,16 +2523,22 @@ paths:
       x-service-only: true
       x-required-scope: kernel.service.memberships.read
       parameters:
+        - $ref: "#/components/parameters/ifNoneMatch"
         - $ref: "#/components/parameters/personId"
       responses:
         "200":
           description: OK
+          headers:
+            ETag: { schema: { type: string } }
           content:
             application/json:
               schema:
                 type: array
                 items: { $ref: "#/components/schemas/PersonMembershipView" }
         "403": { $ref: "#/components/responses/Forbidden" }
+        "304": { description: Sin cambios desde el ETag enviado. }
+        "404": { $ref: "#/components/responses/NotFound" }
+
   /service/persons/{personId}:
     get:
       operationId: serviceGetPerson
@@ -2528,13 +2547,18 @@ paths:
       security: [{ serviceAuth: [] }]
       x-service-only: true
       parameters:
+        - $ref: "#/components/parameters/ifNoneMatch"
         - $ref: "#/components/parameters/personId"
       responses:
         "200":
           description: OK
+          headers:
+            ETag: { schema: { type: string } }
           content:
             application/json:
               schema: { $ref: "#/components/schemas/PersonView" }
+        "304": { description: Sin cambios desde el ETag enviado. }
+        "404": { $ref: "#/components/responses/NotFound" }
 
   /service/organizations/{organizationId}:
     get:
@@ -2544,13 +2568,18 @@ paths:
       security: [{ serviceAuth: [] }]
       x-service-only: true
       parameters:
+        - $ref: "#/components/parameters/ifNoneMatch"
         - $ref: "#/components/parameters/organizationId"
       responses:
         "200":
           description: OK
+          headers:
+            ETag: { schema: { type: string } }
           content:
             application/json:
               schema: { $ref: "#/components/schemas/OrganizationView" }
+        "304": { description: Sin cambios desde el ETag enviado. }
+        "404": { $ref: "#/components/responses/NotFound" }
 
   /service/organizations/{organizationId}/membership-snapshot:
     get:
