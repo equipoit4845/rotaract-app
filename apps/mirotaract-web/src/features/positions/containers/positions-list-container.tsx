@@ -62,17 +62,10 @@ export function PositionsListContainer() {
       />
 
       {query.isLoading ? (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "var(--mr-space-2)",
-            marginTop: "var(--mr-space-4)",
-          }}
-        >
-          <Skeleton style={{ height: "2.5rem" }} />
-          <Skeleton style={{ height: "2.5rem" }} />
-          <Skeleton style={{ height: "2.5rem" }} />
+        <div className="flex flex-col gap-2 mt-4">
+          <Skeleton className="h-10" />
+          <Skeleton className="h-10" />
+          <Skeleton className="h-10" />
         </div>
       ) : query.isError ? (
         <DataState kind="error" {...describeKernelError(query.error)} />

@@ -79,23 +79,6 @@
   --warning-foreground: oklch(0.98 0.01 85);
 }
 
-/* TEMPORARY bridge: ~64 feature files still use the removed
-   @equipoit4845/design-tokens variables in inline styles. Mapping them to
-   the theme keeps spacing and colors working while those files migrate to
-   Tailwind utilities. Delete once `grep -r "var(--mr-" src` is empty. */
-:root {
-  --mr-space-2: 0.5rem;
-  --mr-space-3: 0.75rem;
-  --mr-space-4: 1rem;
-  --mr-space-6: 1.5rem;
-  --mr-radius-md: calc(var(--radius) - 2px);
-  --mr-color-text-muted: var(--muted-foreground);
-  --mr-color-border: var(--border);
-  --mr-color-surface: var(--card);
-  --mr-color-surface-muted: var(--muted);
-  --mr-color-action: var(--primary);
-}
-
 @theme inline {
   --font-sans: var(--font-public-sans), ui-sans-serif, system-ui, sans-serif;
   --color-background: var(--background);

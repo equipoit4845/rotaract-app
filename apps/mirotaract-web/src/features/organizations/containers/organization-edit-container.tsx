@@ -21,7 +21,7 @@ export function OrganizationEditContainer({
   });
 
   if (organizationQuery.isLoading) {
-    return <Skeleton style={{ height: "20rem" }} />;
+    return <Skeleton className="h-80" />;
   }
 
   if (organizationQuery.isError) {

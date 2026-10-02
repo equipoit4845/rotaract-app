@@ -41,15 +41,9 @@ export function OrganizationDetailContainer({
 
   if (organizationQuery.isLoading) {
     return (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "var(--mr-space-3)",
-        }}
-      >
-        <Skeleton style={{ height: "2rem" }} />
-        <Skeleton style={{ height: "12rem" }} />
+      <div className="flex flex-col gap-3">
+        <Skeleton className="h-8" />
+        <Skeleton className="h-48" />
       </div>
     );
   }
@@ -113,14 +107,7 @@ export function OrganizationDetailContainer({
           {/* Fase 4 (Membresías) owns `/memberships/**` — this only links
               into that scoped list, it never embeds Membresías UI here
               (product spec §13/§32). */}
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "var(--mr-space-3)",
-              alignItems: "flex-start",
-            }}
-          >
+          <div className="flex flex-col gap-3 items-start">
             <p>Los socios de esta organización se gestionan en Membresías.</p>
             <Link href={`/memberships?organization=${organization.id}`}>
               <Button variant="secondary">Ver membresías</Button>

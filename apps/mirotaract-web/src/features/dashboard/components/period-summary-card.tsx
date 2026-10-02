@@ -32,15 +32,9 @@ export function PeriodSummaryCard({
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "var(--mr-space-2)",
-            }}
-          >
-            <Skeleton style={{ height: "1.5rem" }} />
-            <Skeleton style={{ height: "1.5rem" }} />
+          <div className="flex flex-col gap-2">
+            <Skeleton className="h-6" />
+            <Skeleton className="h-6" />
           </div>
         ) : isError ? (
           <DataState kind="error" {...describeKernelError(error)} />

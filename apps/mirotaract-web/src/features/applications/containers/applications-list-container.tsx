@@ -66,7 +66,7 @@ export function ApplicationsListContainer() {
 
       <DataToolbar
         filters={
-          <div style={{ display: "flex", gap: "var(--mr-space-2)" }}>
+          <div className="flex gap-2">
             <ApplicationOrganizationFilter
               value={organizationId}
               organizations={organizationCandidates}
@@ -78,17 +78,10 @@ export function ApplicationsListContainer() {
       />
 
       {query.isLoading ? (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "var(--mr-space-2)",
-            marginTop: "var(--mr-space-4)",
-          }}
-        >
-          <Skeleton style={{ height: "2.5rem" }} />
-          <Skeleton style={{ height: "2.5rem" }} />
-          <Skeleton style={{ height: "2.5rem" }} />
+        <div className="flex flex-col gap-2 mt-4">
+          <Skeleton className="h-10" />
+          <Skeleton className="h-10" />
+          <Skeleton className="h-10" />
         </div>
       ) : query.isError ? (
         <DataState kind="error" {...describeKernelError(query.error)} />

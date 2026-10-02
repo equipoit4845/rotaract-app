@@ -23,9 +23,7 @@ export function PersonActionsRow({ person }: { person: Person }) {
   const canEdit = canManage || (isOwnPerson && canUpdateSelf);
 
   return (
-    <div
-      style={{ display: "flex", gap: "var(--mr-space-2)", flexWrap: "wrap" }}
-    >
+    <div className="flex gap-2 flex-wrap">
       {canEdit ? (
         <Link href={`/persons/${person.id}/edit`}>
           <Button variant="secondary">Editar</Button>

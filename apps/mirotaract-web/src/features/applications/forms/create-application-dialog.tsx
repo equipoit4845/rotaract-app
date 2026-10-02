@@ -71,14 +71,7 @@ export function CreateApplicationDialog({
             Crea una solicitud de ingreso (borrador) para este club.
           </DialogDescription>
         </DialogHeader>
-        <form
-          onSubmit={handleSubmit}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "var(--mr-space-3)",
-          }}
-        >
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <FormField
             label="Mensaje"
             htmlFor="applicationMessage"

@@ -21,15 +21,9 @@ export function ApplicationDetailContainer({
 
   if (applicationQuery.isLoading) {
     return (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "var(--mr-space-3)",
-        }}
-      >
-        <Skeleton style={{ height: "2rem" }} />
-        <Skeleton style={{ height: "12rem" }} />
+      <div className="flex flex-col gap-3">
+        <Skeleton className="h-8" />
+        <Skeleton className="h-48" />
       </div>
     );
   }

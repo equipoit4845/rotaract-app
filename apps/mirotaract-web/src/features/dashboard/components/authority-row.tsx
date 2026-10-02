@@ -31,7 +31,7 @@ export function AuthorityRow({
         {person ? (
           (person.displayName ?? `${person.firstName} ${person.lastName}`)
         ) : (
-          <Skeleton style={{ height: "1rem", width: "8rem" }} />
+          <Skeleton className="h-4 w-32" />
         )}
       </TableCell>
       <TableCell>

@@ -143,42 +143,14 @@ export function TransferWorkflowTimeline({
         <CardTitle>Estado de la transferencia</CardTitle>
       </CardHeader>
       <CardContent>
-        <ol
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "var(--mr-space-3)",
-            margin: 0,
-            padding: 0,
-            listStyle: "none",
-          }}
-        >
+        <ol className="flex flex-col gap-3 m-0 p-0 list-none">
           {ordered.map((step) => (
-            <li
-              key={step.key}
-              style={{
-                borderLeft: "2px solid var(--mr-color-border)",
-                paddingLeft: "var(--mr-space-3)",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  gap: "var(--mr-space-2)",
-                  alignItems: "center",
-                  flexWrap: "wrap",
-                }}
-              >
+            <li key={step.key} className="border-l-2 border-border pl-3">
+              <div className="flex gap-2 items-center flex-wrap">
                 <strong>{step.label}</strong>
                 <StatusBadge kind="transfer" status={step.status} />
               </div>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: "0.75rem",
-                  color: "var(--mr-color-text-muted)",
-                }}
-              >
+              <p className="m-0 text-xs text-muted-foreground">
                 {formatDateTime(step.at)}
                 {step.performedById ? (
                   <>

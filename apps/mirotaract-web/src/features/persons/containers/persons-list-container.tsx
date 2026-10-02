@@ -53,17 +53,10 @@ function PersonsDirectory() {
       />
 
       {page.isLoading ? (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "var(--mr-space-2)",
-            marginTop: "var(--mr-space-4)",
-          }}
-        >
-          <Skeleton style={{ height: "2.5rem" }} />
-          <Skeleton style={{ height: "2.5rem" }} />
-          <Skeleton style={{ height: "2.5rem" }} />
+        <div className="flex flex-col gap-2 mt-4">
+          <Skeleton className="h-10" />
+          <Skeleton className="h-10" />
+          <Skeleton className="h-10" />
         </div>
       ) : page.isError ? (
         <DataState kind="error" {...describeKernelError(page.error)} />
@@ -121,17 +114,10 @@ function SuperadminUsersDirectory() {
         search={<PersonSearchInput value={query} onCommit={setQuery} />}
       />
       {directory.isLoading ? (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "var(--mr-space-2)",
-            marginTop: "var(--mr-space-4)",
-          }}
-        >
-          <Skeleton style={{ height: "2.5rem" }} />
-          <Skeleton style={{ height: "2.5rem" }} />
-          <Skeleton style={{ height: "2.5rem" }} />
+        <div className="flex flex-col gap-2 mt-4">
+          <Skeleton className="h-10" />
+          <Skeleton className="h-10" />
+          <Skeleton className="h-10" />
         </div>
       ) : directory.isError ? (
         <DataState kind="error" {...describeKernelError(directory.error)} />

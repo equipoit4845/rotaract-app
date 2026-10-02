@@ -16,7 +16,7 @@ import Link from "next/link";
 export function AppointmentPeriodCell({ periodId }: { periodId: string }) {
   const { data: period, isLoading } = usePeriod(periodId);
 
-  if (isLoading) return <Skeleton style={{ height: "1rem", width: "6rem" }} />;
+  if (isLoading) return <Skeleton className="h-4 w-24" />;
   if (!period) return <span>—</span>;
   return <Link href={`/periods/${periodId}`}>{period.name}</Link>;
 }

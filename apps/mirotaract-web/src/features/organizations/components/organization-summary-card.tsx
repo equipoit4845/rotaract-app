@@ -77,9 +77,7 @@ export function OrganizationSummaryCard({
           ) : null}
         </DetailGrid>
         {organization.description ? (
-          <p style={{ marginTop: "var(--mr-space-4)" }}>
-            {organization.description}
-          </p>
+          <p className="mt-4">{organization.description}</p>
         ) : null}
       </CardContent>
     </Card>

@@ -31,7 +31,7 @@ export function AppointmentMembershipCell({
   );
 
   if (isLoadingMembership || isLoadingPerson) {
-    return <Skeleton style={{ height: "1rem", width: "8rem" }} />;
+    return <Skeleton className="h-4 w-32" />;
   }
   if (!person) return <span>—</span>;
 

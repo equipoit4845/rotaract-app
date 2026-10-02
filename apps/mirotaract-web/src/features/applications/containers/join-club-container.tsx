@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import { describeKernelError } from "@/features/shell/kernel-error-message";
+import { cn } from "@/lib/cn";
 
 /**
  * Self-service entry point brought from the legacy product flow:
@@ -65,10 +66,10 @@ export function JoinClubContainer() {
 
   if (clubs.isLoading) {
     return (
-      <div style={{ display: "grid", gap: "var(--mr-space-3)" }}>
-        <Skeleton style={{ height: "2rem" }} />
-        <Skeleton style={{ height: "3rem" }} />
-        <Skeleton style={{ height: "12rem" }} />
+      <div className="grid gap-3">
+        <Skeleton className="h-8" />
+        <Skeleton className="h-12" />
+        <Skeleton className="h-48" />
       </div>
     );
   }
@@ -82,13 +83,7 @@ export function JoinClubContainer() {
         description="Elegí el club al que querés sumarte. La presidencia recibirá tu solicitud y deberá aprobarla."
       />
       <Card>
-        <CardContent
-          style={{
-            display: "grid",
-            gap: "var(--mr-space-3)",
-            paddingTop: "var(--mr-space-4)",
-          }}
-        >
+        <CardContent className="grid gap-3 pt-4">
           <Input
             aria-label="Buscar club"
             placeholder="Buscar por nombre o código"
@@ -105,7 +100,7 @@ export function JoinClubContainer() {
             <div
               role="listbox"
               aria-label="Clubes disponibles"
-              style={{ display: "grid", gap: "var(--mr-space-2)" }}
+              className="grid gap-2"
             >
               {items.map((club) => {
                 const selected = selectedClubId === club.id;
@@ -116,27 +111,15 @@ export function JoinClubContainer() {
                     role="option"
                     aria-selected={selected}
                     onClick={() => setSelectedClubId(club.id)}
-                    style={{
-                      cursor: "pointer",
-                      textAlign: "left",
-                      padding: "var(--mr-space-3)",
-                      borderRadius: "var(--mr-radius-md)",
-                      border: selected
-                        ? "2px solid var(--mr-color-action)"
-                        : "1px solid var(--mr-color-border)",
-                      background: selected
-                        ? "var(--mr-color-surface-muted)"
-                        : "var(--mr-color-surface)",
-                      color: "inherit",
-                    }}
+                    className={cn(
+                      "w-full cursor-pointer rounded-lg border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      selected
+                        ? "border-primary bg-primary/5 ring-1 ring-primary"
+                        : "border-border bg-card hover:bg-muted/50",
+                    )}
                   >
                     <strong>{club.name}</strong>
-                    <span
-                      style={{
-                        display: "block",
-                        color: "var(--mr-color-text-muted)",
-                      }}
-                    >
+                    <span className="block text-muted-foreground">
                       {club.code}
                     </span>
                   </button>

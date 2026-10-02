@@ -82,14 +82,7 @@ export function CreateMembershipDialog({
             Da de alta a una persona como socio de esta organización.
           </DialogDescription>
         </DialogHeader>
-        <form
-          onSubmit={handleSubmit}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "var(--mr-space-3)",
-          }}
-        >
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <PersonPickerField
             value={personId}
             onChange={setPersonId}

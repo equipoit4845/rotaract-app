@@ -30,7 +30,7 @@ export function PersonMembershipRow({
             {organization.name}
           </Link>
         ) : (
-          <Skeleton style={{ height: "1rem", width: "8rem" }} />
+          <Skeleton className="h-4 w-32" />
         )}
       </TableCell>
       <TableCell>

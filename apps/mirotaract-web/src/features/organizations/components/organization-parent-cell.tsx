@@ -20,6 +20,6 @@ export function OrganizationParentCell({
   const { data: parent, isLoading } = useOrganization(parentId ?? undefined);
 
   if (!parentId) return <span>—</span>;
-  if (isLoading) return <Skeleton style={{ height: "1rem", width: "6rem" }} />;
+  if (isLoading) return <Skeleton className="h-4 w-24" />;
   return <span>{parent?.name ?? "—"}</span>;
 }

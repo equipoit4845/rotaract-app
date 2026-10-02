@@ -57,22 +57,8 @@ export function EditPersonForm({ person }: { person: Person }) {
   });
 
   return (
-    <form
-      onSubmit={onSubmit}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--mr-space-3)",
-        maxWidth: "40rem",
-      }}
-    >
-      <div
-        style={{
-          display: "grid",
-          gap: "var(--mr-space-3)",
-          gridTemplateColumns: "1fr 1fr",
-        }}
-      >
+    <form onSubmit={onSubmit} className="flex flex-col gap-3 max-w-[40rem]">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
         <FormField
           label="Nombre"
           htmlFor="firstName"
@@ -106,13 +92,7 @@ export function EditPersonForm({ person }: { person: Person }) {
         <Input id="primaryEmail" type="email" {...register("primaryEmail")} />
       </FormField>
 
-      <div
-        style={{
-          display: "grid",
-          gap: "var(--mr-space-3)",
-          gridTemplateColumns: "1fr 1fr",
-        }}
-      >
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
         <FormField label="Teléfono" htmlFor="phone">
           <Input id="phone" type="tel" {...register("phone")} />
         </FormField>
@@ -129,7 +109,7 @@ export function EditPersonForm({ person }: { person: Person }) {
         />
       ) : null}
 
-      <div style={{ display: "flex", gap: "var(--mr-space-2)" }}>
+      <div className="flex gap-2">
         <Button
           type="button"
           variant="outline"

@@ -21,15 +21,9 @@ export function TransferDetailContainer({
 
   if (transferQuery.isLoading) {
     return (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "var(--mr-space-3)",
-        }}
-      >
-        <Skeleton style={{ height: "2rem" }} />
-        <Skeleton style={{ height: "12rem" }} />
+      <div className="flex flex-col gap-3">
+        <Skeleton className="h-8" />
+        <Skeleton className="h-48" />
       </div>
     );
   }
@@ -61,13 +55,7 @@ export function TransferDetailContainer({
         ]}
         actions={<TransferActionsRow transfer={transfer} />}
       />
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "var(--mr-space-4)",
-        }}
-      >
+      <div className="flex flex-col gap-4">
         <TransferSummaryCard transfer={transfer} />
         <TransferWorkflowTimeline transfer={transfer} />
       </div>

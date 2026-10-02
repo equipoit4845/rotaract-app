@@ -121,7 +121,7 @@ export function FormSection({
 
 /**
  * Label/value grid for summary cards — replaces the hand-styled `<dl>`
- * blocks (`style={{ margin: 0 }}`) each feature used to repeat.
+ * blocks (`className="m-0"`) each feature used to repeat.
  */
 export function DetailGrid({
   children,

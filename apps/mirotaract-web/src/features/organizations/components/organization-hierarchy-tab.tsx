@@ -41,25 +41,19 @@ export function OrganizationHierarchyTab({
   const childrenQuery = useOrganizationChildren(organization.id);
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--mr-space-4)",
-      }}
-    >
+    <div className="flex flex-col gap-4">
       <Card>
         <CardHeader>
           <CardTitle>Ancestros</CardTitle>
         </CardHeader>
         <CardContent>
           {ancestors.length === 0 ? (
-            <p style={{ margin: 0 }}>
+            <p className="m-0">
               Esta organización no tiene ancestros — es una raíz de la
               jerarquía.
             </p>
           ) : (
-            <ol style={{ margin: 0, paddingLeft: "1.25rem" }}>
+            <ol className="m-0 pl-5">
               {ancestors.map((ancestor) => (
                 <li key={ancestor.id}>
                   <Link href={`/organizations/${ancestor.id}`}>
@@ -78,15 +72,9 @@ export function OrganizationHierarchyTab({
         </CardHeader>
         <CardContent>
           {childrenQuery.isLoading ? (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "var(--mr-space-2)",
-              }}
-            >
-              <Skeleton style={{ height: "1.5rem" }} />
-              <Skeleton style={{ height: "1.5rem" }} />
+            <div className="flex flex-col gap-2">
+              <Skeleton className="h-6" />
+              <Skeleton className="h-6" />
             </div>
           ) : childrenQuery.isError ? (
             <DataState

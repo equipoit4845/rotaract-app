@@ -64,17 +64,11 @@ export function MoveOrganizationDialog({
         )
       }
     >
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "var(--mr-space-3)",
-        }}
-      >
-        <p style={{ margin: 0 }}>
+      <div className="flex flex-col gap-3">
+        <p className="m-0">
           <strong>Organización actual:</strong> {organization.name}
         </p>
-        <p style={{ margin: 0 }}>
+        <p className="m-0">
           <strong>Padre actual:</strong>{" "}
           {organization.parentId ? (currentParent?.name ?? "…") : "Sin padre"}
         </p>

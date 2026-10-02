@@ -80,13 +80,7 @@ export function AppointmentsListContainer() {
 
       <DataToolbar
         filters={
-          <div
-            style={{
-              display: "flex",
-              gap: "var(--mr-space-2)",
-              flexWrap: "wrap",
-            }}
-          >
+          <div className="flex gap-2 flex-wrap">
             <OrganizationScopeFilter
               value={organizationId}
               organizations={organizationCandidates}
@@ -145,17 +139,10 @@ export function AppointmentsListContainer() {
       />
 
       {appointments.isLoading || positions.isLoading ? (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "var(--mr-space-2)",
-            marginTop: "var(--mr-space-4)",
-          }}
-        >
-          <Skeleton style={{ height: "2.5rem" }} />
-          <Skeleton style={{ height: "2.5rem" }} />
-          <Skeleton style={{ height: "2.5rem" }} />
+        <div className="flex flex-col gap-2 mt-4">
+          <Skeleton className="h-10" />
+          <Skeleton className="h-10" />
+          <Skeleton className="h-10" />
         </div>
       ) : appointments.isError ? (
         <DataState kind="error" {...describeKernelError(appointments.error)} />

@@ -66,7 +66,7 @@ export function OrganizationListFilters({
   onStatusChange: (value: OrganizationStatus | undefined) => void;
 }) {
   return (
-    <div style={{ display: "flex", gap: "var(--mr-space-2)" }}>
+    <div className="flex gap-2">
       <OrganizationTypeFilter value={type} onChange={onTypeChange} />
       <OrganizationStatusFilter value={status} onChange={onStatusChange} />
     </div>

@@ -16,9 +16,7 @@ import { SchedulePeriodDialog } from "../forms/schedule-period-dialog";
  */
 export function PeriodActionsRow({ period }: { period: InstitutionalPeriod }) {
   return (
-    <div
-      style={{ display: "flex", gap: "var(--mr-space-2)", flexWrap: "wrap" }}
-    >
+    <div className="flex gap-2 flex-wrap">
       <EditDraftPeriodDialog period={period} />
       <SchedulePeriodDialog period={period} />
       <ActivatePeriodDialog period={period} />

@@ -91,14 +91,7 @@ export function CreateAppointmentDialog({
             Crea un cargo en estado NOMINATED para una membresía activa.
           </DialogDescription>
         </DialogHeader>
-        <form
-          onSubmit={handleSubmit}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "var(--mr-space-3)",
-          }}
-        >
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <FormField
             label="Cargo"
             htmlFor="positionDefinitionId"

@@ -56,7 +56,7 @@ export function TransfersListContainer() {
 
       <DataToolbar
         filters={
-          <div style={{ display: "flex", gap: "var(--mr-space-2)" }}>
+          <div className="flex gap-2">
             <TransferOrganizationFilter
               value={fromOrganizationId}
               organizations={organizationCandidates}
@@ -77,17 +77,10 @@ export function TransfersListContainer() {
       />
 
       {transfersQuery.isLoading ? (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "var(--mr-space-2)",
-            marginTop: "var(--mr-space-4)",
-          }}
-        >
-          <Skeleton style={{ height: "2.5rem" }} />
-          <Skeleton style={{ height: "2.5rem" }} />
-          <Skeleton style={{ height: "2.5rem" }} />
+        <div className="flex flex-col gap-2 mt-4">
+          <Skeleton className="h-10" />
+          <Skeleton className="h-10" />
+          <Skeleton className="h-10" />
         </div>
       ) : transfersQuery.isError ? (
         <DataState

@@ -124,14 +124,7 @@ export function RequestTransferDialog() {
             destino debe aceptar y el origen confirmar antes de completarse.
           </DialogDescription>
         </DialogHeader>
-        <form
-          onSubmit={handleSubmit}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "var(--mr-space-3)",
-          }}
-        >
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <FormField
             label="Tu membresía"
             htmlFor="transferMembershipId"

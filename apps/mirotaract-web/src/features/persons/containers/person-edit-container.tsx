@@ -16,7 +16,7 @@ export function PersonEditContainer({ personId }: { personId: string }) {
   const canUpdateSelf = useCan("kernel.person.update.self");
 
   if (personQuery.isLoading) {
-    return <Skeleton style={{ height: "20rem" }} />;
+    return <Skeleton className="h-80" />;
   }
 
   if (personQuery.isError) {

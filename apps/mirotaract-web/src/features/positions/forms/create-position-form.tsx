@@ -82,15 +82,7 @@ export function CreatePositionForm() {
   });
 
   return (
-    <form
-      onSubmit={onSubmit}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--mr-space-3)",
-        maxWidth: "40rem",
-      }}
-    >
+    <form onSubmit={onSubmit} className="flex flex-col gap-3 max-w-[40rem]">
       <FormField
         label="Distrito propietario"
         htmlFor="ownerOrganizationId"
@@ -175,13 +167,7 @@ export function CreatePositionForm() {
         control={control}
         name="isSingletonPerPeriod"
         render={({ field }) => (
-          <label
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "var(--mr-space-2)",
-            }}
-          >
+          <label className="flex items-center gap-2">
             <Checkbox
               checked={field.value}
               onCheckedChange={(checked) => field.onChange(checked === true)}
@@ -202,7 +188,7 @@ export function CreatePositionForm() {
         />
       ) : null}
 
-      <div style={{ display: "flex", gap: "var(--mr-space-2)" }}>
+      <div className="flex gap-2">
         <Button
           type="button"
           variant="outline"

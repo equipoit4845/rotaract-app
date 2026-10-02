@@ -69,13 +69,7 @@ export function InvitePersonDialog({ person }: { person: Person }) {
       }}
     >
       {hasMembership ? (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "var(--mr-space-3)",
-          }}
-        >
+        <div className="flex flex-col gap-3">
           <FormField label="Membresía" htmlFor="membershipId" required>
             <Select
               id="membershipId"

@@ -63,13 +63,7 @@ export function PositionPermissionsPanel({
         <CardTitle>Permisos del rol técnico</CardTitle>
       </CardHeader>
       <CardContent>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "var(--mr-space-3)",
-          }}
-        >
+        <div className="flex flex-col gap-3">
           <FormField label="Permiso" htmlFor="permissionId">
             <Select
               id="permissionId"
@@ -85,7 +79,7 @@ export function PositionPermissionsPanel({
             </Select>
           </FormField>
 
-          <div style={{ display: "flex", gap: "var(--mr-space-2)" }}>
+          <div className="flex gap-2">
             <Button
               type="button"
               disabled={!permissionId || attach.isPending}

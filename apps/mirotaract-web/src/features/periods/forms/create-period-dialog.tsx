@@ -104,14 +104,7 @@ export function CreatePeriodDialog({
             Da de alta un período institucional en borrador.
           </DialogDescription>
         </DialogHeader>
-        <form
-          onSubmit={onSubmit}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "var(--mr-space-3)",
-          }}
-        >
+        <form onSubmit={onSubmit} className="flex flex-col gap-3">
           <FormField
             label="Nombre"
             htmlFor="name"
@@ -121,13 +114,7 @@ export function CreatePeriodDialog({
             <Input id="name" {...register("name", { required: true })} />
           </FormField>
 
-          <div
-            style={{
-              display: "grid",
-              gap: "var(--mr-space-3)",
-              gridTemplateColumns: "1fr 1fr",
-            }}
-          >
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
             <FormField
               label="Código"
               htmlFor="code"
@@ -158,13 +145,7 @@ export function CreatePeriodDialog({
             </FormField>
           </div>
 
-          <div
-            style={{
-              display: "grid",
-              gap: "var(--mr-space-3)",
-              gridTemplateColumns: "1fr 1fr",
-            }}
-          >
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
             <FormField
               label="Fecha de inicio"
               htmlFor="startDate"

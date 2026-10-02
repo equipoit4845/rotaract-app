@@ -11,7 +11,7 @@ function AuthGateFallback() {
     <div
       role="status"
       aria-label="Restaurando sesión"
-      style={{ display: "grid", placeItems: "center", minHeight: "100vh" }}
+      className="grid place-items-center min-h-screen"
     >
       <Spinner size={28} label="Restaurando sesión" />
     </div>

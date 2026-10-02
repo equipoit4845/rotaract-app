@@ -78,13 +78,7 @@ export function ClubDashboard({
         description={`Club · ${organization.code}`}
       />
 
-      <div
-        style={{
-          display: "grid",
-          gap: "var(--mr-space-4)",
-          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-        }}
-      >
+      <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
         <StatCard
           label="Membresías activas"
           value={formatMembershipCount(memberships)}
@@ -107,14 +101,7 @@ export function ClubDashboard({
         />
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gap: "var(--mr-space-4)",
-          gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1fr)",
-          marginTop: "var(--mr-space-6)",
-        }}
-      >
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] mt-6">
         <AuthoritiesCard
           title="Autoridades vigentes"
           emptyDescription="Todavía no hay cargos activos registrados en este club."

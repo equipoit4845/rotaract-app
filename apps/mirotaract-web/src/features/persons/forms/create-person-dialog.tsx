@@ -88,21 +88,8 @@ export function CreatePersonDialog() {
             todavía.
           </DialogDescription>
         </DialogHeader>
-        <form
-          onSubmit={onSubmit}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "var(--mr-space-3)",
-          }}
-        >
-          <div
-            style={{
-              display: "grid",
-              gap: "var(--mr-space-3)",
-              gridTemplateColumns: "1fr 1fr",
-            }}
-          >
+        <form onSubmit={onSubmit} className="flex flex-col gap-3">
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
             <FormField
               label="Nombre"
               htmlFor="firstName"
@@ -137,13 +124,7 @@ export function CreatePersonDialog() {
             />
           </FormField>
 
-          <div
-            style={{
-              display: "grid",
-              gap: "var(--mr-space-3)",
-              gridTemplateColumns: "1fr 1fr",
-            }}
-          >
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
             <FormField label="Teléfono" htmlFor="phone">
               <Input id="phone" type="tel" {...register("phone")} />
             </FormField>

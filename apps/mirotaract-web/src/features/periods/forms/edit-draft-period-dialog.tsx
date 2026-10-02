@@ -107,14 +107,7 @@ export function EditDraftPeriodDialog({
             Sólo se puede editar un período mientras esté en borrador.
           </DialogDescription>
         </DialogHeader>
-        <form
-          onSubmit={onSubmit}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "var(--mr-space-3)",
-          }}
-        >
+        <form onSubmit={onSubmit} className="flex flex-col gap-3">
           <FormField
             label="Nombre"
             htmlFor="edit-name"
@@ -124,13 +117,7 @@ export function EditDraftPeriodDialog({
             <Input id="edit-name" {...register("name", { required: true })} />
           </FormField>
 
-          <div
-            style={{
-              display: "grid",
-              gap: "var(--mr-space-3)",
-              gridTemplateColumns: "1fr 1fr",
-            }}
-          >
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
             <FormField
               label="Fecha de inicio"
               htmlFor="edit-startDate"

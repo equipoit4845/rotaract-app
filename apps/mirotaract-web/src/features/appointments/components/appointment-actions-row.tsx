@@ -18,9 +18,7 @@ export function AppointmentActionsRow({
   appointment: Appointment;
 }) {
   return (
-    <div
-      style={{ display: "flex", gap: "var(--mr-space-2)", flexWrap: "wrap" }}
-    >
+    <div className="flex gap-2 flex-wrap">
       <MarkElectedDialog appointment={appointment} />
       <ActivateAppointmentDialog appointment={appointment} />
       <EndAppointmentDialog appointment={appointment} />

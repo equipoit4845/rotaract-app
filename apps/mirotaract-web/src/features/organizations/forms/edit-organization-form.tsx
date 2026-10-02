@@ -70,15 +70,7 @@ export function EditOrganizationForm({
   });
 
   return (
-    <form
-      onSubmit={onSubmit}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--mr-space-3)",
-        maxWidth: "40rem",
-      }}
-    >
+    <form onSubmit={onSubmit} className="flex flex-col gap-3 max-w-[40rem]">
       <FormField
         label="Nombre"
         htmlFor="name"
@@ -88,13 +80,7 @@ export function EditOrganizationForm({
         <Input id="name" {...register("name", { required: true })} />
       </FormField>
 
-      <div
-        style={{
-          display: "grid",
-          gap: "var(--mr-space-3)",
-          gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
-        }}
-      >
+      <div className="grid gap-3 grid-cols-[repeat(auto-fit,minmax(140px,1fr))]">
         <FormField label="País" htmlFor="countryCode">
           <Input
             id="countryCode"
@@ -110,13 +96,7 @@ export function EditOrganizationForm({
         </FormField>
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gap: "var(--mr-space-3)",
-          gridTemplateColumns: "1fr 1fr",
-        }}
-      >
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
         <FormField label="Email de contacto" htmlFor="contactEmail">
           <Input id="contactEmail" type="email" {...register("contactEmail")} />
         </FormField>
@@ -139,7 +119,7 @@ export function EditOrganizationForm({
         />
       ) : null}
 
-      <div style={{ display: "flex", gap: "var(--mr-space-2)" }}>
+      <div className="flex gap-2">
         <Button
           type="button"
           variant="outline"

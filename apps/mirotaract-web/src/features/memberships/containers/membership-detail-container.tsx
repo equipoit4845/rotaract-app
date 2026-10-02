@@ -29,15 +29,9 @@ export function MembershipDetailContainer({
 
   if (membershipQuery.isLoading) {
     return (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "var(--mr-space-3)",
-        }}
-      >
-        <Skeleton style={{ height: "2rem" }} />
-        <Skeleton style={{ height: "12rem" }} />
+      <div className="flex flex-col gap-3">
+        <Skeleton className="h-8" />
+        <Skeleton className="h-48" />
       </div>
     );
   }
@@ -80,16 +74,10 @@ export function MembershipDetailContainer({
           />
         }
       />
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "var(--mr-space-4)",
-        }}
-      >
+      <div className="flex flex-col gap-4">
         <MembershipSummaryCard membership={membership} />
         {historyQuery.isLoading ? (
-          <Skeleton style={{ height: "8rem" }} />
+          <Skeleton className="h-32" />
         ) : historyQuery.isError ? (
           <DataState
             kind="error"

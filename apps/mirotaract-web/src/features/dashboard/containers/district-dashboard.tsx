@@ -43,13 +43,7 @@ export function DistrictDashboard({
         description={`Distrito · ${organization.code}`}
       />
 
-      <div
-        style={{
-          display: "grid",
-          gap: "var(--mr-space-4)",
-          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-        }}
-      >
+      <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
         <StatCard
           label="Clubes"
           value={children.data?.length ?? "—"}
@@ -62,14 +56,7 @@ export function DistrictDashboard({
         />
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gap: "var(--mr-space-4)",
-          gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
-          marginTop: "var(--mr-space-6)",
-        }}
-      >
+      <div className="grid gap-4 lg:grid-cols-2 mt-6">
         <ChildOrganizationsCard
           organizations={children.data}
           isLoading={children.isLoading}
@@ -87,7 +74,7 @@ export function DistrictDashboard({
         />
       </div>
 
-      <div style={{ marginTop: "var(--mr-space-4)" }}>
+      <div className="mt-4">
         <PeriodSummaryCard
           period={period.data}
           isLoading={period.isLoading}

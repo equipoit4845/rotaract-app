@@ -60,15 +60,9 @@ export function PositionDetailContainer({
 
   if (positions.isLoading) {
     return (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "var(--mr-space-3)",
-        }}
-      >
-        <Skeleton style={{ height: "2rem" }} />
-        <Skeleton style={{ height: "12rem" }} />
+      <div className="flex flex-col gap-3">
+        <Skeleton className="h-8" />
+        <Skeleton className="h-48" />
       </div>
     );
   }
@@ -135,15 +129,13 @@ export function PositionDetailContainer({
             <Field label="Actualizado" value={formatDate(position.updatedAt)} />
           </DetailGrid>
           {position.description ? (
-            <p style={{ marginTop: "var(--mr-space-4)" }}>
-              {position.description}
-            </p>
+            <p className="mt-4">{position.description}</p>
           ) : null}
         </CardContent>
       </Card>
 
       {position.isSystem ? (
-        <div style={{ marginTop: "var(--mr-space-4)" }}>
+        <div className="mt-4">
           <DataState
             kind="empty"
             title="Cargo de sistema"
@@ -151,14 +143,7 @@ export function PositionDetailContainer({
           />
         </div>
       ) : canEdit ? (
-        <div
-          style={{
-            marginTop: "var(--mr-space-4)",
-            display: "flex",
-            flexDirection: "column",
-            gap: "var(--mr-space-4)",
-          }}
-        >
+        <div className="mt-4 flex flex-col gap-4">
           <Card>
             <CardHeader>
               <CardTitle>Editar cargo</CardTitle>

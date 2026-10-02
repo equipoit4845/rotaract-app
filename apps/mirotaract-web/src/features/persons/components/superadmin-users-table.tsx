@@ -33,7 +33,7 @@ export function SuperadminUsersTable({
         {items.map((item) => (
           <TableRow key={item.id}>
             <TableCell>
-              <div style={{ display: "grid", gap: "0.2rem" }}>
+              <div className="grid gap-1">
                 <span>{item.displayName}</span>
                 {item.archived ? <Badge tone="neutral">Archivada</Badge> : null}
               </div>
@@ -42,9 +42,7 @@ export function SuperadminUsersTable({
             <TableCell>{item.clubs.join(", ") || "Sin club activo"}</TableCell>
             <TableCell>
               {item.roles.length ? (
-                <div
-                  style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem" }}
-                >
+                <div className="flex flex-wrap gap-1.5">
                   {item.roles.map((role) => (
                     <Badge
                       key={role}

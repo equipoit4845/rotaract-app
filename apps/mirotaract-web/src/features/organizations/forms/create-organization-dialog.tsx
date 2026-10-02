@@ -127,14 +127,7 @@ export function CreateOrganizationDialog() {
             Da de alta un distrito, club u otra organización institucional.
           </DialogDescription>
         </DialogHeader>
-        <form
-          onSubmit={onSubmit}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "var(--mr-space-3)",
-          }}
-        >
+        <form onSubmit={onSubmit} className="flex flex-col gap-3">
           <FormField label="Tipo" htmlFor="type" required>
             <Select id="type" {...register("type", { required: true })}>
               <option value="DISTRICT">Distrito</option>
@@ -188,13 +181,7 @@ export function CreateOrganizationDialog() {
             <Input id="name" {...register("name", { required: true })} />
           </FormField>
 
-          <div
-            style={{
-              display: "grid",
-              gap: "var(--mr-space-3)",
-              gridTemplateColumns: "1fr 1fr",
-            }}
-          >
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
             <FormField
               label="Código"
               htmlFor="code"
@@ -220,13 +207,7 @@ export function CreateOrganizationDialog() {
             </FormField>
           </div>
 
-          <div
-            style={{
-              display: "grid",
-              gap: "var(--mr-space-3)",
-              gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
-            }}
-          >
+          <div className="grid gap-3 grid-cols-[repeat(auto-fit,minmax(140px,1fr))]">
             <FormField label="País" htmlFor="countryCode">
               <Input
                 id="countryCode"
@@ -242,13 +223,7 @@ export function CreateOrganizationDialog() {
             </FormField>
           </div>
 
-          <div
-            style={{
-              display: "grid",
-              gap: "var(--mr-space-3)",
-              gridTemplateColumns: "1fr 1fr",
-            }}
-          >
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
             <FormField label="Email de contacto" htmlFor="contactEmail">
               <Input
                 id="contactEmail"
