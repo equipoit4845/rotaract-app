@@ -18,37 +18,47 @@ import { useDistrictCandidates } from "../view-models/use-district-candidates";
 import { describePositionMutationError } from "./position-mutation-errors";
 
 type CreatePositionFormValues = {
-  code: string;
   name: string;
   description: string;
   ownerOrganizationId: string;
-  editPermissionCode: string;
-  defaultRoleCode: string;
   isSingletonPerPeriod: boolean;
 };
 
 const DEFAULT_VALUES: CreatePositionFormValues = {
-  code: "",
   name: "",
   description: "",
   ownerOrganizationId: "",
-  editPermissionCode: "kernel.position.manage",
-  defaultRoleCode: "",
   isSingletonPerPeriod: false,
 };
+
+/**
+ * The Kernel needs a stable unique code; people only ever see the name, so
+ * it is derived from it ("Coordinación de imagen" -> DISTRICT_COORDINACION_DE_IMAGEN_X7K2)
+ * with a short random suffix to avoid collisions.
+ */
+function codeFromName(name: string): string {
+  const slug = name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 40);
+  const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
+  return `DISTRICT_${slug || "CARGO"}_${suffix}`;
+}
 
 function toCreateRequest(
   values: CreatePositionFormValues,
 ): CreatePositionDefinitionRequest {
   return {
-    code: values.code.trim(),
+    code: codeFromName(values.name.trim()),
     name: values.name.trim(),
     description: values.description.trim() || null,
     organizationType: "DISTRICT",
     ownerOrganizationId: values.ownerOrganizationId,
-    editPermissionCode:
-      values.editPermissionCode.trim() || "kernel.position.manage",
-    defaultRoleCode: values.defaultRoleCode.trim() || null,
+    editPermissionCode: "kernel.position.manage",
+    defaultRoleCode: null,
     isSingletonPerPeriod: values.isSingletonPerPeriod,
   };
 }
@@ -84,15 +94,11 @@ export function CreatePositionForm() {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-3 max-w-[40rem]">
       <FormField
-        label="Distrito propietario"
+        label="Distrito"
         htmlFor="ownerOrganizationId"
         required
-        error={
-          errors.ownerOrganizationId
-            ? "Elegí el distrito propietario."
-            : undefined
-        }
-        hint="El cargo sólo será utilizable en este distrito (invariante 6.6.1)."
+        error={errors.ownerOrganizationId ? "Elegí el distrito." : undefined}
+        hint="El cargo va a estar disponible solo en este distrito."
       >
         <Controller
           control={control}
@@ -124,43 +130,8 @@ export function CreatePositionForm() {
         <Input id="name" {...register("name", { required: true })} />
       </FormField>
 
-      <FormField
-        label="Código"
-        htmlFor="code"
-        required
-        hint="Identificador único del cargo, por ejemplo CLUB_PRESIDENT."
-        error={errors.code ? "El código es obligatorio." : undefined}
-      >
-        <Input id="code" {...register("code", { required: true })} />
-      </FormField>
-
       <FormField label="Descripción" htmlFor="description">
         <Textarea id="description" rows={3} {...register("description")} />
-      </FormField>
-
-      <FormField
-        label="Permiso de edición"
-        htmlFor="editPermissionCode"
-        required
-        hint="Determina quién puede editar este cargo y sus permisos (invariante 6.6.1.3)."
-        error={
-          errors.editPermissionCode
-            ? "El permiso de edición es obligatorio."
-            : undefined
-        }
-      >
-        <Input
-          id="editPermissionCode"
-          {...register("editPermissionCode", { required: true })}
-        />
-      </FormField>
-
-      <FormField
-        label="Rol técnico por defecto"
-        htmlFor="defaultRoleCode"
-        hint="Opcional. Si se completa, activar este cargo puede materializar una asignación de rol técnico."
-      >
-        <Input id="defaultRoleCode" {...register("defaultRoleCode")} />
       </FormField>
 
       <Controller
@@ -172,8 +143,7 @@ export function CreatePositionForm() {
               checked={field.value}
               onCheckedChange={(checked) => field.onChange(checked === true)}
             />
-            Singleton por período (una sola asignación ACTIVE por
-            organización/período)
+            Solo una persona puede ocuparlo por período
           </label>
         )}
       />

@@ -64,9 +64,13 @@ describe("Modules E2E", () => {
   afterAll(async () => {
     await prisma.moduleInstallation.deleteMany({ where: { moduleId } });
     await prisma.moduleDefinition.deleteMany({ where: { id: moduleId } });
-    await prisma.kernelAuditLog.deleteMany({ where: { organizationId: orgId } });
+    await prisma.kernelAuditLog.deleteMany({
+      where: { organizationId: orgId },
+    });
     await prisma.organization.deleteMany({ where: { id: orgId } });
-    await prisma.accountSession.deleteMany({ where: { accountId: superAdminAccountId } });
+    await prisma.accountSession.deleteMany({
+      where: { accountId: superAdminAccountId },
+    });
     await prisma.userAccount.deleteMany({ where: { id: superAdminAccountId } });
     await prisma.$disconnect();
     await app.close();
@@ -81,7 +85,11 @@ describe("Modules E2E", () => {
         id: moduleId,
         name: "E2E Fixture Module",
         version: "1.0.0",
-        manifest: { permissions: [], events: { publishes: [], subscribes: [] }, capabilities: [] },
+        manifest: {
+          permissions: [],
+          events: { publishes: [], subscribes: [] },
+          capabilities: [],
+        },
       })
       .expect(201);
 
@@ -92,7 +100,9 @@ describe("Modules E2E", () => {
       .expect(201);
 
     const activated = await request(http)
-      .post(`/api/kernel/v1/organizations/${orgId}/modules/${moduleId}/activate`)
+      .post(
+        `/api/kernel/v1/organizations/${orgId}/modules/${moduleId}/activate`,
+      )
       .set("authorization", `Bearer ${superAdminToken}`)
       .set("idempotency-key", randomUUID())
       .expect(201);
@@ -120,7 +130,11 @@ describe("Modules E2E", () => {
         id: deprecatedId,
         name: "Deprecated Fixture Module",
         version: "1.0.0",
-        manifest: { permissions: [], events: { publishes: [], subscribes: [] }, capabilities: [] },
+        manifest: {
+          permissions: [],
+          events: { publishes: [], subscribes: [] },
+          capabilities: [],
+        },
       })
       .expect(201);
     await request(http)
@@ -130,7 +144,9 @@ describe("Modules E2E", () => {
       .expect(201);
 
     await request(http)
-      .post(`/api/kernel/v1/organizations/${orgId}/modules/${deprecatedId}/install`)
+      .post(
+        `/api/kernel/v1/organizations/${orgId}/modules/${deprecatedId}/install`,
+      )
       .set("authorization", `Bearer ${superAdminToken}`)
       .set("idempotency-key", randomUUID())
       .expect(409);

@@ -5,4 +5,6 @@ export const positionKeys = {
   lists: () => [...positionKeys.all, "list"] as const,
   list: (organizationType?: OrganizationType) =>
     [...positionKeys.lists(), organizationType ?? null] as const,
+  permissions: (positionDefinitionId: string) =>
+    [...positionKeys.all, "permissions", positionDefinitionId] as const,
 };

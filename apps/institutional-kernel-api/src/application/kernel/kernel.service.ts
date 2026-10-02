@@ -25,6 +25,25 @@ import { OutboxService } from "../outbox/outbox.service";
 import { CommandExecutorService } from "../shared/command-executor.service";
 import { NotificationService } from "../notifications/notification.service";
 import { webUrl } from "../shared/web-url";
+import { allowInput } from "../shared/input-allowlist";
+
+/**
+ * Permissions that act beyond a single club (structure, role delegation,
+ * platform data). A club-owned position can never receive them.
+ */
+const DISTRICT_ONLY_PERMISSIONS = new Set([
+  "kernel.organization.create",
+  "kernel.organization.activate",
+  "kernel.organization.archive",
+  "kernel.organization.move",
+  "kernel.person.manage",
+  "kernel.role.manage",
+  "kernel.role.assign",
+  "kernel.role.revoke",
+  "kernel.module.register",
+  "kernel.account.manage",
+  "kernel.audit.read",
+]);
 import { OptionalRedisCacheService } from "../../infrastructure/cache/optional-redis-cache.service";
 import { CommandContext } from "../../domain/shared/command-context";
 import {
@@ -151,6 +170,7 @@ export class KernelService {
 
   // Persons
   createPerson(input: any, context?: CommandContext) {
+    input = allowInput("createPerson", input);
     return this.mutate(
       "CreatePerson",
       context,
@@ -197,6 +217,7 @@ export class KernelService {
     return this.prisma.person.findUniqueOrThrow({ where: { id } });
   }
   updatePerson(id: string, input: any, context?: CommandContext) {
+    input = allowInput("updatePerson", input);
     return this.mutate(
       "UpdatePerson",
       context,
@@ -268,6 +289,7 @@ export class KernelService {
 
   // Organizations and hierarchy
   async createOrganization(input: any, context?: CommandContext) {
+    input = allowInput("createOrganization", input);
     return this.mutate(
       "CreateOrganization",
       context,
@@ -316,6 +338,7 @@ export class KernelService {
     return this.prisma.organization.findUniqueOrThrow({ where: { id } });
   }
   updateOrganization(id: string, input: any, context?: CommandContext) {
+    input = allowInput("updateOrganization", input);
     return this.mutate(
       "UpdateOrganization",
       context,
@@ -480,6 +503,7 @@ export class KernelService {
     input: any,
     context?: CommandContext,
   ) {
+    input = allowInput("createMembership", input);
     return this.mutate(
       "CreateMembership",
       context,
@@ -553,6 +577,7 @@ export class KernelService {
     });
   }
   updateMembership(id: string, input: any, context?: CommandContext) {
+    input = allowInput("updateMembership", input);
     return this.mutate(
       "UpdateMembership",
       context,
@@ -595,6 +620,7 @@ export class KernelService {
             internalNotes: input.internalNotes ?? previous.internalNotes,
           },
         });
+        await this.syncMemberRole(tx, id, context);
         await tx.membershipTransition.create({
           data: {
             membershipId: id,
@@ -622,6 +648,58 @@ export class KernelService {
       },
     );
   }
+  /**
+   * Keeps the MEMBER role in step with the membership (kernel-spec.md
+   * §10.2): an ACTIVE or ON_LEAVE member holds MEMBER scoped to exactly
+   * their organization; any other status holds none. Idempotent, so every
+   * path that changes a membership's status can call it.
+   */
+  private async syncMemberRole(
+    tx: any,
+    membershipId: string,
+    context?: CommandContext,
+  ): Promise<void> {
+    const [membership, role] = await Promise.all([
+      tx.organizationMembership.findUniqueOrThrow({
+        where: { id: membershipId },
+        select: { personId: true, organizationId: true, status: true },
+      }),
+      tx.roleDefinition.findUnique({ where: { code: "MEMBER" } }),
+    ]);
+    if (!role) return;
+    const where = {
+      personId: membership.personId,
+      roleDefinitionId: role.id,
+      scopeType: ScopeType.ORGANIZATION,
+      organizationId: membership.organizationId,
+      revokedAt: null,
+    };
+    const shouldHold = ["ACTIVE", "ON_LEAVE"].includes(membership.status);
+    const held = await tx.roleAssignment.count({ where });
+    if (shouldHold && held === 0)
+      await tx.roleAssignment.create({
+        data: {
+          personId: membership.personId,
+          roleDefinitionId: role.id,
+          scopeType: ScopeType.ORGANIZATION,
+          organizationId: membership.organizationId,
+          effect: AssignmentEffect.ALLOW,
+          validFrom: new Date(),
+          reason: `membership:${membershipId}`,
+          grantedById: this.context(context).actor.id,
+        },
+      });
+    else if (!shouldHold && held > 0)
+      await tx.roleAssignment.updateMany({
+        where,
+        data: {
+          revokedAt: new Date(),
+          revokedById: this.context(context).actor.id,
+        },
+      });
+    else return;
+    await this.authorization.invalidate(membership.personId);
+  }
   membershipHistory(id: string) {
     return this.prisma.membershipTransition.findMany({
       where: { membershipId: id },
@@ -642,6 +720,7 @@ export class KernelService {
     input: any,
     context?: CommandContext,
   ) {
+    input = allowInput("createPeriod", input);
     const start = this.date(input.startDate)!;
     const end = this.date(input.endDate)!;
     assertRotaryPeriod(start, end);
@@ -690,6 +769,7 @@ export class KernelService {
     return this.prisma.institutionalPeriod.findUniqueOrThrow({ where: { id } });
   }
   async updatePeriod(id: string, input: any, context?: CommandContext) {
+    input = allowInput("updatePeriod", input);
     return this.mutate(
       "UpdateDraftPeriod",
       context,
@@ -791,6 +871,7 @@ export class KernelService {
 
   // Position definitions and appointments
   createPosition(input: any, context?: CommandContext) {
+    input = allowInput("createPosition", input);
     return this.mutate(
       "CreatePositionDefinition",
       context,
@@ -808,6 +889,13 @@ export class KernelService {
             throw new BadRequestException(
               "District catalogs must be owned by districts",
             );
+          // A club can only define positions for itself, never district or
+          // other-type positions.
+          if (owner.type === "CLUB" && input.organizationType !== "CLUB")
+            throw new BadRequestException(
+              "A club can only define club positions",
+            );
+          await this.assertPositionRole(tx, owner.type, input.defaultRoleCode);
         }
         const position = await tx.positionDefinition.create({ data: input });
         await this.outbox.record(
@@ -832,6 +920,7 @@ export class KernelService {
     });
   }
   updatePosition(id: string, input: any, context?: CommandContext) {
+    input = allowInput("updatePosition", input);
     return this.mutate(
       "UpdatePositionDefinition",
       context,
@@ -842,8 +931,59 @@ export class KernelService {
         event: "kernel.position.updated.v1",
         payload: { positionDefinitionId: id },
       },
-      (tx) => tx.positionDefinition.update({ where: { id }, data: input }),
+      async (tx) => {
+        if (input.defaultRoleCode !== undefined) {
+          const position = await tx.positionDefinition.findUniqueOrThrow({
+            where: { id },
+            include: { ownerOrganization: { select: { type: true } } },
+          });
+          if (position.ownerOrganization)
+            await this.assertPositionRole(
+              tx,
+              position.ownerOrganization.type,
+              input.defaultRoleCode,
+            );
+        }
+        return tx.positionDefinition.update({ where: { id }, data: input });
+      },
     );
+  }
+  /**
+   * A position owned by a club may only derive a role of its own: binding
+   * it to a system role (CLUB_PRESIDENT, DISTRICT_RDR…) would let the club
+   * hand out — or, via position permissions, rewrite — a role every other
+   * club and the district also rely on.
+   */
+  private async assertPositionRole(
+    tx: any,
+    ownerType: string,
+    roleCode?: string | null,
+  ): Promise<void> {
+    if (!roleCode || ownerType !== "CLUB") return;
+    const role = await tx.roleDefinition.findUnique({
+      where: { code: roleCode },
+      select: { isSystem: true },
+    });
+    if (!role) throw new BadRequestException("Unknown role");
+    if (role.isSystem)
+      throw new ForbiddenException(
+        "Club positions cannot derive a system role",
+      );
+  }
+  /** What a position currently allows: the permissions of its derived role. */
+  async positionPermissions(id: string) {
+    const position = await this.prisma.positionDefinition.findUniqueOrThrow({
+      where: { id },
+      select: { defaultRoleCode: true },
+    });
+    if (!position.defaultRoleCode) return [];
+    const links = await this.prisma.rolePermission.findMany({
+      where: { roleDefinition: { code: position.defaultRoleCode } },
+      include: { permissionDefinition: true },
+    });
+    return links
+      .map((link) => link.permissionDefinition)
+      .sort((a, b) => a.code.localeCompare(b.code));
   }
   async positionPermission(
     id: string,
@@ -874,6 +1014,48 @@ export class KernelService {
         const role = await tx.roleDefinition.findUniqueOrThrow({
           where: { code: position.defaultRoleCode },
         });
+        // Editing a position's permissions edits its role for everyone who
+        // holds it. That is only coherent when every position deriving the
+        // role has the same owner (e.g. the district catalog defining what
+        // every club president can do), never across owners.
+        const otherOwners = await tx.positionDefinition.count({
+          where: {
+            id: { not: position.id },
+            defaultRoleCode: position.defaultRoleCode,
+            // Explicit OR: `NOT { owner: X }` alone would skip NULL owners.
+            OR: position.ownerOrganizationId
+              ? [
+                  { ownerOrganizationId: null },
+                  {
+                    ownerOrganizationId: { not: position.ownerOrganizationId },
+                  },
+                ]
+              : [{ ownerOrganizationId: { not: null } }],
+          },
+        });
+        if (otherOwners > 0)
+          throw new ConflictException(
+            "This role is shared with positions of another organization",
+          );
+        if (attach && position.ownerOrganizationId) {
+          const [owner, permission] = await Promise.all([
+            tx.organization.findUniqueOrThrow({
+              where: { id: position.ownerOrganizationId },
+              select: { type: true },
+            }),
+            tx.permissionDefinition.findUniqueOrThrow({
+              where: { id: permissionId },
+              select: { code: true },
+            }),
+          ]);
+          if (
+            owner.type === "CLUB" &&
+            DISTRICT_ONLY_PERMISSIONS.has(permission.code)
+          )
+            throw new ForbiddenException(
+              "This permission can only be granted by the district",
+            );
+        }
         const result = attach
           ? await tx.rolePermission.upsert({
               where: {
@@ -1159,6 +1341,7 @@ export class KernelService {
     });
   }
   createPermission(input: any, context?: CommandContext) {
+    input = allowInput("createPermission", input);
     return this.mutate(
       "RegisterPermission",
       context,
@@ -1208,6 +1391,7 @@ export class KernelService {
     });
   }
   createRole(input: any, context?: CommandContext) {
+    input = allowInput("createRole", input);
     return this.mutate(
       "CreateRole",
       context,
@@ -1294,6 +1478,7 @@ export class KernelService {
       await this.authorization.invalidate(personId);
   }
   async grantRole(input: any, context?: CommandContext) {
+    input = allowInput("grantRole", input);
     return this.mutate(
       "GrantRole",
       context,
@@ -1410,7 +1595,9 @@ export class KernelService {
     // Keeping this binding here (rather than trusting HTTP input) also makes
     // the invariant hold for any future adapter.
     const requesterPersonId =
-      context?.actor.type === "USER" ? context.actor.id : input.requesterPersonId;
+      context?.actor.type === "USER"
+        ? context.actor.id
+        : input.requesterPersonId;
     if (!requesterPersonId)
       throw new BadRequestException(
         "A membership application requires an authenticated requester",
@@ -1517,15 +1704,16 @@ export class KernelService {
         let membershipId = application.membershipId;
         const now = new Date();
         if (target === "APPROVED") {
-          const existingMembership =
-            await tx.organizationMembership.findUnique({
+          const existingMembership = await tx.organizationMembership.findUnique(
+            {
               where: {
                 organizationId_personId: {
                   organizationId: application.organizationId,
                   personId: application.requesterPersonId,
                 },
               },
-            });
+            },
+          );
           if (existingMembership?.status === "ACTIVE")
             throw new ConflictException(
               "Person already has an active membership in this club",
@@ -1549,6 +1737,7 @@ export class KernelService {
                   joinedAt: now,
                 },
               });
+          await this.syncMemberRole(tx, membership.id, context);
           await tx.membershipTransition.create({
             data: {
               membershipId: membership.id,
@@ -1750,6 +1939,7 @@ export class KernelService {
       where: { id: source.id },
       data: { status: "TRANSFERRED", statusChangedAt: now, endedAt: now },
     });
+    await this.syncMemberRole(tx, source.id, context);
     await tx.membershipTransition.create({
       data: {
         membershipId: source.id,
@@ -1794,6 +1984,7 @@ export class KernelService {
         statusChangedAt: now,
       },
     });
+    await this.syncMemberRole(tx, destination.id, context);
     await tx.membershipTransition.create({
       data: {
         membershipId: destination.id,
@@ -1828,6 +2019,7 @@ export class KernelService {
 
   // Modules
   registerModule(input: any, context?: CommandContext) {
+    input = allowInput("registerModule", input);
     return this.mutate(
       "RegisterModule",
       context,

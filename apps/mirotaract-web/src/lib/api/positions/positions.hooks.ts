@@ -42,6 +42,18 @@ export function useUpdatePositionDefinition() {
   });
 }
 
+/** What a position currently allows (the permissions of its derived role). */
+export function usePositionPermissions(
+  positionDefinitionId: string | undefined,
+) {
+  return useQuery({
+    queryKey: positionKeys.permissions(positionDefinitionId ?? ""),
+    queryFn: ({ signal }) =>
+      positionsApi.permissions(positionDefinitionId!, { signal }),
+    enabled: Boolean(positionDefinitionId),
+  });
+}
+
 export function useAttachPermissionToPosition() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -52,8 +64,10 @@ export function useAttachPermissionToPosition() {
       positionDefinitionId: string;
       permissionId: string;
     }) => positionsApi.attachPermission(positionDefinitionId, permissionId),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: positionKeys.lists() }),
+    onSuccess: (_data, { positionDefinitionId }) =>
+      queryClient.invalidateQueries({
+        queryKey: positionKeys.permissions(positionDefinitionId),
+      }),
   });
 }
 
@@ -67,7 +81,9 @@ export function useDetachPermissionFromPosition() {
       positionDefinitionId: string;
       permissionId: string;
     }) => positionsApi.detachPermission(positionDefinitionId, permissionId),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: positionKeys.lists() }),
+    onSuccess: (_data, { positionDefinitionId }) =>
+      queryClient.invalidateQueries({
+        queryKey: positionKeys.permissions(positionDefinitionId),
+      }),
   });
 }

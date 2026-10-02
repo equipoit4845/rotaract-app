@@ -19,19 +19,30 @@ export function describePositionMutationError(
 }
 
 /**
- * `attachPermissionToPosition`/`detachPermissionFromPosition` document one
- * specific 409 (kernel-spec.md §6.6.1.5, kernel-openapi.yaml CA-POS-02):
- * the cargo has no `defaultRoleCode` (technical role) to attach/detach a
- * permission from.
+ * Attach/detach failures in plain language. 409: the position derives no
+ * role, or its role is shared with another organization's positions.
+ * 403: the caller can't edit it, or the permission is district-only and the
+ * position belongs to a club.
  */
 export function describePositionPermissionError(
   error: unknown,
 ): KernelErrorMessage {
   if (error instanceof KernelApiError && error.status === 409) {
     return {
-      title: "Este cargo no tiene un rol técnico asociado.",
+      title: "No se puede cambiar lo que permite este cargo.",
       description:
-        "Asigná un rol técnico (defaultRoleCode) antes de gestionar sus permisos.",
+        "Este cargo comparte sus permisos con cargos de otra organización. Pedile al distrito que lo revise.",
+    };
+  }
+  if (
+    error instanceof KernelApiError &&
+    error.status === 403 &&
+    error.detail?.includes("only be granted by the district")
+  ) {
+    return {
+      title: "Ese permiso no se puede dar desde un club.",
+      description:
+        "Algunos permisos (por ejemplo, crear o mover clubes, u otorgar roles) los decide solo el distrito.",
     };
   }
   return describeKernelError(error);

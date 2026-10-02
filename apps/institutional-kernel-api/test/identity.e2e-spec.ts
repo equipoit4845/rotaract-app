@@ -2,7 +2,12 @@ import type { INestApplication } from "@nestjs/common";
 import type { PrismaClient } from "@prisma/client";
 import request from "supertest";
 
-import { createTestApp, e2eTag, testPrisma, activateForTests } from "./support/test-app";
+import {
+  createTestApp,
+  e2eTag,
+  testPrisma,
+  activateForTests,
+} from "./support/test-app";
 
 describe("Identity E2E (register → verify → login → refresh → lockout)", () => {
   let app: INestApplication;
@@ -22,7 +27,9 @@ describe("Identity E2E (register → verify → login → refresh → lockout)",
 
   afterAll(async () => {
     if (accountId) {
-      await prisma.kernelAuditLog.deleteMany({ where: { resourceId: accountId } });
+      await prisma.kernelAuditLog.deleteMany({
+        where: { resourceId: accountId },
+      });
       await prisma.accountSession.deleteMany({ where: { accountId } });
       await prisma.emailVerificationToken.deleteMany({ where: { accountId } });
       await prisma.userAccount.deleteMany({ where: { id: accountId } });
@@ -66,7 +73,7 @@ describe("Identity E2E (register → verify → login → refresh → lockout)",
       .get("/api/kernel/v1/auth/me")
       .set("authorization", `Bearer ${login.body.accessToken}`)
       .expect(200);
-    expect(me.body.account.id).toBe(accountId);
+    expect(me.body.accountId).toBe(accountId);
   });
 
   it("rotates the refresh token on /auth/refresh", async () => {
@@ -109,7 +116,11 @@ describe("Identity E2E (register → verify → login → refresh → lockout)",
     expect(account.lockedUntil!.getTime()).toBeGreaterThan(Date.now());
 
     const failures = await prisma.kernelAuditLog.count({
-      where: { resourceId: accountId, action: "AuthenticateAccount", result: "FAILURE" },
+      where: {
+        resourceId: accountId,
+        action: "AuthenticateAccount",
+        result: "FAILURE",
+      },
     });
     expect(failures).toBeGreaterThanOrEqual(6);
   });

@@ -1,3 +1,4 @@
+import type { PermissionDefinition } from "../authorization/authorization.types";
 import { apiRequest, httpClient } from "../client/http-client";
 import type {
   CreatePositionDefinitionRequest,
@@ -33,6 +34,20 @@ export const positionsApi = {
         body: payload,
       }),
     ) as Promise<PositionDefinition>,
+
+  permissions: (
+    positionDefinitionId: string,
+    opts?: { signal?: AbortSignal },
+  ) =>
+    apiRequest(() =>
+      httpClient.GET(
+        "/position-definitions/{positionDefinitionId}/permissions",
+        {
+          params: { path: { positionDefinitionId } },
+          signal: opts?.signal,
+        },
+      ),
+    ) as Promise<PermissionDefinition[]>,
 
   attachPermission: (positionDefinitionId: string, permissionId: string) =>
     apiRequest(() =>

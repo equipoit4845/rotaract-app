@@ -6,6 +6,8 @@ import {
   PrismaClient,
 } from "@prisma/client";
 
+import { permissionNames, positionNames, roleNames } from "./catalog-labels";
+
 const prisma = new PrismaClient();
 
 // kernel-spec.md §10.1 — the kernel's own permission catalog.
@@ -230,7 +232,12 @@ async function main(): Promise<void> {
     await prisma.permissionDefinition.upsert({
       where: { code },
       update: {},
-      create: { code, namespace: "kernel", name: code, isSystem: true },
+      create: {
+        code,
+        namespace: "kernel",
+        name: permissionNames[code] ?? code,
+        isSystem: true,
+      },
     });
   // Retire system-seeded permission codes that a previous version of this
   // seed created but the current §10.1 catalog no longer defines (e.g. the
@@ -250,7 +257,7 @@ async function main(): Promise<void> {
     await prisma.roleDefinition.upsert({
       where: { code },
       update: {},
-      create: { code, name: code, isSystem: true },
+      create: { code, name: roleNames[code] ?? code, isSystem: true },
     });
   for (const [code, organizationType, isSingletonPerPeriod] of positions)
     await prisma.positionDefinition.upsert({
@@ -258,7 +265,7 @@ async function main(): Promise<void> {
       update: {},
       create: {
         code,
-        name: code,
+        name: positionNames[code] ?? code,
         organizationType,
         editPermissionCode: "kernel.position.manage",
         defaultRoleCode: roles.includes(code) ? code : null,

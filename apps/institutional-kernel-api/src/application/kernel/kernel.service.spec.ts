@@ -203,7 +203,9 @@ describe("KernelService — membership application invariants (6.8)", () => {
 
     expect(prisma.membershipApplication.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ requesterPersonId: "actual-person-id" }),
+        data: expect.objectContaining({
+          requesterPersonId: "actual-person-id",
+        }),
       }),
     );
   });
@@ -231,8 +233,20 @@ describe("KernelService — membership application invariants (6.8)", () => {
       organizationMembership: {
         findUnique: jest.fn().mockResolvedValue(null),
         create: jest.fn().mockResolvedValue({ id: "membership-1" }),
+        findUniqueOrThrow: jest.fn().mockResolvedValue({
+          personId: "person-1",
+          organizationId: "club-1",
+          status: "ACTIVE",
+        }),
       },
       membershipTransition: { create: jest.fn().mockResolvedValue({}) },
+      roleDefinition: {
+        findUnique: jest.fn().mockResolvedValue({ id: "member-role" }),
+      },
+      roleAssignment: {
+        count: jest.fn().mockResolvedValue(0),
+        create: jest.fn(),
+      },
     });
 
     const approved = await kernel.transitionApplication(
@@ -248,7 +262,10 @@ describe("KernelService — membership application invariants (6.8)", () => {
 
     expect(prisma.organizationMembership.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ status: "ACTIVE", personId: "person-1" }),
+        data: expect.objectContaining({
+          status: "ACTIVE",
+          personId: "person-1",
+        }),
       }),
     );
     expect(prisma.membershipTransition.create).toHaveBeenCalledWith(
@@ -256,6 +273,14 @@ describe("KernelService — membership application invariants (6.8)", () => {
         data: expect.objectContaining({ toStatus: "ACTIVE", type: "CREATED" }),
       }),
     );
+    expect(prisma.roleAssignment.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        personId: "person-1",
+        roleDefinitionId: "member-role",
+        scopeType: "ORGANIZATION",
+        organizationId: "club-1",
+      }),
+    });
     expect(outbox.record).toHaveBeenCalledWith(
       expect.anything(),
       "kernel.membership-application.approved.v1",
@@ -554,5 +579,206 @@ describe("KernelService — §15 read caches", () => {
       expect.any(Number),
       3_600,
     );
+  });
+});
+
+describe("KernelService — input allowlists (mass assignment)", () => {
+  it("drops parentId/type/status from an organization update", async () => {
+    const update = jest.fn().mockResolvedValue({ id: "club-1" });
+    const { kernel } = buildKernel({ organization: { update } });
+
+    await kernel.updateOrganization("club-1", {
+      name: "Rotaract Asunción",
+      parentId: null,
+      type: "DISTRICT",
+      status: "ARCHIVED",
+    });
+
+    expect(update).toHaveBeenCalledWith({
+      where: { id: "club-1" },
+      data: { name: "Rotaract Asunción" },
+    });
+  });
+
+  it("never lets a grant set revocation or provenance fields", async () => {
+    const create = jest.fn().mockResolvedValue({ id: "ra-1", personId: "p-1" });
+    const { kernel } = buildKernel({ roleAssignment: { create } });
+
+    await kernel.grantRole({
+      personId: "p-1",
+      roleDefinitionId: "role-1",
+      scopeType: "ORGANIZATION",
+      organizationId: "club-1",
+      revokedAt: null,
+      sourceAppointmentId: "forged",
+    });
+
+    const data = create.mock.calls[0][0].data;
+    expect(data).not.toHaveProperty("sourceAppointmentId");
+    expect(data).not.toHaveProperty("revokedAt");
+  });
+
+  it("never lets a caller register a system permission", async () => {
+    const create = jest.fn().mockResolvedValue({ id: "perm-1" });
+    const { kernel } = buildKernel({ permissionDefinition: { create } });
+
+    await kernel.createPermission({
+      code: "kernel.widget.read",
+      namespace: "kernel",
+      isSystem: true,
+    });
+
+    expect(create.mock.calls[0][0].data).not.toHaveProperty("isSystem");
+  });
+});
+
+describe("KernelService — club-owned positions", () => {
+  const clubOwner = {
+    organization: {
+      findUniqueOrThrow: jest.fn().mockResolvedValue({ type: "CLUB" }),
+    },
+  };
+
+  it("rejects a club defining a district position", async () => {
+    const { kernel } = buildKernel({ ...clubOwner });
+
+    await expect(
+      kernel.createPosition({
+        code: "X",
+        name: "X",
+        organizationType: "DISTRICT",
+        ownerOrganizationId: "club-1",
+        editPermissionCode: "kernel.position.manage",
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it("rejects a club position deriving a system role", async () => {
+    const { kernel } = buildKernel({
+      ...clubOwner,
+      roleDefinition: {
+        findUnique: jest.fn().mockResolvedValue({ isSystem: true }),
+      },
+    });
+
+    await expect(
+      kernel.createPosition({
+        code: "X",
+        name: "X",
+        organizationType: "CLUB",
+        ownerOrganizationId: "club-1",
+        editPermissionCode: "kernel.position.manage",
+        defaultRoleCode: "DISTRICT_RDR",
+      }),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it("refuses to edit a role shared with another organization's positions", async () => {
+    const { kernel } = buildKernel({
+      positionDefinition: {
+        findUniqueOrThrow: jest.fn().mockResolvedValue({
+          id: "pos-1",
+          defaultRoleCode: "SHARED",
+          ownerOrganizationId: "club-1",
+        }),
+        count: jest.fn().mockResolvedValue(1),
+      },
+      roleDefinition: {
+        findUniqueOrThrow: jest.fn().mockResolvedValue({ id: "role-1" }),
+      },
+    });
+
+    await expect(
+      kernel.positionPermission("pos-1", "perm-1", true),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it("refuses a district-only permission on a club position", async () => {
+    const { kernel } = buildKernel({
+      positionDefinition: {
+        findUniqueOrThrow: jest.fn().mockResolvedValue({
+          id: "pos-1",
+          defaultRoleCode: "CLUB_OWN",
+          ownerOrganizationId: "club-1",
+        }),
+        count: jest.fn().mockResolvedValue(0),
+      },
+      roleDefinition: {
+        findUniqueOrThrow: jest.fn().mockResolvedValue({ id: "role-1" }),
+      },
+      organization: {
+        findUniqueOrThrow: jest.fn().mockResolvedValue({ type: "CLUB" }),
+      },
+      permissionDefinition: {
+        findUniqueOrThrow: jest
+          .fn()
+          .mockResolvedValue({ code: "kernel.organization.move" }),
+      },
+    });
+
+    await expect(
+      kernel.positionPermission("pos-1", "perm-1", true),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+});
+
+describe("KernelService — MEMBER role follows the membership", () => {
+  function membershipKernel(status: string, held: number) {
+    const roleAssignment = {
+      count: jest.fn().mockResolvedValue(held),
+      create: jest.fn(),
+      updateMany: jest.fn(),
+    };
+    const built = buildKernel({
+      organizationMembership: {
+        findUniqueOrThrow: jest
+          .fn()
+          .mockResolvedValueOnce({ id: "m-1", status: "PENDING" })
+          .mockResolvedValue({
+            personId: "p-1",
+            organizationId: "club-1",
+            status,
+          }),
+        update: jest.fn().mockResolvedValue({ id: "m-1", status }),
+      },
+      membershipTransition: { create: jest.fn() },
+      roleDefinition: {
+        findUnique: jest.fn().mockResolvedValue({ id: "member-role" }),
+      },
+      roleAssignment,
+    });
+    return { ...built, roleAssignment };
+  }
+
+  it("grants MEMBER, scoped to the club, when a membership becomes ACTIVE", async () => {
+    const { kernel, roleAssignment } = membershipKernel("ACTIVE", 0);
+
+    await kernel.transitionMembership(
+      "m-1",
+      "ACTIVE" as any,
+      "ACTIVATED" as any,
+    );
+
+    expect(roleAssignment.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        personId: "p-1",
+        roleDefinitionId: "member-role",
+        scopeType: "ORGANIZATION",
+        organizationId: "club-1",
+      }),
+    });
+  });
+
+  it("revokes MEMBER when the membership ends", async () => {
+    const { kernel, roleAssignment } = membershipKernel("INACTIVE", 1);
+
+    await kernel.transitionMembership(
+      "m-1",
+      "INACTIVE" as any,
+      "DEACTIVATED" as any,
+    );
+
+    expect(roleAssignment.updateMany).toHaveBeenCalled();
+    expect(roleAssignment.create).not.toHaveBeenCalled();
   });
 });

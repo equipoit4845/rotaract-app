@@ -36,7 +36,11 @@ describe("Authorization scope E2E", () => {
       .post("/api/kernel/v1/auth/register")
       .send({ email, password, firstName: "E2E", lastName: label })
       .expect(201);
-    await activateForTests(prisma, registered.body.id, registered.body.personId);
+    await activateForTests(
+      prisma,
+      registered.body.id,
+      registered.body.personId,
+    );
     const login = await request(http)
       .post("/api/kernel/v1/auth/login")
       .send({ email, password })
@@ -131,9 +135,15 @@ describe("Authorization scope E2E", () => {
     });
     const accountIds = accounts.map((a) => a.id);
     const personIds = accounts.map((a) => a.personId);
-    await prisma.kernelAuditLog.deleteMany({ where: { resourceId: { in: accountIds } } });
-    await prisma.accountSession.deleteMany({ where: { accountId: { in: accountIds } } });
-    await prisma.roleAssignment.deleteMany({ where: { personId: { in: personIds } } });
+    await prisma.kernelAuditLog.deleteMany({
+      where: { resourceId: { in: accountIds } },
+    });
+    await prisma.accountSession.deleteMany({
+      where: { accountId: { in: accountIds } },
+    });
+    await prisma.roleAssignment.deleteMany({
+      where: { personId: { in: personIds } },
+    });
     await prisma.userAccount.deleteMany({ where: { id: { in: accountIds } } });
     await prisma.person.deleteMany({ where: { id: { in: personIds } } });
     await prisma.$disconnect();
@@ -154,11 +164,14 @@ describe("Authorization scope E2E", () => {
       .post(`/api/kernel/v1/organizations/${clubId}/memberships`)
       .set("authorization", `Bearer ${superAdminToken}`)
       .set("idempotency-key", randomUUID())
-      .send({ personId: president.personId, status: "ACTIVE" })
-      .expect((res) => {
-        if (![200, 201].includes(res.status))
-          throw new Error(`unexpected status ${res.status}: ${JSON.stringify(res.body)}`);
-      });
+      .send({ personId: president.personId })
+      .expect(201);
+    // Memberships are born PENDING; status is never accepted as input.
+    await request(http)
+      .post(`/api/kernel/v1/memberships/${membership.body.id}/activate`)
+      .set("authorization", `Bearer ${superAdminToken}`)
+      .set("idempotency-key", randomUUID())
+      .expect(201);
 
     // POST /memberships/:membershipId/leave carries no organizationId at
     // all — this is exactly the route class WS1 fixed.
@@ -201,9 +214,9 @@ describe("Authorization scope E2E", () => {
       .get("/api/kernel/v1/membership-applications")
       .set("authorization", `Bearer ${memberA.token}`)
       .expect(200);
-    expect(ownList.body.some((item: any) => item.id === application.body.id)).toBe(
-      true,
-    );
+    expect(
+      ownList.body.some((item: any) => item.id === application.body.id),
+    ).toBe(true);
 
     // Trying to filter by someone else's personId is silently overridden,
     // not honored (this is the Express 5 req.query-getter regression).

@@ -52,11 +52,13 @@ export function PositionDetailContainer({
   const positions = usePositionDefinitions();
   const position = positions.data?.find((p) => p.id === positionDefinitionId);
   const owner = useOrganization(position?.ownerOrganizationId ?? undefined);
-  const canEdit =
-    useCan(position?.editPermissionCode ?? "kernel.position.manage", {
+  const canEdit = useCan(
+    position?.editPermissionCode ?? "kernel.position.manage",
+    {
       scopeType: "ORGANIZATION_TREE",
       scopeId: position?.ownerOrganizationId ?? undefined,
-    }) && !position?.isSystem;
+    },
+  );
 
   if (positions.isLoading) {
     return (
@@ -85,7 +87,7 @@ export function PositionDetailContainer({
     <>
       <EntityHero
         title={position.name}
-        subtitle={position.code}
+        subtitle={position.description ?? undefined}
         breadcrumb={[
           { label: "Cargos", href: "/positions" },
           { label: position.name },
@@ -98,32 +100,22 @@ export function PositionDetailContainer({
         </CardHeader>
         <CardContent>
           <DetailGrid>
-            <Field label="Código" value={position.code} />
-            <DetailItem label="Alcance">
+            <DetailItem label="Para">
               <Badge tone={positionScopeToTone(position.organizationType)}>
                 {positionScopeToLabel(position.organizationType)}
               </Badge>
             </DetailItem>
             <Field
-              label="Distrito propietario"
+              label="Definido por"
               value={
                 position.ownerOrganizationId
                   ? (owner.data?.name ?? "…")
-                  : "Sin propietario (sistema)"
+                  : "Plataforma"
               }
             />
             <Field
-              label="Permiso de edición"
-              value={position.editPermissionCode}
-            />
-            <Field label="Rol técnico" value={position.defaultRoleCode} />
-            <Field
-              label="Singleton por período"
+              label="Una persona por período"
               value={position.isSingletonPerPeriod ? "Sí" : "No"}
-            />
-            <Field
-              label="Cargo de sistema"
-              value={position.isSystem ? "Sí" : "No"}
             />
             <Field label="Creado" value={formatDate(position.createdAt)} />
             <Field label="Actualizado" value={formatDate(position.updatedAt)} />
@@ -134,15 +126,7 @@ export function PositionDetailContainer({
         </CardContent>
       </Card>
 
-      {position.isSystem ? (
-        <div className="mt-4">
-          <DataState
-            kind="empty"
-            title="Cargo de sistema"
-            description="Los cargos de sistema no se editan ni se eliminan desde un distrito (invariante 6.6.1.2)."
-          />
-        </div>
-      ) : canEdit ? (
+      {canEdit ? (
         <div className="mt-4 flex flex-col gap-4">
           <Card>
             <CardHeader>
@@ -152,7 +136,10 @@ export function PositionDetailContainer({
               <EditPositionForm position={position} />
             </CardContent>
           </Card>
-          <PositionPermissionsPanel position={position} />
+          <PositionPermissionsPanel
+            position={position}
+            ownerName={owner.data?.name}
+          />
         </div>
       ) : null}
     </>

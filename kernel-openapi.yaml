@@ -1271,6 +1271,27 @@ paths:
               schema: { $ref: "#/components/schemas/PositionDefinition" }
         "403": { $ref: "#/components/responses/Forbidden" }
 
+  /position-definitions/{positionDefinitionId}/permissions:
+    get:
+      operationId: listPositionPermissions
+      tags: [Positions]
+      summary: Listar lo que permite un cargo
+      description: >
+        Devuelve los permisos del rol defaultRoleCode del cargo (lista vacía si
+        el cargo no deriva un rol). Se autoriza en la organización dueña del
+        cargo.
+      x-required-permission: kernel.position.read
+      parameters:
+        - $ref: "#/components/parameters/positionDefinitionId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/PermissionDefinition" }
+
   /position-definitions/{positionDefinitionId}/permissions/{permissionId}:
     put:
       operationId: attachPermissionToPosition

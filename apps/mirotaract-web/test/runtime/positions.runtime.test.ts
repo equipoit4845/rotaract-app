@@ -120,10 +120,11 @@ test("Positions list — loading then success: renders a row for a district posi
   };
   tokenManager.setSession(backend.issueToken(), 600);
 
-  const { getByText } = renderPositionsList(DISTRICT.id);
+  const { getByText, queryByText } = renderPositionsList(DISTRICT.id);
 
   await waitFor(() => assert.ok(getByText("Presidente de Club")));
-  assert.ok(getByText("CLUB_PRESIDENT"));
+  // People read names, never the internal code.
+  assert.equal(queryByText("CLUB_PRESIDENT"), null);
 
   tokenManager.clearSession();
 });
@@ -296,32 +297,29 @@ test("Create position — success: submits CreatePositionDefinitionRequest and n
     }),
   );
 
-  await waitFor(() =>
-    assert.ok(getByLabelText("Distrito propietario", { exact: false })),
-  );
+  await waitFor(() => assert.ok(getByLabelText(/^Distrito/)));
   // Wait for the district candidates request to resolve so the <option>
   // actually exists before setting the <select>'s value — otherwise jsdom
   // silently ignores the assignment (no matching option) and the field
   // stays empty, failing required validation without ever submitting.
   await waitFor(() => assert.ok(getByText(DISTRICT.name)));
-  fireEvent.change(getByLabelText("Distrito propietario", { exact: false }), {
+  fireEvent.change(getByLabelText(/^Distrito/), {
     target: { value: DISTRICT.id },
   });
 
-  fillForm(getByLabelText, {
-    Nombre: "Cargo Nuevo",
-    Código: "NEW_POS",
-  });
+  fillForm(getByLabelText, { Nombre: "Cargo Nuevo" });
 
   fireEvent.click(
-    getByLabelText("Distrito propietario", { exact: false })
+    getByLabelText(/^Distrito/)
       .closest("form")!
       .querySelector("button[type=submit]") as HTMLElement,
   );
 
   await waitFor(() => assert.ok(createBody));
-  assert.deepEqual(createBody, {
-    code: "NEW_POS",
+  // The code is derived from the name; nobody types it.
+  const { code, ...rest } = createBody as { code: string };
+  assert.match(code, /^DISTRICT_CARGO_NUEVO_[A-Z0-9]{2,4}$/);
+  assert.deepEqual(rest, {
     name: "Cargo Nuevo",
     description: null,
     organizationType: "DISTRICT",
@@ -373,6 +371,16 @@ test("Create position — hidden without kernel.position.create", async () => {
   tokenManager.clearSession();
 });
 
+const PERMISSION = {
+  id: "perm_1",
+  code: "kernel.membership.read",
+  namespace: "kernel",
+  name: "Ver el padrón de socios",
+  isSystem: true,
+  createdAt: "2025-01-01T00:00:00.000Z",
+  updatedAt: "2025-01-01T00:00:00.000Z",
+};
+
 // ---------------------------------------------------------------------------
 // US-POS-03 — Editar cargo + permisos
 // ---------------------------------------------------------------------------
@@ -419,19 +427,16 @@ test("Position detail — edit success: PATCHes UpdatePositionDefinitionRequest 
   assert.deepEqual(patchBody, {
     name: "Nombre Nuevo",
     description: null,
-    editPermissionCode: "kernel.position.manage",
-    defaultRoleCode: null,
     isSingletonPerPeriod: true,
   });
 
   tokenManager.clearSession();
 });
 
-test("Position detail — system positions never show the edit form, even with permission", async () => {
+test("Position detail — the district edits its own system positions when it holds the edit permission", async () => {
   const systemPosition = position({
     id: "pos_system1",
     isSystem: true,
-    ownerOrganizationId: null,
   });
   const backend = new MockBackend();
   backend.kernelHandler = (request) => {
@@ -442,29 +447,25 @@ test("Position detail — system positions never show the edit form, even with p
     }
     if (url.pathname.endsWith("/position-definitions"))
       return jsonResponse([systemPosition]);
+    if (url.pathname === "/api/kernel/v1/organizations/org_district1") {
+      return jsonResponse(DISTRICT);
+    }
     return problemResponse(404, "NOT_FOUND");
   };
   tokenManager.setSession(backend.issueToken(), 600);
 
-  const { getByText, queryByLabelText } = renderWithClient(
+  const { getByLabelText } = renderWithClient(
     React.createElement(PositionDetailContainer, {
       positionDefinitionId: "pos_system1",
     }),
   );
 
-  await waitFor(() =>
-    assert.ok(
-      getByText(
-        "Los cargos de sistema no se editan ni se eliminan desde un distrito (invariante 6.6.1.2).",
-      ),
-    ),
-  );
-  assert.equal(queryByLabelText("Nombre", { exact: false }), null);
+  await waitFor(() => assert.ok(getByLabelText("Nombre", { exact: false })));
 
   tokenManager.clearSession();
 });
 
-test("Position detail — permissions panel: cargo without defaultRoleCode shows CA-POS-02 message instead of attach/detach controls", async () => {
+test("Position detail — permissions panel: a position without a derived role explains it is informational only", async () => {
   const noRole = position({ id: "pos_norole1", defaultRoleCode: null });
   const backend = new MockBackend();
   backend.kernelHandler = (request) => {
@@ -488,9 +489,7 @@ test("Position detail — permissions panel: cargo without defaultRoleCode shows
     }),
   );
 
-  await waitFor(() =>
-    assert.ok(getByText("Este cargo no tiene un rol técnico asociado.")),
-  );
+  await waitFor(() => assert.ok(getByText("Este cargo es solo informativo.")));
 
   tokenManager.clearSession();
 });
@@ -513,19 +512,10 @@ test("Position detail — attach permission: success calls attachPermissionToPos
     if (url.pathname === "/api/kernel/v1/organizations/org_district1") {
       return jsonResponse(DISTRICT);
     }
-    if (url.pathname.endsWith("/permissions") && request.method === "GET") {
-      return jsonResponse([
-        {
-          id: "perm_1",
-          code: "kernel.membership.read",
-          namespace: "kernel",
-          name: "Leer membresías",
-          isSystem: true,
-          createdAt: "2025-01-01T00:00:00.000Z",
-          updatedAt: "2025-01-01T00:00:00.000Z",
-        },
-      ]);
-    }
+    if (url.pathname.endsWith("/position-definitions/pos_role1/permissions"))
+      return jsonResponse(attachedPermissionId ? [PERMISSION] : []);
+    if (url.pathname.endsWith("/permissions") && request.method === "GET")
+      return jsonResponse([PERMISSION]);
     if (
       request.method === "PUT" &&
       url.pathname ===
@@ -544,20 +534,22 @@ test("Position detail — attach permission: success calls attachPermissionToPos
     }),
   );
 
-  await waitFor(() => assert.ok(getByLabelText("Permiso")));
+  await waitFor(() => assert.ok(getByLabelText("Agregar un permiso")));
   // Wait for the permission catalog request to resolve so the <option>
-  // actually exists before setting the <select>'s value.
-  await waitFor(() => assert.ok(getByText("kernel.membership.read")));
-  fireEvent.change(getByLabelText("Permiso"), { target: { value: "perm_1" } });
-  fireEvent.click(getByText("Adjuntar"));
+  // actually exists before setting the <select>'s value. Options show the
+  // permission's name, never its code.
+  await waitFor(() => assert.ok(getByText("Ver el padrón de socios")));
+  fireEvent.change(getByLabelText("Agregar un permiso"), {
+    target: { value: "perm_1" },
+  });
+  fireEvent.click(getByText("Agregar"));
 
   await waitFor(() => assert.equal(attachedPermissionId, "perm_1"));
-  await waitFor(() => assert.ok(getByText("Permiso adjuntado.")));
 
   tokenManager.clearSession();
 });
 
-test("Position detail — detach permission: a 409 (no technical role) surfaces the CA-POS-02 message", async () => {
+test("Position detail — detach permission: a 409 (shared role) is explained in plain language", async () => {
   const withRole = position({
     id: "pos_role2",
     defaultRoleCode: "CLUB_PRESIDENT",
@@ -574,19 +566,10 @@ test("Position detail — detach permission: a 409 (no technical role) surfaces 
     if (url.pathname === "/api/kernel/v1/organizations/org_district1") {
       return jsonResponse(DISTRICT);
     }
-    if (url.pathname.endsWith("/permissions") && request.method === "GET") {
-      return jsonResponse([
-        {
-          id: "perm_1",
-          code: "kernel.membership.read",
-          namespace: "kernel",
-          name: "Leer membresías",
-          isSystem: true,
-          createdAt: "2025-01-01T00:00:00.000Z",
-          updatedAt: "2025-01-01T00:00:00.000Z",
-        },
-      ]);
-    }
+    if (url.pathname.endsWith("/position-definitions/pos_role2/permissions"))
+      return jsonResponse([PERMISSION]);
+    if (url.pathname.endsWith("/permissions") && request.method === "GET")
+      return jsonResponse([PERMISSION]);
     if (
       request.method === "DELETE" &&
       url.pathname ===
@@ -604,15 +587,13 @@ test("Position detail — detach permission: a 409 (no technical role) surfaces 
     }),
   );
 
-  await waitFor(() => assert.ok(getByLabelText("Permiso")));
-  // Wait for the permission catalog request to resolve so the <option>
-  // actually exists before setting the <select>'s value.
-  await waitFor(() => assert.ok(getByText("kernel.membership.read")));
-  fireEvent.change(getByLabelText("Permiso"), { target: { value: "perm_1" } });
-  fireEvent.click(getByText("Quitar"));
+  await waitFor(() =>
+    assert.ok(getByLabelText('Quitar "Ver el padrón de socios"')),
+  );
+  fireEvent.click(getByLabelText('Quitar "Ver el padrón de socios"'));
 
   await waitFor(() =>
-    assert.ok(getByText("Este cargo no tiene un rol técnico asociado.")),
+    assert.ok(getByText("No se puede cambiar lo que permite este cargo.")),
   );
 
   tokenManager.clearSession();

@@ -286,6 +286,10 @@ export class InstitutionalController {
       this.contexts.from(request, "updatePositionDefinition"),
     );
   }
+  @Get("position-definitions/:positionDefinitionId/permissions")
+  listPositionPermissions(@Param("positionDefinitionId") id: string) {
+    return this.kernel.positionPermissions(id);
+  }
   @Put("position-definitions/:positionDefinitionId/permissions/:permissionId")
   attachPositionPermission(
     @Param("positionDefinitionId") id: string,

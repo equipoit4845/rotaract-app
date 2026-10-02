@@ -22,28 +22,33 @@ export function PositionsTable({ items }: { items: PositionDefinition[] }) {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Nombre</TableHead>
-          <TableHead>Código</TableHead>
-          <TableHead>Alcance</TableHead>
-          <TableHead>Singleton</TableHead>
-          <TableHead>Sistema</TableHead>
-          <TableHead>Acción</TableHead>
+          <TableHead>Cargo</TableHead>
+          <TableHead>Para</TableHead>
+          <TableHead>Una persona por período</TableHead>
+          <TableHead>Definido por</TableHead>
+          <TableHead className="text-right">Acción</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {items.map((item) => (
           <TableRow key={item.id}>
-            <TableCell>{item.name}</TableCell>
-            <TableCell>{item.code}</TableCell>
+            <TableCell className="font-medium">{item.name}</TableCell>
             <TableCell>
               <Badge tone={positionScopeToTone(item.organizationType)}>
                 {positionScopeToLabel(item.organizationType)}
               </Badge>
             </TableCell>
             <TableCell>{item.isSingletonPerPeriod ? "Sí" : "No"}</TableCell>
-            <TableCell>{item.isSystem ? "Sí" : "No"}</TableCell>
-            <TableCell>
-              <Link href={`/positions/${item.id}`}>Ver detalle</Link>
+            <TableCell className="text-muted-foreground">
+              {item.isSystem ? "Distrito" : "Club"}
+            </TableCell>
+            <TableCell className="text-right">
+              <Link
+                href={`/positions/${item.id}`}
+                className="text-sm font-medium text-primary hover:underline"
+              >
+                Ver detalle
+              </Link>
             </TableCell>
           </TableRow>
         ))}

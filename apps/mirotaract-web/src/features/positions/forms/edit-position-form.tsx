@@ -20,8 +20,6 @@ import { describePositionMutationError } from "./position-mutation-errors";
 type EditPositionFormValues = {
   name: string;
   description: string;
-  editPermissionCode: string;
-  defaultRoleCode: string;
   isSingletonPerPeriod: boolean;
 };
 
@@ -29,8 +27,6 @@ function toDefaultValues(position: PositionDefinition): EditPositionFormValues {
   return {
     name: position.name,
     description: position.description ?? "",
-    editPermissionCode: position.editPermissionCode,
-    defaultRoleCode: position.defaultRoleCode ?? "",
     isSingletonPerPeriod: position.isSingletonPerPeriod,
   };
 }
@@ -41,13 +37,11 @@ function toUpdateRequest(
   return {
     name: values.name.trim(),
     description: values.description.trim() || null,
-    editPermissionCode: values.editPermissionCode.trim() || undefined,
-    defaultRoleCode: values.defaultRoleCode.trim() || null,
     isSingletonPerPeriod: values.isSingletonPerPeriod,
   };
 }
 
-/** CA-POS-03 (`kernel-spec.md` §6.6.1.3): editing requires `position.editPermissionCode`, evaluated on `ownerOrganizationId` — enforced by the caller (`PositionDetailContainer`), this form only submits. */
+/** Name, description and the one-per-period rule. What the position allows is edited in `PositionPermissionsPanel`; who may edit is enforced by the caller (`PositionDetailContainer`). */
 export function EditPositionForm({
   position,
 }: {
@@ -85,26 +79,6 @@ export function EditPositionForm({
         <Textarea id="description" rows={3} {...register("description")} />
       </FormField>
 
-      <FormField
-        label="Permiso de edición"
-        htmlFor="editPermissionCode"
-        required
-        error={
-          errors.editPermissionCode
-            ? "El permiso de edición es obligatorio."
-            : undefined
-        }
-      >
-        <Input
-          id="editPermissionCode"
-          {...register("editPermissionCode", { required: true })}
-        />
-      </FormField>
-
-      <FormField label="Rol técnico por defecto" htmlFor="defaultRoleCode">
-        <Input id="defaultRoleCode" {...register("defaultRoleCode")} />
-      </FormField>
-
       <Controller
         control={control}
         name="isSingletonPerPeriod"
@@ -114,7 +88,7 @@ export function EditPositionForm({
               checked={field.value}
               onCheckedChange={(checked) => field.onChange(checked === true)}
             />
-            Singleton por período
+            Solo una persona puede ocuparlo por período
           </label>
         )}
       />

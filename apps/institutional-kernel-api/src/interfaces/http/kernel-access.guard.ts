@@ -173,6 +173,7 @@ const permissionByHandler: Record<string, string> = {
   cancelPeriod: "kernel.period.update", // no dedicated cancel code
   createPosition: "kernel.position.create",
   listPositions: "kernel.position.read",
+  listPositionPermissions: "kernel.position.read",
   // Fallback defaults only: canActivate() overrides these with the
   // position's own editPermissionCode when the position can be resolved —
   // see the positionHandlers special-case.
@@ -470,7 +471,33 @@ const selfScopeListHandlers: Record<string, SelfScopeListConfig> = {
   },
 };
 
+// A new position is authorized against the organization that will own it
+// (a district catalog, or a club's own positions). Without an owner it is a
+// platform-wide catalog entry, which only PLATFORM-scoped grants can create.
+async function positionOwnerOrganization(
+  _prisma: PrismaService,
+  request: AuthenticatedRequest & Request,
+): Promise<Array<string | undefined> | undefined> {
+  const owner = request.body?.ownerOrganizationId;
+  return [owner ? String(owner) : undefined];
+}
+
+// Reading what a position allows is scoped like the position itself: its
+// owner's people can see it; unowned (platform) positions need a platform grant.
+async function existingPositionOwnerOrganization(
+  prisma: PrismaService,
+  request: AuthenticatedRequest & Request,
+): Promise<Array<string | undefined> | undefined> {
+  const position = await loadPosition(
+    prisma,
+    String(request.params.positionDefinitionId),
+  );
+  return [position?.ownerOrganizationId ?? undefined];
+}
+
 const organizationResolverByHandler: Record<string, OrganizationResolver> = {
+  createPosition: positionOwnerOrganization,
+  listPositionPermissions: existingPositionOwnerOrganization,
   updateMembership: membershipOrganization,
   membershipActivate: membershipOrganization,
   membershipLeave: membershipOrganization,

@@ -12,8 +12,10 @@ async function bootstrap(): Promise<void> {
   // The Web is served from its own public origin. Keep this list explicit so
   // browser clients can use the Kernel without opening the API to arbitrary
   // origins; local development remains supported by the default.
-  const corsOrigins = (process.env.KERNEL_CORS_ORIGINS ??
-    "https://app.rotaract4845.com,http://localhost:3000")
+  const corsOrigins = (
+    process.env.KERNEL_CORS_ORIGINS ??
+    "https://app.rotaract4845.com,http://localhost:3000"
+  )
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean);
