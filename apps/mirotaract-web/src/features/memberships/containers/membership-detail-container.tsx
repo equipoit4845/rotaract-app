@@ -6,8 +6,9 @@ import {
   useMembershipHistory,
   usePerson,
 } from "@/lib/api";
-import { DataState, PageHeader } from "@equipoit4845/admin-shell";
-import { Skeleton } from "@equipoit4845/ui";
+import { Avatar, DataState, EntityHero } from "@/components/layout";
+import { StatusBadge } from "@/components/domain/status-badge";
+import { Skeleton } from "@/components/ui";
 
 import { describeKernelError } from "@/features/shell/kernel-error-message";
 
@@ -63,9 +64,11 @@ export function MembershipDetailContainer({
 
   return (
     <>
-      <PageHeader
+      <EntityHero
+        badges={<StatusBadge kind="membership" status={membership.status} />}
+        image={<Avatar name={personLabel} size="lg" />}
         title={personLabel}
-        description="Membresía"
+        subtitle="Membresía"
         breadcrumb={[
           { label: "Socios", href: "/memberships" },
           { label: personLabel },

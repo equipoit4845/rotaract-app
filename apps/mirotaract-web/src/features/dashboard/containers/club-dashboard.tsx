@@ -9,7 +9,7 @@ import {
   usePositionDefinitions,
 } from "@/lib/api";
 import type { Organization } from "@/lib/api";
-import { PageHeader, StatCard } from "@equipoit4845/admin-shell";
+import { PageHeader, StatCard } from "@/components/layout";
 
 import { AuthoritiesCard } from "../components/authorities-card";
 import { PeriodSummaryCard } from "../components/period-summary-card";

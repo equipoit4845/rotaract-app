@@ -1,7 +1,7 @@
 "use client";
 
 import { useLogout, useLogoutAllSessions } from "@/lib/api";
-import { Avatar } from "@equipoit4845/admin-shell";
+import { Avatar, ConfirmationDialog } from "@/components/layout";
 import {
   Dropdown,
   DropdownContent,
@@ -9,11 +9,10 @@ import {
   DropdownLabel,
   DropdownSeparator,
   DropdownTrigger,
-} from "@equipoit4845/ui";
+} from "@/components/ui";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { ConfirmationDialog } from "./confirmation-dialog";
 import { describeKernelError } from "./kernel-error-message";
 
 /**
@@ -40,14 +39,12 @@ export function AccountMenu({ displayName }: { displayName: string }) {
           <button
             type="button"
             aria-label={`Cuenta de ${displayName}`}
-            style={{
-              background: "none",
-              border: "none",
-              padding: 0,
-              cursor: "pointer",
-            }}
+            className="flex items-center gap-2 rounded-full py-0.5 pl-0.5 pr-2 outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/50"
           >
             <Avatar name={displayName} size="sm" />
+            <span className="hidden max-w-40 truncate text-sm text-muted-foreground lg:inline">
+              {displayName}
+            </span>
           </button>
         </DropdownTrigger>
         <DropdownContent align="end">

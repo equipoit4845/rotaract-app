@@ -1,23 +1,19 @@
 "use client";
 
 import {
-  Badge,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from "@equipoit4845/ui";
+} from "@/components/ui";
 import Link from "next/link";
 
-import {
-  membershipStatusToLabel,
-  membershipStatusToTone,
-} from "../adapters/membership-status-to-tone";
 import { formatDate } from "../utils/format-date";
 import type { MembershipListItemViewModel } from "../view-models/membership-list-item";
 import { MembershipPersonCell } from "./membership-person-cell";
+import { StatusBadge } from "@/components/domain/status-badge";
 
 /**
  * No "tipo" column: `OrganizationMembership` has no `type` field
@@ -49,9 +45,7 @@ export function MembershipsTable({
               <MembershipPersonCell personId={item.personId} />
             </TableCell>
             <TableCell>
-              <Badge tone={membershipStatusToTone(item.status)}>
-                {membershipStatusToLabel(item.status)}
-              </Badge>
+              <StatusBadge kind="membership" status={item.status} />
             </TableCell>
             <TableCell>
               {item.joinedAt ? formatDate(item.joinedAt) : "—"}

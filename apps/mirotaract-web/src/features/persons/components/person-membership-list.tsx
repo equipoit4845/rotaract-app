@@ -1,7 +1,7 @@
 "use client";
 
 import { usePersonMemberships } from "@/lib/api";
-import { DataState } from "@equipoit4845/admin-shell";
+import { DataState } from "@/components/layout";
 import {
   Card,
   CardContent,
@@ -13,7 +13,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@equipoit4845/ui";
+} from "@/components/ui";
 
 import { describeKernelError } from "@/features/shell/kernel-error-message";
 

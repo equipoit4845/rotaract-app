@@ -1,8 +1,9 @@
 "use client";
 
 import { KernelApiError, usePeriod } from "@/lib/api";
-import { DataState, PageHeader } from "@equipoit4845/admin-shell";
-import { Button, Skeleton } from "@equipoit4845/ui";
+import { DataState, EntityHero } from "@/components/layout";
+import { StatusBadge } from "@/components/domain/status-badge";
+import { Button, Skeleton } from "@/components/ui";
 import Link from "next/link";
 
 import { describeKernelError } from "@/features/shell/kernel-error-message";
@@ -53,9 +54,10 @@ export function PeriodDetailContainer({ periodId }: { periodId: string }) {
 
   return (
     <>
-      <PageHeader
+      <EntityHero
+        badges={<StatusBadge kind="period" status={period.status} />}
         title={period.name}
-        description={period.code}
+        subtitle={period.code}
         breadcrumb={[
           { label: "Períodos", href: "/periods" },
           { label: period.name },

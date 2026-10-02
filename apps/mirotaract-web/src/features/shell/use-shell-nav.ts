@@ -2,17 +2,38 @@
 
 import { useCan } from "@/lib/api";
 import { useActiveOrganization } from "@/lib/api/organizations/use-active-organization";
-import type { AdminNavItem } from "@equipoit4845/admin-shell";
+import type { AdminNavItem } from "@/components/layout";
+import {
+  ArrowLeftRight,
+  Award,
+  Building2,
+  CalendarRange,
+  FileText,
+  Home,
+  Landmark,
+  ShieldCheck,
+  UserCog,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import { createElement } from "react";
 
-import { NavIcon } from "./nav-icons";
 import type { SuperadminViewMode } from "./superadmin-mode-context";
 
+type NavEntry = {
+  label: string;
+  href?: string;
+  icon: LucideIcon;
+  /** Extra sections that should highlight this entry (detail routes). */
+  alsoActiveFor?: string[];
+  children?: NavEntry[];
+};
+
 /**
- * Builds `AdminFrame`'s `navItems` already filtered — the component never
- * sees a permission code, only the resulting list. `useCan` is a UX-only
- * gate (kernel-openapi.yaml §19); the Kernel still enforces every mutation
- * server-side regardless of what's visible here.
+ * Builds `AppShell`'s `navItems` already filtered and grouped — the
+ * component never sees a permission code, only the resulting list. `useCan`
+ * is a UX-only gate (kernel-openapi.yaml §19); the Kernel still enforces
+ * every mutation server-side regardless of what's visible here.
  */
 export function useShellNavItems(
   activePath: string,
@@ -27,46 +48,92 @@ export function useShellNavItems(
   const canReadOrganizations = useCan("kernel.organization.read", scope);
   const canReadPersons = useCan("kernel.person.read", scope);
   const canReadMemberships = useCan("kernel.membership.read", scope);
-  const canReadApplications = useCan(
-    "kernel.application.read.self",
-    scope,
-  );
+  const canReadApplications = useCan("kernel.application.read.self", scope);
   const canReadTransfers = useCan("kernel.transfer.read.self", scope);
   const canReadAppointments = useCan("kernel.appointment.read", scope);
   const canReadPositions = useCan("kernel.position.read", scope);
   const canReadPeriods = useCan("kernel.period.read", scope);
   const isDistrictAdminView = superadminMode === "ADMIN";
 
-  const items: AdminNavItem[] = [
-    { label: "Inicio", href: "/dashboard", icon: createElement(NavIcon, { name: "home" }) },
-  ];
-
+  const district: NavEntry[] = [];
   if (canReadOrganizations && isDistrictAdminView) {
     // The Kernel aggregate remains Organization, but this installation has
     // one district and its day-to-day unit is the club.
-    items.push({ label: "Clubes", href: "/organizations", icon: createElement(NavIcon, { name: "clubs" }) });
+    district.push({ label: "Clubes", href: "/organizations", icon: Building2 });
   }
   if (canReadPersons && isDistrictAdminView) {
-    items.push({ label: superadminMode === "ADMIN" ? "Usuarios" : "Personas", href: "/persons", icon: createElement(NavIcon, { name: "people" }) });
-  }
-  if (canReadMemberships) {
-    items.push({ label: "Socios", href: "/memberships", icon: createElement(NavIcon, { name: "members" }) });
-  }
-  if (canReadAppointments) {
-    items.push({ label: "Autoridades", href: "/authorities", icon: createElement(NavIcon, { name: "authorities" }) });
-  }
-  if (canReadPositions) {
-    items.push({ label: "Cargos", href: "/positions", icon: createElement(NavIcon, { name: "authorities" }) });
-  }
-  if (canReadPeriods) {
-    items.push({ label: "Períodos", href: "/periods", icon: createElement(NavIcon, { name: "periods" }) });
-  }
-  if (canReadApplications) {
-    items.push({ label: "Solicitudes", href: "/applications", icon: createElement(NavIcon, { name: "applications" }) });
-  }
-  if (canReadTransfers) {
-    items.push({ label: "Transferencias", href: "/transfers", icon: createElement(NavIcon, { name: "transfers" }) });
+    district.push({ label: "Usuarios", href: "/persons", icon: UserCog });
   }
 
-  return items.map((item) => ({ ...item, active: item.href === activePath }));
+  const club: NavEntry[] = [];
+  if (canReadMemberships) {
+    club.push({ label: "Socios", href: "/memberships", icon: Users });
+  }
+  if (canReadAppointments) {
+    club.push({
+      label: "Autoridades",
+      href: "/authorities",
+      icon: ShieldCheck,
+      alsoActiveFor: ["/appointments"],
+    });
+  }
+  if (canReadPositions) {
+    club.push({ label: "Cargos", href: "/positions", icon: Award });
+  }
+  if (canReadPeriods) {
+    club.push({ label: "Períodos", href: "/periods", icon: CalendarRange });
+  }
+
+  const procedures: NavEntry[] = [];
+  if (canReadApplications) {
+    procedures.push({
+      label: "Solicitudes",
+      href: "/applications",
+      icon: FileText,
+    });
+  }
+  if (canReadTransfers) {
+    procedures.push({
+      label: "Transferencias",
+      href: "/transfers",
+      icon: ArrowLeftRight,
+    });
+  }
+
+  const entries: NavEntry[] = [
+    { label: "Inicio", href: "/dashboard", icon: Home },
+  ];
+  if (district.length) {
+    entries.push({ label: "Distrito", icon: Landmark, children: district });
+  }
+  if (club.length) {
+    entries.push({ label: "Mi club", icon: Building2, children: club });
+  }
+  if (procedures.length) {
+    entries.push({ label: "Trámites", icon: FileText, children: procedures });
+  }
+
+  return entries.map((entry) => toNavItem(entry, activePath));
+}
+
+function toNavItem(entry: NavEntry, activePath: string): AdminNavItem {
+  return {
+    label: entry.label,
+    href: entry.href,
+    icon: createElement(entry.icon, { "aria-hidden": true }),
+    active:
+      entry.href === activePath ||
+      (entry.alsoActiveFor?.includes(activePath) ?? false),
+    children: entry.children?.map((child) => toNavItem(child, activePath)),
+  };
+}
+
+/** Label of the active entry, used as the top bar's section title. */
+export function findActiveNavLabel(items: AdminNavItem[]): string | undefined {
+  for (const item of items) {
+    if (item.active) return item.label;
+    const child = item.children && findActiveNavLabel(item.children);
+    if (child) return child;
+  }
+  return undefined;
 }

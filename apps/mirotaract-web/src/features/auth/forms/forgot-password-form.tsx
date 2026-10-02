@@ -1,7 +1,7 @@
 "use client";
 
 import { useRequestPasswordReset } from "@/lib/api";
-import { Alert, Button, FormField, Input } from "@equipoit4845/ui";
+import { Alert, Button, FormField, Input } from "@/components/ui";
 import { useForm } from "react-hook-form";
 
 import { describeKernelError } from "@/features/shell/kernel-error-message";
@@ -30,15 +30,7 @@ export function ForgotPasswordForm({ onSuccess }: { onSuccess: () => void }) {
   });
 
   return (
-    <form
-      onSubmit={onSubmit}
-      noValidate
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--mr-space-3)",
-      }}
-    >
+    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
       <FormField
         label="Email"
         htmlFor="email"
@@ -57,7 +49,12 @@ export function ForgotPasswordForm({ onSuccess }: { onSuccess: () => void }) {
         <Alert tone="danger" {...describeKernelError(requestReset.error)} />
       ) : null}
 
-      <Button type="submit" disabled={requestReset.isPending}>
+      <Button
+        type="submit"
+        size="lg"
+        className="w-full"
+        disabled={requestReset.isPending}
+      >
         {requestReset.isPending ? "Enviando…" : "Enviar instrucciones"}
       </Button>
     </form>

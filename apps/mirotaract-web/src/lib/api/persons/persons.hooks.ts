@@ -42,7 +42,10 @@ export function useAllPersons(
   filters: Omit<PersonFilters, "cursor"> = {},
   options: { enabled?: boolean } = {},
 ) {
-  const query = usePersons({ ...filters, limit: filters.limit ?? 100 }, options);
+  const query = usePersons(
+    { ...filters, limit: filters.limit ?? 100 },
+    options,
+  );
 
   useEffect(() => {
     if (query.hasNextPage && !query.isFetchingNextPage) {

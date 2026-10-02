@@ -1,7 +1,12 @@
 "use client";
 
 import { useCan, useOrganization, usePositionDefinitions } from "@/lib/api";
-import { DataState, PageHeader } from "@equipoit4845/admin-shell";
+import {
+  DataState,
+  DetailGrid,
+  DetailItem,
+  EntityHero,
+} from "@/components/layout";
 import {
   Badge,
   Card,
@@ -9,7 +14,7 @@ import {
   CardHeader,
   CardTitle,
   Skeleton,
-} from "@equipoit4845/ui";
+} from "@/components/ui";
 
 import { describeKernelError } from "@/features/shell/kernel-error-message";
 
@@ -28,20 +33,7 @@ function Field({
   label: string;
   value: string | undefined | null;
 }) {
-  return (
-    <div>
-      <dt
-        style={{
-          fontSize: "0.75rem",
-          color: "var(--mr-color-text-muted)",
-          margin: 0,
-        }}
-      >
-        {label}
-      </dt>
-      <dd style={{ margin: 0 }}>{value?.trim() ? value : "—"}</dd>
-    </div>
-  );
+  return <DetailItem label={label}>{value}</DetailItem>;
 }
 
 /**
@@ -97,9 +89,9 @@ export function PositionDetailContainer({
 
   return (
     <>
-      <PageHeader
+      <EntityHero
         title={position.name}
-        description={position.code}
+        subtitle={position.code}
         breadcrumb={[
           { label: "Cargos", href: "/positions" },
           { label: position.name },
@@ -111,31 +103,13 @@ export function PositionDetailContainer({
           <CardTitle>Resumen</CardTitle>
         </CardHeader>
         <CardContent>
-          <dl
-            style={{
-              display: "grid",
-              gap: "var(--mr-space-4)",
-              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-              margin: 0,
-            }}
-          >
+          <DetailGrid>
             <Field label="Código" value={position.code} />
-            <div>
-              <dt
-                style={{
-                  fontSize: "0.75rem",
-                  color: "var(--mr-color-text-muted)",
-                  margin: 0,
-                }}
-              >
-                Alcance
-              </dt>
-              <dd style={{ margin: 0 }}>
-                <Badge tone={positionScopeToTone(position.organizationType)}>
-                  {positionScopeToLabel(position.organizationType)}
-                </Badge>
-              </dd>
-            </div>
+            <DetailItem label="Alcance">
+              <Badge tone={positionScopeToTone(position.organizationType)}>
+                {positionScopeToLabel(position.organizationType)}
+              </Badge>
+            </DetailItem>
             <Field
               label="Distrito propietario"
               value={
@@ -159,7 +133,7 @@ export function PositionDetailContainer({
             />
             <Field label="Creado" value={formatDate(position.createdAt)} />
             <Field label="Actualizado" value={formatDate(position.updatedAt)} />
-          </dl>
+          </DetailGrid>
           {position.description ? (
             <p style={{ marginTop: "var(--mr-space-4)" }}>
               {position.description}

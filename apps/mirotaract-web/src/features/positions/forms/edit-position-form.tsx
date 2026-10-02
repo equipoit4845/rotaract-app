@@ -12,7 +12,7 @@ import {
   FormField,
   Input,
   Textarea,
-} from "@equipoit4845/ui";
+} from "@/components/ui";
 import { Controller, useForm } from "react-hook-form";
 
 import { describePositionMutationError } from "./position-mutation-errors";

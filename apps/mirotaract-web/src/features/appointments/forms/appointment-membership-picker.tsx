@@ -5,7 +5,7 @@ import {
   useOrganizationDescendants,
   useOrganizationMemberships,
 } from "@/lib/api";
-import { FormField, Select } from "@equipoit4845/ui";
+import { FormField, Select } from "@/components/ui";
 import { useState } from "react";
 
 import { AppointmentMembershipOption } from "./appointment-membership-option";

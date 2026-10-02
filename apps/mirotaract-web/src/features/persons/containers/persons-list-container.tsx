@@ -10,8 +10,8 @@ import {
   DataState,
   DataToolbar,
   PageHeader,
-} from "@equipoit4845/admin-shell";
-import { Skeleton } from "@equipoit4845/ui";
+} from "@/components/layout";
+import { Skeleton } from "@/components/ui";
 import { useMemo, useState } from "react";
 
 import { describeKernelError } from "@/features/shell/kernel-error-message";
@@ -98,7 +98,12 @@ function SuperadminUsersDirectory() {
     () =>
       directory.items.filter((item) => {
         if (!normalizedQuery) return true;
-        return [item.displayName, item.email ?? "", ...item.clubs, ...item.roles]
+        return [
+          item.displayName,
+          item.email ?? "",
+          ...item.clubs,
+          ...item.roles,
+        ]
           .join(" ")
           .toLocaleLowerCase("es")
           .includes(normalizedQuery);

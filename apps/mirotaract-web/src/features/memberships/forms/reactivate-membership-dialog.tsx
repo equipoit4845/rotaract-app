@@ -1,13 +1,13 @@
 "use client";
 
+import { ConfirmationDialog } from "@/components/layout";
 import type { OrganizationMembership } from "@/lib/api";
 import { useCan, useReactivateMembership } from "@/lib/api";
-import { Button } from "@equipoit4845/ui";
+import { Button } from "@/components/ui";
 import { useState } from "react";
 
 import { describeMembershipTransitionError } from "./membership-mutation-errors";
 import { canReactivateMembership } from "../adapters/membership-lifecycle";
-import { ConfirmationDialog } from "../components/confirmation-dialog";
 
 /**
  * `INACTIVE -> ACTIVE` only (kernel-spec.md §7.3 + kernel-openapi.yaml's

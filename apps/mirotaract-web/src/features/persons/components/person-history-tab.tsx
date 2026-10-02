@@ -1,7 +1,8 @@
 "use client";
 
 import type { Person } from "@/lib/api";
-import { Card, CardContent, CardHeader, CardTitle } from "@equipoit4845/ui";
+import { DetailGrid } from "@/components/layout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 
 import { toPersonIdentityViewModel } from "../view-models/person-identity";
 import { FieldRow } from "./field-row";
@@ -21,18 +22,11 @@ export function PersonHistoryTab({ person }: { person: Person }) {
         <CardTitle>Historial</CardTitle>
       </CardHeader>
       <CardContent>
-        <dl
-          style={{
-            display: "grid",
-            gap: "var(--mr-space-4)",
-            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-            margin: 0,
-          }}
-        >
+        <DetailGrid>
           {identity.lifecycle.map((field) => (
             <FieldRow key={field.label} {...field} />
           ))}
-        </dl>
+        </DetailGrid>
       </CardContent>
     </Card>
   );

@@ -3,7 +3,10 @@
 import { useMemo } from "react";
 
 import { useCurrentUser } from "../auth/auth.hooks";
-import { useRoleAssignments, useRoles } from "../authorization/authorization.hooks";
+import {
+  useRoleAssignments,
+  useRoles,
+} from "../authorization/authorization.hooks";
 import { useOrganizationMembershipDirectories } from "../memberships/memberships.hooks";
 import { useAllOrganizations } from "../organizations/organizations.hooks";
 import { useAllPersons } from "../persons/persons.hooks";
@@ -54,7 +57,10 @@ export function useAdministrativeUserDirectory(enabled: boolean) {
 
   const items = useMemo<AdministrativeUserDirectoryItem[]>(() => {
     const clubsById = new Map(
-      organizations.items.map((organization) => [organization.id, organization]),
+      organizations.items.map((organization) => [
+        organization.id,
+        organization,
+      ]),
     );
     const roleNamesById = new Map(
       (roles.data ?? []).map((role) => [role.id, role.name || role.code]),
@@ -66,7 +72,9 @@ export function useAdministrativeUserDirectory(enabled: boolean) {
         if (membership.status !== "ACTIVE") continue;
         const club = clubsById.get(membership.organizationId);
         if (!club) continue;
-        const names = activeMembershipsByPerson.get(membership.personId) ?? new Set<string>();
+        const names =
+          activeMembershipsByPerson.get(membership.personId) ??
+          new Set<string>();
         names.add(club.name);
         activeMembershipsByPerson.set(membership.personId, names);
       }
@@ -79,7 +87,8 @@ export function useAdministrativeUserDirectory(enabled: boolean) {
         assignment.effect !== "ALLOW" ||
         assignment.revokedAt ||
         new Date(assignment.validFrom).getTime() > now ||
-        (assignment.validUntil && new Date(assignment.validUntil).getTime() <= now)
+        (assignment.validUntil &&
+          new Date(assignment.validUntil).getTime() <= now)
       ) {
         continue;
       }
@@ -88,7 +97,8 @@ export function useAdministrativeUserDirectory(enabled: boolean) {
       const scope = assignment.organizationId
         ? clubsById.get(assignment.organizationId)?.name
         : undefined;
-      const labels = effectiveRolesByPerson.get(assignment.personId) ?? new Set<string>();
+      const labels =
+        effectiveRolesByPerson.get(assignment.personId) ?? new Set<string>();
       labels.add(scope ? `${roleName} · ${scope}` : roleName);
       effectiveRolesByPerson.set(assignment.personId, labels);
     }
@@ -101,12 +111,18 @@ export function useAdministrativeUserDirectory(enabled: boolean) {
         // The public read contract exposes platformRole only for the current
         // authenticated account. We surface it accurately for that row rather
         // than fabricating platform roles for other people.
-        if (person.id === currentUser?.personId && currentUser.platformRole === "SUPERADMIN") {
+        if (
+          person.id === currentUser?.personId &&
+          currentUser.platformRole === "SUPERADMIN"
+        ) {
           rolesForPerson.add("SUPERADMIN");
         }
         return {
           id: person.id,
-          displayName: [person.firstName, person.lastName].filter(Boolean).join(" ") || person.primaryEmail || "Sin nombre",
+          displayName:
+            [person.firstName, person.lastName].filter(Boolean).join(" ") ||
+            person.primaryEmail ||
+            "Sin nombre",
           email: person.primaryEmail ?? null,
           archived: Boolean(person.archivedAt),
           clubs: [...(activeMembershipsByPerson.get(person.id) ?? [])].sort(),
@@ -114,7 +130,14 @@ export function useAdministrativeUserDirectory(enabled: boolean) {
         };
       })
       .sort((a, b) => a.displayName.localeCompare(b.displayName, "es"));
-  }, [assignments.data, currentUser, membershipQueries, organizations.items, persons.items, roles.data]);
+  }, [
+    assignments.data,
+    currentUser,
+    membershipQueries,
+    organizations.items,
+    persons.items,
+    roles.data,
+  ]);
 
   return { items, isLoading, isError, error };
 }

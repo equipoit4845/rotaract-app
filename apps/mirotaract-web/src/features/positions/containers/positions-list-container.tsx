@@ -1,8 +1,8 @@
 "use client";
 
 import { useCan, usePositionDefinitions } from "@/lib/api";
-import { DataState, DataToolbar, PageHeader } from "@equipoit4845/admin-shell";
-import { Select, Skeleton } from "@equipoit4845/ui";
+import { DataState, DataToolbar, PageHeader } from "@/components/layout";
+import { Select, Skeleton } from "@/components/ui";
 import Link from "next/link";
 
 import { useActiveOrganizationContext } from "@/features/shell/active-organization-context";

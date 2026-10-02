@@ -1,6 +1,6 @@
 "use client";
 
-import { DataState } from "@equipoit4845/admin-shell";
+import { DataState } from "@/components/layout";
 
 /**
  * `BLOCKED_API` (docs/09-administrative-web.md, Área 2 preflight notes):

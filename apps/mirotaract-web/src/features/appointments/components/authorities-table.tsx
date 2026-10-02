@@ -2,21 +2,17 @@
 
 import type { Appointment, PositionDefinition } from "@/lib/api";
 import {
-  Badge,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from "@equipoit4845/ui";
+} from "@/components/ui";
 import Link from "next/link";
 
-import {
-  appointmentStatusToLabel,
-  appointmentStatusToTone,
-} from "../adapters/appointment-status-to-tone";
 import { AppointmentMembershipCell } from "./appointment-membership-cell";
+import { StatusBadge } from "@/components/domain/status-badge";
 
 /**
  * US-APP-01 — `Appointment` is the only source of authority truth (never
@@ -54,9 +50,7 @@ export function AuthoritiesTable({
               />
             </TableCell>
             <TableCell>
-              <Badge tone={appointmentStatusToTone(appointment.status)}>
-                {appointmentStatusToLabel(appointment.status)}
-              </Badge>
+              <StatusBadge kind="appointment" status={appointment.status} />
             </TableCell>
             <TableCell>
               <Link href={`/appointments/${appointment.id}`}>Ver detalle</Link>

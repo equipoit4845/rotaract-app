@@ -6,8 +6,8 @@ import {
   DataState,
   DataToolbar,
   PageHeader,
-} from "@equipoit4845/admin-shell";
-import { Skeleton } from "@equipoit4845/ui";
+} from "@/components/layout";
+import { Skeleton } from "@/components/ui";
 
 import { describeKernelError } from "@/features/shell/kernel-error-message";
 
@@ -19,8 +19,11 @@ import { useOrganizationListPage } from "../view-models/use-organization-list-pa
 import { CreateOrganizationDialog } from "../forms/create-organization-dialog";
 
 export function OrganizationsListContainer() {
-  const { filters: urlFilters, setStatus, setQuery } =
-    useOrganizationListFilters();
+  const {
+    filters: urlFilters,
+    setStatus,
+    setQuery,
+  } = useOrganizationListFilters();
   // Distrito 4845 is a fixed tenant context in this Web. The operational
   // directory is therefore the club directory; the underlying Kernel keeps
   // its generic Organization aggregate and hierarchy intact.

@@ -14,7 +14,7 @@ import {
   DialogTrigger,
   FormField,
   Input,
-} from "@equipoit4845/ui";
+} from "@/components/ui";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 

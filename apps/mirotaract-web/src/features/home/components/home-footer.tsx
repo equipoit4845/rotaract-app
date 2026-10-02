@@ -1,22 +1,26 @@
+import { Logo } from "@/components/brand";
+import Link from "next/link";
+
 export function HomeFooter() {
   const year = new Date().getFullYear();
 
   return (
-    <footer
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: "var(--mr-space-1)",
-        padding: "var(--mr-space-6)",
-        borderTop: "1px solid var(--mr-color-border)",
-        color: "var(--mr-color-text-muted)",
-        fontSize: "0.875rem",
-        textAlign: "center",
-      }}
-    >
-      <span>Mi Rotaract — Rotaract Distrito 4845</span>
-      <span>&copy; {year}</span>
+    <footer className="border-t border-border bg-muted/40">
+      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-10 text-sm text-muted-foreground md:flex-row md:px-6">
+        <span className="flex items-center gap-2 font-medium text-foreground">
+          <Logo size={16} />
+          Mi Rotaract — Rotaract Distrito 4845
+        </span>
+        <div className="flex items-center gap-6">
+          <Link
+            href="/login"
+            className="transition-colors hover:text-foreground"
+          >
+            Iniciar sesión
+          </Link>
+          <span>&copy; {year}</span>
+        </div>
+      </div>
     </footer>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuthStatus } from "@/lib/api";
-import { Spinner } from "@equipoit4845/ui";
+import { Spinner } from "@/components/ui";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect } from "react";
 import type { ReactNode } from "react";

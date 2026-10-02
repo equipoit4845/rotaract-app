@@ -2,7 +2,7 @@
 
 import type { Organization, UpdateOrganizationRequest } from "@/lib/api";
 import { useUpdateOrganization } from "@/lib/api";
-import { Alert, Button, FormField, Input, Textarea } from "@equipoit4845/ui";
+import { Alert, Button, FormField, Input, Textarea } from "@/components/ui";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { Select } from "@equipoit4845/ui";
+import { Select } from "@/components/ui";
 
 import type { SuperadminViewMode } from "./superadmin-mode-context";
 

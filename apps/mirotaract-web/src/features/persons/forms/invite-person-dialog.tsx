@@ -1,16 +1,16 @@
 "use client";
 
+import { ConfirmationDialog } from "@/components/layout";
 import type { Person } from "@/lib/api";
 import { useCan, useInvitePerson, usePersonMemberships } from "@/lib/api";
-import { Alert, Button, FormField, Input, Select } from "@equipoit4845/ui";
+import { Alert, Button, FormField, Input, Select } from "@/components/ui";
 import { useState } from "react";
 
 import { describeKernelError } from "@/features/shell/kernel-error-message";
 
-import { invitationStatusToLabel } from "../adapters/invitation-status-to-tone";
 import { personDisplayName } from "../adapters/person-display-name";
-import { ConfirmationDialog } from "../components/confirmation-dialog";
 import { InviteMembershipOption } from "./invite-membership-option";
+import { statusLabel } from "@/lib/status/status-catalog";
 
 /**
  * `invitePersonToCreateAccount` requires `membershipId` — inviting only
@@ -103,7 +103,7 @@ export function InvitePersonDialog({ person }: { person: Person }) {
             <Alert
               tone="success"
               title="Invitación enviada"
-              description={`Estado: ${invitationStatusToLabel(invite.data.status)}`}
+              description={`Estado: ${statusLabel("invitation", invite.data.status)}`}
             />
           ) : null}
         </div>

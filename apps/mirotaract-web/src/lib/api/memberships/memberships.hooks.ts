@@ -68,7 +68,11 @@ export function useOrganizationMembershipDirectories(
     queries: ids.map((organizationId) => ({
       queryKey: membershipKeys.organizationList(organizationId, { limit: 100 }),
       queryFn: ({ signal }: { signal: AbortSignal }) =>
-        membershipsApi.listByOrganization(organizationId, { limit: 100 }, { signal }),
+        membershipsApi.listByOrganization(
+          organizationId,
+          { limit: 100 },
+          { signal },
+        ),
       enabled: options.enabled !== false,
       staleTime: 60_000,
     })),

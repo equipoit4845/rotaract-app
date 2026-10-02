@@ -1,15 +1,15 @@
 "use client";
 
+import { ConfirmationDialog } from "@/components/layout";
 import type { Person } from "@/lib/api";
 import { useArchivePerson, useCan } from "@/lib/api";
-import { Button } from "@equipoit4845/ui";
+import { Button } from "@/components/ui";
 import { useState } from "react";
 
 import { describeKernelError } from "@/features/shell/kernel-error-message";
 
 import { canArchivePerson } from "../adapters/person-lifecycle";
 import { personDisplayName } from "../adapters/person-display-name";
-import { ConfirmationDialog } from "../components/confirmation-dialog";
 
 /**
  * Archive ≠ delete (product spec §18): the copy is explicit that history

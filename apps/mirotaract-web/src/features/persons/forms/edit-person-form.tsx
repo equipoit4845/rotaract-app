@@ -2,7 +2,7 @@
 
 import type { Person, UpdatePersonRequest } from "@/lib/api";
 import { useUpdatePerson } from "@/lib/api";
-import { Alert, Button, FormField, Input } from "@equipoit4845/ui";
+import { Alert, Button, FormField, Input } from "@/components/ui";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 

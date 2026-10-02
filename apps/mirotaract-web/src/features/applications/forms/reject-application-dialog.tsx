@@ -1,12 +1,12 @@
 "use client";
 
+import { ConfirmationDialog } from "@/components/layout";
 import type { MembershipApplication } from "@/lib/api";
 import { useCan, useRejectMembershipApplication } from "@/lib/api";
-import { Button, FormField, Textarea } from "@equipoit4845/ui";
+import { Button, FormField, Textarea } from "@/components/ui";
 import { useState } from "react";
 
 import { canRejectApplication } from "../adapters/application-lifecycle";
-import { ConfirmationDialog } from "../components/confirmation-dialog";
 import { describeApplicationTransitionError } from "./application-mutation-errors";
 
 /**

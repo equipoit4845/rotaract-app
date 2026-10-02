@@ -13,7 +13,7 @@ import {
   DialogTrigger,
   FormField,
   Textarea,
-} from "@equipoit4845/ui";
+} from "@/components/ui";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 

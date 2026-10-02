@@ -1,7 +1,7 @@
 "use client";
 
 import { useRegister } from "@/lib/api";
-import { Alert, Button, FormField, Input } from "@equipoit4845/ui";
+import { Alert, Button, FormField, Input } from "@/components/ui";
 import { useForm } from "react-hook-form";
 
 import { describeRegisterError } from "../adapters/auth-mutation-errors";
@@ -49,22 +49,8 @@ export function RegisterForm({ onSuccess }: { onSuccess: () => void }) {
   );
 
   return (
-    <form
-      onSubmit={onSubmit}
-      noValidate
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--mr-space-3)",
-      }}
-    >
-      <div
-        style={{
-          display: "grid",
-          gap: "var(--mr-space-3)",
-          gridTemplateColumns: "1fr 1fr",
-        }}
-      >
+    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
+      <div className="grid gap-4 sm:grid-cols-2">
         <FormField
           label="Nombre"
           htmlFor="firstName"
@@ -146,7 +132,12 @@ export function RegisterForm({ onSuccess }: { onSuccess: () => void }) {
         <Alert tone="danger" {...describeRegisterError(register_.error)} />
       ) : null}
 
-      <Button type="submit" disabled={register_.isPending}>
+      <Button
+        type="submit"
+        size="lg"
+        className="w-full"
+        disabled={register_.isPending}
+      >
         {register_.isPending ? "Creando cuenta…" : "Crear cuenta"}
       </Button>
     </form>

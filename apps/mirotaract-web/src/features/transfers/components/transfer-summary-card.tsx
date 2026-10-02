@@ -1,39 +1,17 @@
 "use client";
 
 import type { MembershipTransfer } from "@/lib/api";
-import {
-  Badge,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@equipoit4845/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import {
-  transferStatusToLabel,
-  transferStatusToTone,
-} from "../adapters/transfer-status-to-tone";
 import { formatDate } from "../utils/format-date";
 import { TransferOrganizationCell } from "./transfer-organization-cell";
 import { TransferPersonCell } from "./transfer-person-cell";
+import { DetailGrid, DetailItem } from "@/components/layout";
 
 function Field({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div>
-      <dt
-        style={{
-          fontSize: "0.75rem",
-          color: "var(--mr-color-text-muted)",
-          margin: 0,
-        }}
-      >
-        {label}
-      </dt>
-      <dd style={{ margin: 0 }}>{value ?? "—"}</dd>
-    </div>
-  );
+  return <DetailItem label={label}>{value ?? "—"}</DetailItem>;
 }
 
 /**
@@ -55,34 +33,11 @@ export function TransferSummaryCard({
         <CardTitle>Resumen</CardTitle>
       </CardHeader>
       <CardContent>
-        <dl
-          style={{
-            display: "grid",
-            gap: "var(--mr-space-4)",
-            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-            margin: 0,
-          }}
-        >
+        <DetailGrid>
           <Field
             label="Persona"
             value={<TransferPersonCell membershipId={transfer.membershipId} />}
           />
-          <div>
-            <dt
-              style={{
-                fontSize: "0.75rem",
-                color: "var(--mr-color-text-muted)",
-                margin: 0,
-              }}
-            >
-              Estado
-            </dt>
-            <dd style={{ margin: 0 }}>
-              <Badge tone={transferStatusToTone(transfer.status)}>
-                {transferStatusToLabel(transfer.status)}
-              </Badge>
-            </dd>
-          </div>
           <Field
             label="Organización origen"
             value={
@@ -116,7 +71,7 @@ export function TransferSummaryCard({
               }
             />
           ) : null}
-        </dl>
+        </DetailGrid>
       </CardContent>
     </Card>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMembership, usePerson } from "@/lib/api";
-import { Skeleton } from "@equipoit4845/ui";
+import { Skeleton } from "@/components/ui";
 import Link from "next/link";
 
 import { personDisplayName } from "../adapters/person-display-name";

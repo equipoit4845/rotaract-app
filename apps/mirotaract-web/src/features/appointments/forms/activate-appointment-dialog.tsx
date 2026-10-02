@@ -1,11 +1,11 @@
 "use client";
 
+import { ConfirmationDialog } from "@/components/layout";
 import type { Appointment } from "@/lib/api";
 import { useActivateAppointment, useCan } from "@/lib/api";
-import { Button } from "@equipoit4845/ui";
+import { Button } from "@/components/ui";
 import { useState } from "react";
 
-import { ConfirmationDialog } from "../components/confirmation-dialog";
 import { describeAppointmentTransitionError } from "./appointment-mutation-errors";
 
 /** `ELECTED -> ACTIVE` (kernel-spec.md §7.5). May 409 on a singleton conflict (CA-APP-02) even when the transition itself is otherwise valid. */

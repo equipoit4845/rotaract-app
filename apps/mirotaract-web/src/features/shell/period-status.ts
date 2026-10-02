@@ -1,5 +1,5 @@
 import type { PeriodStatus } from "@/lib/api";
-import type { PeriodIndicatorStatus } from "@equipoit4845/admin-shell";
+import type { PeriodIndicatorStatus } from "@/components/layout";
 
 /**
  * Kernel → visual mapping. `PeriodIndicator` only ever sees this tri-state,

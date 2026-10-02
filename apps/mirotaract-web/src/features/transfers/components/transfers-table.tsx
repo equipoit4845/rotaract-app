@@ -2,23 +2,19 @@
 
 import type { MembershipTransfer } from "@/lib/api";
 import {
-  Badge,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from "@equipoit4845/ui";
+} from "@/components/ui";
 import Link from "next/link";
 
-import {
-  transferStatusToLabel,
-  transferStatusToTone,
-} from "../adapters/transfer-status-to-tone";
 import { formatDate } from "../utils/format-date";
 import { TransferOrganizationCell } from "./transfer-organization-cell";
 import { TransferPersonCell } from "./transfer-person-cell";
+import { StatusBadge } from "@/components/domain/status-badge";
 
 /**
  * `GET /membership-transfers` returns a plain `MembershipTransfer[]`, no
@@ -55,9 +51,7 @@ export function TransfersTable({ items }: { items: MembershipTransfer[] }) {
               />
             </TableCell>
             <TableCell>
-              <Badge tone={transferStatusToTone(transfer.status)}>
-                {transferStatusToLabel(transfer.status)}
-              </Badge>
+              <StatusBadge kind="transfer" status={transfer.status} />
             </TableCell>
             <TableCell>{formatDate(transfer.requestedAt)}</TableCell>
             <TableCell>

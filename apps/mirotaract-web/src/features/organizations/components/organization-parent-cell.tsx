@@ -1,7 +1,7 @@
 "use client";
 
 import { useOrganization } from "@/lib/api";
-import { Skeleton } from "@equipoit4845/ui";
+import { Skeleton } from "@/components/ui";
 
 /**
  * Resolves a parent's name with one bounded request per distinct

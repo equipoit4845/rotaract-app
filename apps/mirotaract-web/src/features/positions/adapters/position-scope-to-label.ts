@@ -1,5 +1,5 @@
 import type { OrganizationType } from "@/lib/api";
-import type { MrStateTone } from "@equipoit4845/design-tokens";
+import type { BadgeTone as MrStateTone } from "@/components/ui";
 
 /**
  * Local to Positions, deliberately not imported from

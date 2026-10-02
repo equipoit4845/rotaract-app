@@ -5,8 +5,15 @@ import {
   useOrganizations,
   useSubmitMembershipApplication,
 } from "@/lib/api";
-import { DataState, PageHeader } from "@equipoit4845/admin-shell";
-import { Alert, Button, Card, CardContent, Input, Skeleton } from "@equipoit4845/ui";
+import { DataState, PageHeader } from "@/components/layout";
+import {
+  Alert,
+  Button,
+  Card,
+  CardContent,
+  Input,
+  Skeleton,
+} from "@/components/ui";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
@@ -33,9 +40,9 @@ export function JoinClubContainer() {
       (clubs.data?.pages.flatMap((page) => page.items) ?? [])
         .filter((club): club is NonNullable<typeof club> => Boolean(club))
         .filter((club) =>
-          `${club.name} ${club.code}`.toLocaleLowerCase("es").includes(
-            search.trim().toLocaleLowerCase("es"),
-          ),
+          `${club.name} ${club.code}`
+            .toLocaleLowerCase("es")
+            .includes(search.trim().toLocaleLowerCase("es")),
         ),
     [clubs.data, search],
   );
@@ -49,7 +56,8 @@ export function JoinClubContainer() {
       {
         onSuccess: (application) =>
           submit.mutate(application.id, {
-            onSuccess: (submitted) => router.push(`/applications/${submitted.id}`),
+            onSuccess: (submitted) =>
+              router.push(`/applications/${submitted.id}`),
           }),
       },
     );
@@ -123,7 +131,12 @@ export function JoinClubContainer() {
                     }}
                   >
                     <strong>{club.name}</strong>
-                    <span style={{ display: "block", color: "var(--mr-color-text-muted)" }}>
+                    <span
+                      style={{
+                        display: "block",
+                        color: "var(--mr-color-text-muted)",
+                      }}
+                    >
                       {club.code}
                     </span>
                   </button>
@@ -132,7 +145,9 @@ export function JoinClubContainer() {
             </div>
           )}
 
-          {error ? <Alert tone="danger" {...describeKernelError(error)} /> : null}
+          {error ? (
+            <Alert tone="danger" {...describeKernelError(error)} />
+          ) : null}
 
           <Button
             onClick={requestToJoin}

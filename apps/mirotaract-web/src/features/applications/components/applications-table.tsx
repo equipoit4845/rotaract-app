@@ -3,21 +3,17 @@
 import type { MembershipApplication } from "@/lib/api";
 import { usePerson } from "@/lib/api";
 import {
-  Badge,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from "@equipoit4845/ui";
+} from "@/components/ui";
 import Link from "next/link";
 
-import {
-  applicationStatusToLabel,
-  applicationStatusToTone,
-} from "../adapters/application-status-to-tone";
 import { formatDate } from "../utils/format-date";
+import { StatusBadge } from "@/components/domain/status-badge";
 
 /**
  * TEMPORARY_BOUNDED_JOIN — same pattern as
@@ -72,9 +68,7 @@ export function ApplicationsTable({
               <ApplicantCell personId={item.requesterPersonId} />
             </TableCell>
             <TableCell>
-              <Badge tone={applicationStatusToTone(item.status)}>
-                {applicationStatusToLabel(item.status)}
-              </Badge>
+              <StatusBadge kind="application" status={item.status} />
             </TableCell>
             <TableCell>
               {item.submittedAt ? formatDate(item.submittedAt) : "—"}

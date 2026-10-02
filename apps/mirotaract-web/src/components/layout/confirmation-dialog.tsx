@@ -1,5 +1,8 @@
 "use client";
 
+import { TriangleAlert } from "lucide-react";
+import type { ReactNode } from "react";
+
 import {
   Alert,
   Button,
@@ -10,17 +13,14 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@equipoit4845/ui";
-import type { ReactNode } from "react";
-
-import type { KernelErrorMessage } from "@/features/shell/kernel-error-message";
+} from "@/components/ui";
 
 /**
- * Local to Appointments (duplicated from Organizations'/Persons'/
- * Memberships' identical component, per established project convention —
- * every phase keeps its own copy rather than importing another feature's
- * folder). Never applies an optimistic update — the trigger stays disabled
- * and labeled "Procesando…" until the Kernel responds.
+ * The one "confirm this Kernel state transition" dialog for every feature.
+ * Never applies an optimistic update: the confirm button stays disabled
+ * with "Procesando…" until the Kernel responds, and a failure is shown
+ * inline (`errorMessage`, usually from `describeKernelError`) without
+ * closing the dialog.
  */
 export function ConfirmationDialog({
   open,
@@ -37,23 +37,35 @@ export function ConfirmationDialog({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  trigger: ReactNode;
+  /** Omit when the dialog is opened programmatically (e.g. from a menu item) instead of its own trigger element. */
+  trigger?: ReactNode;
   title: string;
   description: ReactNode;
   confirmLabel: string;
   confirmVariant?: "primary" | "danger";
   isPending: boolean;
-  errorMessage?: KernelErrorMessage;
+  errorMessage?: { title: string; description?: string };
   onConfirm: () => void;
   children?: ReactNode;
 }) {
+  const danger = confirmVariant === "danger";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      {trigger ? <DialogTrigger asChild>{trigger}</DialogTrigger> : null}
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
+          <div className="flex items-start gap-3">
+            {danger ? (
+              <span className="grid size-9 shrink-0 place-items-center rounded-full bg-destructive/10 text-destructive">
+                <TriangleAlert className="size-4" aria-hidden />
+              </span>
+            ) : null}
+            <div className="min-w-0 space-y-1.5">
+              <DialogTitle>{title}</DialogTitle>
+              <DialogDescription>{description}</DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
         {children}
         {errorMessage ? (
@@ -74,6 +86,11 @@ export function ConfirmationDialog({
           <Button
             type="button"
             variant={confirmVariant}
+            className={
+              danger
+                ? "bg-destructive text-white hover:bg-destructive/90"
+                : undefined
+            }
             disabled={isPending}
             onClick={onConfirm}
           >

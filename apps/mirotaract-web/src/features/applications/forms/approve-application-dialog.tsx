@@ -1,12 +1,12 @@
 "use client";
 
+import { ConfirmationDialog } from "@/components/layout";
 import type { MembershipApplication } from "@/lib/api";
 import { useApproveMembershipApplication, useCan } from "@/lib/api";
-import { Button } from "@equipoit4845/ui";
+import { Button } from "@/components/ui";
 import { useState } from "react";
 
 import { canApproveApplication } from "../adapters/application-lifecycle";
-import { ConfirmationDialog } from "../components/confirmation-dialog";
 import { describeApplicationTransitionError } from "./application-mutation-errors";
 
 /**

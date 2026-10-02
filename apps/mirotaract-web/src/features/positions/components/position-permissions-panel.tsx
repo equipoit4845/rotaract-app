@@ -15,7 +15,7 @@ import {
   CardTitle,
   FormField,
   Select,
-} from "@equipoit4845/ui";
+} from "@/components/ui";
 import { useState } from "react";
 
 import { describePositionPermissionError } from "../forms/position-mutation-errors";

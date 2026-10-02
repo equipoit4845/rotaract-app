@@ -1,12 +1,12 @@
 "use client";
 
+import { ConfirmationDialog } from "@/components/layout";
 import type { InstitutionalPeriod } from "@/lib/api";
 import { useActivatePeriod, useCan } from "@/lib/api";
-import { Button } from "@equipoit4845/ui";
+import { Button } from "@/components/ui";
 import { useState } from "react";
 
 import { canActivatePeriod } from "../adapters/period-lifecycle";
-import { ConfirmationDialog } from "../components/confirmation-dialog";
 import { describeActivatePeriodError } from "./period-mutation-errors";
 
 /**

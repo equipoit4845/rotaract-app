@@ -9,25 +9,26 @@ import {
   usePerson,
   usePositionDefinitions,
 } from "@/lib/api";
-import { DataState, PageHeader } from "@equipoit4845/admin-shell";
 import {
-  Badge,
+  DataState,
+  DetailGrid,
+  DetailItem,
+  EntityHero,
+} from "@/components/layout";
+import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   Skeleton,
-} from "@equipoit4845/ui";
+} from "@/components/ui";
 
 import { describeKernelError } from "@/features/shell/kernel-error-message";
 
-import {
-  appointmentStatusToLabel,
-  appointmentStatusToTone,
-} from "../adapters/appointment-status-to-tone";
 import { personDisplayName } from "../adapters/person-display-name";
 import { AppointmentActionsRow } from "../components/appointment-actions-row";
 import { formatDateTime } from "../utils/format-date";
+import { StatusBadge } from "@/components/domain/status-badge";
 
 function Field({
   label,
@@ -36,20 +37,7 @@ function Field({
   label: string;
   value: string | undefined | null;
 }) {
-  return (
-    <div>
-      <dt
-        style={{
-          fontSize: "0.75rem",
-          color: "var(--mr-color-text-muted)",
-          margin: 0,
-        }}
-      >
-        {label}
-      </dt>
-      <dd style={{ margin: 0 }}>{value?.trim() ? value : "—"}</dd>
-    </div>
-  );
+  return <DetailItem label={label}>{value}</DetailItem>;
 }
 
 /**
@@ -109,9 +97,10 @@ export function AppointmentDetailContainer({
 
   return (
     <>
-      <PageHeader
+      <EntityHero
+        badges={<StatusBadge kind="appointment" status={appointment.status} />}
         title={positionName}
-        description={organization.data?.name ?? appointment.organizationId}
+        subtitle={organization.data?.name ?? appointment.organizationId}
         breadcrumb={[
           { label: "Cargos", href: "/appointments" },
           { label: positionName },
@@ -124,30 +113,7 @@ export function AppointmentDetailContainer({
           <CardTitle>Resumen</CardTitle>
         </CardHeader>
         <CardContent>
-          <dl
-            style={{
-              display: "grid",
-              gap: "var(--mr-space-4)",
-              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-              margin: 0,
-            }}
-          >
-            <div>
-              <dt
-                style={{
-                  fontSize: "0.75rem",
-                  color: "var(--mr-color-text-muted)",
-                  margin: 0,
-                }}
-              >
-                Estado
-              </dt>
-              <dd style={{ margin: 0 }}>
-                <Badge tone={appointmentStatusToTone(appointment.status)}>
-                  {appointmentStatusToLabel(appointment.status)}
-                </Badge>
-              </dd>
-            </div>
+          <DetailGrid>
             <Field
               label="Persona"
               value={person.data ? personDisplayName(person.data) : "…"}
@@ -204,7 +170,7 @@ export function AppointmentDetailContainer({
               label="Creado"
               value={formatDateTime(appointment.createdAt)}
             />
-          </dl>
+          </DetailGrid>
         </CardContent>
       </Card>
     </>

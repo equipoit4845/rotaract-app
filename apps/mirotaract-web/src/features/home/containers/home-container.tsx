@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuthStatus } from "@/lib/api";
-import { Spinner } from "@equipoit4845/ui";
+import { Spinner } from "@/components/ui";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -31,7 +31,7 @@ export function HomeContainer() {
       <div
         role="status"
         aria-label="Cargando"
-        style={{ display: "grid", placeItems: "center", minHeight: "100vh" }}
+        className="grid min-h-screen place-items-center"
       >
         <Spinner size={28} label="Cargando" />
       </div>
@@ -39,11 +39,9 @@ export function HomeContainer() {
   }
 
   return (
-    <div
-      style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
-    >
+    <div className="flex min-h-screen flex-col bg-background">
       <HomeHeader />
-      <main style={{ flex: 1 }}>
+      <main className="flex-1">
         <HomeHero />
         <HomeCapabilities />
         <HomeAccessModel />

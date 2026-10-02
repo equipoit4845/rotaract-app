@@ -1,7 +1,7 @@
 "use client";
 
 import { useCurrentUser } from "@/lib/api";
-import type { OrganizationOption } from "@equipoit4845/admin-shell";
+import type { OrganizationOption } from "@/components/layout";
 
 /**
  * The Kernel returns named workspaces authorized by active memberships and

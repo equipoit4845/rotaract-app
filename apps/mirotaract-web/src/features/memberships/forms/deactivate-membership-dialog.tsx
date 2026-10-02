@@ -1,13 +1,13 @@
 "use client";
 
+import { ConfirmationDialog } from "@/components/layout";
 import type { OrganizationMembership } from "@/lib/api";
 import { useCan, useDeactivateMembership } from "@/lib/api";
-import { Button, FormField, Textarea } from "@equipoit4845/ui";
+import { Button, FormField, Textarea } from "@/components/ui";
 import { useState } from "react";
 
 import { describeMembershipTransitionError } from "./membership-mutation-errors";
 import { canDeactivateMembership } from "../adapters/membership-lifecycle";
-import { ConfirmationDialog } from "../components/confirmation-dialog";
 
 /**
  * `{PENDING, ACTIVE} -> INACTIVE` (kernel-spec.md §7.3 — deactivate isn't

@@ -2,7 +2,7 @@
 
 import type { Organization } from "@/lib/api";
 import { useCan } from "@/lib/api";
-import { Button } from "@equipoit4845/ui";
+import { Button } from "@/components/ui";
 import Link from "next/link";
 
 import { canEditOrganization } from "../adapters/organization-lifecycle";

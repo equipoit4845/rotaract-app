@@ -1,22 +1,18 @@
 "use client";
 
 import {
-  Badge,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from "@equipoit4845/ui";
+} from "@/components/ui";
 import Link from "next/link";
 
-import {
-  periodStatusToLabel,
-  periodStatusToTone,
-} from "../adapters/period-status-to-tone";
 import { formatDate } from "../utils/format-date";
 import type { PeriodListItemViewModel } from "../view-models/period-list-item";
+import { StatusBadge } from "@/components/domain/status-badge";
 
 export function PeriodsTable({ items }: { items: PeriodListItemViewModel[] }) {
   return (
@@ -38,9 +34,7 @@ export function PeriodsTable({ items }: { items: PeriodListItemViewModel[] }) {
             <TableCell>{item.code}</TableCell>
             <TableCell>{item.sequence}</TableCell>
             <TableCell>
-              <Badge tone={periodStatusToTone(item.status)}>
-                {periodStatusToLabel(item.status)}
-              </Badge>
+              <StatusBadge kind="period" status={item.status} />
             </TableCell>
             <TableCell>
               {formatDate(item.startDate)} – {formatDate(item.endDate)}

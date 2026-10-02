@@ -1,7 +1,7 @@
 "use client";
 
 import { useLogin } from "@/lib/api";
-import { Alert, Button, FormField, Input } from "@equipoit4845/ui";
+import { Alert, Button, FormField, Input } from "@/components/ui";
 import { useForm } from "react-hook-form";
 
 import { describeLoginError } from "../adapters/auth-mutation-errors";
@@ -32,15 +32,7 @@ export function LoginForm({ onSuccess }: { onSuccess: () => void }) {
   });
 
   return (
-    <form
-      onSubmit={onSubmit}
-      noValidate
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--mr-space-3)",
-      }}
-    >
+    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
       <FormField
         label="Email"
         htmlFor="email"
@@ -72,7 +64,12 @@ export function LoginForm({ onSuccess }: { onSuccess: () => void }) {
         <Alert tone="danger" {...describeLoginError(login.error)} />
       ) : null}
 
-      <Button type="submit" disabled={login.isPending}>
+      <Button
+        type="submit"
+        size="lg"
+        className="w-full"
+        disabled={login.isPending}
+      >
         {login.isPending ? "Ingresando…" : "Ingresar"}
       </Button>
     </form>

@@ -1,13 +1,13 @@
 "use client";
 
+import { ConfirmationDialog } from "@/components/layout";
 import type { OrganizationMembership } from "@/lib/api";
 import { useActivateMembership, useCan } from "@/lib/api";
-import { Button, FormField, Input } from "@equipoit4845/ui";
+import { Button, FormField, Input } from "@/components/ui";
 import { useState } from "react";
 
 import { describeMembershipTransitionError } from "./membership-mutation-errors";
 import { canActivateMembership } from "../adapters/membership-lifecycle";
-import { ConfirmationDialog } from "../components/confirmation-dialog";
 
 /**
  * `PENDING -> ACTIVE` (kernel-spec.md §7.3). Visible only with

@@ -1,6 +1,6 @@
 "use client";
 
-import { DataState } from "@equipoit4845/admin-shell";
+import { DataState } from "@/components/layout";
 
 /**
  * Socios/Autoridades/Períodos aren't in scope for this phase (product

@@ -1,21 +1,17 @@
 "use client";
 
 import {
-  Badge,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from "@equipoit4845/ui";
+} from "@/components/ui";
 import Link from "next/link";
 
-import {
-  organizationStatusToLabel,
-  organizationStatusToTone,
-} from "../adapters/organization-status-to-tone";
 import type { OrganizationListItemViewModel } from "../view-models/organization-list-item";
+import { StatusBadge } from "@/components/domain/status-badge";
 
 export function OrganizationsTable({
   items,
@@ -38,9 +34,7 @@ export function OrganizationsTable({
             <TableCell>{item.name}</TableCell>
             <TableCell>{item.code}</TableCell>
             <TableCell>
-              <Badge tone={organizationStatusToTone(item.status)}>
-                {organizationStatusToLabel(item.status)}
-              </Badge>
+              <StatusBadge kind="organization" status={item.status} />
             </TableCell>
             <TableCell>
               <Link href={item.href}>Ver detalle</Link>

@@ -1,7 +1,7 @@
 "use client";
 
 import type { Organization } from "@/lib/api";
-import { Select } from "@equipoit4845/ui";
+import { Select } from "@/components/ui";
 
 /**
  * Lets a person switch which organization's appointments/authorities they

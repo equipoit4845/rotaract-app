@@ -1,10 +1,9 @@
 "use client";
 
 import type { Organization } from "@/lib/api";
-import { DataState } from "@equipoit4845/admin-shell";
+import { DataState } from "@/components/layout";
 import Link from "next/link";
 import {
-  Badge,
   Card,
   CardContent,
   CardHeader,
@@ -16,14 +15,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@equipoit4845/ui";
+} from "@/components/ui";
 
 import { describeKernelError } from "@/features/shell/kernel-error-message";
-
-import {
-  organizationStatusToLabel,
-  organizationStatusToTone,
-} from "@/features/organizations/adapters/organization-status-to-tone";
+import { StatusBadge } from "@/components/domain/status-badge";
 
 /**
  * One request (`useOrganizationChildren`), rendered as-is — no per-club
@@ -86,9 +81,7 @@ export function ChildOrganizationsCard({
                   </TableCell>
                   <TableCell>{org.code}</TableCell>
                   <TableCell>
-                    <Badge tone={organizationStatusToTone(org.status)}>
-                      {organizationStatusToLabel(org.status)}
-                    </Badge>
+                    <StatusBadge kind="organization" status={org.status} />
                   </TableCell>
                 </TableRow>
               ))}

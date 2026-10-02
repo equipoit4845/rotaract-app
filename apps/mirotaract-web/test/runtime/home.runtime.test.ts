@@ -42,8 +42,8 @@ test("Home — UNAUTHENTICATED renders the public landing", async () => {
   );
 
   assert.ok(getAllByText("Mi Rotaract").length > 0);
-  assert.ok(getByText("Qué permite administrar"));
-  assert.ok(getByText("Cómo funciona el acceso"));
+  assert.ok(getByText("Herramientas para que el club avance."));
+  assert.ok(getByText("Una plataforma para cada rol."));
   assert.ok(getAllByText("Ingresar").length > 0);
 });
 
@@ -66,6 +66,6 @@ test("Home — AUTHENTICATED redirects to /dashboard instead of showing the land
     React.createElement(HomeContainer),
   );
 
-  assert.equal(queryByText("Qué permite administrar"), null);
+  assert.equal(queryByText("Herramientas para que el club avance."), null);
   await waitFor(() => assert.ok(router.replaceCalls.includes("/dashboard")));
 });

@@ -2,7 +2,7 @@
 
 import type { Person } from "@/lib/api";
 import { useCan, useCurrentUser } from "@/lib/api";
-import { Button } from "@equipoit4845/ui";
+import { Button } from "@/components/ui";
 import Link from "next/link";
 
 import { ArchivePersonDialog } from "../forms/archive-person-dialog";

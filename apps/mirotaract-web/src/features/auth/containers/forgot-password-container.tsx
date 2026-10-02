@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert } from "@equipoit4845/ui";
+import { Alert } from "@/components/ui";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -25,7 +25,7 @@ export function ForgotPasswordContainer() {
       ) : (
         <ForgotPasswordForm onSuccess={() => setSubmitted(true)} />
       )}
-      <p style={{ margin: 0, fontSize: "0.875rem" }}>
+      <p className="text-center text-sm text-muted-foreground [&_a]:font-medium [&_a]:text-primary [&_a:hover]:underline">
         <Link href="/login">Volver a ingresar</Link>
       </p>
     </AuthShell>

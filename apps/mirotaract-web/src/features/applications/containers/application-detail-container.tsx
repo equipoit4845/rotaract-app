@@ -1,8 +1,9 @@
 "use client";
 
 import { KernelApiError, useMembershipApplication, usePerson } from "@/lib/api";
-import { DataState, PageHeader } from "@equipoit4845/admin-shell";
-import { Skeleton } from "@equipoit4845/ui";
+import { DataState, EntityHero } from "@/components/layout";
+import { StatusBadge } from "@/components/domain/status-badge";
+import { Skeleton } from "@/components/ui";
 
 import { describeKernelError } from "@/features/shell/kernel-error-message";
 
@@ -56,9 +57,10 @@ export function ApplicationDetailContainer({
 
   return (
     <>
-      <PageHeader
+      <EntityHero
+        badges={<StatusBadge kind="application" status={application.status} />}
         title={`Solicitud de ${personLabel}`}
-        description="Solicitud de membresía"
+        subtitle="Solicitud de membresía"
         breadcrumb={[
           { label: "Solicitudes", href: "/applications" },
           { label: personLabel },

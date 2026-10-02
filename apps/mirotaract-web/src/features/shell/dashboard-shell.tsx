@@ -6,13 +6,13 @@ import {
   useCurrentUser,
 } from "@/lib/api";
 import {
-  AdminFrame,
+  AppShell,
   Avatar,
   DataState,
   OrganizationSwitcher,
   PeriodIndicator,
-} from "@equipoit4845/admin-shell";
-import { Logo } from "@equipoit4845/icons";
+} from "@/components/layout";
+import { Logo } from "@/components/brand";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -21,16 +21,17 @@ import { ActiveOrganizationProvider } from "./active-organization-context";
 import { AuthGate } from "./auth-gate";
 import { toVisualPeriodStatus } from "./period-status";
 import { useOrganizationOptions } from "./use-organization-options";
-import { useShellNavItems } from "./use-shell-nav";
+import { findActiveNavLabel, useShellNavItems } from "./use-shell-nav";
 import {
   SuperadminModeProvider,
   useSuperadminMode,
 } from "./superadmin-mode-context";
 import { SuperadminModeSwitcher } from "./superadmin-mode-switcher";
+import { ThemeToggle } from "@/components/layout";
 
 /**
- * The one place Kernel hooks meet `AdminFrame`. Everything below this
- * component's own body is resolved-props-only: `AdminFrame` never calls a
+ * The one place Kernel hooks meet `AppShell`. Everything below this
+ * component's own body is resolved-props-only: `AppShell` never calls a
  * hook, never sees a permission code, never sees a Kernel entity.
  */
 export function DashboardShell({
@@ -76,59 +77,68 @@ function DashboardShellContent({
 
   return (
     <SuperadminModeProvider value={superadminMode}>
-      <AdminFrame
-      brand={
-        <Link href="/dashboard" className="mr-workspace-brand">
-          <Logo size={20} />
-          <span>Mi Rotaract</span>
-        </Link>
-      }
-      navItems={navItems}
-      organizationSwitcher={
-        organizationOptions.length > 0 ? (
-          <OrganizationSwitcher
-            organizations={organizationOptions}
-            activeOrganizationId={organizationId ?? ""}
-            onSelect={activeOrganization.setActiveOrganizationId}
-          />
-        ) : undefined
-      }
-      periodIndicator={
-        currentPeriod ? (
-          <PeriodIndicator
-            label={currentPeriod.name}
-            status={toVisualPeriodStatus(currentPeriod.status)}
-          />
-        ) : undefined
-      }
-      user={
-        currentUser ? (
-          <AccountMenu displayName={currentUser.displayName} />
-        ) : undefined
-      }
-      actions={
-        superadminMode.isSuperadmin ? (
-          <SuperadminModeSwitcher
-            mode={superadminMode.mode}
-            onChange={superadminMode.setMode}
-          />
-        ) : undefined
-      }
-      sidebarFooter={
-        currentUser ? (
-          <div className="mr-workspace-user">
-            <Avatar name={currentUser.displayName} size="sm" />
-            <div style={{ minWidth: 0 }}>
-              <span className="mr-workspace-user__name">
-                {currentUser.displayName}
-              </span>
-              <span className="mr-workspace-user__hint">
-                Distrito 4845
-              </span>
+      <AppShell
+        brand={
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-2 font-semibold text-sidebar-foreground transition-colors hover:text-primary"
+          >
+            <span className="grid size-7 place-items-center rounded-lg bg-primary text-primary-foreground">
+              <Logo size={16} />
+            </span>
+            <span>Mi Rotaract</span>
+          </Link>
+        }
+        navItems={navItems}
+        title={findActiveNavLabel(navItems)}
+        organizationSwitcher={
+          organizationOptions.length > 0 ? (
+            <OrganizationSwitcher
+              organizations={organizationOptions}
+              activeOrganizationId={organizationId ?? ""}
+              onSelect={activeOrganization.setActiveOrganizationId}
+            />
+          ) : undefined
+        }
+        periodIndicator={
+          currentPeriod ? (
+            <PeriodIndicator
+              label={currentPeriod.name}
+              status={toVisualPeriodStatus(currentPeriod.status)}
+            />
+          ) : undefined
+        }
+        user={
+          currentUser ? (
+            <AccountMenu displayName={currentUser.displayName} />
+          ) : undefined
+        }
+        actions={
+          <>
+            {superadminMode.isSuperadmin ? (
+              <SuperadminModeSwitcher
+                mode={superadminMode.mode}
+                onChange={superadminMode.setMode}
+              />
+            ) : null}
+            <ThemeToggle />
+          </>
+        }
+        sidebarFooter={
+          currentUser ? (
+            <div className="flex items-center gap-2 px-1">
+              <Avatar name={currentUser.displayName} size="sm" />
+              <div className="min-w-0">
+                <span className="block truncate text-xs font-medium">
+                  {currentUser.displayName}
+                </span>
+                <span className="block truncate text-[11px] text-muted-foreground">
+                  Distrito 4845
+                </span>
+              </div>
             </div>
-          </div>
-        ) : undefined
-      }
+          ) : undefined
+        }
       >
         <ActiveOrganizationProvider value={activeOrganization}>
           {organization || allowWithoutOrganization ? (
@@ -138,11 +148,18 @@ function DashboardShellContent({
               kind="empty"
               title="Todavía no pertenecés a un club"
               description="Buscá tu club y enviá una solicitud. La presidencia del club la revisará antes de habilitar tu espacio de socio."
-              action={<Link href="/join-club">Buscar mi club</Link>}
+              action={
+                <Link
+                  href="/join-club"
+                  className="inline-flex h-9 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                >
+                  Buscar mi club
+                </Link>
+              }
             />
           )}
         </ActiveOrganizationProvider>
-      </AdminFrame>
+      </AppShell>
     </SuperadminModeProvider>
   );
 }

@@ -1,14 +1,14 @@
 "use client";
 
+import { ConfirmationDialog } from "@/components/layout";
 import type { Organization } from "@/lib/api";
 import { useActivateOrganization, useCan } from "@/lib/api";
-import { Button } from "@equipoit4845/ui";
+import { Button } from "@/components/ui";
 import { useState } from "react";
 
 import { describeKernelError } from "@/features/shell/kernel-error-message";
 
 import { canActivateOrganization } from "../adapters/organization-lifecycle";
-import { ConfirmationDialog } from "../components/confirmation-dialog";
 
 /**
  * Visible only with `kernel.organization.activate` (same permission as

@@ -2,9 +2,8 @@
 
 import type { Organization } from "@/lib/api";
 import { useOrganizationChildren } from "@/lib/api";
-import { DataState } from "@equipoit4845/admin-shell";
+import { DataState } from "@/components/layout";
 import {
-  Badge,
   Card,
   CardContent,
   CardHeader,
@@ -16,15 +15,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@equipoit4845/ui";
+} from "@/components/ui";
 import Link from "next/link";
 
 import { describeKernelError } from "@/features/shell/kernel-error-message";
-
-import {
-  organizationStatusToLabel,
-  organizationStatusToTone,
-} from "../adapters/organization-status-to-tone";
+import { StatusBadge } from "@/components/domain/status-badge";
 
 /**
  * `ancestors` is passed in from the container, which already fetches it
@@ -123,9 +118,7 @@ export function OrganizationHierarchyTab({
                     </TableCell>
                     <TableCell>{child.code}</TableCell>
                     <TableCell>
-                      <Badge tone={organizationStatusToTone(child.status)}>
-                        {organizationStatusToLabel(child.status)}
-                      </Badge>
+                      <StatusBadge kind="organization" status={child.status} />
                     </TableCell>
                   </TableRow>
                 ))}

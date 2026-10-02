@@ -1,12 +1,12 @@
 "use client";
 
+import { ConfirmationDialog } from "@/components/layout";
 import type { Organization } from "@/lib/api";
 import { useCan, useMoveOrganization, useOrganization } from "@/lib/api";
-import { Button, FormField, Select } from "@equipoit4845/ui";
+import { Button, FormField, Select } from "@/components/ui";
 import { useState } from "react";
 
 import { canMoveOrganization } from "../adapters/organization-lifecycle";
-import { ConfirmationDialog } from "../components/confirmation-dialog";
 import { describeMoveOrganizationError } from "./organization-mutation-errors";
 import { useParentCandidates } from "./use-parent-candidates";
 

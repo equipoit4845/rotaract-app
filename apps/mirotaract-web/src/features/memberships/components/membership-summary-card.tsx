@@ -2,38 +2,16 @@
 
 import type { OrganizationMembership } from "@/lib/api";
 import { useOrganization } from "@/lib/api";
-import {
-  Badge,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@equipoit4845/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import {
-  membershipStatusToLabel,
-  membershipStatusToTone,
-} from "../adapters/membership-status-to-tone";
 import { formatDate } from "../utils/format-date";
 import { MembershipPersonCell } from "./membership-person-cell";
+import { DetailGrid, DetailItem } from "@/components/layout";
 
 function Field({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div>
-      <dt
-        style={{
-          fontSize: "0.75rem",
-          color: "var(--mr-color-text-muted)",
-          margin: 0,
-        }}
-      >
-        {label}
-      </dt>
-      <dd style={{ margin: 0 }}>{value ?? "—"}</dd>
-    </div>
-  );
+  return <DetailItem label={label}>{value ?? "—"}</DetailItem>;
 }
 
 /**
@@ -64,14 +42,7 @@ export function MembershipSummaryCard({
         <CardTitle>Resumen</CardTitle>
       </CardHeader>
       <CardContent>
-        <dl
-          style={{
-            display: "grid",
-            gap: "var(--mr-space-4)",
-            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-            margin: 0,
-          }}
-        >
+        <DetailGrid>
           <Field
             label="Persona"
             value={
@@ -93,22 +64,6 @@ export function MembershipSummaryCard({
               )
             }
           />
-          <div>
-            <dt
-              style={{
-                fontSize: "0.75rem",
-                color: "var(--mr-color-text-muted)",
-                margin: 0,
-              }}
-            >
-              Estado
-            </dt>
-            <dd style={{ margin: 0 }}>
-              <Badge tone={membershipStatusToTone(membership.status)}>
-                {membershipStatusToLabel(membership.status)}
-              </Badge>
-            </dd>
-          </div>
           <Field label="Número de socio" value={membership.memberNumber} />
           <Field
             label="Fecha de ingreso"
@@ -130,7 +85,7 @@ export function MembershipSummaryCard({
                 : undefined
             }
           />
-        </dl>
+        </DetailGrid>
       </CardContent>
     </Card>
   );

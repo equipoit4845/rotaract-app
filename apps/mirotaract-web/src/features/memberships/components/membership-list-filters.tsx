@@ -1,7 +1,7 @@
 "use client";
 
 import type { MembershipStatus, Organization } from "@/lib/api";
-import { Select } from "@equipoit4845/ui";
+import { Select } from "@/components/ui";
 
 export function MembershipStatusFilter({
   value,

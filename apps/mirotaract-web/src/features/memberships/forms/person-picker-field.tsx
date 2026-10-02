@@ -1,6 +1,6 @@
 "use client";
 
-import { FormField, Input, Select } from "@equipoit4845/ui";
+import { FormField, Input, Select } from "@/components/ui";
 
 import { personDisplayName } from "../adapters/person-display-name";
 import { usePersonSearch } from "./use-person-search";

@@ -1,14 +1,14 @@
 "use client";
 
 import type { InstitutionalPeriod } from "@/lib/api";
-import { DataState } from "@equipoit4845/admin-shell";
+import { DataState, DetailGrid, DetailItem } from "@/components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   Skeleton,
-} from "@equipoit4845/ui";
+} from "@/components/ui";
 
 import { describeKernelError } from "@/features/shell/kernel-error-message";
 
@@ -51,39 +51,12 @@ export function PeriodSummaryCard({
             description="Esta organización no tiene un período vigente."
           />
         ) : (
-          <dl
-            style={{
-              margin: 0,
-              display: "flex",
-              flexDirection: "column",
-              gap: "var(--mr-space-3)",
-            }}
-          >
-            <div>
-              <dt
-                style={{
-                  fontSize: "0.75rem",
-                  color: "var(--mr-color-text-muted)",
-                }}
-              >
-                Nombre
-              </dt>
-              <dd style={{ margin: 0 }}>{period.name}</dd>
-            </div>
-            <div>
-              <dt
-                style={{
-                  fontSize: "0.75rem",
-                  color: "var(--mr-color-text-muted)",
-                }}
-              >
-                Vigencia
-              </dt>
-              <dd style={{ margin: 0 }}>
-                {formatDate(period.startDate)} – {formatDate(period.endDate)}
-              </dd>
-            </div>
-          </dl>
+          <DetailGrid>
+            <DetailItem label="Nombre">{period.name}</DetailItem>
+            <DetailItem label="Vigencia">
+              {formatDate(period.startDate)} – {formatDate(period.endDate)}
+            </DetailItem>
+          </DetailGrid>
         )}
       </CardContent>
     </Card>

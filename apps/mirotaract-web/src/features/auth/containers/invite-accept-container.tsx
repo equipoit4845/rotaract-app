@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert } from "@equipoit4845/ui";
+import { Alert } from "@/components/ui";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -33,7 +33,7 @@ export function InviteAcceptContainer({ token }: { token: string }) {
             title="Tu cuenta fue creada."
             description="Ya podés iniciar sesión con la contraseña que elegiste."
           />
-          <p style={{ margin: 0 }}>
+          <p className="text-center text-sm text-muted-foreground [&_a]:font-medium [&_a]:text-primary [&_a:hover]:underline">
             <Link href="/login">Ir a ingresar</Link>
           </p>
         </>

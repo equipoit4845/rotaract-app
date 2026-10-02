@@ -1,7 +1,7 @@
 "use client";
 
 import { useVerifyEmail } from "@/lib/api";
-import { Alert, Spinner } from "@equipoit4845/ui";
+import { Alert, Spinner } from "@/components/ui";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 
@@ -32,7 +32,7 @@ export function VerifyEmailContainer({ token }: { token: string }) {
         <div
           role="status"
           aria-label="Verificando"
-          style={{ display: "flex", justifyContent: "center" }}
+          className="flex justify-center"
         >
           <Spinner size={24} label="Verificando tu email…" />
         </div>
@@ -45,7 +45,7 @@ export function VerifyEmailContainer({ token }: { token: string }) {
             title="Tu email fue verificado."
             description="Ya podés iniciar sesión."
           />
-          <p style={{ margin: 0 }}>
+          <p className="text-center text-sm text-muted-foreground [&_a]:font-medium [&_a]:text-primary [&_a:hover]:underline">
             <Link href="/login">Ir a ingresar</Link>
           </p>
         </>

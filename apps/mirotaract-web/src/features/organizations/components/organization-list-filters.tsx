@@ -1,7 +1,7 @@
 "use client";
 
 import type { OrganizationStatus, OrganizationType } from "@/lib/api";
-import { Select } from "@equipoit4845/ui";
+import { Select } from "@/components/ui";
 
 export function OrganizationTypeFilter({
   value,

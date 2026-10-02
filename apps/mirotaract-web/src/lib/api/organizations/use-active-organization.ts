@@ -36,10 +36,16 @@ export function useActiveOrganization() {
 
   useEffect(() => {
     if (!currentUser) return;
-    const workspaces = currentUser.workspaces ?? currentUser.memberships
-      .filter((membership) => membership.status === "ACTIVE")
-      .map((membership) => ({ organizationId: membership.organizationId }));
-    if (workspaces.some((workspace) => workspace.organizationId === organizationId))
+    const workspaces =
+      currentUser.workspaces ??
+      currentUser.memberships
+        .filter((membership) => membership.status === "ACTIVE")
+        .map((membership) => ({ organizationId: membership.organizationId }));
+    if (
+      workspaces.some(
+        (workspace) => workspace.organizationId === organizationId,
+      )
+    )
       return;
 
     const fallback = workspaces[0]?.organizationId;

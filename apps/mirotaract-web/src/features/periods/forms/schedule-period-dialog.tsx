@@ -1,14 +1,14 @@
 "use client";
 
+import { ConfirmationDialog } from "@/components/layout";
 import type { InstitutionalPeriod } from "@/lib/api";
 import { useCan, useSchedulePeriod } from "@/lib/api";
-import { Button } from "@equipoit4845/ui";
+import { Button } from "@/components/ui";
 import { useState } from "react";
 
 import { describeKernelError } from "@/features/shell/kernel-error-message";
 
 import { canSchedulePeriod } from "../adapters/period-lifecycle";
-import { ConfirmationDialog } from "../components/confirmation-dialog";
 
 /**
  * Visible only with `kernel.period.update` (`schedulePeriod`'s documented

@@ -2,8 +2,7 @@
 
 import { useOrganization } from "@/lib/api";
 import type { OrganizationMembership } from "@/lib/api";
-
-import { membershipStatusToLabel } from "../adapters/membership-status-to-tone";
+import { statusLabel } from "@/lib/status/status-catalog";
 
 /** Bounded by the person's own membership count (see PersonMembershipRow for the same reasoning). */
 export function InviteMembershipOption({
@@ -15,7 +14,7 @@ export function InviteMembershipOption({
   return (
     <option value={membership.id}>
       {organization ? organization.name : "…"} —{" "}
-      {membershipStatusToLabel(membership.status)}
+      {statusLabel("membership", membership.status)}
     </option>
   );
 }

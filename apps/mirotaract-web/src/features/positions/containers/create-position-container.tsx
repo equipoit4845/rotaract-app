@@ -1,7 +1,7 @@
 "use client";
 
 import { useCan } from "@/lib/api";
-import { DataState, PageHeader } from "@equipoit4845/admin-shell";
+import { DataState, PageHeader } from "@/components/layout";
 
 import { useActiveOrganizationContext } from "@/features/shell/active-organization-context";
 

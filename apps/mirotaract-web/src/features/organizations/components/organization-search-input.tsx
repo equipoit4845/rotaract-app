@@ -1,6 +1,6 @@
 "use client";
 
-import { Input } from "@equipoit4845/ui";
+import { Input } from "@/components/ui";
 import { useEffect, useState } from "react";
 
 /**

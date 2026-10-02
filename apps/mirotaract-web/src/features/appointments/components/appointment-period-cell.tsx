@@ -1,7 +1,7 @@
 "use client";
 
 import { usePeriod } from "@/lib/api";
-import { Skeleton } from "@equipoit4845/ui";
+import { Skeleton } from "@/components/ui";
 import Link from "next/link";
 
 /**

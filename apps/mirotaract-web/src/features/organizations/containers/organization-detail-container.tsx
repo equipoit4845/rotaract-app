@@ -5,7 +5,8 @@ import {
   useOrganization,
   useOrganizationAncestors,
 } from "@/lib/api";
-import { DataState, PageHeader } from "@equipoit4845/admin-shell";
+import { DataState, EntityHero } from "@/components/layout";
+import { StatusBadge } from "@/components/domain/status-badge";
 import {
   Button,
   Skeleton,
@@ -13,7 +14,7 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@equipoit4845/ui";
+} from "@/components/ui";
 import Link from "next/link";
 
 import { describeKernelError } from "@/features/shell/kernel-error-message";
@@ -82,9 +83,12 @@ export function OrganizationDetailContainer({
 
   return (
     <>
-      <PageHeader
+      <EntityHero
+        badges={
+          <StatusBadge kind="organization" status={organization.status} />
+        }
         title={organization.name}
-        description={organization.code}
+        subtitle={organization.code}
         breadcrumb={breadcrumb}
         actions={<OrganizationActionsRow organization={organization} />}
       />

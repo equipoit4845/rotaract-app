@@ -60,7 +60,9 @@ export function SuperadminModeProvider({
 export function useSuperadminModeContext(): SuperadminModeValue {
   const context = useContext(SuperadminModeContext);
   if (!context) {
-    throw new Error("useSuperadminModeContext must be used within DashboardShell");
+    throw new Error(
+      "useSuperadminModeContext must be used within DashboardShell",
+    );
   }
   return context;
 }

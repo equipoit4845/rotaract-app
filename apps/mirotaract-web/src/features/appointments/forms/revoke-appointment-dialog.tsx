@@ -1,11 +1,11 @@
 "use client";
 
+import { ConfirmationDialog } from "@/components/layout";
 import type { Appointment } from "@/lib/api";
 import { useCan, useRevokeAppointment } from "@/lib/api";
-import { Button, FormField, Textarea } from "@equipoit4845/ui";
+import { Button, FormField, Textarea } from "@/components/ui";
 import { useState } from "react";
 
-import { ConfirmationDialog } from "../components/confirmation-dialog";
 import { describeAppointmentTransitionError } from "./appointment-mutation-errors";
 
 const REVOCABLE_STATUSES: Appointment["status"][] = [

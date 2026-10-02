@@ -10,7 +10,7 @@ import {
   Input,
   Select,
   Textarea,
-} from "@equipoit4845/ui";
+} from "@/components/ui";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 

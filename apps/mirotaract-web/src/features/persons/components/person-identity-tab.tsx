@@ -1,17 +1,11 @@
 "use client";
 
 import type { Person } from "@/lib/api";
-import { Card, CardContent, CardHeader, CardTitle } from "@equipoit4845/ui";
+import { DetailGrid } from "@/components/layout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 
 import { toPersonIdentityViewModel } from "../view-models/person-identity";
 import { FieldRow } from "./field-row";
-
-const GRID_STYLE = {
-  display: "grid",
-  gap: "var(--mr-space-4)",
-  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-  margin: 0,
-} as const;
 
 /**
  * Two cards, not a flat field list — "basic" (name) vs "sensitive"
@@ -23,23 +17,17 @@ export function PersonIdentityTab({ person }: { person: Person }) {
   const identity = toPersonIdentityViewModel(person);
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--mr-space-4)",
-      }}
-    >
+    <div className="flex flex-col gap-4">
       <Card>
         <CardHeader>
           <CardTitle>Identidad</CardTitle>
         </CardHeader>
         <CardContent>
-          <dl style={GRID_STYLE}>
+          <DetailGrid>
             {identity.basic.map((field) => (
               <FieldRow key={field.label} {...field} />
             ))}
-          </dl>
+          </DetailGrid>
         </CardContent>
       </Card>
       <Card>
@@ -47,11 +35,11 @@ export function PersonIdentityTab({ person }: { person: Person }) {
           <CardTitle>Datos sensibles</CardTitle>
         </CardHeader>
         <CardContent>
-          <dl style={GRID_STYLE}>
+          <DetailGrid>
             {identity.sensitive.map((field) => (
               <FieldRow key={field.label} {...field} />
             ))}
-          </dl>
+          </DetailGrid>
         </CardContent>
       </Card>
     </div>

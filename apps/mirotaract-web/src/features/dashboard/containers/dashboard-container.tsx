@@ -1,7 +1,7 @@
 "use client";
 
 import { useActiveOrganizationContext } from "@/features/shell/active-organization-context";
-import { DataState } from "@equipoit4845/admin-shell";
+import { DataState } from "@/components/layout";
 
 import { ClubDashboard } from "./club-dashboard";
 import { DistrictDashboard } from "./district-dashboard";

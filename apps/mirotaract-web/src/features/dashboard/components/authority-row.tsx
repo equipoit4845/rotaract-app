@@ -2,12 +2,8 @@
 
 import { useMembership, usePerson } from "@/lib/api";
 import type { Appointment } from "@/lib/api";
-import { Badge, Skeleton, TableCell, TableRow } from "@equipoit4845/ui";
-
-import {
-  appointmentStatusToLabel,
-  appointmentStatusToTone,
-} from "../adapters/appointment-status-to-tone";
+import { Skeleton, TableCell, TableRow } from "@/components/ui";
+import { StatusBadge } from "@/components/domain/status-badge";
 
 /**
  * One row = one bounded pair of lookups (membership, then person), each
@@ -39,9 +35,7 @@ export function AuthorityRow({
         )}
       </TableCell>
       <TableCell>
-        <Badge tone={appointmentStatusToTone(appointment.status)}>
-          {appointmentStatusToLabel(appointment.status)}
-        </Badge>
+        <StatusBadge kind="appointment" status={appointment.status} />
       </TableCell>
     </TableRow>
   );

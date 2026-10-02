@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuthStatus } from "@/lib/api";
-import { Spinner } from "@equipoit4845/ui";
+import { Spinner } from "@/components/ui";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect } from "react";
@@ -15,7 +15,7 @@ function LoginLoading() {
     <div
       role="status"
       aria-label="Cargando"
-      style={{ display: "grid", placeItems: "center", minHeight: "100vh" }}
+      className="grid min-h-screen place-items-center"
     >
       <Spinner size={28} label="Cargando" />
     </div>
@@ -59,14 +59,18 @@ function LoginContainerInner() {
     <AuthShell
       title="Ingresar"
       description="Accedé con la cuenta vinculada a tu organización."
+      footer={
+        <>
+          <p>
+            <Link href="/forgot-password">¿Olvidaste tu contraseña?</Link>
+          </p>
+          <p>
+            ¿No tenés cuenta? <Link href="/register">Creá una</Link>
+          </p>
+        </>
+      }
     >
       <LoginForm onSuccess={() => router.replace(next)} />
-      <p style={{ margin: 0, fontSize: "0.875rem" }}>
-        <Link href="/forgot-password">¿Olvidaste tu contraseña?</Link>
-      </p>
-      <p style={{ margin: 0, fontSize: "0.875rem" }}>
-        ¿No tenés cuenta? <Link href="/register">Creá una</Link>
-      </p>
     </AuthShell>
   );
 }

@@ -1,21 +1,12 @@
 "use client";
 
 import type { MembershipTransition } from "@/lib/api";
-import {
-  Badge,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@equipoit4845/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 
-import {
-  membershipStatusToLabel,
-  membershipStatusToTone,
-} from "../adapters/membership-status-to-tone";
 import { membershipTransitionToLabel } from "../adapters/membership-transition-to-label";
 import { formatDateTime } from "../utils/format-date";
 import { MembershipPersonCell } from "./membership-person-cell";
+import { StatusBadge } from "@/components/domain/status-badge";
 
 /**
  * DOMAIN component — stays in `features/memberships/components`, never
@@ -77,9 +68,7 @@ export function MembershipHistoryTimeline({
                 }}
               >
                 <strong>{membershipTransitionToLabel(transition.type)}</strong>
-                <Badge tone={membershipStatusToTone(transition.toStatus)}>
-                  {membershipStatusToLabel(transition.toStatus)}
-                </Badge>
+                <StatusBadge kind="membership" status={transition.toStatus} />
               </div>
               <p
                 style={{

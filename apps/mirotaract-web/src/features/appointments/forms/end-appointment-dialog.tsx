@@ -1,11 +1,11 @@
 "use client";
 
+import { ConfirmationDialog } from "@/components/layout";
 import type { Appointment } from "@/lib/api";
 import { useCan, useEndAppointment } from "@/lib/api";
-import { Button } from "@equipoit4845/ui";
+import { Button } from "@/components/ui";
 import { useState } from "react";
 
-import { ConfirmationDialog } from "../components/confirmation-dialog";
 import { describeAppointmentTransitionError } from "./appointment-mutation-errors";
 
 /** `ACTIVE -> ENDED` (kernel-spec.md §7.5) — a normal end of term, distinct from `REVOKED`. */

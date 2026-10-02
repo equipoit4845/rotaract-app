@@ -1,7 +1,7 @@
 "use client";
 
 import { useAcceptInvitation } from "@/lib/api";
-import { Alert, Button, FormField } from "@equipoit4845/ui";
+import { Alert, Button, FormField } from "@/components/ui";
 import { useForm } from "react-hook-form";
 
 import { describeAcceptInvitationError } from "../adapters/auth-mutation-errors";
@@ -47,15 +47,7 @@ export function InviteAcceptForm({
   });
 
   return (
-    <form
-      onSubmit={onSubmit}
-      noValidate
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--mr-space-3)",
-      }}
-    >
+    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
       <FormField
         label="Contraseña"
         htmlFor="password"
@@ -100,7 +92,12 @@ export function InviteAcceptForm({
         />
       ) : null}
 
-      <Button type="submit" disabled={acceptInvitation.isPending}>
+      <Button
+        type="submit"
+        size="lg"
+        className="w-full"
+        disabled={acceptInvitation.isPending}
+      >
         {acceptInvitation.isPending ? "Creando cuenta…" : "Crear cuenta"}
       </Button>
     </form>

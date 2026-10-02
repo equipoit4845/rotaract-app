@@ -1,8 +1,8 @@
 "use client";
 
 import { useCan } from "@/lib/api";
-import { DataState, DataToolbar, PageHeader } from "@equipoit4845/admin-shell";
-import { Skeleton } from "@equipoit4845/ui";
+import { DataState, DataToolbar, PageHeader } from "@/components/layout";
+import { Skeleton } from "@/components/ui";
 
 import { useActiveOrganizationContext } from "@/features/shell/active-organization-context";
 import { describeKernelError } from "@/features/shell/kernel-error-message";

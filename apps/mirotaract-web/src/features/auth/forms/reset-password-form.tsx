@@ -1,7 +1,7 @@
 "use client";
 
 import { useResetPassword } from "@/lib/api";
-import { Alert, Button, FormField } from "@equipoit4845/ui";
+import { Alert, Button, FormField } from "@/components/ui";
 import { useForm } from "react-hook-form";
 
 import { describeResetPasswordError } from "../adapters/auth-mutation-errors";
@@ -40,15 +40,7 @@ export function ResetPasswordForm({
   });
 
   return (
-    <form
-      onSubmit={onSubmit}
-      noValidate
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--mr-space-3)",
-      }}
-    >
+    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
       <FormField
         label="Nueva contraseña"
         htmlFor="newPassword"
@@ -93,7 +85,12 @@ export function ResetPasswordForm({
         />
       ) : null}
 
-      <Button type="submit" disabled={resetPassword.isPending}>
+      <Button
+        type="submit"
+        size="lg"
+        className="w-full"
+        disabled={resetPassword.isPending}
+      >
         {resetPassword.isPending ? "Actualizando…" : "Actualizar contraseña"}
       </Button>
     </form>

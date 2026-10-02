@@ -8,7 +8,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@equipoit4845/ui";
+} from "@/components/ui";
 import Link from "next/link";
 
 import type { AdministrativeUserDirectoryItem } from "@/lib/api";
@@ -42,9 +42,14 @@ export function SuperadminUsersTable({
             <TableCell>{item.clubs.join(", ") || "Sin club activo"}</TableCell>
             <TableCell>
               {item.roles.length ? (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem" }}>
+                <div
+                  style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem" }}
+                >
                   {item.roles.map((role) => (
-                    <Badge key={role} tone={role === "SUPERADMIN" ? "danger" : "info"}>
+                    <Badge
+                      key={role}
+                      tone={role === "SUPERADMIN" ? "danger" : "info"}
+                    >
                       {role}
                     </Badge>
                   ))}

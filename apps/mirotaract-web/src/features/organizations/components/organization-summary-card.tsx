@@ -2,20 +2,11 @@
 
 import type { Organization } from "@/lib/api";
 import { useOrganization } from "@/lib/api";
-import {
-  Badge,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@equipoit4845/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 
-import {
-  organizationStatusToLabel,
-  organizationStatusToTone,
-} from "../adapters/organization-status-to-tone";
 import { organizationTypeToLabel } from "../adapters/organization-type-to-label";
 import { formatDate } from "../utils/format-date";
+import { DetailGrid, DetailItem } from "@/components/layout";
 
 function Field({
   label,
@@ -24,20 +15,7 @@ function Field({
   label: string;
   value: string | undefined | null;
 }) {
-  return (
-    <div>
-      <dt
-        style={{
-          fontSize: "0.75rem",
-          color: "var(--mr-color-text-muted)",
-          margin: 0,
-        }}
-      >
-        {label}
-      </dt>
-      <dd style={{ margin: 0 }}>{value?.trim() ? value : "—"}</dd>
-    </div>
-  );
+  return <DetailItem label={label}>{value}</DetailItem>;
 }
 
 /**
@@ -58,14 +36,7 @@ export function OrganizationSummaryCard({
         <CardTitle>Resumen</CardTitle>
       </CardHeader>
       <CardContent>
-        <dl
-          style={{
-            display: "grid",
-            gap: "var(--mr-space-4)",
-            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-            margin: 0,
-          }}
-        >
+        <DetailGrid>
           <Field label="Nombre" value={organization.name} />
           <Field label="Código" value={organization.code} />
           <Field label="Slug" value={organization.slug} />
@@ -73,22 +44,6 @@ export function OrganizationSummaryCard({
             label="Tipo"
             value={organizationTypeToLabel(organization.type)}
           />
-          <div>
-            <dt
-              style={{
-                fontSize: "0.75rem",
-                color: "var(--mr-color-text-muted)",
-                margin: 0,
-              }}
-            >
-              Estado
-            </dt>
-            <dd style={{ margin: 0 }}>
-              <Badge tone={organizationStatusToTone(organization.status)}>
-                {organizationStatusToLabel(organization.status)}
-              </Badge>
-            </dd>
-          </div>
           <Field
             label="Organización padre"
             value={organization.parentId ? (parent?.name ?? "…") : undefined}
@@ -120,7 +75,7 @@ export function OrganizationSummaryCard({
               value={formatDate(organization.archivedAt)}
             />
           ) : null}
-        </dl>
+        </DetailGrid>
         {organization.description ? (
           <p style={{ marginTop: "var(--mr-space-4)" }}>
             {organization.description}

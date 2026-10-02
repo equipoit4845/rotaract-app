@@ -2,19 +2,10 @@
 
 import type { MembershipTransfer, TransferStatus } from "@/lib/api";
 import { usePerson } from "@/lib/api";
-import {
-  Badge,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@equipoit4845/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 
-import {
-  transferStatusToLabel,
-  transferStatusToTone,
-} from "../adapters/transfer-status-to-tone";
 import { formatDateTime } from "../utils/format-date";
+import { StatusBadge } from "@/components/domain/status-badge";
 
 type Step = {
   key: string;
@@ -75,11 +66,11 @@ export function TransferWorkflowTimeline({
       key: "requested",
       status: "REQUESTED",
       // The step heading is an ACTION phrase, deliberately worded
-      // differently from `transferStatusToLabel` (the badge next to it) —
+      // differently from the transfer status badge next to it —
       // otherwise every step would render its own label text twice
       // (heading + badge), same discipline `MembershipHistoryTimeline`
       // keeps by using `membershipTransitionToLabel` (event) vs
-      // `membershipStatusToLabel` (resulting status) as two separate
+      // the membership status label (resulting status) as two separate
       // vocabularies.
       label: "Transferencia solicitada",
       at: transfer.requestedAt,
@@ -179,9 +170,7 @@ export function TransferWorkflowTimeline({
                 }}
               >
                 <strong>{step.label}</strong>
-                <Badge tone={transferStatusToTone(step.status)}>
-                  {transferStatusToLabel(step.status)}
-                </Badge>
+                <StatusBadge kind="transfer" status={step.status} />
               </div>
               <p
                 style={{

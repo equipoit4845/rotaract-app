@@ -2,37 +2,15 @@
 
 import type { MembershipApplication } from "@/lib/api";
 import { useOrganization, usePerson } from "@/lib/api";
-import {
-  Badge,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@equipoit4845/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import {
-  applicationStatusToLabel,
-  applicationStatusToTone,
-} from "../adapters/application-status-to-tone";
 import { formatDateTime } from "../utils/format-date";
+import { DetailGrid, DetailItem } from "@/components/layout";
 
 function Field({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div>
-      <dt
-        style={{
-          fontSize: "0.75rem",
-          color: "var(--mr-color-text-muted)",
-          margin: 0,
-        }}
-      >
-        {label}
-      </dt>
-      <dd style={{ margin: 0 }}>{value ?? "—"}</dd>
-    </div>
-  );
+  return <DetailItem label={label}>{value ?? "—"}</DetailItem>;
 }
 
 /**
@@ -62,14 +40,7 @@ export function ApplicationSummaryCard({
         <CardTitle>Resumen</CardTitle>
       </CardHeader>
       <CardContent>
-        <dl
-          style={{
-            display: "grid",
-            gap: "var(--mr-space-4)",
-            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-            margin: 0,
-          }}
-        >
+        <DetailGrid>
           <Field
             label="Solicitante"
             value={
@@ -90,22 +61,6 @@ export function ApplicationSummaryCard({
               )
             }
           />
-          <div>
-            <dt
-              style={{
-                fontSize: "0.75rem",
-                color: "var(--mr-color-text-muted)",
-                margin: 0,
-              }}
-            >
-              Estado
-            </dt>
-            <dd style={{ margin: 0 }}>
-              <Badge tone={applicationStatusToTone(application.status)}>
-                {applicationStatusToLabel(application.status)}
-              </Badge>
-            </dd>
-          </div>
           <Field label="Mensaje" value={application.message} />
           <Field
             label="Enviada"
@@ -137,7 +92,7 @@ export function ApplicationSummaryCard({
               ) : undefined
             }
           />
-        </dl>
+        </DetailGrid>
       </CardContent>
     </Card>
   );

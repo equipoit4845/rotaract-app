@@ -1,14 +1,14 @@
 "use client";
 
 import { KernelApiError, usePerson } from "@/lib/api";
-import { DataState, PageHeader } from "@equipoit4845/admin-shell";
+import { Avatar, DataState, EntityHero } from "@/components/layout";
 import {
   Skeleton,
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@equipoit4845/ui";
+} from "@/components/ui";
 
 import { describeKernelError } from "@/features/shell/kernel-error-message";
 
@@ -56,9 +56,10 @@ export function PersonDetailContainer({ personId }: { personId: string }) {
 
   return (
     <>
-      <PageHeader
+      <EntityHero
+        image={<Avatar name={personDisplayName(person)} size="lg" />}
         title={personDisplayName(person)}
-        description={person.archivedAt ? "Persona archivada" : undefined}
+        subtitle={person.archivedAt ? "Persona archivada" : undefined}
         breadcrumb={[
           { label: "Usuarios y socios", href: "/persons" },
           { label: personDisplayName(person) },

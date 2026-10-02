@@ -1,7 +1,7 @@
 "use client";
 
 import type { Organization, TransferStatus } from "@/lib/api";
-import { Select } from "@equipoit4845/ui";
+import { Select } from "@/components/ui";
 
 export function TransferStatusFilter({
   value,

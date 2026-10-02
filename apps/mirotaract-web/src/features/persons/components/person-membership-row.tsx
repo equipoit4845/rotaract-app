@@ -2,14 +2,11 @@
 
 import { useOrganization } from "@/lib/api";
 import type { OrganizationMembership } from "@/lib/api";
-import { Badge, Skeleton, TableCell, TableRow } from "@equipoit4845/ui";
+import { Skeleton, TableCell, TableRow } from "@/components/ui";
 import Link from "next/link";
 
-import {
-  membershipStatusToLabel,
-  membershipStatusToTone,
-} from "../adapters/membership-status-to-tone";
 import { formatDate } from "../utils/format-date";
+import { StatusBadge } from "@/components/domain/status-badge";
 
 /**
  * `OrganizationMembership` only carries `organizationId`, not a
@@ -37,9 +34,7 @@ export function PersonMembershipRow({
         )}
       </TableCell>
       <TableCell>
-        <Badge tone={membershipStatusToTone(membership.status)}>
-          {membershipStatusToLabel(membership.status)}
-        </Badge>
+        <StatusBadge kind="membership" status={membership.status} />
       </TableCell>
       <TableCell>
         {membership.joinedAt ? formatDate(membership.joinedAt) : "—"}

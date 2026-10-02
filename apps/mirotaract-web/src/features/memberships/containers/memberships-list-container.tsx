@@ -6,8 +6,8 @@ import {
   DataState,
   DataToolbar,
   PageHeader,
-} from "@equipoit4845/admin-shell";
-import { Skeleton } from "@equipoit4845/ui";
+} from "@/components/layout";
+import { Skeleton } from "@/components/ui";
 
 import { useActiveOrganizationContext } from "@/features/shell/active-organization-context";
 import { describeKernelError } from "@/features/shell/kernel-error-message";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuthStatus } from "@/lib/api";
-import { Alert, Spinner } from "@equipoit4845/ui";
+import { Alert, Spinner } from "@/components/ui";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -23,7 +23,7 @@ export function RegisterContainer() {
       <div
         role="status"
         aria-label="Cargando"
-        style={{ display: "grid", placeItems: "center", minHeight: "100vh" }}
+        className="grid min-h-screen place-items-center"
       >
         <Spinner size={28} label="Cargando" />
       </div>
@@ -44,7 +44,7 @@ export function RegisterContainer() {
       ) : (
         <>
           <RegisterForm onSuccess={() => setRegistered(true)} />
-          <p style={{ margin: 0, fontSize: "0.875rem" }}>
+          <p className="text-center text-sm text-muted-foreground [&_a]:font-medium [&_a]:text-primary [&_a:hover]:underline">
             ¿Ya tenés cuenta? <Link href="/login">Ingresá</Link>
           </p>
         </>
