@@ -66,7 +66,10 @@ export function useShellNavItems(
   if (canReadPersons && isDistrictAdminView) {
     district.push({ label: "Usuarios", href: "/persons", icon: UserCog });
   }
-  if (canReadApps && isDistrictAdminView) {
+  // Not tied to the superadmin "district admin" view: an RDR (who is not a
+  // superadmin and never gets that view) holds kernel.app.read and must
+  // see the apps console.
+  if (canReadApps) {
     district.push({ label: "Apps", href: "/developer/apps", icon: Blocks });
   }
 
