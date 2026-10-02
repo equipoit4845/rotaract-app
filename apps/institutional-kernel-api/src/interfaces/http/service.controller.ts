@@ -26,6 +26,12 @@ import { KernelService } from "../../application/kernel/kernel.service";
  */
 function withEtag<T>(response: Response, body: T): T {
   response.setHeader("ETag", weakEtag(body));
+  // Fetch-based clients (browsers, Node's fetch) add `Cache-Control:
+  // no-cache` to any request carrying If-None-Match, and Express's freshness
+  // check then never answers 304. A conditional request *is* a revalidation
+  // with the origin, which is what no-cache asks for, so it may get a 304.
+  const headers = response.req?.headers;
+  if (headers?.["if-none-match"]) delete headers["cache-control"];
   return body;
 }
 

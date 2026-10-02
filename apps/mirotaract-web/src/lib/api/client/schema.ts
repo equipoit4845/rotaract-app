@@ -2578,13 +2578,13 @@ export interface components {
             name: string;
             sequence: number;
             /**
-             * Format: date
-             * @description Debe ser 1 de julio.
+             * Format: date-time
+             * @description Debe ser 1 de julio (00:00 UTC).
              */
             startDate: string;
             /**
-             * Format: date
-             * @description Debe ser 30 de junio del año siguiente.
+             * Format: date-time
+             * @description Debe ser 30 de junio del año siguiente (00:00 UTC).
              */
             endDate: string;
             status: components["schemas"]["PeriodStatus"];
@@ -6271,6 +6271,7 @@ export interface operations {
                 content?: never;
             };
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
     serviceListAuthorities: {
@@ -6279,7 +6280,10 @@ export interface operations {
                 /** @description Incluye las autoridades de las organizaciones hijas (por ejemplo, todos los clubes de un distrito). */
                 includeDescendants?: boolean;
             };
-            header?: never;
+            header?: {
+                /** @description ETag de una respuesta anterior; si no hubo cambios responde 304. */
+                "If-None-Match"?: components["parameters"]["ifNoneMatch"];
+            };
             path: {
                 organizationId: components["parameters"]["organizationId"];
             };
@@ -6290,13 +6294,22 @@ export interface operations {
             /** @description OK */
             200: {
                 headers: {
+                    ETag?: string;
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["AuthorityView"][];
                 };
             };
+            /** @description Sin cambios desde el ETag enviado. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
     serviceListPeriods: {
@@ -6304,7 +6317,10 @@ export interface operations {
             query?: {
                 status?: components["schemas"]["PeriodStatus"];
             };
-            header?: never;
+            header?: {
+                /** @description ETag de una respuesta anterior; si no hubo cambios responde 304. */
+                "If-None-Match"?: components["parameters"]["ifNoneMatch"];
+            };
             path: {
                 organizationId: components["parameters"]["organizationId"];
             };
@@ -6315,13 +6331,22 @@ export interface operations {
             /** @description OK */
             200: {
                 headers: {
+                    ETag?: string;
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["PeriodView"][];
                 };
             };
+            /** @description Sin cambios desde el ETag enviado. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
     serviceBatchPersons: {
@@ -6348,12 +6373,17 @@ export interface operations {
                     "application/json": components["schemas"]["PersonView"][];
                 };
             };
+            400: components["responses"]["Error"];
+            403: components["responses"]["Forbidden"];
         };
     };
     servicePersonMemberships: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description ETag de una respuesta anterior; si no hubo cambios responde 304. */
+                "If-None-Match"?: components["parameters"]["ifNoneMatch"];
+            };
             path: {
                 personId: components["parameters"]["personId"];
             };
@@ -6364,19 +6394,31 @@ export interface operations {
             /** @description OK */
             200: {
                 headers: {
+                    ETag?: string;
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["PersonMembershipView"][];
                 };
             };
+            /** @description Sin cambios desde el ETag enviado. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
     serviceGetPerson: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description ETag de una respuesta anterior; si no hubo cambios responde 304. */
+                "If-None-Match"?: components["parameters"]["ifNoneMatch"];
+            };
             path: {
                 personId: components["parameters"]["personId"];
             };
@@ -6387,18 +6429,30 @@ export interface operations {
             /** @description OK */
             200: {
                 headers: {
+                    ETag?: string;
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["PersonView"];
                 };
             };
+            /** @description Sin cambios desde el ETag enviado. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["NotFound"];
         };
     };
     serviceGetOrganization: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description ETag de una respuesta anterior; si no hubo cambios responde 304. */
+                "If-None-Match"?: components["parameters"]["ifNoneMatch"];
+            };
             path: {
                 organizationId: components["parameters"]["organizationId"];
             };
@@ -6409,12 +6463,21 @@ export interface operations {
             /** @description OK */
             200: {
                 headers: {
+                    ETag?: string;
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["OrganizationView"];
                 };
             };
+            /** @description Sin cambios desde el ETag enviado. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["NotFound"];
         };
     };
     serviceGetMembershipSnapshot: {

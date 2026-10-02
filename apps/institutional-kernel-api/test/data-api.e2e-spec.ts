@@ -424,6 +424,14 @@ describe("Data API v1 E2E (E4)", () => {
 
     await get(clubToken, url).set("if-none-match", 'W/"stale"').expect(200);
 
+    // What fetch() sends (browsers, Node, the official SDKs): If-None-Match
+    // plus an automatic Cache-Control: no-cache. Still a 304.
+    await get(clubToken, url)
+      .set("if-none-match", etag)
+      .set("cache-control", "no-cache")
+      .set("pragma", "no-cache")
+      .expect(304);
+
     const orgs = await get(districtToken, "/organizations").expect(200);
     await get(districtToken, "/organizations")
       .set("if-none-match", orgs.headers.etag)

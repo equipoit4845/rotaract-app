@@ -3670,12 +3670,12 @@ components:
         name: { type: string }
         sequence: { type: integer }
         startDate:
-          { type: string, format: date, description: Debe ser 1 de julio. }
+          { type: string, format: date-time, description: Debe ser 1 de julio (00:00 UTC). }
         endDate:
           {
             type: string,
-            format: date,
-            description: Debe ser 30 de junio del año siguiente.,
+            format: date-time,
+            description: Debe ser 30 de junio del año siguiente (00:00 UTC).,
           }
         status: { $ref: "#/components/schemas/PeriodStatus" }
         createdAt: { type: string, format: date-time }
