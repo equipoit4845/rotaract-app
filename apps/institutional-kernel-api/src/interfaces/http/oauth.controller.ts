@@ -14,7 +14,7 @@ import {
 import type { Request, Response } from "express";
 
 import type { AuthenticatedRequest } from "../../application/auth/jwt-session.guard";
-import { DeveloperAppsService } from "../../application/developer-apps/developer-apps.service";
+import { ClientAuthenticator } from "../../application/oauth/client-authenticator";
 import { ClientCredentialsGrant } from "../../application/oauth/client-credentials.grant";
 import {
   OidcAccessGuard,
@@ -79,7 +79,7 @@ async function oauthResponse<T>(
 @Controller("oauth")
 export class OAuthController {
   constructor(
-    private readonly apps: DeveloperAppsService,
+    private readonly clients: ClientAuthenticator,
     private readonly clientCredentials: ClientCredentialsGrant,
     private readonly oidc: OidcService,
   ) {}
@@ -87,7 +87,7 @@ export class OAuthController {
   @Get("apps/:clientId") getPublicDeveloperApp(
     @Param("clientId") clientId: string,
   ) {
-    return this.apps.publicInfo(clientId);
+    return this.clients.publicInfo(clientId);
   }
 
   @Get("authorize/context") getAuthorizationContext(
@@ -143,7 +143,7 @@ export class OAuthController {
         )
       )
         throw new OAuthError("unsupported_grant_type");
-      const app = await this.apps.authenticateClient(
+      const app = await this.clients.authenticate(
         clientCredentials(request, body),
       );
       if (!app.grantTypes.includes(grantType))
@@ -174,7 +174,7 @@ export class OAuthController {
     @Res({ passthrough: true }) response: Response,
   ) {
     return oauthResponse(response, async () => {
-      const app = await this.apps.authenticateClient(
+      const app = await this.clients.authenticate(
         clientCredentials(request, body),
       );
       if (body?.token) await this.oidc.revoke(app, body.token);

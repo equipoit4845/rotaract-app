@@ -63,27 +63,4 @@ export class DeveloperAppsService {
   ): Promise<DeveloperAppView> {
     throw new NotImplementedException();
   }
-  /** Public info for the consent screen; 404 unless the app is ACTIVE. */
-  publicInfo(_clientId: string): Promise<{
-    clientId: string;
-    name: string;
-    description: string | null;
-    type: "CONFIDENTIAL" | "PUBLIC";
-    organizationName: string;
-  }> {
-    throw new NotImplementedException();
-  }
-  /**
-   * Client authentication for the token/revocation endpoints. Returns the
-   * ACTIVE app when the credentials are valid; throws
-   * OAuthError("invalid_client") otherwise. A PUBLIC app authenticates with
-   * its client_id alone (secret must be absent); a CONFIDENTIAL app needs a
-   * valid, unexpired, unrevoked secret. Updates lastUsedAt.
-   */
-  authenticateClient(_credentials: {
-    clientId?: string;
-    clientSecret?: string;
-  }): Promise<DeveloperApp> {
-    throw new NotImplementedException();
-  }
 }

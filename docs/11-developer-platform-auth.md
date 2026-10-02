@@ -1,7 +1,7 @@
 # 11 · Plataforma de desarrolladores: apps (E2) e "Ingresar con Mi Rotaract" (E3)
 
 Especificación de implementación de las épicas E2 y E3 del plan
-*Mi Rotaract Developers*. El contrato HTTP está en `kernel-openapi.yaml`
+_Mi Rotaract Developers_. El contrato HTTP está en `kernel-openapi.yaml`
 (tags `DeveloperApps` y `OAuth`); este documento fija las reglas que el
 contrato no expresa. Ante una duda, gana este documento y se actualiza el
 contrato.
@@ -21,19 +21,19 @@ integración para apps (E7).
 
 ## Piezas compartidas (ya implementadas)
 
-| Pieza | Archivo |
-|---|---|
-| Modelos y migración | `prisma/schema.prisma` (`DeveloperApp`, `DeveloperAppSecret`, `OAuthConsent`, `OAuthAuthorizationCode`, `OAuthRefreshToken`, `SigningKey`), migración `20261002195448_developer_platform_auth` |
-| Claves ES256, JWKS, emisión y verificación | `src/infrastructure/crypto/signing-key.service.ts` (`sign`, `verify`, `jwks`, `issuer`, `rotate`) |
-| Discovery OIDC | `src/interfaces/http/well-known.controller.ts` |
-| Catálogo de scopes, TTLs, audiencia | `src/application/oauth/scopes.ts` |
-| Error RFC 6749 | `src/application/oauth/oauth-error.ts` (`OAuthError`) |
-| Controllers HTTP (no se modifican) | `developer-apps.controller.ts`, `oauth.controller.ts` |
-| Autorización de rutas | `kernel-access.guard.ts`: `kernel.app.read` / `kernel.app.manage` evaluados en la organización de la app; rutas OAuth públicas o de sesión |
-| Permisos | `kernel.app.read`, `kernel.app.manage` (seed; otorgados a `DISTRICT_RDR`) |
-| Variables | `KERNEL_SIGNING_KEY_SECRET` (obligatoria en producción), `KERNEL_ISSUER_URL` |
+| Pieza                                      | Archivo                                                                                                                                                                                        |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Modelos y migración                        | `prisma/schema.prisma` (`DeveloperApp`, `DeveloperAppSecret`, `OAuthConsent`, `OAuthAuthorizationCode`, `OAuthRefreshToken`, `SigningKey`), migración `20261002195448_developer_platform_auth` |
+| Claves ES256, JWKS, emisión y verificación | `src/infrastructure/crypto/signing-key.service.ts` (`sign`, `verify`, `jwks`, `issuer`, `rotate`)                                                                                              |
+| Discovery OIDC                             | `src/interfaces/http/well-known.controller.ts`                                                                                                                                                 |
+| Catálogo de scopes, TTLs, audiencia        | `src/application/oauth/scopes.ts`                                                                                                                                                              |
+| Error RFC 6749                             | `src/application/oauth/oauth-error.ts` (`OAuthError`)                                                                                                                                          |
+| Controllers HTTP (no se modifican)         | `developer-apps.controller.ts`, `oauth.controller.ts`                                                                                                                                          |
+| Autorización de rutas                      | `kernel-access.guard.ts`: `kernel.app.read` / `kernel.app.manage` evaluados en la organización de la app; rutas OAuth públicas o de sesión                                                     |
+| Permisos                                   | `kernel.app.read`, `kernel.app.manage` (seed; otorgados a `DISTRICT_RDR`)                                                                                                                      |
+| Variables                                  | `KERNEL_SIGNING_KEY_SECRET` (obligatoria en producción), `KERNEL_ISSUER_URL`                                                                                                                   |
 
-`ServiceApiGuard`, `DeveloperAppsService`, `ClientCredentialsGrant`,
+`ServiceApiGuard`, `DeveloperAppsService` (alta, edición, secretos, estados), `ClientCredentialsGrant`,
 `OidcService` y `OidcAccessGuard` son los puntos a implementar; sus firmas
 ya existen como stubs.
 
@@ -41,10 +41,10 @@ ya existen como stubs.
 
 ### Tipos y combinaciones válidas
 
-| Tipo | Grants permitidos | Scopes permitidos |
-|---|---|---|
+| Tipo                      | Grants permitidos                                           | Scopes permitidos  |
+| ------------------------- | ----------------------------------------------------------- | ------------------ |
 | `CONFIDENTIAL` (servidor) | `client_credentials`, `authorization_code`, `refresh_token` | OIDC y de servicio |
-| `PUBLIC` (SPA, móvil) | `authorization_code`, `refresh_token` | Solo OIDC |
+| `PUBLIC` (SPA, móvil)     | `authorization_code`, `refresh_token`                       | Solo OIDC          |
 
 Validaciones al crear y editar (400 con mensaje claro en castellano):
 
@@ -70,7 +70,7 @@ Validaciones al crear y editar (400 con mensaje claro en castellano):
   anteriores reciben `expiresAt = ahora + 7 días` (si no vencían antes). Nunca
   hay más de dos vigentes: si ya hay dos, el más viejo se revoca en el acto.
   Una app `PUBLIC` no tiene secretos (409).
-- `authenticateClient`: app `ACTIVE`; `PUBLIC` se autentica solo con
+- `ClientAuthenticator.authenticate` (ya implementado, `src/application/oauth/client-authenticator.ts`): app `ACTIVE`; `PUBLIC` se autentica solo con
   `client_id` y no debe enviar secreto; `CONFIDENTIAL` necesita un secreto no
   revocado ni vencido (argon2 verify contra los vigentes). Actualiza
   `lastUsedAt`. Cualquier falla: `OAuthError("invalid_client")`, sin revelar
@@ -91,16 +91,16 @@ Toda mutación usa `CommandExecutorService.execute` (idempotencia por
 
 JWT ES256 firmado con `SigningKeyService.sign`:
 
-| Claim | Valor |
-|---|---|
-| `iss` | `KERNEL_ISSUER_URL` |
-| `aud` | `institutional-kernel` |
-| `sub` | `app:<clientId>` |
-| `client_id`, `azp` | `<clientId>` |
-| `token_use` | `service` |
-| `scope` | scopes de servicio, separados por espacio |
-| `org` | `organizationId` de la app |
-| `exp` | `iat + 600` |
+| Claim              | Valor                                     |
+| ------------------ | ----------------------------------------- |
+| `iss`              | `KERNEL_ISSUER_URL`                       |
+| `aud`              | `institutional-kernel`                    |
+| `sub`              | `app:<clientId>`                          |
+| `client_id`, `azp` | `<clientId>`                              |
+| `token_use`        | `service`                                 |
+| `scope`            | scopes de servicio, separados por espacio |
+| `org`              | `organizationId` de la app                |
+| `exp`              | `iat + 600`                               |
 
 Si el pedido trae `scope`, debe ser subconjunto de los scopes de servicio de
 la app (`invalid_scope` si no). Sin `scope`, se emiten todos.
@@ -184,13 +184,13 @@ query existente de la `redirect_uri`.
 Minimización: membresías y cargos solo de organizaciones dentro del árbol de
 la organización de la app (una app de club ve solo ese club).
 
-| Scope | Claims |
-|---|---|
-| `openid` | `sub` (personId) |
-| `profile` | `name` (displayName o nombre + apellido), `given_name`, `family_name`, `picture` (avatarUrl o null) |
-| `email` | `email` (email de la cuenta), `email_verified` |
+| Scope         | Claims                                                                                                        |
+| ------------- | ------------------------------------------------------------------------------------------------------------- |
+| `openid`      | `sub` (personId)                                                                                              |
+| `profile`     | `name` (displayName o nombre + apellido), `given_name`, `family_name`, `picture` (avatarUrl o null)           |
+| `email`       | `email` (email de la cuenta), `email_verified`                                                                |
 | `memberships` | `memberships`: `[{ organizationId, organizationName, organizationType, status }]`, solo `ACTIVE` y `ON_LEAVE` |
-| `positions` | `positions`: `[{ organizationId, positionCode, positionName, periodId }]`, nombramientos `ACTIVE` |
+| `positions`   | `positions`: `[{ organizationId, positionCode, positionName, periodId }]`, nombramientos `ACTIVE`             |
 
 ### `OidcAccessGuard` (userinfo)
 

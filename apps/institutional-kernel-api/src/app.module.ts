@@ -37,6 +37,7 @@ import { DeveloperAppsController } from "./interfaces/http/developer-apps.contro
 import { OAuthController } from "./interfaces/http/oauth.controller";
 import { DeveloperAppsService } from "./application/developer-apps/developer-apps.service";
 import { ClientCredentialsGrant } from "./application/oauth/client-credentials.grant";
+import { ClientAuthenticator } from "./application/oauth/client-authenticator";
 import { OidcService } from "./application/oauth/oidc.service";
 import { OidcAccessGuard } from "./application/oauth/oidc-access.guard";
 
@@ -88,6 +89,7 @@ import { OidcAccessGuard } from "./application/oauth/oidc-access.guard";
     SigningKeyService,
     DeveloperAppsService,
     ClientCredentialsGrant,
+    ClientAuthenticator,
     OidcService,
     OidcAccessGuard,
     { provide: APP_INTERCEPTOR, useClass: OpenApiValidationInterceptor },
