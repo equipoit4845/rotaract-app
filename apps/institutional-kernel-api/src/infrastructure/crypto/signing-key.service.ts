@@ -123,13 +123,40 @@ export class SigningKeyService implements OnModuleInit {
     return this.createKey();
   }
 
+  /**
+   * Guarantees a usable ACTIVE key. An active key that can't be decrypted
+   * (KERNEL_SIGNING_KEY_SECRET changed or lost) is retired instead of
+   * making every token issuance fail: its public part stays in the JWKS for
+   * the grace period, so tokens it already signed keep verifying.
+   */
   private async ensureActiveKey(): Promise<void> {
-    const active = await this.prisma.signingKey.count({
+    const active = await this.prisma.signingKey.findMany({
       where: { status: SigningKeyStatus.ACTIVE },
     });
-    if (active === 0) {
+    const unusable = active.filter(
+      (key) => !this.canDecrypt(key.privateKeyEnc),
+    );
+    if (unusable.length) {
+      this.logger.error(
+        `Retiring ${unusable.length} signing key(s) that can't be decrypted with the current KERNEL_SIGNING_KEY_SECRET: ${unusable.map((k) => k.kid).join(", ")}`,
+      );
+      await this.prisma.signingKey.updateMany({
+        where: { kid: { in: unusable.map((key) => key.kid) } },
+        data: { status: SigningKeyStatus.RETIRED, retiredAt: new Date() },
+      });
+    }
+    if (active.length === unusable.length) {
       const kid = await this.createKey();
       this.logger.log(`Created signing key ${kid}`);
+    }
+  }
+
+  private canDecrypt(stored: string): boolean {
+    try {
+      this.decrypt(stored);
+      return true;
+    } catch {
+      return false;
     }
   }
 

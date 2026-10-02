@@ -9,6 +9,7 @@ function memoryPrisma() {
   const matches = (row: any, where: any = {}): boolean => {
     if (where.OR) return where.OR.some((w: any) => matches(row, w));
     if (where.status && row.status !== where.status) return false;
+    if (where.kid?.in && !where.kid.in.includes(row.kid)) return false;
     if (where.retiredAt?.gte && !(row.retiredAt >= where.retiredAt.gte))
       return false;
     return true;
@@ -131,5 +132,36 @@ describe("SigningKeyService", () => {
     await expect(keys.onModuleInit()).rejects.toThrow(
       /KERNEL_SIGNING_KEY_SECRET/,
     );
+  });
+
+  it("retires an active key it can no longer decrypt and keeps signing", async () => {
+    const prisma = memoryPrisma();
+    process.env.KERNEL_SIGNING_KEY_SECRET = "secret-a";
+    const before = new SigningKeyService(prisma as unknown as PrismaService);
+    await before.onModuleInit();
+    const oldToken = await before.sign(
+      {},
+      { audience: "institutional-kernel", subject: "app:x", expiresIn: 60 },
+    );
+
+    process.env.KERNEL_SIGNING_KEY_SECRET = "secret-b";
+    const after = new SigningKeyService(prisma as unknown as PrismaService);
+    await after.onModuleInit();
+
+    expect(prisma.rows.map((r) => r.status).sort()).toEqual([
+      "ACTIVE",
+      "RETIRED",
+    ]);
+    const newToken = await after.sign(
+      {},
+      { audience: "institutional-kernel", subject: "app:x", expiresIn: 60 },
+    );
+    await expect(
+      after.verify(newToken, { audience: "institutional-kernel" }),
+    ).resolves.toBeTruthy();
+    // Tokens signed before the secret changed still verify (public key kept).
+    await expect(
+      after.verify(oldToken, { audience: "institutional-kernel" }),
+    ).resolves.toBeTruthy();
   });
 });
