@@ -106,6 +106,16 @@ export const INPUT_FIELDS = {
     "manifest",
     "configurationSchema",
   ],
+  createDeveloperApp: [
+    "name",
+    "description",
+    "type",
+    "organizationId",
+    "grantTypes",
+    "scopes",
+    "redirectUris",
+  ],
+  updateDeveloperApp: ["name", "description", "scopes", "redirectUris"],
 } as const;
 
 export type InputOperation = keyof typeof INPUT_FIELDS;

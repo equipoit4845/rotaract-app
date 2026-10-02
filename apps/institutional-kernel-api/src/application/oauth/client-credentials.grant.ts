@@ -1,5 +1,14 @@
-import { Injectable, NotImplementedException } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import type { DeveloperApp } from "@prisma/client";
+
+import { SigningKeyService } from "../../infrastructure/crypto/signing-key.service";
+import { OAuthError } from "./oauth-error";
+import {
+  isServiceScope,
+  KERNEL_AUDIENCE,
+  parseScope,
+  TOKEN_TTL,
+} from "./scopes";
 
 export type TokenResponse = {
   access_token: string;
@@ -10,17 +19,54 @@ export type TokenResponse = {
   refresh_token?: string;
 };
 
+/** Claims of a service token (docs/11-developer-platform-auth.md §"Token de servicio"). */
+export type ServiceTokenClaims = {
+  client_id: string;
+  azp: string;
+  token_use: "service";
+  scope: string;
+  org: string;
+};
+
 /**
  * E2 — `grant_type=client_credentials`: an app's own token to call
- * /service/* within its organization.
- * OWNER: E2 agent. See docs/11-developer-platform-auth.md §Tokens.
+ * /service/* within its organization. The caller (OAuthController) has
+ * already authenticated the client and checked it holds this grant.
  */
 @Injectable()
 export class ClientCredentialsGrant {
-  issue(
-    _app: DeveloperApp,
-    _requestedScope: string | undefined,
+  constructor(private readonly keys: SigningKeyService) {}
+
+  async issue(
+    app: DeveloperApp,
+    requestedScope: string | undefined,
   ): Promise<TokenResponse> {
-    throw new NotImplementedException();
+    const granted: string[] = app.scopes.filter(isServiceScope);
+    const requested = parseScope(requestedScope);
+    const missing = requested.filter((scope) => !granted.includes(scope));
+    if (missing.length)
+      throw new OAuthError(
+        "invalid_scope",
+        `This app is not allowed to request: ${missing.join(" ")}`,
+      );
+    const scope = (requested.length ? requested : granted).join(" ");
+    const claims: ServiceTokenClaims = {
+      client_id: app.clientId,
+      azp: app.clientId,
+      token_use: "service",
+      scope,
+      org: app.organizationId,
+    };
+    const accessToken = await this.keys.sign(claims, {
+      audience: KERNEL_AUDIENCE,
+      subject: `app:${app.clientId}`,
+      expiresIn: TOKEN_TTL.serviceAccessToken,
+    });
+    return {
+      access_token: accessToken,
+      token_type: "Bearer",
+      expires_in: TOKEN_TTL.serviceAccessToken,
+      scope,
+    };
   }
 }
