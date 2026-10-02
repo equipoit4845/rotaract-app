@@ -85,7 +85,9 @@ describe("Club boundaries E2E", () => {
         parentId: districtId,
       })
       .expect(201);
-    await as(admin).post(`/organizations/${created.body.id}/activate`).expect(201);
+    await as(admin)
+      .post(`/organizations/${created.body.id}/activate`)
+      .expect(201);
     return created.body.id as string;
   }
 
@@ -142,6 +144,12 @@ describe("Club boundaries E2E", () => {
     });
     await prisma.positionDefinition.deleteMany({
       where: { ownerOrganizationId: { in: orgs } },
+    });
+    await prisma.appointment.deleteMany({
+      where: { organizationId: { in: orgs } },
+    });
+    await prisma.institutionalPeriod.deleteMany({
+      where: { organizationId: { in: orgs } },
     });
     await prisma.membershipTransition.deleteMany({
       where: { membership: { organizationId: { in: orgs } } },
@@ -257,6 +265,67 @@ describe("Club boundaries E2E", () => {
         ownerOrganizationId: districtId,
         editPermissionCode: "kernel.position.manage",
       })
+      .expect(403);
+  });
+
+  it("takes the permissions away from a president whose membership ends", async () => {
+    const president = await account("president-ending");
+    const membershipId = await activeMember(president.personId, clubA);
+
+    const period = await as(admin)
+      .post(`/organizations/${clubA}/periods`, {
+        code: `P-${tag}`,
+        name: "2026-2027",
+        sequence: 1,
+        startDate: "2026-07-01",
+        endDate: "2027-06-30",
+      })
+      .expect(201);
+    await as(admin).post(`/periods/${period.body.id}/schedule`).expect(201);
+    await as(admin).post(`/periods/${period.body.id}/activate`).expect(201);
+
+    const presidency = await prisma.positionDefinition.findUniqueOrThrow({
+      where: { code: "CLUB_PRESIDENT" },
+    });
+    const appointment = await as(admin)
+      .post(`/organizations/${clubA}/appointments`, {
+        membershipId,
+        periodId: period.body.id,
+        positionDefinitionId: presidency.id,
+      })
+      .expect(201);
+    await as(admin)
+      .post(`/appointments/${appointment.body.id}/elect`)
+      .expect(201);
+    await as(admin)
+      .post(`/appointments/${appointment.body.id}/activate`)
+      .expect(201);
+
+    // In office: the derived role lets them edit their club.
+    const token = await president.login();
+    await as(token)
+      .patch(`/organizations/${clubA}`, { city: "Asunción" })
+      .expect(200);
+
+    await as(admin)
+      .post(`/memberships/${membershipId}/deactivate`, {
+        reasonText: "Baja voluntaria",
+      })
+      .expect(201);
+
+    const closed = await prisma.appointment.findUniqueOrThrow({
+      where: { id: appointment.body.id },
+    });
+    expect(closed.status).toBe("ENDED");
+    expect(
+      await prisma.roleAssignment.count({
+        where: { sourceAppointmentId: appointment.body.id, revokedAt: null },
+      }),
+    ).toBe(0);
+    // Same (still valid) access token: authorization is evaluated per
+    // request, so the former president is locked out immediately.
+    await as(token)
+      .patch(`/organizations/${clubA}`, { city: "Encarnación" })
       .expect(403);
   });
 });

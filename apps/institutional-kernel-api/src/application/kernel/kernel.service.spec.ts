@@ -723,17 +723,34 @@ describe("KernelService — club-owned positions", () => {
 });
 
 describe("KernelService — MEMBER role follows the membership", () => {
-  function membershipKernel(status: string, held: number) {
+  function membershipKernel(
+    status: string,
+    held: number,
+    openAppointments: Array<{ id: string; status: string }> = [],
+  ) {
     const roleAssignment = {
       count: jest.fn().mockResolvedValue(held),
       create: jest.fn(),
       updateMany: jest.fn(),
     };
+    const appointment = {
+      findMany: jest.fn().mockResolvedValue(
+        openAppointments.map((a) => ({
+          ...a,
+          organizationId: "club-1",
+          membership: { personId: "p-1" },
+        })),
+      ),
+      update: jest.fn(),
+    };
     const built = buildKernel({
       organizationMembership: {
         findUniqueOrThrow: jest
           .fn()
-          .mockResolvedValueOnce({ id: "m-1", status: "PENDING" })
+          .mockResolvedValueOnce({
+            id: "m-1",
+            status: status === "ACTIVE" ? "PENDING" : "ACTIVE",
+          })
           .mockResolvedValue({
             personId: "p-1",
             organizationId: "club-1",
@@ -746,8 +763,9 @@ describe("KernelService — MEMBER role follows the membership", () => {
         findUnique: jest.fn().mockResolvedValue({ id: "member-role" }),
       },
       roleAssignment,
+      appointment,
     });
-    return { ...built, roleAssignment };
+    return { ...built, roleAssignment, appointment };
   }
 
   it("grants MEMBER, scoped to the club, when a membership becomes ACTIVE", async () => {
@@ -780,5 +798,56 @@ describe("KernelService — MEMBER role follows the membership", () => {
 
     expect(roleAssignment.updateMany).toHaveBeenCalled();
     expect(roleAssignment.create).not.toHaveBeenCalled();
+  });
+
+  it("ends the active mandate and revokes pending ones when the membership ends", async () => {
+    const { kernel, roleAssignment, appointment, outbox } = membershipKernel(
+      "INACTIVE",
+      0,
+      [
+        { id: "appt-active", status: "ACTIVE" },
+        { id: "appt-elected", status: "ELECTED" },
+      ],
+    );
+
+    await kernel.transitionMembership(
+      "m-1",
+      "INACTIVE" as any,
+      "DEACTIVATED" as any,
+    );
+
+    expect(appointment.update).toHaveBeenCalledWith({
+      where: { id: "appt-active" },
+      data: expect.objectContaining({ status: "ENDED" }),
+    });
+    expect(appointment.update).toHaveBeenCalledWith({
+      where: { id: "appt-elected" },
+      data: expect.objectContaining({ status: "REVOKED" }),
+    });
+    expect(roleAssignment.updateMany).toHaveBeenCalledWith({
+      where: { sourceAppointmentId: "appt-active", revokedAt: null },
+      data: expect.objectContaining({ revokedAt: expect.any(Date) }),
+    });
+    const events = (outbox.record as jest.Mock).mock.calls.map((c) => c[1]);
+    expect(events).toEqual(
+      expect.arrayContaining([
+        "kernel.appointment.ended.v1",
+        "kernel.appointment.revoked.v1",
+      ]),
+    );
+  });
+
+  it("keeps the mandate while the member is only on leave", async () => {
+    const { kernel, appointment } = membershipKernel("ON_LEAVE", 1, [
+      { id: "appt-active", status: "ACTIVE" },
+    ]);
+
+    await kernel.transitionMembership(
+      "m-1",
+      "ON_LEAVE" as any,
+      "LEAVE_STARTED" as any,
+    );
+
+    expect(appointment.findMany).not.toHaveBeenCalled();
   });
 });

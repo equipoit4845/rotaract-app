@@ -621,6 +621,7 @@ export class KernelService {
           },
         });
         await this.syncMemberRole(tx, id, context);
+        if (terminal) await this.closeAppointmentsOfMembership(tx, id, context);
         await tx.membershipTransition.create({
           data: {
             membershipId: id,
@@ -699,6 +700,64 @@ export class KernelService {
       });
     else return;
     await this.authorization.invalidate(membership.personId);
+  }
+  /**
+   * A membership that ends (INACTIVE, GRADUATED, TRANSFERRED) can no longer
+   * back an authority: an ACTIVE appointment is ENDED, a NOMINATED/ELECTED
+   * one is REVOKED (it can never take office), and the roles they derived
+   * are revoked — otherwise a former president would keep their
+   * permissions. Emits the same events and cache invalidations as the
+   * manual appointment transitions.
+   */
+  private async closeAppointmentsOfMembership(
+    tx: any,
+    membershipId: string,
+    context?: CommandContext,
+  ): Promise<void> {
+    const open = await tx.appointment.findMany({
+      where: {
+        membershipId,
+        status: { in: ["NOMINATED", "ELECTED", "ACTIVE"] },
+      },
+      include: { membership: { select: { personId: true } } },
+    });
+    if (!open.length) return;
+    const now = new Date();
+    const actorId = this.context(context).actor.id;
+    for (const appointment of open) {
+      const target = appointment.status === "ACTIVE" ? "ENDED" : "REVOKED";
+      appointmentStateMachine.assertTransition(appointment.status, target);
+      await tx.appointment.update({
+        where: { id: appointment.id },
+        data:
+          target === "ENDED"
+            ? { status: target, endedAt: now }
+            : {
+                status: target,
+                revokedAt: now,
+                revokedById: actorId,
+                revokeReason: "La membresía que respaldaba el cargo finalizó",
+              },
+      });
+      await tx.roleAssignment.updateMany({
+        where: { sourceAppointmentId: appointment.id, revokedAt: null },
+        data: { revokedAt: now, revokedById: actorId },
+      });
+      await this.outbox.record(
+        tx,
+        target === "ENDED"
+          ? "kernel.appointment.ended.v1"
+          : "kernel.appointment.revoked.v1",
+        "Appointment",
+        appointment.id,
+        { appointmentId: appointment.id, status: target },
+        this.context(context),
+      );
+      await this.bumpCacheVersion(
+        `kernel:authorities-version:${appointment.organizationId}:v1`,
+      );
+    }
+    await this.authorization.invalidate(open[0].membership.personId);
   }
   membershipHistory(id: string) {
     return this.prisma.membershipTransition.findMany({
@@ -1950,20 +2009,7 @@ export class KernelService {
         commandId: this.context(context).commandId,
       },
     });
-    await tx.appointment.updateMany({
-      where: {
-        membershipId: source.id,
-        status: { in: ["NOMINATED", "ELECTED", "ACTIVE"] },
-      },
-      data: { status: "ENDED", endedAt: now },
-    });
-    await tx.roleAssignment.updateMany({
-      where: {
-        sourceAppointment: { membershipId: source.id },
-        revokedAt: null,
-      },
-      data: { revokedAt: now, revokedById: this.context(context).actor.id },
-    });
+    await this.closeAppointmentsOfMembership(tx, source.id, context);
     const destination = await tx.organizationMembership.upsert({
       where: {
         organizationId_personId: {
