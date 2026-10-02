@@ -16,11 +16,12 @@ import { useState } from "react";
 import { describeKernelError } from "./kernel-error-message";
 
 /**
- * Only the two session actions the Kernel actually exposes for the
- * current account (`revokeSession`/`revokeAllSessions` via
- * `useLogout`/`useLogoutAllSessions`) — no "Mi perfil" entry, since there's
- * no profile route/screen in this app yet and product spec §30 rules out
- * inventing settings that don't exist.
+ * "Apps conectadas" (the person's OAuth consents) plus the two session
+ * actions the Kernel actually exposes for the current account
+ * (`revokeSession`/`revokeAllSessions` via `useLogout`/
+ * `useLogoutAllSessions`) — no "Mi perfil" entry, since there's no profile
+ * route/screen in this app yet and product spec §30 rules out inventing
+ * settings that don't exist.
  */
 export function AccountMenu({ displayName }: { displayName: string }) {
   const router = useRouter();
@@ -49,6 +50,10 @@ export function AccountMenu({ displayName }: { displayName: string }) {
         </DropdownTrigger>
         <DropdownContent align="end">
           <DropdownLabel>{displayName}</DropdownLabel>
+          <DropdownSeparator />
+          <DropdownItem onSelect={() => router.push("/connected-apps")}>
+            Apps conectadas
+          </DropdownItem>
           <DropdownSeparator />
           <DropdownItem
             onSelect={() =>

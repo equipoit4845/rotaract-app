@@ -55,3 +55,11 @@ export * from "./modules/modules.keys";
 export type * from "./modules/modules.types";
 
 export * from "./administration/administrative-user-directory.hooks";
+
+export * from "./developer-apps/developer-apps.hooks";
+export * from "./developer-apps/developer-apps.keys";
+export type * from "./developer-apps/developer-apps.types";
+
+export * from "./oauth/oauth.hooks";
+export * from "./oauth/oauth.keys";
+export type * from "./oauth/oauth.types";

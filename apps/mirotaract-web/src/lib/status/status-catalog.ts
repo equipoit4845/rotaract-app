@@ -2,6 +2,7 @@ import type {
   AccountInvitation,
   ApplicationStatus,
   AppointmentStatus,
+  DeveloperAppStatus,
   MembershipStatus,
   OrganizationStatus,
   PeriodStatus,
@@ -81,6 +82,11 @@ const catalog = {
     CANCELLED: { label: "Cancelada", tone: "neutral" },
     EXPIRED: { label: "Expirada", tone: "warning" },
   } satisfies Record<TransferStatus, StatusEntry>,
+  developerApp: {
+    ACTIVE: { label: "Activa", tone: "success" },
+    SUSPENDED: { label: "Pausada", tone: "warning" },
+    REVOKED: { label: "Revocada", tone: "danger" },
+  } satisfies Record<DeveloperAppStatus, StatusEntry>,
 } as const;
 
 export type StatusKind = keyof typeof catalog;

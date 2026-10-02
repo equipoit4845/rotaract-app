@@ -6,6 +6,7 @@ import type { AdminNavItem } from "@/components/layout";
 import {
   ArrowLeftRight,
   Award,
+  Blocks,
   Building2,
   CalendarRange,
   FileText,
@@ -53,6 +54,7 @@ export function useShellNavItems(
   const canReadAppointments = useCan("kernel.appointment.read", scope);
   const canReadPositions = useCan("kernel.position.read", scope);
   const canReadPeriods = useCan("kernel.period.read", scope);
+  const canReadApps = useCan("kernel.app.read", scope);
   const isDistrictAdminView = superadminMode === "ADMIN";
 
   const district: NavEntry[] = [];
@@ -63,6 +65,9 @@ export function useShellNavItems(
   }
   if (canReadPersons && isDistrictAdminView) {
     district.push({ label: "Usuarios", href: "/persons", icon: UserCog });
+  }
+  if (canReadApps && isDistrictAdminView) {
+    district.push({ label: "Apps", href: "/developer/apps", icon: Blocks });
   }
 
   const club: NavEntry[] = [];
