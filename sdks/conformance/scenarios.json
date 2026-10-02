@@ -1,0 +1,139 @@
+{
+  "version": 1,
+  "description": "Escenarios de conformidad de los SDKs oficiales de Mi Rotaract (docs/12-data-api-and-sdks.md §E5). Cada runner implementa todos los ids, en este orden, contra un kernel real descartable. Resultado por escenario: PASS, FAIL, PENDING (requiere una épica que el kernel todavía no expone: el endpoint responde 404) o SKIP (falta una variable de entorno). Un SDK no se publica si su runner tiene algún FAIL.",
+  "env": {
+    "required": ["MR_BASE_URL", "MR_CLIENT_ID", "MR_CLIENT_SECRET", "MR_ORG_ID", "MR_OTHER_ORG_ID"],
+    "oidc": ["MR_PUBLIC_CLIENT_ID", "MR_REDIRECT_URI", "MR_USER_ACCESS_TOKEN | MR_USER_EMAIL + MR_USER_PASSWORD"],
+    "optional": ["MR_PERSON_ID", "MR_OUTSIDER_PERSON_ID"]
+  },
+  "scenarios": [
+    {
+      "id": "discovery",
+      "description": "El SDK lee {issuer}/.well-known/openid-configuration a partir de baseUrl/issuer.",
+      "expected": "issuer == MR_BASE_URL; token_endpoint, jwks_uri, authorization_endpoint presentes; code_challenge_methods_supported incluye S256."
+    },
+    {
+      "id": "client_credentials.token_cached",
+      "description": "El cliente de servidor pide un token client_credentials y lo reutiliza.",
+      "expected": "Dos llamadas a la API producen exactamente un POST /oauth/token."
+    },
+    {
+      "id": "client_credentials.invalid_secret",
+      "description": "Un secreto inválido no autentica.",
+      "expected": "MiRotaractOAuthError con error == invalid_client."
+    },
+    {
+      "id": "clubs.get_in_scope",
+      "description": "clubs.get(MR_ORG_ID) dentro del alcance de la app.",
+      "expected": "Devuelve la organización con id == MR_ORG_ID."
+    },
+    {
+      "id": "scope.out_of_scope_org",
+      "description": "clubs.get(MR_OTHER_ORG_ID): una organización fuera del árbol de la app.",
+      "expected": "MiRotaractApiError con status 403."
+    },
+    {
+      "id": "permissions.check",
+      "description": "permissions.check dentro del alcance.",
+      "expected": "AuthorizationDecision con allowed booleano y subjectId == personId."
+    },
+    {
+      "id": "permissions.check_out_of_scope",
+      "description": "permissions.check con organizationId fuera del alcance.",
+      "expected": "MiRotaractApiError con status 403."
+    },
+    {
+      "id": "persons.get_in_scope",
+      "description": "persons.get(MR_PERSON_ID), persona con membresía en la organización de la app.",
+      "expected": "Devuelve la persona con id == MR_PERSON_ID."
+    },
+    {
+      "id": "clubs.list_all_pages",
+      "requires": "E4",
+      "description": "clubs.list({ limit: 1 }) recorrido completo con el iterador.",
+      "expected": "Más de una página; incluye MR_ORG_ID y nunca MR_OTHER_ORG_ID."
+    },
+    {
+      "id": "members.pagination",
+      "requires": "E4",
+      "description": "members.list(MR_ORG_ID, { limit: 2, updatedSince }) sigue nextCursor.",
+      "expected": "Con updatedSince en el pasado: 3+ páginas y 5+ socios sin repetidos. Con updatedSince en el futuro: 0 socios."
+    },
+    {
+      "id": "members.out_of_scope",
+      "requires": "E4",
+      "description": "members.list(MR_OTHER_ORG_ID).",
+      "expected": "MiRotaractApiError con status 403."
+    },
+    {
+      "id": "members.etag_not_modified",
+      "requires": "E4",
+      "description": "Sincronización condicional: la primera página trae ETag; repetirla con ifNoneMatch.",
+      "expected": "La segunda llamada devuelve { notModified: true } (HTTP 304) y el iterador no produce elementos."
+    },
+    {
+      "id": "persons.batch",
+      "requires": "E4",
+      "description": "persons.batch([MR_PERSON_ID, MR_OUTSIDER_PERSON_ID]).",
+      "expected": "Incluye MR_PERSON_ID y omite a la persona fuera del alcance (sin error)."
+    },
+    {
+      "id": "persons.memberships",
+      "requires": "E4",
+      "description": "persons.memberships(MR_PERSON_ID).",
+      "expected": "Lista con una membresía en MR_ORG_ID."
+    },
+    {
+      "id": "authorities.list",
+      "requires": "E4",
+      "description": "authorities.list(MR_ORG_ID).",
+      "expected": "Lista (el seed nombra un presidente vigente en MR_ORG_ID)."
+    },
+    {
+      "id": "periods.list",
+      "requires": "E4",
+      "description": "periods.list(MR_ORG_ID).",
+      "expected": "Lista con al menos un período de MR_ORG_ID."
+    },
+    {
+      "id": "oidc.authorization_url",
+      "description": "authorizationUrl() arma el pedido con PKCE S256, state y nonce aleatorios.",
+      "expected": "URL sobre authorization_endpoint con response_type=code, client_id, redirect_uri, scope, state, nonce, code_challenge (43 chars) y code_challenge_method=S256."
+    },
+    {
+      "id": "oidc.code_pkce",
+      "description": "Flujo completo con la app confidencial: GET /oauth/authorize/context + POST /oauth/authorize (con el token de sesión de la persona, como la Web) y exchangeCode({ code, codeVerifier, nonce }).",
+      "expected": "Tokens + claims verificados; claims.sub == MR_PERSON_ID (si está definido); refreshToken presente."
+    },
+    {
+      "id": "oidc.code_reuse",
+      "description": "Canjear dos veces el mismo código.",
+      "expected": "MiRotaractOAuthError invalid_grant."
+    },
+    {
+      "id": "oidc.verify_id_token",
+      "description": "verifyIdToken con el nonce correcto y con uno incorrecto.",
+      "expected": "Correcto: claims; incorrecto: MiRotaractOAuthError invalid_token."
+    },
+    {
+      "id": "oidc.userinfo",
+      "description": "userInfo(accessToken).",
+      "expected": "sub igual al del id_token; email presente (scope email)."
+    },
+    {
+      "id": "oidc.refresh_rotation",
+      "description": "refresh(refreshToken) y luego reusar el refresh token viejo.",
+      "expected": "Nuevo refresh token distinto; el reuso falla con MiRotaractOAuthError invalid_grant."
+    },
+    {
+      "id": "oidc.revoke",
+      "description": "revoke(refreshToken) y luego intentar refrescar con él.",
+      "expected": "revoke no falla; el refresh posterior falla con invalid_grant."
+    },
+    {
+      "id": "oidc.public_client",
+      "description": "App PUBLIC (sin secreto): code + PKCE con MR_PUBLIC_CLIENT_ID.",
+      "expected": "exchangeCode devuelve claims verificados con aud == MR_PUBLIC_CLIENT_ID."
+    }
+  ]
+}
