@@ -66,9 +66,17 @@ describe("Live infrastructure (Redis + NATS JetStream)", () => {
         },
       });
       const publisher = app.get(OutboxPublisherService);
-      await expect(publisher.publishPending()).resolves.toBeGreaterThanOrEqual(
-        1,
-      );
+      // publishPending takes the oldest 100 rows: rows other suites left
+      // pending in the same run can come first, so drain until ours is out.
+      for (let batch = 0; batch < 50; batch++) {
+        await expect(
+          publisher.publishPending(),
+        ).resolves.toBeGreaterThanOrEqual(1);
+        const row = await prisma.outboxMessage.findUniqueOrThrow({
+          where: { id: message.id },
+        });
+        if (row.status === "PUBLISHED") break;
+      }
       let timeout: NodeJS.Timeout | undefined;
       const received = await Promise.race([
         subscription[Symbol.asyncIterator]()

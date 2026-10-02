@@ -709,12 +709,17 @@ export class KernelAccessGuard implements CanActivate {
           ? owned.organizationIds
           : [undefined];
     } else {
-      candidateOrganizationIds = directOrganizationId
-        ? [directOrganizationId]
-        : ((await organizationResolverByHandler[handler]?.(
-            this.prisma,
-            request,
-          )) ?? [undefined]);
+      // A route that names its resource (appId, membershipId, ...) is
+      // authorized against THAT resource's organization. A caller-supplied
+      // organizationId in the body or query must never replace it: otherwise
+      // someone with kernel.app.manage in their own organization could act
+      // on another organization's app by sending `organizationId` along.
+      const resolver = organizationResolverByHandler[handler];
+      candidateOrganizationIds = resolver
+        ? ((await resolver(this.prisma, request)) ?? [undefined])
+        : directOrganizationId
+          ? [directOrganizationId]
+          : [undefined];
     }
     if (candidateOrganizationIds.length === 0)
       candidateOrganizationIds = [undefined];

@@ -45,6 +45,8 @@ describe("Webhooks E2E (E7)", () => {
   let districtId: string;
   let clubA: string;
   let clubB: string;
+  let otherDistrictId: string;
+  let otherRdr: string;
   let appId: string;
   let clientId: string;
   let clientSecret: string;
@@ -265,6 +267,23 @@ describe("Webhooks E2E (E7)", () => {
     );
     president = await presidentAccount.login();
 
+    // RDR of ANOTHER district: holds kernel.app.manage, but not over clubA.
+    otherDistrictId = await organization({
+      type: "DISTRICT",
+      code: `D2-${tag}`,
+      name: `Other district ${tag}`,
+      slug: `d2-${tag}`,
+    });
+    const otherRdrAccount = await account("other-rdr");
+    await grantRoleForTests(
+      prisma,
+      otherRdrAccount.personId,
+      "DISTRICT_RDR",
+      "ORGANIZATION_TREE",
+      otherDistrictId,
+    );
+    otherRdr = await otherRdrAccount.login();
+
     const created = await as(rdr)
       .post("/developer/apps", {
         name: `Padrón ${tag}`,
@@ -283,7 +302,7 @@ describe("Webhooks E2E (E7)", () => {
   });
 
   afterAll(async () => {
-    const orgs = [clubA, clubB, districtId].filter(Boolean);
+    const orgs = [clubA, clubB, districtId, otherDistrictId].filter(Boolean);
     const accounts = await prisma.userAccount.findMany({
       where: { email: { contains: tag } },
       select: { id: true, personId: true },
@@ -319,7 +338,9 @@ describe("Webhooks E2E (E7)", () => {
     await prisma.organization.deleteMany({
       where: { id: { in: [clubA, clubB].filter(Boolean) } },
     });
-    await prisma.organization.deleteMany({ where: { id: districtId } });
+    await prisma.organization.deleteMany({
+      where: { id: { in: [districtId, otherDistrictId].filter(Boolean) } },
+    });
     await prisma.accountSession.deleteMany({
       where: { accountId: { in: accounts.map((a) => a.id) } },
     });
@@ -427,6 +448,32 @@ describe("Webhooks E2E (E7)", () => {
       })
       .expect(403);
     await as(president).post(`${hooks()}/${endpointId}/test`).expect(403);
+
+    // Another district's RDR can't reach this app by naming their own
+    // organization in the body or the query: the app's organization rules.
+    await as(otherRdr).get(hooks()).expect(403);
+    await as(otherRdr)
+      .get(`${hooks()}?organizationId=${otherDistrictId}`)
+      .expect(403);
+    await as(otherRdr)
+      .post(hooks(), {
+        url: receiverUrl,
+        eventTypes: ["membership.activated.v1"],
+        organizationId: otherDistrictId,
+      })
+      .expect(403);
+    await as(otherRdr)
+      .patch(`${hooks()}/${endpointId}`, {
+        status: "DISABLED",
+        organizationId: otherDistrictId,
+      })
+      .expect(403);
+    await as(otherRdr)
+      .patch(`/developer/apps/${appId}`, {
+        name: "Hijacked",
+        organizationId: otherDistrictId,
+      })
+      .expect(403);
   });
 
   it("delivers a signed membership.activated.v1 that verifies with the Kernel, the JS SDK and the Python SDK", async () => {

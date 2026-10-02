@@ -209,7 +209,9 @@ export class WebhookStreamService {
       clearInterval(heartbeat);
       response.end();
     };
-    request.on("close", close);
+    // `close` of the response: the client went away (the request side may
+    // emit `close` as soon as its empty body has been read).
+    response.on("close", close);
   }
 
   /** `?events=a,b` ∩ what the app's scopes allow; default: all it may receive. */
