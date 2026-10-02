@@ -1,0 +1,555 @@
+// Reuniones distritales (meetings-api).
+//
+// Port of the legacy Mi Rotaract meetings models
+// (/home/equipoit/mi-rotaract/apps/api/prisma/schema.prisma). Users and clubs
+// are no longer owned here: `userId` everywhere is a kernel personId and
+// `clubId` a kernel organizationId (type CLUB). The Dir* tables are a local
+// read model of the kernel directory, refreshed by DirectorySyncService.
+//
+// The client is generated into ./generated/prisma so it never clashes with
+// the Institutional Kernel's own @prisma/client.
+
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../generated/prisma"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("MEETINGS_DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Directory (read model of the kernel)
+// ---------------------------------------------------------------------------
+
+enum ClubStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum DistrictRole {
+  RDR
+  SECRETARY
+}
+
+enum StaffRole {
+  SUPERADMIN
+  SECRETARY
+}
+
+/// Kernel Person. `id` = kernel personId. Placeholder rows created by the
+/// legacy migration for unmapped users have ids starting with "legacy:".
+model DirPerson {
+  id                String    @id
+  fullName          String
+  email             String?
+  isActive          Boolean   @default(true)
+  /// Kernel platformRole when known (USER | SUPERADMIN). The Data API does
+  /// not expose it, so SUPERADMIN is normally granted through DistrictStaff.
+  platformRole      String?
+  externalReference String?
+  syncedAt          DateTime  @default(now())
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  memberships         DirMembership[]
+  districtRoles       DirDistrictRole[]
+  meetingParticipants MeetingParticipant[]
+  speakingRequests    SpeakingRequest[]
+  transcriptions      TopicTranscription[]
+
+  @@index([email])
+}
+
+/// Kernel Organization of type CLUB. `id` = kernel organizationId.
+model DirClub {
+  id        String     @id
+  name      String
+  code      String
+  status    ClubStatus @default(ACTIVE)
+  syncedAt  DateTime   @default(now())
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  standing           ClubStanding?
+  memberships        DirMembership[]
+  meetings           Meeting[]
+  meetingAttendances ClubMeetingAttendance[]
+  cartasPoder        CartaPoder[]
+  proposedMotions    Motion[]                @relation("MotionProposerClub")
+  secondedMotions    Motion[]                @relation("MotionSeconderClub")
+
+  @@index([code])
+  @@index([status])
+}
+
+/// Kernel OrganizationMembership (person -> club). `isPresident` comes from an
+/// ACTIVE CLUB_PRESIDENT appointment in the club.
+model DirMembership {
+  id          String    @id @default(cuid())
+  personId    String
+  clubId      String
+  title       String?
+  isPresident Boolean   @default(false)
+  active      Boolean   @default(true)
+  syncedAt    DateTime  @default(now())
+  person      DirPerson @relation(fields: [personId], references: [id], onDelete: Cascade)
+  club        DirClub   @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@unique([personId, clubId])
+  @@index([clubId])
+  @@index([clubId, isPresident])
+}
+
+/// ACTIVE district appointments (DISTRICT_RDR -> RDR, DISTRICT_SECRETARY -> SECRETARY).
+model DirDistrictRole {
+  personId String
+  role     DistrictRole
+  syncedAt DateTime     @default(now())
+  person   DirPerson    @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@id([personId, role])
+}
+
+/// Local district staff (not in the kernel): the legacy district
+/// secretaries and superadmins. Editable by SUPERADMIN/RDR.
+model DistrictStaff {
+  personId    String    @id
+  role        StaffRole @default(SECRETARY)
+  note        String?
+  createdById String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+/// Club standing for district meetings (not in the kernel). Defaults match
+/// the legacy Club columns.
+model ClubStanding {
+  clubId                     String   @id
+  isConstituido              Boolean  @default(true)
+  cuotaAldia                 Boolean  @default(false)
+  informeAlDia               Boolean  @default(false)
+  enabledForDistrictMeetings Boolean  @default(true)
+  updatedById                String?
+  updatedAt                  DateTime @updatedAt
+  club                       DirClub  @relation(fields: [clubId], references: [id], onDelete: Cascade)
+}
+
+/// Bookkeeping of the kernel directory sync (single row id="kernel").
+model DirSyncState {
+  id            String    @id
+  lastAttemptAt DateTime?
+  lastSuccessAt DateTime?
+  lastError     String?
+  clubs         Int       @default(0)
+  persons       Int       @default(0)
+  memberships   Int       @default(0)
+}
+
+// ---------------------------------------------------------------------------
+// Meetings (legacy models, unchanged apart from User/Club references)
+// ---------------------------------------------------------------------------
+
+enum CartaPoderStatus {
+  DRAFT
+  PENDING_SECRETARY
+  SUBMITTED
+  VERIFIED
+  REJECTED
+}
+
+enum MeetingType {
+  ORDINARY
+  EXTRAORDINARY
+}
+
+enum ActaStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum VotingMethod {
+  PUBLIC
+  SECRET
+}
+
+enum MajorityType {
+  SIMPLE
+  ABSOLUTE
+  TWO_THIRDS
+  THREE_QUARTERS
+}
+
+enum BallotType {
+  YES_NO
+  CANDIDATE
+}
+
+enum MeetingStatus {
+  DRAFT
+  SCHEDULED
+  LIVE
+  PAUSED
+  FINISHED
+  ARCHIVED
+}
+
+enum AttendanceStatus {
+  INVITED
+  JOINED
+  LEFT
+}
+
+enum TopicType {
+  DISCUSSION
+  VOTING
+  INFORMATIVE
+}
+
+enum TopicStatus {
+  PENDING
+  ACTIVE
+  DONE
+}
+
+enum VoteSessionStatus {
+  OPEN
+  CLOSED
+}
+
+enum VoteChoice {
+  YES
+  NO
+  ABSTAIN
+}
+
+enum MotionStatus {
+  PROPOSED
+  SECONDED
+  VOTING
+  APPROVED
+  REJECTED
+}
+
+enum SpeakingRequestStatus {
+  PENDING
+  ACCEPTED
+  CANCELLED
+  DONE
+}
+
+model Meeting {
+  id                   String               @id @default(cuid())
+  title                String
+  description          String?
+  scheduledAt          DateTime?
+  startedAt            DateTime?
+  endedAt              DateTime?
+  status               MeetingStatus        @default(DRAFT)
+  type                 MeetingType          @default(ORDINARY)
+  isDistrictMeeting    Boolean              @default(true)
+  quorumRequired       Int?
+  quorumMet            Boolean              @default(false)
+  isInformationalOnly  Boolean              @default(false)
+  attendanceLocked     Boolean              @default(false)
+  attendanceLockedAt   DateTime?
+  transcriptionEnabled Boolean              @default(true)
+  currentTopicId       String?
+  /// kernel personId of the creator (plain id, no FK)
+  createdById          String
+  clubId               String
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  club                 DirClub              @relation(fields: [clubId], references: [id])
+  participants         MeetingParticipant[]
+  topics               AgendaTopic[]
+  voteSessions         VoteSession[]
+  speakingRequests     SpeakingRequest[]
+  currentSpeakerId     String?
+  nextSpeakerId        String?
+  timerSessions        TimerSession[]
+  auditLogs            AuditLog[]
+  clubAttendances      ClubMeetingAttendance[]
+  cartasPoder          CartaPoder[]
+  acta                 MeetingActa?
+  motions              Motion[]
+
+  @@index([clubId])
+  @@index([status, scheduledAt])
+  @@index([type])
+}
+
+model AgendaTopic {
+  id                   String               @id @default(cuid())
+  meetingId            String
+  title                String
+  description          String?
+  order                Int                  @default(0)
+  type                 TopicType            @default(DISCUSSION)
+  estimatedDurationSec Int?
+  status               TopicStatus          @default(PENDING)
+  isAttendanceTopic    Boolean              @default(false)
+  meeting              Meeting              @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  voteSessions         VoteSession[]
+  transcriptions       TopicTranscription[]
+
+  @@index([meetingId, order])
+}
+
+model VoteSession {
+  id                       String            @id @default(cuid())
+  meetingId                String
+  topicId                  String
+  status                   VoteSessionStatus @default(OPEN)
+  votingMethod             VotingMethod      @default(PUBLIC)
+  requiredMajority         MajorityType      @default(SIMPLE)
+  isElection               Boolean           @default(false)
+  electionType             String?
+  ballotType               BallotType        @default(YES_NO)
+  round                    Int               @default(1)
+  previousSessionId        String?
+  rdrTiebreakerUsed        Boolean           @default(false)
+  rdrTiebreakerChoice      VoteChoice?
+  rdrTiebreakerCandidateId String?
+  eligibleClubIds          String?           @db.Text
+  eligibleClubCount        Int?
+  openedAt                 DateTime          @default(now())
+  closedAt                 DateTime?
+  openedById               String?
+  closedById               String?
+  votes                    Vote[]
+  sealedVotes              SealedVote[]
+  candidates               VoteCandidate[]
+  previousSession          VoteSession?      @relation("VoteRound", fields: [previousSessionId], references: [id])
+  nextRounds               VoteSession[]     @relation("VoteRound")
+  topic                    AgendaTopic       @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  meeting                  Meeting           @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  motion                   Motion?
+
+  @@index([meetingId, status])
+  @@index([previousSessionId])
+}
+
+model VoteCandidate {
+  id            String      @id @default(cuid())
+  voteSessionId String
+  displayName   String
+  userId        String?
+  order         Int         @default(0)
+  createdAt     DateTime    @default(now())
+  session       VoteSession @relation(fields: [voteSessionId], references: [id], onDelete: Cascade)
+  votes         Vote[]
+
+  @@index([voteSessionId])
+}
+
+model Vote {
+  id            String         @id @default(cuid())
+  voteSessionId String
+  userId        String
+  /// Public club of the vote (null for SECRET sessions, as in legacy).
+  clubId        String?
+  /// Club the ballot counts for in a district meeting, also for SECRET
+  /// sessions. Never exposed by the API; it only backs the one-vote-per-club
+  /// rule at the database level (unique with voteSessionId; NULLs, i.e.
+  /// non-district meetings, never collide).
+  ballotClubId  String?
+  choice        VoteChoice
+  candidateId   String?
+  createdAt     DateTime       @default(now())
+  session       VoteSession    @relation(fields: [voteSessionId], references: [id], onDelete: Cascade)
+  candidate     VoteCandidate? @relation(fields: [candidateId], references: [id], onDelete: SetNull)
+
+  @@unique([voteSessionId, userId])
+  @@unique([voteSessionId, ballotClubId])
+  @@index([voteSessionId])
+  @@index([voteSessionId, clubId])
+  @@index([candidateId])
+}
+
+model Motion {
+  id               String       @id @default(cuid())
+  meetingId        String
+  title            String
+  description      String?      @db.Text
+  status           MotionStatus @default(PROPOSED)
+  proposedByUserId String
+  proposedByClubId String
+  secondedByUserId String?
+  secondedByClubId String?
+  voteSessionId    String?      @unique
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  meeting        Meeting      @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  proposedByClub DirClub      @relation("MotionProposerClub", fields: [proposedByClubId], references: [id], onDelete: Cascade)
+  secondedByClub DirClub?     @relation("MotionSeconderClub", fields: [secondedByClubId], references: [id], onDelete: SetNull)
+  voteSession    VoteSession? @relation(fields: [voteSessionId], references: [id], onDelete: SetNull)
+
+  @@index([meetingId])
+  @@index([status])
+}
+
+model MeetingParticipant {
+  id               String           @id @default(cuid())
+  meetingId        String
+  userId           String
+  clubId           String?
+  canVote          Boolean          @default(true)
+  isDelegate       Boolean          @default(false)
+  attendanceStatus AttendanceStatus @default(INVITED)
+  joinedAt         DateTime?
+  user             DirPerson        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  meeting          Meeting          @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+
+  @@unique([meetingId, userId])
+  @@index([meetingId])
+  @@index([userId])
+  @@index([meetingId, clubId])
+}
+
+model SpeakingRequest {
+  id          String                @id @default(cuid())
+  meetingId   String
+  userId      String
+  status      SpeakingRequestStatus @default(PENDING)
+  position    Int                   @default(0)
+  requestedAt DateTime              @default(now())
+  acceptedAt  DateTime?
+  meeting     Meeting               @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  user        DirPerson             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([meetingId, status])
+}
+
+model TimerSession {
+  id                 String    @id @default(cuid())
+  meetingId          String
+  topicId            String?
+  speakingRequestId  String?
+  type               String // TOPIC | SPEAKER
+  plannedDurationSec Int
+  startedAt          DateTime  @default(now())
+  pausedAt           DateTime?
+  endedAt            DateTime?
+  overtimeSec        Int       @default(0)
+  meeting            Meeting   @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+
+  @@index([meetingId])
+}
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  meetingId    String?
+  clubId       String?
+  actorUserId  String?
+  action       String
+  entityType   String?
+  entityId     String?
+  metadataJson String?
+  createdAt    DateTime @default(now())
+  meeting      Meeting? @relation(fields: [meetingId], references: [id], onDelete: SetNull)
+
+  @@index([meetingId, createdAt])
+  @@index([clubId, createdAt])
+}
+
+model CartaPoder {
+  id                String           @id @default(cuid())
+  meetingId         String
+  clubId            String
+  presidentUserId   String
+  delegateUserId    String
+  delegateDocNumber String?
+  delegateDocType   String? // 'DNI' | 'PASAPORTE' | 'CI'
+  status            CartaPoderStatus @default(DRAFT)
+  secretaryUserId   String?
+  secretarySignedAt DateTime?
+  submittedAt       DateTime?
+  rejectionReason   String?
+  receivedAt        DateTime         @default(now())
+  verified          Boolean          @default(false)
+  verifiedById      String?
+  documentUrl       String?
+  meeting           Meeting          @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  club              DirClub          @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@unique([meetingId, clubId])
+  @@index([meetingId])
+  @@index([clubId, status])
+}
+
+model ClubMeetingAttendance {
+  id             String   @id @default(cuid())
+  meetingId      String
+  clubId         String
+  attendeeUserId String
+  isDelegate     Boolean  @default(false)
+  cartaPoderId   String?
+  createdAt      DateTime @default(now())
+  meeting        Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  club           DirClub  @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@unique([meetingId, clubId])
+  @@index([clubId])
+}
+
+model SealedVote {
+  id            String      @id @default(cuid())
+  voteSessionId String
+  clubId        String
+  choice        VoteChoice
+  priorityOrder Int?
+  documentUrl   String?
+  receivedAt    DateTime    @default(now())
+  receivedById  String?
+  session       VoteSession @relation(fields: [voteSessionId], references: [id], onDelete: Cascade)
+
+  @@unique([voteSessionId, clubId])
+  @@index([voteSessionId])
+}
+
+model MeetingActa {
+  id            String     @id @default(cuid())
+  meetingId     String     @unique
+  status        ActaStatus @default(DRAFT)
+  contentJson   String     @db.Text
+  publishedAt   DateTime?
+  publishedById String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  meeting       Meeting    @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+}
+
+model TopicTranscription {
+  id        String      @id @default(cuid())
+  topicId   String
+  userId    String?
+  userName  String
+  text      String      @db.Text
+  createdAt DateTime    @default(now())
+
+  topic AgendaTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  user  DirPerson?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([topicId])
+}
+
+/// Meeting attachments only (legacy Attachment with entityType "meeting"),
+/// stored on the local filesystem under MEETINGS_UPLOAD_DIR.
+model Attachment {
+  id             String   @id @default(cuid())
+  entityType     String
+  entityId       String
+  fileName       String
+  mimeType       String?
+  sizeBytes      Int?
+  storageKey     String
+  storageBackend String   @default("fs")
+  uploadedById   String
+  uploadedAt     DateTime @default(now())
+
+  @@index([entityType, entityId])
+}
