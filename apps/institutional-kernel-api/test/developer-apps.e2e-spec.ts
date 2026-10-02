@@ -133,12 +133,10 @@ describe("Developer apps E2E (E2)", () => {
       .set("authorization", `Bearer ${token}`);
 
   beforeAll(async () => {
-    // Runtime OpenAPI request validation is off here (as in production):
-    // the validator compares header parameter names case-sensitively, so the
-    // `Idempotency-Key` header the DeveloperApps operations declare is never
-    // found among Express's lower-cased headers. The service-level
-    // allowlists and validations are what's under test.
-    process.env.KERNEL_OPENAPI_RUNTIME_VALIDATION = "false";
+    // Request validation ON: these routes declare the Idempotency-Key
+    // header in the contract. Set explicitly because process.env is shared
+    // across E2E files run in band and other suites turn it off.
+    process.env.KERNEL_OPENAPI_RUNTIME_VALIDATION = "true";
     app = await createTestApp();
     http = app.getHttpServer();
     prisma = testPrisma();

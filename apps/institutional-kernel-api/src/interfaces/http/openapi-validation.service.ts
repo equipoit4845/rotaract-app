@@ -96,7 +96,10 @@ export class OpenApiValidationService {
           : location === "query"
             ? request.query
             : request.headers;
-      const value = source[name];
+      // HTTP header names are case-insensitive (RFC 9110 §5.1) and Node
+      // lowercases them, while the contract spells them canonically.
+      const value =
+        location === "header" ? source[name.toLowerCase()] : source[name];
       if (value === undefined && parameter.required) {
         throw new BadRequestException(
           `Missing required ${location} parameter: ${name}`,
