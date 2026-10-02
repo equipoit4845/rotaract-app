@@ -188,6 +188,7 @@ export class OAuthController {
     return this.oidc.userInfo({
       personId: request.oidc.personId,
       scopes: request.oidc.scopes,
+      appId: request.oidc.appId,
     });
   }
 

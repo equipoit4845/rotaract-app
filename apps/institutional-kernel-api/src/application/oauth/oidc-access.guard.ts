@@ -1,10 +1,10 @@
 import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
 import { AccountStatus, DeveloperAppStatus } from "@prisma/client";
-import type { Request, Response } from "express";
+import type { Request } from "express";
 
 import { SigningKeyService } from "../../infrastructure/crypto/signing-key.service";
 import { PrismaService } from "../../infrastructure/prisma/prisma.service";
-import { bindAccessApp } from "./oidc-access-context";
+import { OAuthError } from "./oauth-error";
 import { KERNEL_AUDIENCE, isOidcScope, parseScope } from "./scopes";
 
 export type OidcAccessRequest = Request & {
@@ -17,22 +17,6 @@ type UserAccessToken = {
   token_use?: string;
   scope?: string;
 };
-
-/**
- * Sends the RFC 6750 §3.1 error and makes later writes to this response
- * no-ops. The global ProblemFilter would otherwise answer the
- * ForbiddenException Nest raises for `false` with Problem Details (and
- * fail with "headers already sent"); OAuth clients expect this exact shape.
- */
-function rejectInvalidToken(response: Response): false {
-  response.setHeader("WWW-Authenticate", 'Bearer error="invalid_token"');
-  response.setHeader("Cache-Control", "no-store");
-  response.status(401).json({ error: "invalid_token" });
-  const sealed = response as unknown as Record<string, unknown>;
-  for (const method of ["status", "type", "set", "header", "send", "json"])
-    sealed[method] = () => response;
-  return false;
-}
 
 /**
  * E3 — guards /oauth/userinfo: requires an ES256 access token issued by
@@ -48,12 +32,10 @@ export class OidcAccessGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const http = context.switchToHttp();
-    const request = http.getRequest<OidcAccessRequest>();
-    const response = http.getResponse<Response>();
+    const request = context.switchToHttp().getRequest<OidcAccessRequest>();
     const access = await this.resolve(request);
-    if (!access) return rejectInvalidToken(response);
-    bindAccessApp(access.scopes, access.appId);
+    // ProblemFilter renders OAuthError as RFC 6750 (401 + WWW-Authenticate).
+    if (!access) throw new OAuthError("invalid_token");
     request.oidc = access;
     return true;
   }

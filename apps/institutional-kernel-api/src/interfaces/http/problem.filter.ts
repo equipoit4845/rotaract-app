@@ -6,6 +6,7 @@ import {
 } from "@nestjs/common";
 import type { Request, Response } from "express";
 import { DomainError } from "../../domain/shared/domain.error";
+import { OAuthError } from "../../application/oauth/oauth-error";
 
 @Catch()
 export class ProblemFilter implements ExceptionFilter {
@@ -13,6 +14,17 @@ export class ProblemFilter implements ExceptionFilter {
     const http = host.switchToHttp();
     const response = http.getResponse<Response>();
     const request = http.getRequest<Request>();
+    // OAuth endpoints answer in RFC 6749 §5.2 / RFC 6750 §3.1 shape, which
+    // is what OAuth client libraries parse, never Problem Details.
+    if (error instanceof OAuthError) {
+      response.setHeader("Cache-Control", "no-store");
+      if (error.error === "invalid_token")
+        response.setHeader("WWW-Authenticate", 'Bearer error="invalid_token"');
+      else if (error.status === 401)
+        response.setHeader("WWW-Authenticate", 'Basic realm="mirotaract"');
+      response.status(error.status).json(error.toJSON());
+      return;
+    }
     const prismaCode = (error as { code?: string })?.code;
     const status =
       error instanceof HttpException

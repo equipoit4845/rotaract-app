@@ -1,7 +1,6 @@
 import {
   BadRequestException,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
 } from "@nestjs/common";
 import {
@@ -20,7 +19,6 @@ import {
 } from "../developer-apps/credentials";
 import { buildClaims } from "./claims";
 import type { TokenResponse } from "./client-credentials.grant";
-import { boundAccessApp } from "./oidc-access-context";
 import { OAuthError } from "./oauth-error";
 import {
   KERNEL_AUDIENCE,
@@ -297,15 +295,11 @@ export class OidcService {
   async userInfo(access: {
     personId: string;
     scopes: string[];
-    appId?: string;
+    /** Claims are restricted to this app's organization tree. */
+    appId: string;
   }): Promise<Record<string, unknown>> {
-    const appId = access.appId ?? boundAccessApp(access.scopes);
-    // Without the app we can't restrict claims to its organization tree:
-    // fail closed rather than leak memberships.
-    if (!appId)
-      throw new InternalServerErrorException("OIDC access context missing");
     const app = await this.prisma.developerApp.findUniqueOrThrow({
-      where: { id: appId },
+      where: { id: access.appId },
       select: { organizationId: true },
     });
     const claims = await buildClaims(this.prisma, {

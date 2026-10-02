@@ -3,7 +3,7 @@ import type { ExecutionContext } from "@nestjs/common";
 import type { SigningKeyService } from "../../infrastructure/crypto/signing-key.service";
 import type { PrismaService } from "../../infrastructure/prisma/prisma.service";
 import { OidcAccessGuard } from "./oidc-access.guard";
-import { boundAccessApp } from "./oidc-access-context";
+import { OAuthError } from "./oauth-error";
 
 const validPayload = {
   sub: "person_1",
@@ -102,7 +102,6 @@ describe("OidcAccessGuard", () => {
       clientId: "mra_1",
       scopes: ["openid", "profile"],
     });
-    expect(boundAccessApp(request.oidc.scopes)).toBe("app_1");
   });
 
   it.each([
@@ -118,15 +117,12 @@ describe("OidcAccessGuard", () => {
     ],
     ["an inactive account", { account: { status: "SUSPENDED" } }],
   ])("answers 401 invalid_token for %s", async (_label, options) => {
-    const { guard, context, response } = setup(options);
-    await expect(guard.canActivate(context)).resolves.toBe(false);
-    expect(response.statusCode).toBe(401);
-    expect(response.body).toEqual({ error: "invalid_token" });
-    expect(response.headers["WWW-Authenticate"]).toBe(
-      'Bearer error="invalid_token"',
-    );
-    // Later writes (the global exception filter) can't overwrite it.
-    response.status(403).type("application/problem+json").send({});
-    expect(response.statusCode).toBe(401);
+    const { guard, context } = setup(options);
+    // ProblemFilter renders it as 401 { error: "invalid_token" } with
+    // WWW-Authenticate (asserted end to end in test/oidc.e2e-spec.ts).
+    const error = await guard.canActivate(context).catch((e) => e);
+    expect(error).toBeInstanceOf(OAuthError);
+    expect(error.error).toBe("invalid_token");
+    expect(error.status).toBe(401);
   });
 });

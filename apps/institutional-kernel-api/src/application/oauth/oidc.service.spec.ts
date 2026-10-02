@@ -3,7 +3,6 @@ import { BadRequestException, NotFoundException } from "@nestjs/common";
 import type { SigningKeyService } from "../../infrastructure/crypto/signing-key.service";
 import type { PrismaService } from "../../infrastructure/prisma/prisma.service";
 import { pkceS256, sha256 } from "../developer-apps/credentials";
-import { bindAccessApp } from "./oidc-access-context";
 import { OidcService } from "./oidc.service";
 import { OAuthError } from "./oauth-error";
 
@@ -549,8 +548,11 @@ describe("OidcService — revoke, userinfo and consents", () => {
       },
     ]);
     const scopes = ["openid", "memberships"];
-    bindAccessApp(scopes, "app_1");
-    const info = await oidc.userInfo({ personId: "person_1", scopes });
+    const info = await oidc.userInfo({
+      personId: "person_1",
+      scopes,
+      appId: "app_1",
+    });
 
     expect(info).toEqual({
       sub: "person_1",
@@ -572,13 +574,6 @@ describe("OidcService — revoke, userinfo and consents", () => {
         },
       }),
     );
-  });
-
-  it("fails closed when it can't tell which app is asking", async () => {
-    const { oidc } = setup();
-    await expect(
-      oidc.userInfo({ personId: "person_1", scopes: ["openid"] }),
-    ).rejects.toThrow("OIDC access context missing");
   });
 
   it("revokes a consent together with its refresh tokens", async () => {
