@@ -95,7 +95,34 @@ def all_members(token: str, organization_id: str):
         params["cursor"] = page["pageInfo"]["nextCursor"]
 ```
 
-Los SDKs oficiales (en publicación) hacen esto solos con iteradores.
+Con los SDKs oficiales (todavía no publicados en npm/PyPI; ver
+[README.md](README.md#sdks-oficiales)), los listados paginados
+(`clubs.list` / `organizations.list` y `members.list`) devuelven un
+paginador que sigue `nextCursor` solo:
+
+```ts
+const socios = client.members.list(organizationId, { status: "ACTIVE", limit: 100 });
+
+for await (const socio of socios) console.log(socio.person.displayName); // todas las páginas
+const todos = await client.members.list(organizationId).all({ max: 5000 }); // junta todo (max corta antes)
+for await (const page of client.members.list(organizationId).pages()) page.items; // página por página
+const primera = await client.members.list(organizationId).page(); // solo una página (o .page(cursor))
+```
+
+```python
+for socio in client.members.list(organization_id, status="ACTIVE", limit=100):
+    print(socio["person"]["displayName"])
+
+todos = client.members.list(organization_id).all(max=5000)
+for page in client.members.list(organization_id).pages():
+    page.items, page.next_cursor, page.has_more
+primera = client.members.list(organization_id).page()   # o .page(cursor)
+```
+
+Con `AsyncMiRotaract` es igual, con `async for` y `await`. El resto de los
+métodos (`clubs.get`, `persons.get`, `persons.batch`, `persons.memberships`,
+`authorities.list`, `periods.list`, `permissions.check`) devuelven el
+resultado directo, sin paginador.
 
 ### Sincronización incremental (`updatedSince`)
 
@@ -119,6 +146,18 @@ Las membresías no se borran: una baja llega como un cambio de `status`
 la sincronización incremental no te vas a enterar de las bajas; no filtres
 por estado al sincronizar.
 
+Con los SDKs, `updatedSince` acepta un string ISO 8601 o un `Date` /
+`datetime`:
+
+```ts
+for await (const cambio of client.members.list(clubId, { updatedSince: ultimoUpdatedAt })) aplicar(cambio);
+```
+
+```python
+for cambio in client.members.list(club_id, updated_since=ultimo_updated_at):
+    aplicar(cambio)
+```
+
 Recordá que tu copia es **solo una caché**: la fuente de verdad sigue siendo
 el kernel. No la uses para "corregir" datos.
 
@@ -136,6 +175,39 @@ curl -s -i "$API/service/organizations/$CLUB_ID/members" \
 ```
 
 Ideal para refrescos periódicos: casi no consume ancho de banda.
+
+Con los SDKs, el ETag se maneja con `.page()` del paginador. `ifNoneMatch` /
+`if_none_match` **solo aplica a la primera página**: si el servidor responde
+`304`, `.page()` devuelve `{ notModified: true, etag }` (en Python,
+`NotModified(etag=…)`, con `not_modified == True`), iterar el paginador no
+produce ningún elemento y `paginator.notModified` / `paginator.not_modified`
+queda en verdadero. Los SDKs solo envían `If-None-Match` en `clubs.list` /
+`organizations.list` y `members.list`.
+
+```ts
+// Primera vez
+const page = await client.members.list(clubId).page();
+if (!page.notModified) guardar(page.items, page.etag);
+
+// Después
+const again = await client.members.list(clubId, { ifNoneMatch: etagGuardado }).page();
+if (again.notModified) return; // 304: nada cambió
+guardar(again.items, again.etag);
+```
+
+```python
+page = client.members.list(club_id).page()
+guardar(page.items, page.etag)
+
+again = client.members.list(club_id, if_none_match=etag_guardado).page()
+if again.not_modified:   # 304: nada cambió
+    return
+guardar(again.items, again.etag)
+```
+
+Si la primera página cambió y hay más (`pageInfo.hasMore` en JS, `has_more` en Python), seguí con
+`.page(cursor)` o combiná el ETag con `updatedSince` para traer solo lo
+modificado.
 
 ## Organizaciones
 
@@ -350,6 +422,18 @@ curl -s -X POST "$API/service/persons/batch" \
 
 Es una consulta (no modifica nada), aunque use `POST`.
 
+Con los SDKs, `persons.batch(ids)` saca duplicados, parte la lista de a 100
+ids y junta las respuestas; manda una `Idempotency-Key` propia en cada
+pedido, así que se puede reintentar sin riesgo:
+
+```ts
+const personas = await client.persons.batch(ids); // PersonView[]
+```
+
+```python
+personas = client.persons.batch(ids)  # list[PersonView] (dicts)
+```
+
 ## Autoridades
 
 ### Autoridades vigentes · v1
@@ -483,12 +567,34 @@ curl -s -X POST "$API/service/authorization/check" \
 
 Podés cachear la decisión hasta `cacheUntil`.
 
+Con los SDKs (el SDK arma `subjectId` y `scope` por vos; `scopeType` es
+`ORGANIZATION` por defecto):
+
+```ts
+const { allowed, cacheUntil } = await client.permissions.check({
+  personId: "cmb1p0lucia0000000000001",
+  permission: "kernel.membership.read",
+  organizationId: "cmb0c1asucentro000000001",
+});
+```
+
+```python
+decision = client.permissions.check(
+    person_id="cmb1p0lucia0000000000001",
+    permission="kernel.membership.read",
+    organization_id="cmb0c1asucentro000000001",
+)
+decision["allowed"]
+```
+
 ### Varias decisiones · disponible
 
 `POST /service/authorization/batch-check` · mismo scope. Cuerpo
 `{ "checks": [ ... ] }` con hasta 100 pedidos como el anterior; cada uno
 tiene que tener una organización dentro del alcance. Responde una lista de
-decisiones en el mismo orden.
+decisiones en el mismo orden. En los SDKs: `permissions.checkMany([...])`
+(JS) y `permissions.check_many([...])` (Python, con dicts de las mismas
+claves que `check`); no parten la lista, así que mandá como máximo 100.
 
 ## Otros endpoints de servicio
 

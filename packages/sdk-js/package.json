@@ -7,7 +7,7 @@
   "type": "module",
   "sideEffects": false,
   "engines": {
-    "node": ">=18.17"
+    "node": ">=20"
   },
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",

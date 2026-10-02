@@ -133,9 +133,53 @@ async function withRetry(call: () => Promise<Response>, attempts = 4): Promise<R
 }
 ```
 
-Los SDKs oficiales (en publicación) ya reintentan `429`/`502`/`503`/`504`
-respetando `Retry-After`, y nunca reintentan un `POST` sin
-`Idempotency-Key`.
+Los SDKs oficiales (`@mirotaract/sdk` y `mirotaract`, todavía no publicados
+en npm/PyPI; ver [README.md](README.md#sdks-oficiales)) ya hacen esto: hasta
+2 reintentos por defecto, con backoff exponencial y azar, ante
+`429`/`502`/`503`/`504` y errores de red, respetando `Retry-After` (si la
+espera pedida supera el máximo configurado, 30 s por defecto, devuelven el
+error en vez de esperar). Reintentan `GET`, `PUT` y `DELETE`, y **nunca** un
+`POST` sin `Idempotency-Key`. Las consultas por `POST`
+(`persons.batch`, `permissions.check` y `permissions.checkMany` /
+`check_many`) mandan una `Idempotency-Key` generada por el SDK, así que sí
+se reintentan. El pedido del token (`POST /oauth/token`), el canje de código
+y el refresh **no** se reintentan.
+
+Errores tipados de los SDKs:
+
+| Clase | Cuándo | Campos (JS / Python) |
+|---|---|---|
+| `MiRotaractApiError` | La API respondió Problem Details. | `status`, `code`, `title`, `detail`, `traceId` / `trace_id`, `type`, `instance`, `body` |
+| `MiRotaractOAuthError` | Un endpoint `/oauth/*` respondió un error OAuth, un token no pasó la verificación local (`invalid_token`) o el callback trajo `error=…`. | `error`, `errorDescription` / `error_description`, `status` (vacío en verificaciones locales) |
+| `MiRotaractConfigError` | Configuración inválida (por ejemplo, un `clientSecret` en el navegador). | — |
+
+Las tres heredan de `MiRotaractError`, que también se usa para errores de
+red cuando se agotan los reintentos.
+
+```ts
+import { MiRotaractApiError, MiRotaractOAuthError } from "@mirotaract/sdk";
+
+try {
+  await client.members.list(otroClubId).all();
+} catch (error) {
+  if (error instanceof MiRotaractApiError) {
+    console.error(error.status, error.code, error.detail, error.traceId); // 403 KERNEL_HTTP_403 "Fuera del alcance de esta app"
+  } else if (error instanceof MiRotaractOAuthError) {
+    console.error(error.error, error.errorDescription); // "invalid_client", …
+  } else throw error;
+}
+```
+
+```python
+from mirotaract import MiRotaractApiError, MiRotaractOAuthError
+
+try:
+    client.members.list(otro_club_id).all()
+except MiRotaractApiError as e:
+    print(e.status, e.code, e.detail, e.trace_id)
+except MiRotaractOAuthError as e:
+    print(e.error, e.error_description)
+```
 
 ## Idempotencia
 

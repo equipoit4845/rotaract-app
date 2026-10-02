@@ -217,14 +217,18 @@ cacheado, pedí uno nuevo y reintentá **una sola vez**.
 
 ## Con los SDKs oficiales
 
-> **SDK en publicación.** `@mirotaract/sdk` (npm) y `mirotaract` (PyPI)
-> todavía no están publicados. Los ejemplos muestran la superficie acordada;
-> los nombres exactos de las opciones pueden variar. Revisá el README del
-> paquete cuando salga.
+> **SDKs todavía no publicados.** `@mirotaract/sdk` (JavaScript/TypeScript,
+> Node 20+) y `mirotaract` (Python ≥ 3.10) ya existen en el monorepo
+> (`packages/sdk-js` y `sdks/python`), pero no están en npm ni en PyPI.
+> Mientras tanto, instalalos desde el repositorio (ver
+> [README.md](README.md#sdks-oficiales)).
 
-Los SDKs piden el token, lo cachean (hasta 60 s antes del vencimiento), lo
-renuevan solos, siguen la paginación y reintentan con backoff ante
-`429`/`502`/`503`/`504`.
+Los SDKs piden el token con `client_credentials`, lo cachean y lo renuevan
+60 s antes del vencimiento (si hay pedidos concurrentes, comparten una sola
+renovación). Si `/service/*` responde `401` con el token cacheado, lo
+descartan, piden uno nuevo y reintentan una vez. Además siguen la paginación
+y reintentan con backoff ante `429`/`502`/`503`/`504` y errores de red (ver
+[errores.md](errores.md#reintentos)).
 
 ```ts
 import { MiRotaract } from "@mirotaract/sdk";
@@ -233,11 +237,14 @@ const client = new MiRotaract({
   baseUrl: "https://api.rotaract4845.com/api/kernel/v1",
   clientId: process.env.MIROTARACT_CLIENT_ID!,
   clientSecret: process.env.MIROTARACT_CLIENT_SECRET!,
+  // scope: ["kernel.service.memberships.read"], // opcional; por defecto, todos los de la app
 });
 
 for await (const member of client.members.list(process.env.ORGANIZATION_ID!, { status: "ACTIVE" })) {
   console.log(member.person.displayName);
 }
+
+client.grantedScopes; // scopes del token vigente (después de la primera llamada)
 ```
 
 ```python
@@ -245,14 +252,22 @@ import os
 from mirotaract import MiRotaract
 
 client = MiRotaract(
-    base_url="https://api.rotaract4845.com/api/kernel/v1",
-    client_id=os.environ["MIROTARACT_CLIENT_ID"],
-    client_secret=os.environ["MIROTARACT_CLIENT_SECRET"],
+    "https://api.rotaract4845.com/api/kernel/v1",
+    os.environ["MIROTARACT_CLIENT_ID"],
+    os.environ["MIROTARACT_CLIENT_SECRET"],
+    # scope=["kernel.service.memberships.read"],  # opcional
 )
 
 for member in client.members.list(os.environ["ORGANIZATION_ID"], status="ACTIVE"):
-    print(member.person.display_name)
+    print(member["person"]["displayName"])  # las vistas son dicts con las claves de la API
+
+client.granted_scopes
 ```
+
+En Python también está `AsyncMiRotaract`, con la misma superficie y
+`async for` / `await`. Si necesitás el token crudo (por ejemplo, para una
+ruta que el SDK todavía no envuelve), usá `client.getAccessToken()` /
+`client.get_access_token()` o directamente `client.request(...)`.
 
 ## Errores
 

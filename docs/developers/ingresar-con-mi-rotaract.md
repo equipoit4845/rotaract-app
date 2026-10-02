@@ -499,38 +499,122 @@ app.get("/auth/callback", async (req, res) => {
 
 ### Node.js con `@mirotaract/sdk`
 
-> **SDK en publicación.** Superficie acordada; los nombres exactos pueden
-> variar cuando se publique.
+> **SDK todavía no publicado en npm.** `@mirotaract/sdk` está en el
+> monorepo (`packages/sdk-js`) y requiere Node 20+. Mientras tanto,
+> instalalo desde el repositorio (ver [README.md](README.md#sdks-oficiales)).
+
+`MiRotaractAuth` descubre los endpoints solo, genera `state`, `nonce` y el
+par PKCE, y verifica el `id_token` contra el JWKS (firma ES256, `iss`, `aud`,
+`exp`, `azp` y `nonce`).
 
 ```ts
-import { MiRotaractAuth } from "@mirotaract/sdk";
+import express from "express";
+import session from "express-session";
+import { MiRotaractAuth, MiRotaractOAuthError } from "@mirotaract/sdk";
+import { requireMiRotaractUser } from "@mirotaract/sdk/express";
 
 const auth = new MiRotaractAuth({
   issuer: "https://api.rotaract4845.com/api/kernel/v1",
   clientId: process.env.MIROTARACT_CLIENT_ID!,
   clientSecret: process.env.MIROTARACT_CLIENT_SECRET, // omitilo en apps PUBLIC
   redirectUri: "https://asistencia.asuncioncentro.org.py/auth/callback",
+  scope: "openid profile email memberships", // por defecto: "openid profile email"
 });
 
-// /auth/login
-const { url, codeVerifier, state, nonce } = await auth.authorizationUrl({
-  scope: "openid profile email memberships",
+const app = express();
+app.use(session({ secret: process.env.SESSION_SECRET!, resave: false, saveUninitialized: false }));
+
+app.get("/auth/login", async (req, res) => {
+  const { url, codeVerifier, state, nonce } = await auth.authorizationUrl();
+  req.session.oidc = { codeVerifier, state, nonce };
+  res.redirect(url);
 });
-req.session.oidc = { codeVerifier, state, nonce };
-res.redirect(url);
 
-// /auth/callback (después de comparar state)
-const result = await auth.exchangeCode({ code: String(req.query.code), codeVerifier });
-// result trae los tokens y los claims del id_token ya verificados (firma, iss, aud, exp);
-// el nonce se verifica con auth.verifyIdToken(idToken, { nonce })
+app.get("/auth/callback", async (req, res) => {
+  const pending = req.session.oidc;
+  delete req.session.oidc;
+  try {
+    // valida state; si la persona canceló, lanza MiRotaractOAuthError("access_denied")
+    const { code } = auth.parseCallback(req.originalUrl, { state: pending?.state ?? "" });
+    const tokens = await auth.exchangeCode({ code, codeVerifier: pending!.codeVerifier, nonce: pending!.nonce });
+    req.session.miRotaractUser = tokens.claims; // id_token ya verificado (incluye el nonce)
+    req.session.refreshToken = tokens.refreshToken; // solo si la app tiene refresh_token
+    res.redirect("/");
+  } catch (error) {
+    if (error instanceof MiRotaractOAuthError) return res.redirect(`/?error=${error.error}`);
+    throw error;
+  }
+});
 
-// más tarde
-const renewed = await auth.refresh(refreshToken);
-const info = await auth.userInfo(renewed.access_token);
+// Rutas protegidas por la sesión del servidor
+app.use("/panel", requireMiRotaractUser({ source: "session", getUser: (req) => req.session.miRotaractUser }));
+
+// Más tarde
+const renewed = await auth.refresh(refreshToken); // rota: guardá renewed.refreshToken
+const info = await auth.userInfo(renewed.accessToken);
+await auth.revoke(renewed.refreshToken!, { tokenTypeHint: "refresh_token" });
 ```
 
-El paquete trae además un middleware para Express (`requireMiRotaractUser`) y
-route handlers de login, callback y logout para Next.js con cookie cifrada.
+`tokens` (y lo que devuelve `refresh`) tiene `accessToken`, `tokenType`,
+`expiresIn`, `expiresAt` (epoch en ms), `scope`, `idToken?`,
+`refreshToken?` y `claims?` (los claims verificados del `id_token`).
+
+**Tu propia API con access tokens de personas** (por ejemplo, el backend de
+una SPA o app móvil `PUBLIC`): `requireMiRotaractUser` con `source: "bearer"`
+(por defecto) lee `Authorization: Bearer …` y deja la persona en
+`req.miRotaract.user`.
+
+```ts
+app.get("/api/yo", requireMiRotaractUser({ auth }), (req, res) => {
+  res.json(req.miRotaract.user);
+});
+```
+
+- `verify: "userinfo"` (por defecto) consulta `/oauth/userinfo`, así que un
+  acceso quitado, una app pausada o una cuenta inactiva se rechazan en el
+  acto; cachea el resultado `cacheTtlSec` segundos (60 por defecto).
+- `verify: "jwt"` verifica la firma localmente (sin red por pedido), pero no
+  ve revocaciones hasta que el token vence (10 minutos).
+- `authorize: (user) => boolean` agrega un chequeo propio (por ejemplo, ser
+  socio de un club); si da `false`, responde `403 { error: "forbidden" }`.
+- Sin token o con token inválido: `401 { error: "invalid_token" }` con
+  `WWW-Authenticate: Bearer error="invalid_token"`.
+
+**Next.js (App Router)**: `createMiRotaractNext` arma los route handlers de
+login, callback y logout y guarda la sesión en una cookie `httpOnly` cifrada
+(dura `sessionMaxAgeSec`, 8 h por defecto, independiente del `id_token`):
+
+```ts
+// lib/mirotaract.ts
+import { MiRotaractAuth } from "@mirotaract/sdk";
+import { createMiRotaractNext } from "@mirotaract/sdk/next";
+
+export const mr = createMiRotaractNext({
+  auth: new MiRotaractAuth({
+    issuer: process.env.MIROTARACT_ISSUER!,
+    clientId: process.env.MIROTARACT_CLIENT_ID!,
+    clientSecret: process.env.MIROTARACT_CLIENT_SECRET!,
+    redirectUri: `${process.env.APP_URL}/auth/callback`,
+  }),
+  secret: process.env.SESSION_SECRET!, // 32 caracteres o más
+  scope: "openid profile email memberships",
+});
+
+// app/auth/login/route.ts     → export const GET = mr.login;   (acepta ?returnTo=/panel)
+// app/auth/callback/route.ts  → export const GET = mr.callback;
+// app/auth/logout/route.ts    → export const POST = mr.logout;
+
+// app/panel/page.tsx
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+const session = await mr.getSession(await cookies());
+if (!session) redirect("/auth/login?returnTo=/panel");
+session.user.name;
+```
+
+Por defecto la cookie no guarda tokens; con `storeTokens: true` guarda
+`accessToken` y `refreshToken`, y `logout` revoca el refresh token. Si el
+login falla, redirige a `errorPath` (`/` por defecto) con `?error=<código>`.
 
 ### Python "a mano" (httpx + PyJWT)
 
@@ -602,27 +686,72 @@ def finish_login(session: dict, params: dict) -> dict:
 
 ### Python con `mirotaract`
 
-> **SDK en publicación.** Superficie acordada; los nombres exactos pueden
-> variar cuando se publique.
+> **SDK todavía no publicado en PyPI.** `mirotaract` está en el monorepo
+> (`sdks/python`) y requiere Python ≥ 3.10. Mientras tanto, instalalo desde
+> el repositorio (ver [README.md](README.md#sdks-oficiales)).
 
 ```python
-from mirotaract import MiRotaractAuth
+import os
+from mirotaract import MiRotaractAuth, MiRotaractOAuthError
 
 auth = MiRotaractAuth(
-    issuer="https://api.rotaract4845.com/api/kernel/v1",
+    "https://api.rotaract4845.com/api/kernel/v1",
     client_id=os.environ["MIROTARACT_CLIENT_ID"],
-    client_secret=os.environ["MIROTARACT_CLIENT_SECRET"],
     redirect_uri="https://asistencia.asuncioncentro.org.py/auth/callback",
+    client_secret=os.environ["MIROTARACT_CLIENT_SECRET"],  # None en apps PUBLIC
+    scope="openid profile email",
 )
 
-login = auth.authorization_url(scope="openid profile email")
-# guardá login.code_verifier, login.state y login.nonce en la sesión; redirigí a login.url
+# /auth/login
+login = auth.authorization_url()
+session["oidc"] = {"verifier": login.code_verifier, "state": login.state, "nonce": login.nonce}
+# redirigí a login.url
 
-result = auth.exchange_code(code=code, code_verifier=code_verifier)
-claims = auth.verify_id_token(result.id_token, nonce=nonce)
+# /auth/callback
+pending = session.pop("oidc")
+try:
+    code = auth.parse_callback(str(request.url), pending["state"])  # valida state; access_denied → error
+    tokens = auth.exchange_code(code, pending["verifier"], nonce=pending["nonce"])
+except MiRotaractOAuthError as e:
+    ...  # e.error: "access_denied", "invalid_state", "invalid_grant"…
+session["user"] = tokens.claims          # id_token ya verificado (incluye el nonce)
+session["refresh_token"] = tokens.refresh_token
+
+# Más tarde
+renewed = auth.refresh(session["refresh_token"])   # rota: guardá renewed.refresh_token
+info = auth.user_info(renewed.access_token)
+auth.revoke(renewed.refresh_token, token_type_hint="refresh_token")
 ```
 
-Incluye una dependencia para FastAPI que exige una persona autenticada.
+`tokens` es un `TokenSet` con `access_token`, `token_type`, `expires_in`,
+`expires_at` (epoch en segundos), `scope`, `id_token`, `refresh_token` y
+`claims`. `AsyncMiRotaractAuth` tiene los mismos métodos con `await`.
+
+**FastAPI**: `require_user` (`pip install 'mirotaract[fastapi]'`) arma una
+dependencia que exige `Authorization: Bearer <access_token>` emitido por Mi
+Rotaract a tu app y devuelve el `UserInfo` de la persona:
+
+```python
+from fastapi import Depends, FastAPI
+from mirotaract import AsyncMiRotaractAuth
+from mirotaract.fastapi import require_user
+
+auth = AsyncMiRotaractAuth(ISSUER, CLIENT_ID, REDIRECT_URI)
+current_user = require_user(auth)  # verify="userinfo" (por defecto) o verify="jwt"
+
+app = FastAPI()
+
+@app.get("/api/yo")
+async def yo(user=Depends(current_user)):
+    return user
+```
+
+Igual que en Express: `verify="userinfo"` ve revocaciones en el acto y
+cachea `cache_ttl` segundos (60); `verify="jwt"` no usa la red por pedido;
+`authorize=lambda user: …` responde `403` si da `False`; sin token o con
+token inválido responde `401` con `WWW-Authenticate: Bearer
+error="invalid_token"`. Para apps con páginas del servidor, conviene la
+sesión del lado del servidor del ejemplo anterior.
 
 ## Seguridad: lo que no se negocia
 

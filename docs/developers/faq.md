@@ -90,9 +90,13 @@ alcance por organización y la auditoría.
 
 ### ¿Hay SDK para mi lenguaje?
 
-Se están publicando `@mirotaract/sdk` (JavaScript/TypeScript) y `mirotaract`
-(Python ≥ 3.10). Flutter, PHP, Kotlin, Swift, .NET y Go vienen después.
-Mientras tanto, cualquier librería OAuth 2.0 / OpenID Connect estándar sirve
+Sí para JavaScript/TypeScript (`@mirotaract/sdk`, Node 20+, con
+adaptadores para Express y Next.js) y Python (`mirotaract`, Python ≥ 3.10,
+con dependencia para FastAPI). Están en el monorepo (`packages/sdk-js` y
+`sdks/python`) pero **todavía no en npm ni PyPI**: instalalos desde el
+repositorio como se explica en [README.md](README.md#sdks-oficiales).
+Flutter, PHP, Kotlin, Swift, .NET y Go vienen después. Para otros lenguajes,
+cualquier librería OAuth 2.0 / OpenID Connect estándar sirve
 (por ejemplo `openid-client` o `jose` en Node, `Authlib` o `PyJWT` en
 Python).
 

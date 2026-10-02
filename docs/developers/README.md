@@ -102,17 +102,93 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 
 ## SDKs oficiales
 
-Se están publicando dos SDKs con la misma superficie:
+Si tu app está en JavaScript/TypeScript o en Python, no hace falta que
+escribas a mano el token, la paginación, los reintentos ni la verificación
+del `id_token`: hay dos SDKs oficiales con la misma superficie.
 
-- JavaScript/TypeScript: `@mirotaract/sdk` (Node, navegador, adaptador para
-  Express y helpers para Next.js).
-- Python ≥ 3.10: `mirotaract` (síncrono y asíncrono, dependencia para
-  FastAPI).
+| SDK | Lenguaje | Requisitos | Incluye | Documentación |
+|---|---|---|---|---|
+| `@mirotaract/sdk` | JavaScript/TypeScript (ESM y CommonJS, tipos incluidos) | Node 20+ (también runtimes edge y navegador, solo para el login con apps `PUBLIC`) | `MiRotaract` (API de datos), `MiRotaractAuth` (login), `requireMiRotaractUser` para Express (`@mirotaract/sdk/express`), `createMiRotaractNext` para Next.js App Router (`@mirotaract/sdk/next`) | [packages/sdk-js/README.md](../../packages/sdk-js/README.md) |
+| `mirotaract` | Python | Python ≥ 3.10 (`httpx`, `PyJWT[crypto]`) | `MiRotaract` / `AsyncMiRotaract` (API de datos), `MiRotaractAuth` / `AsyncMiRotaractAuth` (login), `require_user` para FastAPI (`mirotaract.fastapi`) | [sdks/python/README.md](../../sdks/python/README.md) |
 
-> **SDK en publicación.** Mientras no estén publicados en npm y PyPI, los
-> ejemplos con SDK de estas guías muestran la superficie acordada y pueden
-> cambiar en detalles (nombres de opciones). Los ejemplos con `curl` y "a
-> mano" funcionan hoy.
+> **Todavía no están publicados en npm ni en PyPI.** Los paquetes existen en
+> este monorepo (`packages/sdk-js` y `sdks/python`) y pasan la suite de
+> conformidad contra un kernel real, pero `npm install @mirotaract/sdk` y
+> `pip install mirotaract` todavía no funcionan. Mientras tanto, instalalos
+> desde una copia del repositorio:
+>
+> ```bash
+> # JavaScript/TypeScript (Node 20+): primero compilá el paquete
+> cd /ruta/al/repo
+> npx pnpm@10.13.1 install                      # si todavía no instalaste dependencias
+> npx pnpm@10.13.1 --filter @mirotaract/sdk build
+> cd /ruta/a/tu-app
+> npm install /ruta/al/repo/packages/sdk-js     # enlaza la carpeta
+> # o, para copiarlo a otra máquina:
+> #   (cd /ruta/al/repo/packages/sdk-js && npm pack)   → mirotaract-sdk-0.1.0.tgz
+> #   npm install ./mirotaract-sdk-0.1.0.tgz
+>
+> # Python (≥ 3.10)
+> pip install /ruta/al/repo/sdks/python             # o "/ruta/al/repo/sdks/python[fastapi]"
+> ```
+>
+> Si ya tenés `pnpm` instalado, `pnpm --filter @mirotaract/sdk build` es lo
+> mismo. Cuando se publiquen, va a alcanzar con `npm install @mirotaract/sdk`
+> y `pip install mirotaract`; el código de los ejemplos no cambia.
+
+Superficie de la API de datos (cliente `MiRotaract`, solo servidor: usa el
+secreto):
+
+| Recurso | JavaScript | Python |
+|---|---|---|
+| `clubs` (alias `organizations`) | `list({ type, status, parentId, updatedSince, limit, ifNoneMatch })` → paginador, `get(id)` | `list(type=, status=, parent_id=, updated_since=, limit=, if_none_match=)` → paginador, `get(id)` |
+| `members` | `list(organizationId, { status, updatedSince, limit, ifNoneMatch })` → paginador | `list(organization_id, status=, updated_since=, limit=, if_none_match=)` → paginador |
+| `persons` | `get(id)`, `batch(ids)`, `memberships(personId)` | `get(id)`, `batch(ids)`, `memberships(person_id)` |
+| `authorities` | `list(organizationId, { includeDescendants })` | `list(organization_id, include_descendants=)` |
+| `periods` | `list(organizationId, { status })` | `list(organization_id, status=)` |
+| `permissions` | `check({ personId, permission, organizationId, scopeType?, periodId?, resource? })`, `checkMany([...])` | `check(person_id=, permission=, organization_id=, scope_type=, period_id=, resource=)`, `check_many([...])` |
+| Otros | `getAccessToken()`, `grantedScopes`, `clearToken()`, `discovery()`, `request({ method, path, query, json })` | `get_access_token()`, `granted_scopes`, `clear_token()`, `discovery()`, `request(method, path, params=, json=)` |
+
+Los paginadores se recorren con `for await` / `for` (siguen `nextCursor`
+solos) y tienen `.all({ max })` / `.all(max=)`, `.pages()` y
+`.page(cursor?)`. En JS las respuestas son objetos tipados; en Python son
+`dict` con las mismas claves que la API (`member["person"]["displayName"]`).
+
+Login (`MiRotaractAuth`): `authorizationUrl()` / `authorization_url()`,
+`parseCallback()` / `parse_callback()`, `exchangeCode()` / `exchange_code()`,
+`refresh()`, `verifyIdToken()` / `verify_id_token()`,
+`verifyAccessToken()` / `verify_access_token()`, `userInfo()` /
+`user_info()`, `revoke()` y `discovery()`.
+
+```ts
+import { MiRotaract } from "@mirotaract/sdk";
+
+const client = new MiRotaract({
+  baseUrl: "https://api.rotaract4845.com/api/kernel/v1",
+  clientId: process.env.MIROTARACT_CLIENT_ID!,
+  clientSecret: process.env.MIROTARACT_CLIENT_SECRET!,
+});
+const club = await client.clubs.get(process.env.ORGANIZATION_ID!);
+```
+
+```python
+import os
+from mirotaract import MiRotaract
+
+client = MiRotaract(
+    "https://api.rotaract4845.com/api/kernel/v1",
+    os.environ["MIROTARACT_CLIENT_ID"],
+    os.environ["MIROTARACT_CLIENT_SECRET"],
+)
+club = client.clubs.get(os.environ["ORGANIZATION_ID"])
+```
+
+Dónde se usan en estas guías: token de servicio en
+[autenticacion-servidor.md](autenticacion-servidor.md#con-los-sdks-oficiales),
+paginación y ETag en [api-de-datos.md](api-de-datos.md#paginación-por-cursor),
+login, Express, Next.js y FastAPI en
+[ingresar-con-mi-rotaract.md](ingresar-con-mi-rotaract.md#ejemplos), errores
+y reintentos en [errores.md](errores.md#reintentos).
 
 Flutter, PHP, Kotlin, Swift, .NET y Go están planificados para una segunda
 etapa.
