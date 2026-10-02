@@ -40,6 +40,7 @@ import { ClientCredentialsGrant } from "./application/oauth/client-credentials.g
 import { ClientAuthenticator } from "./application/oauth/client-authenticator";
 import { OidcService } from "./application/oauth/oidc.service";
 import { OidcAccessGuard } from "./application/oauth/oidc-access.guard";
+import { DataApiService } from "./application/data-api/data-api.service";
 
 @Module({
   imports: [
@@ -77,6 +78,7 @@ import { OidcAccessGuard } from "./application/oauth/oidc-access.guard";
     OutboxService,
     JwtSessionGuard,
     ServiceApiGuard,
+    DataApiService,
     AuthorizationService,
     CommandExecutorService,
     AuditService,

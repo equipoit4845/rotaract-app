@@ -136,15 +136,28 @@ export type IntrospectionResult = {
   expiresAt?: string;
 };
 
+// GET /service/persons/{id} returns the contract's PersonView (Data API v1):
+// the optional fields below are additive so existing callers keep compiling.
+// email/phone/birthDate are present only with the
+// kernel.service.persons.contact.read scope (omitted otherwise).
 export type PersonSummary = {
   id: string;
   firstName: string;
   lastName: string;
   displayName?: string | null;
+  avatarUrl?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  /** YYYY-MM-DD */
+  birthDate?: string | null;
+  updatedAt?: string;
+  /** @deprecated Not returned by PersonView; use `email` (contact scope). */
   primaryEmail?: string | null;
+  /** @deprecated Not returned by PersonView. */
   archivedAt?: string | null;
 };
 
+// GET /service/organizations/{id} returns the contract's OrganizationView.
 export type OrganizationSummary = {
   id: string;
   parentId?: string | null;
@@ -152,6 +165,14 @@ export type OrganizationSummary = {
   code: string;
   name: string;
   status: string;
+  slug?: string;
+  countryCode?: string | null;
+  region?: string | null;
+  city?: string | null;
+  timezone?: string | null;
+  logoUrl?: string | null;
+  description?: string | null;
+  updatedAt?: string;
 };
 
 export type ModuleInstallationSummary = {

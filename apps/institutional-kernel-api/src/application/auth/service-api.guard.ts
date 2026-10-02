@@ -42,6 +42,16 @@ const serviceScopeByHandler: Record<string, string> = {
   batch: "kernel.service.authorization.check",
   installation: "kernel.service.modules.read",
   introspect: "kernel.service.tokens.introspect",
+  // Data API v1 (docs/12-data-api-and-sdks.md §E4). Contact fields are
+  // gated inside the handlers by kernel.service.persons.contact.read.
+  serviceListOrganizations: "kernel.service.organizations.read",
+  serviceListMembers: "kernel.service.memberships.read",
+  serviceListAuthorities: "kernel.service.authorities.read",
+  serviceListPeriods: "kernel.service.periods.read",
+  // persons/batch has no route personId: the ids in the body are not
+  // checked here; out-of-scope persons are omitted by DataApiService.
+  serviceBatchPersons: "kernel.service.persons.read",
+  servicePersonMemberships: "kernel.service.memberships.read",
 };
 
 const OUT_OF_SCOPE = "Fuera del alcance de esta app";
