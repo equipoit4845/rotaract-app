@@ -1714,6 +1714,114 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/service/organizations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar organizaciones visibles para la app */
+        get: operations["serviceListOrganizations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/service/organizations/{organizationId}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Padrón de socios de una organización
+         * @description email, phone y birthDate de cada persona solo aparecen con el scope kernel.service.persons.contact.read; sin él se omiten.
+         */
+        get: operations["serviceListMembers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/service/organizations/{organizationId}/authorities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Autoridades vigentes (nombramientos ACTIVE) */
+        get: operations["serviceListAuthorities"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/service/organizations/{organizationId}/periods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Períodos de una organización */
+        get: operations["serviceListPeriods"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/service/persons/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Obtener varias personas por id
+         * @description Máximo 100 ids. Las personas fuera del alcance de la app se omiten de la respuesta (no fallan el pedido).
+         */
+        post: operations["serviceBatchPersons"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/service/persons/{personId}/memberships": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Membresías de una persona dentro del alcance de la app */
+        get: operations["servicePersonMemberships"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/service/persons/{personId}": {
         parameters: {
             query?: never;
@@ -3078,6 +3186,97 @@ export interface components {
                 [key: string]: unknown;
             }[];
         };
+        OrganizationView: {
+            id: string;
+            type: components["schemas"]["OrganizationType"];
+            code: string;
+            name: string;
+            slug: string;
+            status: components["schemas"]["OrganizationStatus"];
+            parentId: string | null;
+            countryCode?: string | null;
+            region?: string | null;
+            city?: string | null;
+            timezone?: string | null;
+            logoUrl?: string | null;
+            description?: string | null;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        OrganizationViewPage: {
+            items: components["schemas"]["OrganizationView"][];
+            pageInfo: components["schemas"]["PageInfo"];
+        };
+        /** @description email, phone y birthDate solo con el scope kernel.service.persons.contact.read; sin él, las propiedades no aparecen. */
+        PersonView: {
+            id: string;
+            displayName: string;
+            firstName: string;
+            lastName: string;
+            avatarUrl?: string | null;
+            email?: string | null;
+            phone?: string | null;
+            /** Format: date */
+            birthDate?: string | null;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        MemberView: {
+            membershipId: string;
+            organizationId: string;
+            personId: string;
+            status: components["schemas"]["MembershipStatus"];
+            /** Format: date-time */
+            joinedAt?: string | null;
+            memberNumber?: string | null;
+            person: components["schemas"]["PersonView"];
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        MemberViewPage: {
+            items: components["schemas"]["MemberView"][];
+            pageInfo: components["schemas"]["PageInfo"];
+        };
+        PersonMembershipView: {
+            membershipId: string;
+            organizationId: string;
+            organizationName: string;
+            organizationType: components["schemas"]["OrganizationType"];
+            status: components["schemas"]["MembershipStatus"];
+            /** Format: date-time */
+            joinedAt?: string | null;
+            /** Format: date-time */
+            endedAt?: string | null;
+        };
+        AuthorityView: {
+            appointmentId: string;
+            organizationId: string;
+            periodId: string;
+            positionCode: string;
+            positionName: string;
+            status: components["schemas"]["AppointmentStatus"];
+            /** Format: date-time */
+            startsAt?: string | null;
+            /** Format: date-time */
+            endsAt?: string | null;
+            /** @description Sin datos de contacto. */
+            person: {
+                id: string;
+                displayName: string;
+                avatarUrl?: string | null;
+            };
+        };
+        PeriodView: {
+            id: string;
+            organizationId: string;
+            code: string;
+            name: string;
+            status: components["schemas"]["PeriodStatus"];
+            /** Format: date-time */
+            startDate: string;
+            /** Format: date-time */
+            endDate: string;
+        };
     };
     responses: {
         /** @description Pedido inválido. */
@@ -3118,6 +3317,10 @@ export interface components {
         };
     };
     parameters: {
+        /** @description Devuelve solo lo modificado desde este instante (sincronización incremental). */
+        updatedSince: string;
+        /** @description ETag de una respuesta anterior; si no hubo cambios responde 304. */
+        ifNoneMatch: string;
         appId: string;
         personId: string;
         organizationId: string;
@@ -5987,6 +6190,189 @@ export interface operations {
             };
         };
     };
+    serviceListOrganizations: {
+        parameters: {
+            query?: {
+                type?: components["schemas"]["OrganizationType"];
+                status?: components["schemas"]["OrganizationStatus"];
+                parentId?: string;
+                /** @description Devuelve solo lo modificado desde este instante (sincronización incremental). */
+                updatedSince?: components["parameters"]["updatedSince"];
+                /** @description Cursor de paginación opaco devuelto por la página anterior. */
+                cursor?: components["parameters"]["cursor"];
+                /** @description Tamaño de página. Por defecto 25, máximo 100 (§18). */
+                limit?: components["parameters"]["limit"];
+            };
+            header?: {
+                /** @description ETag de una respuesta anterior; si no hubo cambios responde 304. */
+                "If-None-Match"?: components["parameters"]["ifNoneMatch"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    ETag?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizationViewPage"];
+                };
+            };
+            /** @description Sin cambios desde el ETag enviado. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    serviceListMembers: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["MembershipStatus"];
+                /** @description Devuelve solo lo modificado desde este instante (sincronización incremental). */
+                updatedSince?: components["parameters"]["updatedSince"];
+                /** @description Cursor de paginación opaco devuelto por la página anterior. */
+                cursor?: components["parameters"]["cursor"];
+                /** @description Tamaño de página. Por defecto 25, máximo 100 (§18). */
+                limit?: components["parameters"]["limit"];
+            };
+            header?: {
+                /** @description ETag de una respuesta anterior; si no hubo cambios responde 304. */
+                "If-None-Match"?: components["parameters"]["ifNoneMatch"];
+            };
+            path: {
+                organizationId: components["parameters"]["organizationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    ETag?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberViewPage"];
+                };
+            };
+            /** @description Sin cambios desde el ETag enviado. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    serviceListAuthorities: {
+        parameters: {
+            query?: {
+                /** @description Incluye las autoridades de las organizaciones hijas (por ejemplo, todos los clubes de un distrito). */
+                includeDescendants?: boolean;
+            };
+            header?: never;
+            path: {
+                organizationId: components["parameters"]["organizationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthorityView"][];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    serviceListPeriods: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["PeriodStatus"];
+            };
+            header?: never;
+            path: {
+                organizationId: components["parameters"]["organizationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PeriodView"][];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    serviceBatchPersons: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    ids: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonView"][];
+                };
+            };
+        };
+    };
+    servicePersonMemberships: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                personId: components["parameters"]["personId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonMembershipView"][];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+        };
+    };
     serviceGetPerson: {
         parameters: {
             query?: never;
@@ -6004,7 +6390,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PersonSummary"];
+                    "application/json": components["schemas"]["PersonView"];
                 };
             };
         };
@@ -6026,7 +6412,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["OrganizationSummary"];
+                    "application/json": components["schemas"]["OrganizationView"];
                 };
             };
         };

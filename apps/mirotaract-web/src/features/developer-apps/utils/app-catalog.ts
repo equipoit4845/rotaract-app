@@ -25,6 +25,10 @@ export const APP_OWN_DATA = [
   },
   { code: "kernel.service.persons.read", label: "Leer datos de personas" },
   {
+    code: "kernel.service.persons.contact.read",
+    label: "Leer email, teléfono y fecha de nacimiento de personas",
+  },
+  {
     code: "kernel.service.organizations.read",
     label: "Leer clubes y distrito",
   },

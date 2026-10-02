@@ -2363,6 +2363,163 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/UserContext" }
 
+
+  # --- Data API v1 for developer apps (E4) -------------------------------
+  # All require a service token (client_credentials). Results are limited to
+  # the app's organization and its descendants. See docs/12-data-api-and-sdks.md.
+
+  /service/organizations:
+    get:
+      operationId: serviceListOrganizations
+      tags: [Service]
+      summary: Listar organizaciones visibles para la app
+      security: [{ serviceAuth: [] }]
+      x-service-only: true
+      x-required-scope: kernel.service.organizations.read
+      parameters:
+        - { name: type, in: query, schema: { $ref: "#/components/schemas/OrganizationType" } }
+        - { name: status, in: query, schema: { $ref: "#/components/schemas/OrganizationStatus" } }
+        - { name: parentId, in: query, schema: { type: string } }
+        - $ref: "#/components/parameters/updatedSince"
+        - $ref: "#/components/parameters/cursor"
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/ifNoneMatch"
+      responses:
+        "200":
+          description: OK
+          headers:
+            ETag: { schema: { type: string } }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OrganizationViewPage" }
+        "304": { description: Sin cambios desde el ETag enviado. }
+
+  /service/organizations/{organizationId}/members:
+    get:
+      operationId: serviceListMembers
+      tags: [Service]
+      summary: Padrón de socios de una organización
+      description: >
+        email, phone y birthDate de cada persona solo aparecen con el scope
+        kernel.service.persons.contact.read; sin él se omiten.
+      security: [{ serviceAuth: [] }]
+      x-service-only: true
+      x-required-scope: kernel.service.memberships.read
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+        - { name: status, in: query, schema: { $ref: "#/components/schemas/MembershipStatus" } }
+        - $ref: "#/components/parameters/updatedSince"
+        - $ref: "#/components/parameters/cursor"
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/ifNoneMatch"
+      responses:
+        "200":
+          description: OK
+          headers:
+            ETag: { schema: { type: string } }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MemberViewPage" }
+        "304": { description: Sin cambios desde el ETag enviado. }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /service/organizations/{organizationId}/authorities:
+    get:
+      operationId: serviceListAuthorities
+      tags: [Service]
+      summary: Autoridades vigentes (nombramientos ACTIVE)
+      security: [{ serviceAuth: [] }]
+      x-service-only: true
+      x-required-scope: kernel.service.authorities.read
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+        - name: includeDescendants
+          in: query
+          schema: { type: boolean, default: false }
+          description: Incluye las autoridades de las organizaciones hijas (por ejemplo, todos los clubes de un distrito).
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/AuthorityView" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /service/organizations/{organizationId}/periods:
+    get:
+      operationId: serviceListPeriods
+      tags: [Service]
+      summary: Períodos de una organización
+      security: [{ serviceAuth: [] }]
+      x-service-only: true
+      x-required-scope: kernel.service.periods.read
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+        - { name: status, in: query, schema: { $ref: "#/components/schemas/PeriodStatus" } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/PeriodView" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /service/persons/batch:
+    post:
+      operationId: serviceBatchPersons
+      tags: [Service]
+      summary: Obtener varias personas por id
+      description: >
+        Máximo 100 ids. Las personas fuera del alcance de la app se omiten
+        de la respuesta (no fallan el pedido).
+      security: [{ serviceAuth: [] }]
+      x-service-only: true
+      x-required-scope: kernel.service.persons.read
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ids]
+              properties:
+                ids:
+                  type: array
+                  minItems: 1
+                  maxItems: 100
+                  items: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/PersonView" }
+
+  /service/persons/{personId}/memberships:
+    get:
+      operationId: servicePersonMemberships
+      tags: [Service]
+      summary: Membresías de una persona dentro del alcance de la app
+      security: [{ serviceAuth: [] }]
+      x-service-only: true
+      x-required-scope: kernel.service.memberships.read
+      parameters:
+        - $ref: "#/components/parameters/personId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/PersonMembershipView" }
+        "403": { $ref: "#/components/responses/Forbidden" }
   /service/persons/{personId}:
     get:
       operationId: serviceGetPerson
@@ -2377,7 +2534,7 @@ paths:
           description: OK
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/PersonSummary" }
+              schema: { $ref: "#/components/schemas/PersonView" }
 
   /service/organizations/{organizationId}:
     get:
@@ -2393,7 +2550,7 @@ paths:
           description: OK
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/OrganizationSummary" }
+              schema: { $ref: "#/components/schemas/OrganizationView" }
 
   /service/organizations/{organizationId}/membership-snapshot:
     get:
@@ -2960,6 +3117,16 @@ components:
         (ES256, `token_use: user`). Solo sirve para `/oauth/userinfo`.
 
   parameters:
+    updatedSince:
+      name: updatedSince
+      in: query
+      schema: { type: string, format: date-time }
+      description: Devuelve solo lo modificado desde este instante (sincronización incremental).
+    ifNoneMatch:
+      name: If-None-Match
+      in: header
+      schema: { type: string }
+      description: ETag de una respuesta anterior; si no hubo cambios responde 304.
     appId:
       name: appId
       in: path
@@ -4265,3 +4432,107 @@ components:
         keys:
           type: array
           items: { type: object, additionalProperties: true }
+
+    # --- Data API v1 views (E4) -----------------------------------------
+
+    OrganizationView:
+      type: object
+      required: [id, type, code, name, slug, status, parentId, updatedAt]
+      properties:
+        id: { type: string }
+        type: { $ref: "#/components/schemas/OrganizationType" }
+        code: { type: string }
+        name: { type: string }
+        slug: { type: string }
+        status: { $ref: "#/components/schemas/OrganizationStatus" }
+        parentId: { type: string, nullable: true }
+        countryCode: { type: string, nullable: true }
+        region: { type: string, nullable: true }
+        city: { type: string, nullable: true }
+        timezone: { type: string, nullable: true }
+        logoUrl: { type: string, nullable: true }
+        description: { type: string, nullable: true }
+        updatedAt: { type: string, format: date-time }
+    OrganizationViewPage:
+      type: object
+      required: [items, pageInfo]
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/OrganizationView" } }
+        pageInfo: { $ref: "#/components/schemas/PageInfo" }
+    PersonView:
+      type: object
+      required: [id, displayName, firstName, lastName, updatedAt]
+      description: >
+        email, phone y birthDate solo con el scope
+        kernel.service.persons.contact.read; sin él, las propiedades no
+        aparecen.
+      properties:
+        id: { type: string }
+        displayName: { type: string }
+        firstName: { type: string }
+        lastName: { type: string }
+        avatarUrl: { type: string, nullable: true }
+        email: { type: string, nullable: true }
+        phone: { type: string, nullable: true }
+        birthDate: { type: string, format: date, nullable: true }
+        updatedAt: { type: string, format: date-time }
+    MemberView:
+      type: object
+      required: [membershipId, organizationId, personId, status, person, updatedAt]
+      properties:
+        membershipId: { type: string }
+        organizationId: { type: string }
+        personId: { type: string }
+        status: { $ref: "#/components/schemas/MembershipStatus" }
+        joinedAt: { type: string, format: date-time, nullable: true }
+        memberNumber: { type: string, nullable: true }
+        person: { $ref: "#/components/schemas/PersonView" }
+        updatedAt: { type: string, format: date-time }
+    MemberViewPage:
+      type: object
+      required: [items, pageInfo]
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/MemberView" } }
+        pageInfo: { $ref: "#/components/schemas/PageInfo" }
+    PersonMembershipView:
+      type: object
+      required: [membershipId, organizationId, organizationName, organizationType, status]
+      properties:
+        membershipId: { type: string }
+        organizationId: { type: string }
+        organizationName: { type: string }
+        organizationType: { $ref: "#/components/schemas/OrganizationType" }
+        status: { $ref: "#/components/schemas/MembershipStatus" }
+        joinedAt: { type: string, format: date-time, nullable: true }
+        endedAt: { type: string, format: date-time, nullable: true }
+    AuthorityView:
+      type: object
+      required: [appointmentId, organizationId, periodId, positionCode, positionName, status, person]
+      properties:
+        appointmentId: { type: string }
+        organizationId: { type: string }
+        periodId: { type: string }
+        positionCode: { type: string }
+        positionName: { type: string }
+        status: { $ref: "#/components/schemas/AppointmentStatus" }
+        startsAt: { type: string, format: date-time, nullable: true }
+        endsAt: { type: string, format: date-time, nullable: true }
+        person:
+          description: Sin datos de contacto.
+          type: object
+          required: [id, displayName]
+          properties:
+            id: { type: string }
+            displayName: { type: string }
+            avatarUrl: { type: string, nullable: true }
+    PeriodView:
+      type: object
+      required: [id, organizationId, code, name, status, startDate, endDate]
+      properties:
+        id: { type: string }
+        organizationId: { type: string }
+        code: { type: string }
+        name: { type: string }
+        status: { $ref: "#/components/schemas/PeriodStatus" }
+        startDate: { type: string, format: date-time }
+        endDate: { type: string, format: date-time }

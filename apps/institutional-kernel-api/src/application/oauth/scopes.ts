@@ -19,6 +19,8 @@ export type OidcScope = keyof typeof OIDC_SCOPES;
 export const SERVICE_SCOPE_LABELS = {
   "kernel.service.users.read": "Leer el contexto de una cuenta",
   "kernel.service.persons.read": "Leer datos de personas",
+  "kernel.service.persons.contact.read":
+    "Leer email, teléfono y fecha de nacimiento de personas",
   "kernel.service.organizations.read": "Leer clubes y distrito",
   "kernel.service.memberships.read": "Leer el padrón de socios",
   "kernel.service.authorities.read": "Leer autoridades vigentes",
