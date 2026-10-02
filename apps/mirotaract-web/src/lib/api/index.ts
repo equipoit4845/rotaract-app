@@ -60,6 +60,10 @@ export * from "./developer-apps/developer-apps.hooks";
 export * from "./developer-apps/developer-apps.keys";
 export type * from "./developer-apps/developer-apps.types";
 
+export * from "./webhooks/webhooks.hooks";
+export * from "./webhooks/webhooks.keys";
+export type * from "./webhooks/webhooks.types";
+
 export * from "./oauth/oauth.hooks";
 export * from "./oauth/oauth.keys";
 export type * from "./oauth/oauth.types";

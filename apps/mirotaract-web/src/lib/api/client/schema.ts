@@ -2125,6 +2125,186 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/developer/apps/{appId}/webhooks/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Stream de eventos para desarrollo (Server-Sent Events)
+         * @description Para `mirotaract webhooks listen`. Emite cada evento que la app recibiría por webhook, tal cual se haría el POST: primero `event: ready` con `{ "secret": "whsec_..." }` (secreto propio de este stream), después un `event: webhook` por evento con `data: {"headers": {...}, "body": "<json crudo>"}`, firmado con ese secreto. Se autentica con las credenciales de la app (Basic `client_id:secreto`), no con una sesión. Solo existe si `KERNEL_WEBHOOK_STREAM_ENABLED=true` (kernel local o de pruebas); si no, 404.
+         */
+        get: operations["streamWebhookEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/developer-apps/{appId}/webhooks/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Stream de eventos para desarrollo (ruta del contrato E6/E7)
+         * @description Igual que `GET /developer/apps/{appId}/webhooks/stream`.
+         */
+        get: operations["streamWebhookEventsAlias"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/developer/apps/{appId}/webhooks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar los endpoints de webhooks de una app */
+        get: operations["listWebhookEndpoints"];
+        put?: never;
+        /**
+         * Registrar un endpoint
+         * @description Devuelve el secreto de firma (`whsec_...`) una única vez. La URL tiene que ser https y apuntar a una dirección pública (se verifica también después de resolver el DNS). Cada tipo de evento exige el scope de la app indicado en el catálogo.
+         */
+        post: operations["createWebhookEndpoint"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/developer/apps/{appId}/webhooks/{endpointId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ver un endpoint */
+        get: operations["getWebhookEndpoint"];
+        put?: never;
+        post?: never;
+        /** Borrar un endpoint (y su historial de envíos) */
+        delete: operations["deleteWebhookEndpoint"];
+        options?: never;
+        head?: never;
+        /**
+         * Cambiar URL, eventos o descripción, o activar / desactivar
+         * @description `status: ENABLED` reactiva un endpoint desactivado (a mano o automáticamente tras 72 h de fallas) y reinicia su racha de fallas.
+         */
+        patch: operations["updateWebhookEndpoint"];
+        trace?: never;
+    };
+    "/developer/apps/{appId}/webhooks/{endpointId}/rotate-secret": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Crear un secreto de firma nuevo
+         * @description Devuelve el secreto nuevo una única vez. Durante 24 h los envíos llevan dos firmas (`v1=` nueva, `v1=` anterior) para poder actualizar el receptor sin rechazar eventos.
+         */
+        post: operations["rotateWebhookSecret"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/developer/apps/{appId}/webhooks/{endpointId}/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mandar un evento de prueba (ping.v1)
+         * @description Queda en cola y se envía en segundos. Es un único intento, sin reintentos.
+         */
+        post: operations["sendWebhookTest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/developer/apps/{appId}/webhooks/{endpointId}/deliveries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Envíos de un endpoint, del más reciente al más viejo */
+        get: operations["listWebhookDeliveries"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/developer/apps/{appId}/webhooks/{endpointId}/deliveries/{deliveryId}/redeliver": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reenviar un evento ya enviado (o fallido)
+         * @description Mismo evento (mismo id y mismo cuerpo), un intento más, ahora. Si falla vuelve a FAILED; no reinicia los reintentos automáticos.
+         */
+        post: operations["redeliverWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/events/catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Catálogo público de eventos
+         * @description Tipos de evento que una app puede recibir por webhook, con su versión, el scope que exige, el JSON Schema de `data` y un ejemplo completo del cuerpo que se envía. Generado de la misma fuente que usa el kernel para emitirlos.
+         */
+        get: operations["getEventCatalog"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/oauth/apps/{clientId}": {
         parameters: {
             query?: never;
@@ -3277,6 +3457,128 @@ export interface components {
             /** Format: date-time */
             endDate: string;
         };
+        /** @enum {string} */
+        WebhookEndpointStatus: "ENABLED" | "DISABLED";
+        /** @enum {string} */
+        WebhookDeliveryStatus: "PENDING" | "SUCCEEDED" | "FAILED";
+        WebhookEndpoint: {
+            id: string;
+            appId: string;
+            url: string;
+            description?: string | null;
+            eventTypes: string[];
+            status: components["schemas"]["WebhookEndpointStatus"];
+            /**
+             * @description AUTO_FAILURES = se desactivó solo tras 72 h en que fallaron todos los envíos.
+             * @enum {string|null}
+             */
+            disabledReason?: "MANUAL" | "AUTO_FAILURES" | null;
+            /** Format: date-time */
+            disabledAt?: string | null;
+            /** @description Últimos 4 caracteres del secreto vigente. */
+            secretHint: string;
+            /**
+             * Format: date-time
+             * @description Hasta cuándo se firma también con el secreto anterior (rotación).
+             */
+            previousSecretExpiresAt?: string | null;
+            /** Format: date-time */
+            secretRotatedAt?: string | null;
+            /** Format: date-time */
+            failingSince?: string | null;
+            consecutiveFailures: number;
+            /** Format: date-time */
+            lastSuccessAt?: string | null;
+            /** Format: date-time */
+            lastFailureAt?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        WebhookEndpointWithSecret: {
+            endpoint: components["schemas"]["WebhookEndpoint"];
+            /** @description `whsec_...`. Se muestra una única vez. */
+            secret: string;
+        };
+        CreateWebhookEndpointRequest: {
+            url: string;
+            eventTypes: string[];
+            description?: string | null;
+        };
+        UpdateWebhookEndpointRequest: {
+            url?: string;
+            eventTypes?: string[];
+            description?: string | null;
+            status?: components["schemas"]["WebhookEndpointStatus"];
+        };
+        WebhookDelivery: {
+            id: string;
+            endpointId: string;
+            /** @description `evt_...`, igual a MiRotaract-Webhook-Id. */
+            eventId: string;
+            eventType: string;
+            organizationId?: string | null;
+            status: components["schemas"]["WebhookDeliveryStatus"];
+            attempts: number;
+            /** Format: date-time */
+            nextAttemptAt?: string | null;
+            /** Format: date-time */
+            retryUntil: string;
+            /** Format: date-time */
+            firstAttemptAt?: string | null;
+            /** Format: date-time */
+            lastAttemptAt?: string | null;
+            lastResponseStatus?: number | null;
+            /** @description Primer KB de la respuesta del receptor. */
+            lastResponseBody?: string | null;
+            lastLatencyMs?: number | null;
+            lastError?: string | null;
+            /** Format: date-time */
+            deliveredAt?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        WebhookDeliveryPage: {
+            items: components["schemas"]["WebhookDelivery"][];
+            pageInfo: components["schemas"]["PageInfo"];
+        };
+        EventCatalog: {
+            version: number;
+            signature: {
+                algorithm: string;
+                signedPayload: string;
+                headers: {
+                    id: string;
+                    timestamp: string;
+                    signature: string;
+                };
+                toleranceSec: number;
+            };
+            /** @description JSON Schema del cuerpo (igual para todos los tipos). */
+            envelope: Record<string, never>;
+            events: components["schemas"]["EventCatalogEntry"][];
+        };
+        EventCatalogEntry: {
+            /** @description Con versión, p. ej. membership.activated.v1. */
+            type: string;
+            name: string;
+            version: number;
+            title: string;
+            description: string;
+            /** @description Scope de servicio que necesita la app para recibirlo. */
+            scope?: string | null;
+            /** @description JSON Schema de `data`. */
+            schema: Record<string, never>;
+            example: {
+                id: string;
+                type: string;
+                /** Format: date-time */
+                createdAt: string;
+                organizationId: string;
+                data: Record<string, never>;
+            };
+        };
     };
     responses: {
         /** @description Pedido inválido. */
@@ -3322,6 +3624,7 @@ export interface components {
         /** @description ETag de una respuesta anterior; si no hubo cambios responde 304. */
         ifNoneMatch: string;
         appId: string;
+        endpointId: string;
         personId: string;
         organizationId: string;
         membershipId: string;
@@ -6892,6 +7195,320 @@ export interface operations {
                 };
             };
             409: components["responses"]["InvalidTransition"];
+        };
+    };
+    streamWebhookEvents: {
+        parameters: {
+            query?: {
+                /** @description Tipos separados por coma. Por defecto, todos los que la app puede recibir. */
+                events?: string;
+            };
+            header?: never;
+            path: {
+                appId: components["parameters"]["appId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Stream abierto. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": string;
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    streamWebhookEventsAlias: {
+        parameters: {
+            query?: {
+                events?: string;
+            };
+            header?: never;
+            path: {
+                appId: components["parameters"]["appId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Stream abierto. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": string;
+                };
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    listWebhookEndpoints: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                appId: components["parameters"]["appId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebhookEndpoint"][];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    createWebhookEndpoint: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                appId: components["parameters"]["appId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateWebhookEndpointRequest"];
+            };
+        };
+        responses: {
+            /** @description Creado. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebhookEndpointWithSecret"];
+                };
+            };
+            400: components["responses"]["Error"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["InvalidTransition"];
+        };
+    };
+    getWebhookEndpoint: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                appId: components["parameters"]["appId"];
+                endpointId: components["parameters"]["endpointId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebhookEndpoint"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    deleteWebhookEndpoint: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                appId: components["parameters"]["appId"];
+                endpointId: components["parameters"]["endpointId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Borrado. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    updateWebhookEndpoint: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                appId: components["parameters"]["appId"];
+                endpointId: components["parameters"]["endpointId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateWebhookEndpointRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebhookEndpoint"];
+                };
+            };
+            400: components["responses"]["Error"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    rotateWebhookSecret: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                appId: components["parameters"]["appId"];
+                endpointId: components["parameters"]["endpointId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Creado. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebhookEndpointWithSecret"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    sendWebhookTest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                appId: components["parameters"]["appId"];
+                endpointId: components["parameters"]["endpointId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description En cola. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebhookDelivery"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["InvalidTransition"];
+        };
+    };
+    listWebhookDeliveries: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["WebhookDeliveryStatus"];
+                /** @description Cursor de paginación opaco devuelto por la página anterior. */
+                cursor?: components["parameters"]["cursor"];
+                /** @description Tamaño de página. Por defecto 25, máximo 100 (§18). */
+                limit?: components["parameters"]["limit"];
+            };
+            header?: never;
+            path: {
+                appId: components["parameters"]["appId"];
+                endpointId: components["parameters"]["endpointId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebhookDeliveryPage"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    redeliverWebhook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                appId: components["parameters"]["appId"];
+                endpointId: components["parameters"]["endpointId"];
+                deliveryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description En cola. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebhookDelivery"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["InvalidTransition"];
+        };
+    };
+    getEventCatalog: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventCatalog"];
+                };
+            };
         };
     };
     getPublicDeveloperApp: {

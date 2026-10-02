@@ -16,6 +16,10 @@ import {
   CardHeader,
   CardTitle,
   Skeleton,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
 } from "@/components/ui";
 
 import { describeKernelError } from "@/features/shell/kernel-error-message";
@@ -23,6 +27,7 @@ import { describeKernelError } from "@/features/shell/kernel-error-message";
 import { AppSecretsCard } from "../components/app-secrets-card";
 import { AppStatusActions } from "../components/app-status-actions";
 import { CopyableValue } from "../components/copy-button";
+import { WebhooksPanel } from "../components/webhooks-panel";
 import { EditDeveloperAppForm } from "../forms/edit-developer-app-form";
 import {
   APP_TYPE_LABEL,
@@ -86,87 +91,101 @@ export function DeveloperAppDetailContainer({ appId }: { appId: string }) {
         actions={canManage ? <AppStatusActions app={app} /> : undefined}
       />
 
-      <div className="flex flex-col gap-4">
-        {app.status === "SUSPENDED" ? (
-          <Alert
-            tone="warning"
-            title="App pausada"
-            description="No puede conectarse ni recibir ingresos de personas hasta que la reactives."
-          />
-        ) : null}
-        {app.status === "REVOKED" ? (
-          <Alert
-            tone="danger"
-            title="App revocada"
-            description="Perdió el acceso de forma permanente. Si vuelve a hacer falta, registrala de nuevo."
-          />
-        ) : null}
+      <Tabs defaultValue="summary">
+        <TabsList>
+          <TabsTrigger value="summary">Resumen</TabsTrigger>
+          <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
+        </TabsList>
+        <TabsContent value="webhooks" className="mt-4">
+          <WebhooksPanel app={app} canManage={canManage} />
+        </TabsContent>
+        <TabsContent value="summary" className="mt-4">
+          <div className="flex flex-col gap-4">
+            {app.status === "SUSPENDED" ? (
+              <Alert
+                tone="warning"
+                title="App pausada"
+                description="No puede conectarse ni recibir ingresos de personas hasta que la reactives."
+              />
+            ) : null}
+            {app.status === "REVOKED" ? (
+              <Alert
+                tone="danger"
+                title="App revocada"
+                description="Perdió el acceso de forma permanente. Si vuelve a hacer falta, registrala de nuevo."
+              />
+            ) : null}
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Resumen</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <DetailGrid>
-              <DetailItem
-                label="Identificador de la app (client_id)"
-                className="col-span-full"
-              >
-                <CopyableValue
-                  value={app.clientId}
-                  copyLabel="Copiar identificador"
-                />
-              </DetailItem>
-              <DetailItem label="Tipo">{APP_TYPE_LABEL[app.type]}</DetailItem>
-              <DetailItem label="Organización">
-                {organization.data?.name ?? (organization.isLoading ? "…" : "")}
-              </DetailItem>
-              <DetailItem label="Registrada">
-                {formatDate(app.createdAt)}
-              </DetailItem>
-              <DetailItem label="Qué puede hacer">
-                <PlainList items={describeCapabilities(app)} />
-              </DetailItem>
-              <DetailItem label="Datos que puede leer">
-                <PlainList items={app.scopes.map(dataLabel)} />
-              </DetailItem>
-              <DetailItem label="Direcciones de regreso">
-                {app.redirectUris.length > 0 ? (
-                  <ul className="space-y-1">
-                    {app.redirectUris.map((uri) => (
-                      <li key={uri} className="break-all font-mono text-xs">
-                        {uri}
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-              </DetailItem>
-            </DetailGrid>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Resumen</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DetailGrid>
+                  <DetailItem
+                    label="Identificador de la app (client_id)"
+                    className="col-span-full"
+                  >
+                    <CopyableValue
+                      value={app.clientId}
+                      copyLabel="Copiar identificador"
+                    />
+                  </DetailItem>
+                  <DetailItem label="Tipo">
+                    {APP_TYPE_LABEL[app.type]}
+                  </DetailItem>
+                  <DetailItem label="Organización">
+                    {organization.data?.name ??
+                      (organization.isLoading ? "…" : "")}
+                  </DetailItem>
+                  <DetailItem label="Registrada">
+                    {formatDate(app.createdAt)}
+                  </DetailItem>
+                  <DetailItem label="Qué puede hacer">
+                    <PlainList items={describeCapabilities(app)} />
+                  </DetailItem>
+                  <DetailItem label="Datos que puede leer">
+                    <PlainList items={app.scopes.map(dataLabel)} />
+                  </DetailItem>
+                  <DetailItem label="Direcciones de regreso">
+                    {app.redirectUris.length > 0 ? (
+                      <ul className="space-y-1">
+                        {app.redirectUris.map((uri) => (
+                          <li key={uri} className="break-all font-mono text-xs">
+                            {uri}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </DetailItem>
+                </DetailGrid>
+              </CardContent>
+            </Card>
 
-        {app.type === "CONFIDENTIAL" ? (
-          <AppSecretsCard app={app} canManage={canManage} />
-        ) : null}
+            {app.type === "CONFIDENTIAL" ? (
+              <AppSecretsCard app={app} canManage={canManage} />
+            ) : null}
 
-        {editable ? (
-          <Card>
-            <CardHeader>
-              <div>
-                <CardTitle>Editar app</CardTitle>
-                <CardDescription>
-                  Lo que la app puede hacer se define al registrarla; acá
-                  cambiás su nombre, los datos que lee y sus direcciones de
-                  regreso.
-                </CardDescription>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <EditDeveloperAppForm app={app} />
-            </CardContent>
-          </Card>
-        ) : null}
-      </div>
+            {editable ? (
+              <Card>
+                <CardHeader>
+                  <div>
+                    <CardTitle>Editar app</CardTitle>
+                    <CardDescription>
+                      Lo que la app puede hacer se define al registrarla; acá
+                      cambiás su nombre, los datos que lee y sus direcciones de
+                      regreso.
+                    </CardDescription>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <EditDeveloperAppForm app={app} />
+                </CardContent>
+              </Card>
+            ) : null}
+          </div>
+        </TabsContent>
+      </Tabs>
     </>
   );
 }

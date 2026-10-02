@@ -26,14 +26,17 @@ export function SecretRevealDialog({
   description,
   clientId,
   secret,
+  secretLabel = "Secreto (client_secret)",
   note,
   onDone,
 }: {
   open: boolean;
   title: string;
   description: ReactNode;
-  clientId: string;
+  /** Omitted for secrets that are not app credentials (a webhook's). */
+  clientId?: string;
   secret: string;
+  secretLabel?: string;
   note?: ReactNode;
   onDone: () => void;
 }) {
@@ -60,15 +63,20 @@ export function SecretRevealDialog({
         />
 
         <div className="space-y-3">
+          {clientId ? (
+            <div>
+              <p className="mb-1 text-xs font-medium text-muted-foreground">
+                Identificador de la app (client_id)
+              </p>
+              <CopyableValue
+                value={clientId}
+                copyLabel="Copiar identificador"
+              />
+            </div>
+          ) : null}
           <div>
             <p className="mb-1 text-xs font-medium text-muted-foreground">
-              Identificador de la app (client_id)
-            </p>
-            <CopyableValue value={clientId} copyLabel="Copiar identificador" />
-          </div>
-          <div>
-            <p className="mb-1 text-xs font-medium text-muted-foreground">
-              Secreto (client_secret)
+              {secretLabel}
             </p>
             <CopyableValue value={secret} copyLabel="Copiar secreto" />
           </div>
