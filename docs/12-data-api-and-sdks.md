@@ -95,6 +95,8 @@ Flutter, PHP, Kotlin, Swift, .NET y Go quedan para la segunda ola.
 
 `sdks/conformance/scenarios.json` describe escenarios independientes del
 lenguaje (alta de token, listado paginado, 403 fuera de alcance, ETag 304,
-flujo OIDC completo con PKCE, refresh, verificación de `id_token`). Cada SDK
+flujo OIDC completo con PKCE, refresh, verificación de `id_token`; desde E7,
+también la firma de webhooks con los vectores de
+`sdks/conformance/webhook-vectors.json` y el catálogo de eventos). Cada SDK
 tiene un runner que los ejecuta contra un kernel real descartable. Un SDK no
 se publica si su runner falla.

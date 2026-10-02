@@ -9,6 +9,8 @@ SDK oficial de **Mi Rotaract** para Python ≥ 3.10:
   `MiRotaractAuth` y `AsyncMiRotaractAuth`, con verificación del `id_token`
   contra el JWKS publicado.
 - Dependencia para **FastAPI**: `mirotaract.fastapi.require_user`.
+- **Webhooks**: `verify_webhook` verifica en una línea los avisos firmados
+  que Mi Rotaract le manda a tu servidor (solo biblioteca estándar).
 
 Dependencias: `httpx` y `PyJWT[crypto]`.
 
@@ -182,6 +184,31 @@ Para apps web con páginas del servidor conviene una sesión del lado del
 servidor: hacé el login con `authorization_url` / `exchange_code` y guardá
 `tokens.claims` en tu sesión.
 
+## 4. Webhooks
+
+Mi Rotaract le avisa a tu servidor cuando pasa algo (socio activado, baja,
+cargo asumido...) con un `POST` firmado. Guía completa:
+[docs/developers/webhooks.md](../../docs/developers/webhooks.md); tipos:
+[catálogo de eventos](../../docs/developers/catalogo-de-eventos.md).
+
+```python
+import os
+from mirotaract import MiRotaractWebhookError, verify_webhook
+
+event = verify_webhook(
+    raw_body,  # bytes crudos: await request.body() (FastAPI) / request.get_data() (Flask)
+    request.headers,  # dict, Headers de Starlette o pares (bytes, bytes)
+    os.environ["MIROTARACT_WEBHOOK_SECRET"],  # o [nuevo, viejo]
+    tolerance=300,
+)
+if event["type"] == "membership.activated.v1":
+    print(event["data"]["membership"]["person"]["displayName"])
+```
+
+Devuelve el evento como `dict`. Si no es válido lanza
+`MiRotaractWebhookError` con `code`: `missing_header`, `invalid_timestamp`,
+`timestamp_out_of_tolerance`, `invalid_signature` o `invalid_payload`.
+
 ## Conformidad
 
 ```bash
@@ -189,6 +216,9 @@ python3 -m venv .venv && .venv/bin/pip install -e 'sdks/python[dev]'
 KERNEL_DATABASE_URL=… MR_BASE_URL=http://127.0.0.1:3911/api/kernel/v1 node sdks/conformance/seed.mjs > /tmp/mr.env
 .venv/bin/python sdks/conformance/run_python.py --env-file /tmp/mr.env
 ```
+
+`webhooks.signature_vectors` corre sin kernel (vectores compartidos con el SDK
+de JavaScript en `sdks/conformance/webhook-vectors.json`).
 
 ## Desarrollo
 

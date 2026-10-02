@@ -7,6 +7,8 @@ SDK oficial de **Mi Rotaract** para JavaScript y TypeScript:
 - **Ingresar con Mi Rotaract**: OAuth 2.0 + PKCE + OpenID Connect, con
   verificación del `id_token` contra el JWKS publicado.
 - Adaptadores para **Express** y **Next.js** (App Router).
+- **Webhooks**: `verifyWebhook` verifica en una línea los avisos firmados
+  que Mi Rotaract le manda a tu servidor.
 
 Funciona en Node 20+ (Node 18 con `--experimental-global-webcrypto`), en
 runtimes edge y en el navegador (solo la parte de login, con una app
@@ -237,10 +239,78 @@ app.use("/panel", requireMiRotaractUser({ source: "session", getUser: (req) => r
 Sin token o con token inválido responde `401 { error: "invalid_token" }` con
 `WWW-Authenticate: Bearer error="invalid_token"`.
 
+## 5. Webhooks
+
+Mi Rotaract le avisa a tu servidor cuando pasa algo (socio activado, baja,
+cargo asumido...) con un `POST` firmado. Guía completa:
+[docs/developers/webhooks.md](../../docs/developers/webhooks.md); tipos:
+[catálogo de eventos](../../docs/developers/catalogo-de-eventos.md).
+
+`verifyWebhook` comprueba la firma (`MiRotaract-Signature`, HMAC-SHA256 con
+marca de tiempo, tolerancia 300 s) y devuelve el evento tipado. Necesita el
+**cuerpo crudo**:
+
+```ts
+import { verifyWebhook, MiRotaractWebhookError } from "@mirotaract/sdk";
+
+const event = await verifyWebhook({
+  payload: rawBody, // string | Uint8Array | ArrayBuffer
+  headers: req.headers, // Headers o un objeto (mayúsculas indistintas)
+  secret: process.env.MIROTARACT_WEBHOOK_SECRET!, // o [nuevo, viejo]
+  toleranceSec: 300,
+});
+if (event.type === "membership.activated.v1")
+  console.log(event.data.membership.person.displayName);
+```
+
+Si no es válido lanza `MiRotaractWebhookError` con `code`:
+`missing_header`, `invalid_timestamp`, `timestamp_out_of_tolerance`,
+`invalid_signature` o `invalid_payload`.
+
+**Next.js / fetch** (`Request` → `Response`; también desde la raíz del
+paquete):
+
+```ts
+// app/api/webhooks/mirotaract/route.ts
+import { createWebhookHandler } from "@mirotaract/sdk/next";
+
+export const POST = createWebhookHandler({
+  secret: process.env.MIROTARACT_WEBHOOK_SECRET!,
+  onEvent: async (event) => {
+    /* deduplicá por event.id */
+  },
+}); // 200 · 400 firma inválida · 500 si onEvent lanza (se reintenta)
+```
+
+**Express**:
+
+```ts
+import express from "express";
+import { miRotaractWebhook } from "@mirotaract/sdk/express";
+
+app.post(
+  "/api/webhooks/mirotaract",
+  express.raw({ type: "application/json" }),
+  miRotaractWebhook({ secret: process.env.MIROTARACT_WEBHOOK_SECRET! }),
+  (req, res) => {
+    handle(req.miRotaractEvent);
+    res.sendStatus(200);
+  },
+);
+```
+
+Tipos exportados: `MiRotaractWebhookEvent` (unión de todo el catálogo v1),
+`MembershipActivatedEvent`, `MembershipEndedEvent`,
+`AppointmentActivatedEvent`, `AppointmentEndedEvent`,
+`OrganizationUpdatedEvent`, `OrganizationArchivedEvent`,
+`PersonUpdatedEvent`, `PeriodCreatedEvent`, `PingEvent`, `MiRotaractEvent`.
+
 ## Conformidad
 
 `sdks/conformance/run-js.mjs` ejecuta los escenarios de
-`sdks/conformance/scenarios.json` contra un kernel real descartable:
+`sdks/conformance/scenarios.json` contra un kernel real descartable (el
+escenario `webhooks.signature_vectors` corre sin kernel, con
+`sdks/conformance/webhook-vectors.json`):
 
 ```bash
 pnpm --filter @mirotaract/sdk build

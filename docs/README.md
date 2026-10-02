@@ -31,6 +31,9 @@ contratos públicos son [`kernel-openapi.yaml`](../kernel-openapi.yaml),
 - [Validación de la capa de consumo](kernel-api-consumption-validation.md):
   auditoría adversarial estructural de esa capa (hallazgos, fixes aplicados,
   deuda pendiente).
+- [Plataforma de desarrolladores: apps e "Ingresar con Mi Rotaract"](11-developer-platform-auth.md),
+  [API de datos y SDKs](12-data-api-and-sdks.md) y
+  [eventos y webhooks firmados](13-events-and-webhooks.md).
 - [Validación de runtime](kernel-api-runtime-validation.md): la misma capa
   ejercitada con hooks renderizados de verdad (login, reload, concurrencia
   de refresh, invalidación de permisos efectivos, aislamiento de cache entre

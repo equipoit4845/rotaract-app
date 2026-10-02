@@ -19,6 +19,8 @@ los necesita.
 - Una app de inscripción a un evento donde la gente entra con su cuenta de
   Mi Rotaract, sin crear otro usuario y otra contraseña.
 - Un bot o una planilla que sincroniza, cada noche, los cambios del padrón.
+- Una app que se entera al instante de altas, bajas y cambios de autoridades
+  por [webhooks](webhooks.md), sin consultar al kernel cada tanto.
 
 ### Dos maneras de integrarte
 
@@ -84,6 +86,8 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 | [autenticacion-servidor.md](autenticacion-servidor.md) | `client_credentials`: pedir, verificar y cachear el token de servicio. |
 | [ingresar-con-mi-rotaract.md](ingresar-con-mi-rotaract.md) | Inicio de sesión con OIDC + PKCE, `id_token`, userinfo, refresh y revocación. |
 | [api-de-datos.md](api-de-datos.md) | Referencia de los endpoints `/service/*`: paginación, sincronización incremental, ETag. |
+| [webhooks.md](webhooks.md) | Recibir avisos firmados cuando cambia algo (altas, bajas, cargos): verificar la firma en JS/Python, reintentos, idempotencia. |
+| [catalogo-de-eventos.md](catalogo-de-eventos.md) | Todos los tipos de evento, con sus campos y un ejemplo (generado del contrato). |
 | [errores.md](errores.md) | Formatos de error, códigos y qué hacer con cada uno; reintentos. |
 | [seguridad.md](seguridad.md) | Checklist obligatoria antes de pedir producción. |
 | [faq.md](faq.md) | Preguntas frecuentes. |
@@ -98,7 +102,8 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 | Pantalla de autorización | `https://app.rotaract4845.com/oauth/authorize` |
 | Consola de apps (RDR) | `https://app.rotaract4845.com/developer/apps` |
 | Apps conectadas (cada persona) | `https://app.rotaract4845.com/connected-apps` |
-| Contrato OpenAPI | `kernel-openapi.yaml`, tags `OAuth`, `DeveloperApps` y `Service` |
+| Catálogo de eventos (JSON) | `https://api.rotaract4845.com/api/kernel/v1/events/catalog` |
+| Contrato OpenAPI | `kernel-openapi.yaml`, tags `OAuth`, `DeveloperApps`, `Service`, `Webhooks` y `Events` |
 
 ## SDKs oficiales
 
@@ -195,8 +200,7 @@ etapa.
 
 ## Lo que todavía no existe
 
-Para que no lo busques: hoy **no** hay webhooks ni eventos para apps, entorno
-sandbox separado, registro dinámico de clientes (las apps las registra el
+Para que no lo busques: hoy **no** hay entorno sandbox separado, registro dinámico de clientes (las apps las registra el
 RDR), cierre de sesión OIDC (`end_session`) ni consentimiento parcial (la
 persona acepta o rechaza el pedido completo). Están planificados.
 

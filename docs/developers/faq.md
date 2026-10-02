@@ -74,8 +74,11 @@ abierta en Mi Rotaract.
 
 ### ¿Hay webhooks para enterarme de cambios en el padrón?
 
-Todavía no; los eventos para apps están planificados. Por ahora, sincronizá
-periódicamente con `updatedSince` y `If-None-Match` (ver
+Sí: altas, bajas, cambios de cargo, clubes actualizados o archivados, y más
+(ver [webhooks.md](webhooks.md) y el
+[catálogo de eventos](catalogo-de-eventos.md)). Se configuran en la pestaña
+Webhooks de tu app en la consola. Igual conviene una sincronización periódica
+con `updatedSince` como red de seguridad (ver
 [api-de-datos.md](api-de-datos.md#sincronización-incremental-updatedsince)).
 
 ### ¿Puedo escribir datos (dar de alta socios, cargar cargos)?

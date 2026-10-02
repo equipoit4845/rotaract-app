@@ -37,6 +37,10 @@ PostgreSQL, Redis y NATS.
 | `KERNEL_OPENAPI_RUNTIME_VALIDATION`         | valida requests contra OpenAPI en runtime        |
 | `KERNEL_OPENAPI_RESPONSE_VALIDATION`        | valida respuestas JSON contra OpenAPI            |
 | `KERNEL_OPENAPI_PATH`                       | ruta explícita de `kernel-openapi.yaml`          |
+| `KERNEL_WEBHOOKS_ALLOW_INSECURE`            | `true` permite webhooks http y a destinos privados (solo local/sandbox) |
+| `KERNEL_WEBHOOK_STREAM_ENABLED`             | `true` habilita el stream SSE de eventos para la CLI (solo local/sandbox) |
+| `KERNEL_WEBHOOKS_DISPATCH_ENABLED`          | `false` apaga el envío de webhooks en un proceso con jobs |
+| `KERNEL_WEBHOOKS_DISPATCH_INTERVAL_MS`      | cada cuánto el worker reparte y envía webhooks (5000) |
 | `CLICKMAIL_*`                               | adaptador de email opcional                      |
 
 Los secretos nunca deben usarse con los valores por defecto de `.env.example`

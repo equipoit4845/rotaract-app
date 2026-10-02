@@ -57,6 +57,9 @@ services:
       KERNEL_CORS_ORIGINS: ${KERNEL_CORS_ORIGINS:-https://app.rotaract4845.com,http://localhost:3000}
       KERNEL_SERVICE_API_KEY: ${KERNEL_SERVICE_API_KEY:-}
       KERNEL_JOBS_ENABLED: "false"
+      # E7 (docs/13-events-and-webhooks.md): both off in production.
+      KERNEL_WEBHOOKS_ALLOW_INSECURE: ${KERNEL_WEBHOOKS_ALLOW_INSECURE:-false}
+      KERNEL_WEBHOOK_STREAM_ENABLED: ${KERNEL_WEBHOOK_STREAM_ENABLED:-false}
       CLICKMAIL_API_KEY: ${CLICKMAIL_API_KEY:-}
       CLICKMAIL_BASE_URL: ${CLICKMAIL_BASE_URL:-http://localhost:3000}
       CLICKMAIL_FROM_ADDRESS: ${CLICKMAIL_FROM_ADDRESS:-Mi Rotaract <no-reply@mirotaract.org>}
@@ -88,6 +91,8 @@ services:
       KERNEL_SIGNING_KEY_SECRET: ${KERNEL_SIGNING_KEY_SECRET:?KERNEL_SIGNING_KEY_SECRET must be set in .env}
       KERNEL_ISSUER_URL: ${KERNEL_ISSUER_URL:-http://localhost:3001/api/kernel/v1}
       KERNEL_JOBS_ENABLED: "true"
+      # E7: the worker delivers webhooks (outbound HTTPS to third parties).
+      KERNEL_WEBHOOKS_ALLOW_INSECURE: ${KERNEL_WEBHOOKS_ALLOW_INSECURE:-false}
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
