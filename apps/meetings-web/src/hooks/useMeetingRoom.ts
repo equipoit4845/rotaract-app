@@ -1,11 +1,15 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
-import { SOCKET_URL } from '@/lib/config';
-import { getToken, invalidateToken } from '@/lib/session-token';
+import { useEffect, useState } from "react";
+import { io, Socket } from "socket.io-client";
+import { SOCKET_URL } from "@/lib/config";
+import { getToken, invalidateToken } from "@/lib/session-token";
 
-export type VoteCandidate = { id: string; displayName: string; userId: string | null };
+export type VoteCandidate = {
+  id: string;
+  displayName: string;
+  userId: string | null;
+};
 
 export type CandidateResult = {
   candidateId: string;
@@ -37,14 +41,20 @@ export type MeetingSnapshot = {
   meeting?: { transcriptionEnabled?: boolean };
   currentTopicId: string | null;
   currentTopic: { id: string; title: string; type: string } | null;
-  topics: { id: string; title: string; order: number; type: string; status: string }[];
+  topics: {
+    id: string;
+    title: string;
+    order: number;
+    type: string;
+    status: string;
+  }[];
   activeVoteSession?: {
     id: string;
     topicId: string;
     topicTitle: string;
     votingMethod?: string;
     requiredMajority?: string;
-    ballotType?: 'YES_NO' | 'CANDIDATE';
+    ballotType?: "YES_NO" | "CANDIDATE";
     electionType?: string | null;
     isElection?: boolean;
     round?: number;
@@ -52,7 +62,13 @@ export type MeetingSnapshot = {
     eligibleClubCount?: number | null;
     votedClubIds?: string[];
   } | null;
-  speakingQueue?: { id: string; userId: string; fullName: string; position: number; status?: string }[];
+  speakingQueue?: {
+    id: string;
+    userId: string;
+    fullName: string;
+    position: number;
+    status?: string;
+  }[];
   currentSpeaker?: { id: string; fullName: string } | null;
   nextSpeaker?: { id: string; fullName: string } | null;
   activeTimer?: {
@@ -81,7 +97,7 @@ export type MeetingSnapshot = {
   }[];
   ownVote?: {
     voteSessionId: string;
-    choice: 'YES' | 'NO' | 'ABSTAIN';
+    choice: "YES" | "NO" | "ABSTAIN";
     candidateId?: string | null;
   } | null;
   motions?: {
@@ -89,7 +105,7 @@ export type MeetingSnapshot = {
     meetingId: string;
     title: string;
     description: string | null;
-    status: 'PROPOSED' | 'SECONDED' | 'VOTING' | 'APPROVED' | 'REJECTED';
+    status: "PROPOSED" | "SECONDED" | "VOTING" | "APPROVED" | "REJECTED";
     proposedByClubId: string;
     proposedByClubName: string;
     secondedByClubId: string | null;
@@ -108,7 +124,7 @@ export type VoteResult = {
   approved?: boolean | null;
   isTied?: boolean;
   requiredMajority?: string;
-  ballotType?: 'YES_NO' | 'CANDIDATE';
+  ballotType?: "YES_NO" | "CANDIDATE";
   electionType?: string | null;
   round?: number;
   candidateResult?: CandidateVoteResult | null;
@@ -122,57 +138,70 @@ type RawVoteEvent = {
   approved?: boolean | null;
   isTied?: boolean;
   requiredMajority?: string;
-  ballotType?: 'YES_NO' | 'CANDIDATE';
+  ballotType?: "YES_NO" | "CANDIDATE";
   electionType?: string | null;
   round?: number;
   candidateResult?: CandidateVoteResult | null;
   rdrTiebreakerUsed?: boolean;
 };
 
-function normalizeSnapshot(data: Record<string, unknown>): MeetingSnapshot {
-  const meeting = data.meeting as {
-    id?: string;
-    status?: string;
-    type?: string;
-    isDistrictMeeting?: boolean;
-    isInformationalOnly?: boolean;
-    attendanceLocked?: boolean;
-    transcriptionEnabled?: boolean;
-  } | undefined;
-  const activeVote = data.activeVote as {
-    voteSessionId?: string;
-    topicId?: string;
-    topicTitle?: string;
-    votingMethod?: string;
-    requiredMajority?: string;
-    ballotType?: 'YES_NO' | 'CANDIDATE';
-    electionType?: string | null;
-    isElection?: boolean;
-    round?: number;
-    candidates?: VoteCandidate[];
-    eligibleClubCount?: number | null;
-    votedClubIds?: string[];
-  } | undefined;
-  const quorum = data.quorum as MeetingSnapshot['quorum'] ?? null;
-  const timers = (data.timers as Array<{ id: string; type: string; topicId?: string; plannedDurationSec: number; elapsedSec?: number }>) ?? [];
+export function normalizeSnapshot(
+  data: Record<string, unknown>,
+): MeetingSnapshot {
+  const meeting = data.meeting as
+    | {
+        id?: string;
+        status?: string;
+        type?: string;
+        isDistrictMeeting?: boolean;
+        isInformationalOnly?: boolean;
+        attendanceLocked?: boolean;
+        transcriptionEnabled?: boolean;
+      }
+    | undefined;
+  const activeVote = data.activeVote as
+    | {
+        voteSessionId?: string;
+        topicId?: string;
+        topicTitle?: string;
+        votingMethod?: string;
+        requiredMajority?: string;
+        ballotType?: "YES_NO" | "CANDIDATE";
+        electionType?: string | null;
+        isElection?: boolean;
+        round?: number;
+        candidates?: VoteCandidate[];
+        eligibleClubCount?: number | null;
+        votedClubIds?: string[];
+      }
+    | undefined;
+  const quorum = (data.quorum as MeetingSnapshot["quorum"]) ?? null;
+  const timers =
+    (data.timers as Array<{
+      id: string;
+      type: string;
+      topicId?: string;
+      plannedDurationSec: number;
+      elapsedSec?: number;
+    }>) ?? [];
   const firstTimer = timers[0];
-  const ownVote = data.ownVote as MeetingSnapshot['ownVote'] ?? null;
+  const ownVote = (data.ownVote as MeetingSnapshot["ownVote"]) ?? null;
   return {
-    meetingId: meeting?.id ?? '',
-    status: meeting?.status ?? '',
+    meetingId: meeting?.id ?? "",
+    status: meeting?.status ?? "",
     meetingType: meeting?.type,
     isDistrictMeeting: meeting?.isDistrictMeeting,
     isInformationalOnly: meeting?.isInformationalOnly,
     attendanceLocked: meeting?.attendanceLocked,
     meeting: { transcriptionEnabled: meeting?.transcriptionEnabled ?? true },
     currentTopicId: (data.currentTopic as { id?: string })?.id ?? null,
-    currentTopic: data.currentTopic as MeetingSnapshot['currentTopic'],
-    topics: (data.topics as MeetingSnapshot['topics']) ?? [],
+    currentTopic: data.currentTopic as MeetingSnapshot["currentTopic"],
+    topics: (data.topics as MeetingSnapshot["topics"]) ?? [],
     activeVoteSession: activeVote
       ? {
-          id: activeVote.voteSessionId ?? '',
-          topicId: activeVote.topicId ?? '',
-          topicTitle: activeVote.topicTitle ?? '',
+          id: activeVote.voteSessionId ?? "",
+          topicId: activeVote.topicId ?? "",
+          topicTitle: activeVote.topicTitle ?? "",
           votingMethod: activeVote.votingMethod,
           requiredMajority: activeVote.requiredMajority,
           ballotType: activeVote.ballotType,
@@ -185,15 +214,24 @@ function normalizeSnapshot(data: Record<string, unknown>): MeetingSnapshot {
         }
       : null,
     quorum,
-    speakingQueue: ((data.speakingQueue as Array<{ id: string; userId: string; fullName?: string; user?: { fullName?: string }; position: number; status?: string }>) ?? []).map((r) => ({
+    speakingQueue: (
+      (data.speakingQueue as Array<{
+        id: string;
+        userId: string;
+        fullName?: string;
+        user?: { fullName?: string };
+        position: number;
+        status?: string;
+      }>) ?? []
+    ).map((r) => ({
       id: r.id,
       userId: r.userId,
-      fullName: r.fullName ?? r.user?.fullName ?? '—',
+      fullName: r.fullName ?? r.user?.fullName ?? "—",
       position: r.position,
       status: r.status,
     })),
-    currentSpeaker: data.currentSpeaker as MeetingSnapshot['currentSpeaker'],
-    nextSpeaker: data.nextSpeaker as MeetingSnapshot['nextSpeaker'],
+    currentSpeaker: data.currentSpeaker as MeetingSnapshot["currentSpeaker"],
+    nextSpeaker: data.nextSpeaker as MeetingSnapshot["nextSpeaker"],
     activeTimer: firstTimer
       ? {
           id: firstTimer.id,
@@ -202,20 +240,29 @@ function normalizeSnapshot(data: Record<string, unknown>): MeetingSnapshot {
           // button (shown only when activeTimer.topicId === currentTopic.id) never appeared.
           topicId: firstTimer.topicId,
           plannedDurationSec: firstTimer.plannedDurationSec,
-          remainingSec: Math.max(0, firstTimer.plannedDurationSec - (firstTimer.elapsedSec ?? 0)),
-          overtimeSec: Math.max(0, (firstTimer.elapsedSec ?? 0) - firstTimer.plannedDurationSec),
+          remainingSec: Math.max(
+            0,
+            firstTimer.plannedDurationSec - (firstTimer.elapsedSec ?? 0),
+          ),
+          overtimeSec: Math.max(
+            0,
+            (firstTimer.elapsedSec ?? 0) - firstTimer.plannedDurationSec,
+          ),
         }
       : null,
-    clubAttendance: (data.clubAttendance as MeetingSnapshot['clubAttendance']) ?? [],
+    clubAttendance:
+      (data.clubAttendance as MeetingSnapshot["clubAttendance"]) ?? [],
     ownVote,
-    motions: (data.motions as MeetingSnapshot['motions']) ?? [],
+    motions: (data.motions as MeetingSnapshot["motions"]) ?? [],
   };
 }
 
 /** Token rejected by meetings-api (expired, invalid, missing). */
 export function isAuthError(message: string | undefined | null): boolean {
   if (!message) return false;
-  return /unauthori[sz]ed|no autenticado|invalid[_ ]token|jwt expired|token expirado/i.test(message);
+  return /unauthori[sz]ed|no autenticado|invalid[_ ]token|jwt expired|token expirado/i.test(
+    message,
+  );
 }
 
 function joinMeetingWithAck(
@@ -227,11 +274,15 @@ function joinMeetingWithAck(
   onAuthError?: () => void,
 ) {
   s.emit(
-    'meeting.join',
+    "meeting.join",
     { meetingId },
     (res: { event?: string; data?: unknown } | undefined) => {
       if (!res) return;
-      if (res.event === 'meeting.snapshot' && res.data && typeof res.data === 'object') {
+      if (
+        res.event === "meeting.snapshot" &&
+        res.data &&
+        typeof res.data === "object"
+      ) {
         const payload = res.data as Record<string, unknown>;
         setSnapshot(normalizeSnapshot(payload));
         if (payload.voteResult) {
@@ -241,8 +292,11 @@ function joinMeetingWithAck(
         }
         setJoinError(null);
       }
-      if (res.event === 'error') {
-        const msg = res.data && typeof res.data === 'object' && 'message' in res.data ? String((res.data as { message: unknown }).message) : 'Error al unirse';
+      if (res.event === "error") {
+        const msg =
+          res.data && typeof res.data === "object" && "message" in res.data
+            ? String((res.data as { message: unknown }).message)
+            : "Error al unirse";
         if (onAuthError && isAuthError(msg)) {
           onAuthError();
           return;
@@ -271,7 +325,7 @@ export function useMeetingRoom(meetingId: string | null) {
           .then((token) => cb({ token }))
           .catch(() => cb({}));
       },
-      transports: ['websocket', 'polling'],
+      transports: ["websocket", "polling"],
     };
     const s = SOCKET_URL ? io(SOCKET_URL, options) : io(options);
     setSocket(s);
@@ -284,25 +338,39 @@ export function useMeetingRoom(meetingId: string | null) {
         .then(() => {
           if (disposed) return;
           if (s.connected) {
-            joinMeetingWithAck(s, meetingId, setSnapshot, setVoteResult, setJoinError, refreshAndReconnect);
+            joinMeetingWithAck(
+              s,
+              meetingId,
+              setSnapshot,
+              setVoteResult,
+              setJoinError,
+              refreshAndReconnect,
+            );
           } else {
             s.connect();
           }
         })
         .catch(() => {});
     };
-    s.on('connect', () => {
+    s.on("connect", () => {
       setConnected(true);
       setJoinError(null);
-      joinMeetingWithAck(s, meetingId, setSnapshot, setVoteResult, setJoinError, refreshAndReconnect);
+      joinMeetingWithAck(
+        s,
+        meetingId,
+        setSnapshot,
+        setVoteResult,
+        setJoinError,
+        refreshAndReconnect,
+      );
     });
     // A handshake rejected by the server middleware is not retried by
     // socket.io: mint a new token and connect again.
-    s.on('connect_error', (err: Error) => {
+    s.on("connect_error", (err: Error) => {
       if (isAuthError(err?.message)) refreshAndReconnect();
     });
-    s.on('disconnect', () => setConnected(false));
-    s.on('meeting.snapshot', (data: Record<string, unknown>) => {
+    s.on("disconnect", () => setConnected(false));
+    s.on("meeting.snapshot", (data: Record<string, unknown>) => {
       authRetries = 0;
       setSnapshot(normalizeSnapshot(data));
       if (data.voteResult) {
@@ -312,7 +380,7 @@ export function useMeetingRoom(meetingId: string | null) {
       }
       setJoinError(null);
     });
-    s.on('meeting.vote.closed', (data: RawVoteEvent) => {
+    s.on("meeting.vote.closed", (data: RawVoteEvent) => {
       if (data.voteSessionId) {
         setVoteResult({
           voteSessionId: data.voteSessionId,
@@ -331,7 +399,7 @@ export function useMeetingRoom(meetingId: string | null) {
         });
       }
     });
-    s.on('meeting.vote.result', (data: RawVoteEvent) => {
+    s.on("meeting.vote.result", (data: RawVoteEvent) => {
       if (data.voteSessionId) {
         setVoteResult({
           voteSessionId: data.voteSessionId,
@@ -350,12 +418,12 @@ export function useMeetingRoom(meetingId: string | null) {
         });
       }
     });
-    s.on('error', (data: { message?: string }) => {
-      setJoinError(data?.message ?? 'Error de conexión');
+    s.on("error", (data: { message?: string }) => {
+      setJoinError(data?.message ?? "Error de conexión");
     });
     return () => {
       disposed = true;
-      s.emit('leave_meeting', { meetingId });
+      s.emit("leave_meeting", { meetingId });
       s.disconnect();
       setSocket(null);
       setSnapshot(null);

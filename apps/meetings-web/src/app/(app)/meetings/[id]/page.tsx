@@ -1,18 +1,24 @@
-'use client';
+"use client";
 
-import { formatTotalDuration } from '@/lib/format';
-import { useParams } from 'next/navigation';
-import Link from 'next/link';
-import { useMeetingDetailQuery, useMeetingTopicsQuery } from '@/lib/queries';
-import { MEETING_STATUS_LABELS } from '@/lib/meeting-constants';
-import { TopicListSortable } from '@/components/TopicListSortable';
-import { EntityHero } from '@/components/ui/entity-hero';
-import { StatStrip } from '@/components/ui/stat-strip';
-import { StatusBadge } from '@/components/ui/status-badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
+import { formatTotalDuration } from "@/lib/format";
+import { useParams } from "next/navigation";
+import Link from "next/link";
+import { useMeetingDetailQuery, useMeetingTopicsQuery } from "@/lib/queries";
+import { MEETING_STATUS_LABELS } from "@/lib/meeting-constants";
+import { TopicListSortable } from "@/components/TopicListSortable";
+import { EntityHero } from "@/components/ui/entity-hero";
+import { StatStrip } from "@/components/ui/stat-strip";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 type Meeting = {
   id: string;
@@ -56,7 +62,9 @@ export default function ParticipantMeetingDetailPage() {
       <Card className="border-destructive">
         <CardContent className="pt-6">
           <p className="text-sm text-destructive font-medium">
-            {error instanceof Error ? error.message : 'No se pudo cargar la reunión.'}
+            {error instanceof Error
+              ? error.message
+              : "No se pudo cargar la reunión."}
           </p>
         </CardContent>
       </Card>
@@ -65,7 +73,7 @@ export default function ParticipantMeetingDetailPage() {
 
   if (!meeting) return null;
 
-  const canEnterLive = meeting.status === 'LIVE' || meeting.status === 'PAUSED';
+  const canEnterLive = meeting.status === "LIVE" || meeting.status === "PAUSED";
   const totalDuration = formatTotalDuration(topics);
 
   return (
@@ -76,15 +84,23 @@ export default function ParticipantMeetingDetailPage() {
         subtitle={[
           meeting.club?.name,
           meeting.scheduledAt
-            ? new Date(meeting.scheduledAt).toLocaleString('es-AR', { dateStyle: 'medium', timeStyle: 'short' })
+            ? new Date(meeting.scheduledAt).toLocaleString("es-AR", {
+                dateStyle: "medium",
+                timeStyle: "short",
+              })
             : null,
-        ].filter(Boolean).join(' · ')}
+        ]
+          .filter(Boolean)
+          .join(" · ")}
         badges={<StatusBadge status={meeting.status} />}
         actions={
           canEnterLive ? (
             <Button asChild size="lg" className="w-full sm:w-auto">
-              <Link href={`/meetings/${id}/live`} className="flex items-center gap-2">
-                {meeting.status === 'LIVE' && (
+              <Link
+                href={`/meetings/${id}/live`}
+                className="flex items-center gap-2"
+              >
+                {meeting.status === "LIVE" && (
                   <span className="size-2 rounded-full bg-white animate-pulse" />
                 )}
                 Entrar a la sala en vivo
@@ -97,16 +113,21 @@ export default function ParticipantMeetingDetailPage() {
       {/* Stats */}
       <StatStrip
         items={[
-          { label: 'Temas', value: topics.length },
-          { label: 'Duración est.', value: totalDuration },
-          { label: 'Estado', value: MEETING_STATUS_LABELS[meeting.status] ?? meeting.status },
+          { label: "Temas", value: topics.length },
+          { label: "Duración est.", value: totalDuration },
+          {
+            label: "Estado",
+            value: MEETING_STATUS_LABELS[meeting.status] ?? meeting.status,
+          },
         ]}
       />
 
       {meeting.description && (
         <Card>
           <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">{meeting.description}</p>
+            <p className="text-sm text-muted-foreground">
+              {meeting.description}
+            </p>
           </CardContent>
         </Card>
       )}
@@ -116,7 +137,9 @@ export default function ParticipantMeetingDetailPage() {
         <Card>
           <CardHeader>
             <CardTitle>Agenda</CardTitle>
-            <CardDescription>{topics.length} tema{topics.length === 1 ? '' : 's'}</CardDescription>
+            <CardDescription>
+              {topics.length} tema{topics.length === 1 ? "" : "s"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <TopicListSortable

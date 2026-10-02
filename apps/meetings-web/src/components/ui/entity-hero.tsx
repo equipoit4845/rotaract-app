@@ -1,5 +1,5 @@
-import * as React from 'react';
-import { cn } from '@/lib/utils';
+import * as React from "react";
+import { cn } from "@/lib/utils";
 
 type EntityHeroProps = {
   title: string;
@@ -7,7 +7,7 @@ type EntityHeroProps = {
   badges?: React.ReactNode;
   image?: React.ReactNode;
   actions?: React.ReactNode;
-  size?: 'sm' | 'lg';
+  size?: "sm" | "lg";
   className?: string;
 };
 
@@ -21,28 +21,26 @@ export function EntityHero({
   badges,
   image,
   actions,
-  size = 'lg',
+  size = "lg",
   className,
 }: EntityHeroProps) {
   return (
     <div
       className={cn(
-        'overflow-hidden rounded-xl border border-border bg-card shadow-sm',
-        size === 'lg' && 'px-5 py-5',
-        size === 'sm' && 'px-4 py-4',
-        className
+        "overflow-hidden rounded-xl border border-border bg-card shadow-sm",
+        size === "lg" && "px-5 py-5",
+        size === "sm" && "px-4 py-4",
+        className,
       )}
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 flex-1 items-start gap-4">
-          {image && (
-            <div className="shrink-0">{image}</div>
-          )}
+          {image && <div className="shrink-0">{image}</div>}
           <div className="min-w-0 flex-1">
             <h1
               className={cn(
-                'font-semibold text-foreground',
-                size === 'lg' ? 'text-2xl tracking-tight' : 'text-xl'
+                "font-semibold text-foreground",
+                size === "lg" ? "text-2xl tracking-tight" : "text-xl",
               )}
             >
               {title}

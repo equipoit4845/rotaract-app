@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useEffect, type ReactNode } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
-import { AppShell, AppShellSkeleton } from '@/components/layout/AppShell';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { useAuthActions, useAuthState } from '@/context/AuthContext';
-import { decideGuard } from '@/lib/permissions';
+import { useEffect, type ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { AppShell, AppShellSkeleton } from "@/components/layout/AppShell";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { useAuthActions, useAuthState } from "@/context/AuthContext";
+import { decideGuard } from "@/lib/permissions";
 
 type ProtectedAppLayoutProps = {
   title: string;
@@ -33,15 +33,28 @@ export function ProtectedAppLayout({
   const { user, isLoading, error } = useAuthState();
   const { reload } = useAuthActions();
   const router = useRouter();
-  const pathname = usePathname() ?? '/';
-  const decision = decideGuard({ user, isLoading, error, allowRoles, pathname, fallbackHref });
+  const pathname = usePathname() ?? "/";
+  const decision = decideGuard({
+    user,
+    isLoading,
+    error,
+    allowRoles,
+    pathname,
+    fallbackHref,
+  });
 
   useEffect(() => {
-    if (decision.kind === 'login') window.location.assign(decision.href);
-    if (decision.kind === 'redirect') router.replace(decision.href);
-  }, [decision.kind, decision.kind === 'login' || decision.kind === 'redirect' ? decision.href : '', router]);
+    if (decision.kind === "login") window.location.assign(decision.href);
+    if (decision.kind === "redirect") router.replace(decision.href);
+  }, [
+    decision.kind,
+    decision.kind === "login" || decision.kind === "redirect"
+      ? decision.href
+      : "",
+    router,
+  ]);
 
-  if (decision.kind === 'error') {
+  if (decision.kind === "error") {
     return (
       <div className="grid min-h-screen place-items-center bg-background p-4">
         <Card className="w-full max-w-md border-destructive">
@@ -59,14 +72,19 @@ export function ProtectedAppLayout({
     );
   }
 
-  if (decision.kind !== 'allow' || !user) {
+  if (decision.kind !== "allow" || !user) {
     return bare ? null : <AppShellSkeleton />;
   }
 
   if (bare) return <>{children}</>;
 
   return (
-    <AppShell title={title} user={user} backHref={backHref} backLabel={backLabel}>
+    <AppShell
+      title={title}
+      user={user}
+      backHref={backHref}
+      backLabel={backLabel}
+    >
       {children}
     </AppShell>
   );

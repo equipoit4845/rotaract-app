@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import type { BulkImportResult } from '@/lib/api';
-import { Button } from '@/components/ui/button';
+import type { BulkImportResult } from "@/lib/api";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -9,7 +9,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 
 type BulkImportReportProps = {
   result: BulkImportResult;

@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import { useCallback, useState } from 'react';
+import { useCallback, useState } from "react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { BulkImportDropzone } from './BulkImportDropzone';
-import { BulkImportReport } from './BulkImportReport';
-import type { BulkImportResult } from '@/lib/api';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { BulkImportDropzone } from "./BulkImportDropzone";
+import { BulkImportReport } from "./BulkImportReport";
+import type { BulkImportResult } from "@/lib/api";
 
 type BulkImportModalProps = {
   isOpen: boolean;
@@ -19,7 +19,10 @@ type BulkImportModalProps = {
   title: string;
   description?: string;
   onDownloadTemplate: () => Promise<void>;
-  onImport: (file: File, mode: 'partial' | 'strict') => Promise<BulkImportResult>;
+  onImport: (
+    file: File,
+    mode: "partial" | "strict",
+  ) => Promise<BulkImportResult>;
   onSuccess?: () => void;
 };
 
@@ -35,20 +38,20 @@ export function BulkImportModal({
   const [loading, setLoading] = useState(false);
   const [strictMode, setStrictMode] = useState(false);
   const [result, setResult] = useState<BulkImportResult | null>(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const handleFileSelect = useCallback(
     async (file: File) => {
-      setError('');
+      setError("");
       setLoading(true);
       try {
-        const res = await onImport(file, strictMode ? 'strict' : 'partial');
+        const res = await onImport(file, strictMode ? "strict" : "partial");
         setResult(res);
         if (res.failed === 0 && res.created > 0) {
           onSuccess?.();
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error al importar');
+        setError(err instanceof Error ? err.message : "Error al importar");
       } finally {
         setLoading(false);
       }
@@ -58,18 +61,20 @@ export function BulkImportModal({
 
   const handleDownloadReport = useCallback(() => {
     if (!result?.reportCsv) return;
-    const blob = new Blob([result.reportCsv], { type: 'text/csv;charset=utf-8' });
+    const blob = new Blob([result.reportCsv], {
+      type: "text/csv;charset=utf-8",
+    });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = 'reporte-importacion.csv';
+    a.download = "reporte-importacion.csv";
     a.click();
     URL.revokeObjectURL(url);
   }, [result?.reportCsv]);
 
   const handleClose = useCallback(() => {
     setResult(null);
-    setError('');
+    setError("");
     onClose();
   }, [onClose]);
 
@@ -80,9 +85,7 @@ export function BulkImportModal({
       <DialogContent showCloseButton className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          {description && (
-            <DialogDescription>{description}</DialogDescription>
-          )}
+          {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
 
         {!showReport ? (
@@ -91,9 +94,11 @@ export function BulkImportModal({
               variant="outline"
               size="sm"
               onClick={() => {
-                setError('');
+                setError("");
                 onDownloadTemplate().catch((e) =>
-                  setError(e instanceof Error ? e.message : 'Error al descargar'),
+                  setError(
+                    e instanceof Error ? e.message : "Error al descargar",
+                  ),
                 );
               }}
             >

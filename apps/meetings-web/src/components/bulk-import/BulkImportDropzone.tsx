@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useCallback, useState } from 'react';
-import { cn } from '@/lib/utils';
+import { useCallback, useState } from "react";
+import { cn } from "@/lib/utils";
 
 type BulkImportDropzoneProps = {
   onFileSelect: (file: File) => void;
@@ -11,7 +11,7 @@ type BulkImportDropzoneProps = {
 
 export function BulkImportDropzone({
   onFileSelect,
-  accept = '.csv',
+  accept = ".csv",
   disabled,
 }: BulkImportDropzoneProps) {
   const [isDragging, setIsDragging] = useState(false);
@@ -22,7 +22,7 @@ export function BulkImportDropzone({
       setIsDragging(false);
       if (disabled) return;
       const file = e.dataTransfer.files[0];
-      if (file?.name.endsWith('.csv')) {
+      if (file?.name.endsWith(".csv")) {
         onFileSelect(file);
       }
     },
@@ -42,7 +42,7 @@ export function BulkImportDropzone({
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) onFileSelect(file);
-      e.target.value = '';
+      e.target.value = "";
     },
     [onFileSelect],
   );
@@ -50,11 +50,11 @@ export function BulkImportDropzone({
   return (
     <label
       className={cn(
-        'flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 transition-colors cursor-pointer',
+        "flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 transition-colors cursor-pointer",
         isDragging && !disabled
-          ? 'border-primary bg-primary/5'
-          : 'border-muted-foreground/25 hover:border-muted-foreground/50',
-        disabled && 'pointer-events-none opacity-60',
+          ? "border-primary bg-primary/5"
+          : "border-muted-foreground/25 hover:border-muted-foreground/50",
+        disabled && "pointer-events-none opacity-60",
       )}
       onDrop={handleDrop}
       onDragOver={handleDragOver}

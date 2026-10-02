@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { StatusBadge } from '@/components/ui/status-badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import Link from "next/link";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type Meeting = {
   id: string;
@@ -18,16 +18,21 @@ type Meeting = {
 type MeetingCardProps = {
   meeting: Meeting;
   href: string;
-  variant?: 'default' | 'hero';
+  variant?: "default" | "hero";
   className?: string;
 };
 
-export function MeetingCard({ meeting, href, variant = 'default', className }: MeetingCardProps) {
-  const isLive = meeting.status === 'LIVE';
+export function MeetingCard({
+  meeting,
+  href,
+  variant = "default",
+  className,
+}: MeetingCardProps) {
+  const isLive = meeting.status === "LIVE";
 
-  if (variant === 'hero') {
+  if (variant === "hero") {
     return (
-      <Card className={cn('border-primary/30 bg-primary/5', className)}>
+      <Card className={cn("border-primary/30 bg-primary/5", className)}>
         <CardContent className="p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-2">
@@ -42,18 +47,16 @@ export function MeetingCard({ meeting, href, variant = 'default', className }: M
                 {meeting.club?.name && <span>{meeting.club.name}</span>}
                 {meeting.scheduledAt && (
                   <span>
-                    {new Date(meeting.scheduledAt).toLocaleString('es-AR', {
-                      dateStyle: 'medium',
-                      timeStyle: 'short',
+                    {new Date(meeting.scheduledAt).toLocaleString("es-AR", {
+                      dateStyle: "medium",
+                      timeStyle: "short",
                     })}
                   </span>
                 )}
               </div>
             </div>
             <Button asChild>
-              <Link href={href}>
-                {isLive ? 'Entrar' : 'Ver detalle'}
-              </Link>
+              <Link href={href}>{isLive ? "Entrar" : "Ver detalle"}</Link>
             </Button>
           </div>
         </CardContent>
@@ -65,8 +68,8 @@ export function MeetingCard({ meeting, href, variant = 'default', className }: M
     <Link href={href} className="block">
       <Card
         className={cn(
-          'transition-all hover:border-primary/50 hover:shadow-sm',
-          isLive && 'border-l-4 border-l-primary',
+          "transition-all hover:border-primary/50 hover:shadow-sm",
+          isLive && "border-l-4 border-l-primary",
           className,
         )}
       >
@@ -82,9 +85,9 @@ export function MeetingCard({ meeting, href, variant = 'default', className }: M
               {meeting.club?.name && <span>{meeting.club.name}</span>}
               {meeting.scheduledAt && (
                 <span>
-                  {new Date(meeting.scheduledAt).toLocaleString('es-AR', {
-                    dateStyle: 'short',
-                    timeStyle: 'short',
+                  {new Date(meeting.scheduledAt).toLocaleString("es-AR", {
+                    dateStyle: "short",
+                    timeStyle: "short",
                   })}
                 </span>
               )}

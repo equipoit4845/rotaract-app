@@ -1,19 +1,22 @@
-'use client';
+"use client";
 
-import { useMemo, useState } from 'react';
-import Link from 'next/link';
-import { useQueryClient } from '@tanstack/react-query';
-import { meetingsApi } from '@/lib/api';
-import { queryKeys, useMeetingsQuery } from '@/lib/queries';
-import { MeetingsTable } from '@/components/MeetingsTable';
-import { MeetingCard } from '@/components/meetings/MeetingCard';
-import { MeetingFilters, type MeetingFiltersState } from '@/components/meetings/MeetingFilters';
-import { BulkImportModal } from '@/components/bulk-import';
-import { SectionHeader } from '@/components/layout/SectionHeader';
-import { StatsCard } from '@/components/ui/stats-card';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import { useQueryClient } from "@tanstack/react-query";
+import { meetingsApi } from "@/lib/api";
+import { queryKeys, useMeetingsQuery } from "@/lib/queries";
+import { MeetingsTable } from "@/components/MeetingsTable";
+import { MeetingCard } from "@/components/meetings/MeetingCard";
+import {
+  MeetingFilters,
+  type MeetingFiltersState,
+} from "@/components/meetings/MeetingFilters";
+import { BulkImportModal } from "@/components/bulk-import";
+import { SectionHeader } from "@/components/layout/SectionHeader";
+import { StatsCard } from "@/components/ui/stats-card";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Meeting = {
   id: string;
@@ -35,9 +38,9 @@ export default function AdminMeetingsPage() {
   const stats = useMemo(() => {
     const s = { total: meetings.length, scheduled: 0, live: 0, finished: 0 };
     for (const m of meetings) {
-      if (m.status === 'SCHEDULED') s.scheduled++;
-      if (m.status === 'LIVE' || m.status === 'PAUSED') s.live++;
-      if (m.status === 'FINISHED') s.finished++;
+      if (m.status === "SCHEDULED") s.scheduled++;
+      if (m.status === "LIVE" || m.status === "PAUSED") s.live++;
+      if (m.status === "FINISHED") s.finished++;
     }
     return s;
   }, [meetings]);
@@ -56,7 +59,9 @@ export default function AdminMeetingsPage() {
   }, [meetings, filters]);
 
   // Live meeting hero
-  const liveMeeting = meetings.find((m) => m.status === 'LIVE' || m.status === 'PAUSED');
+  const liveMeeting = meetings.find(
+    (m) => m.status === "LIVE" || m.status === "PAUSED",
+  );
 
   if (isLoading) {
     return (
@@ -78,7 +83,9 @@ export default function AdminMeetingsPage() {
       <Card className="border-destructive">
         <CardContent className="pt-6">
           <p className="text-sm text-destructive font-medium">
-            {error instanceof Error ? error.message : 'No se pudieron cargar reuniones.'}
+            {error instanceof Error
+              ? error.message
+              : "No se pudieron cargar reuniones."}
           </p>
         </CardContent>
       </Card>
@@ -144,7 +151,9 @@ export default function AdminMeetingsPage() {
         description="Subí un archivo CSV con la plantilla. Usá UTF-8."
         onDownloadTemplate={meetingsApi.downloadBulkTemplate}
         onImport={(file, mode) => meetingsApi.bulkImport(file, mode)}
-        onSuccess={() => queryClient.invalidateQueries({ queryKey: queryKeys.meetings })}
+        onSuccess={() =>
+          queryClient.invalidateQueries({ queryKey: queryKeys.meetings })
+        }
       />
     </div>
   );

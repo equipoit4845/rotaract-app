@@ -2,7 +2,7 @@
  * Configuración de adjuntos alineada con apps/api/src/attachments/config/attachment-entity.config.ts
  */
 
-const COMMON_ACCEPT = '.pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png';
+const COMMON_ACCEPT = ".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png";
 
 export const ATTACHMENT_CONFIG = {
   report: {
@@ -23,7 +23,7 @@ export const ATTACHMENT_CONFIG = {
   event: {
     maxFiles: 5,
     maxSizeMB: 5,
-    accept: '.pdf,.jpg,.jpeg,.png',
+    accept: ".pdf,.jpg,.jpeg,.png",
   },
   committee_activity: {
     maxFiles: 5,

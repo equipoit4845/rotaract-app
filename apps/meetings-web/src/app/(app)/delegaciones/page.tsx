@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useCallback } from 'react';
-import { useAuth } from '@/context/AuthContext';
-import { meetingsApi, cartaPoderApi, clubsApi } from '@/lib/api';
+import { useEffect, useState, useCallback } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { meetingsApi, cartaPoderApi, clubsApi } from "@/lib/api";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
   DialogContent,
@@ -22,10 +22,16 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { toast } from 'sonner';
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
 
-type Meeting = { id: string; title: string; scheduledAt: string | null; status: string; isDistrictMeeting?: boolean };
+type Meeting = {
+  id: string;
+  title: string;
+  scheduledAt: string | null;
+  status: string;
+  isDistrictMeeting?: boolean;
+};
 type CartaPoder = {
   id: string;
   meetingId: string;
@@ -38,36 +44,42 @@ type CartaPoder = {
 type User = { id: string; fullName: string; email: string; role: string };
 
 const STATUS_LABELS: Record<string, string> = {
-  DRAFT: 'Borrador',
-  PENDING_SECRETARY: 'Pendiente de aprobación',
-  SUBMITTED: 'Enviada',
-  VERIFIED: 'Verificada',
-  REJECTED: 'Rechazada',
+  DRAFT: "Borrador",
+  PENDING_SECRETARY: "Pendiente de aprobación",
+  SUBMITTED: "Enviada",
+  VERIFIED: "Verificada",
+  REJECTED: "Rechazada",
 };
 
-const STATUS_VARIANTS: Record<string, 'default' | 'secondary' | 'success' | 'destructive' | 'warning' | 'outline'> = {
-  DRAFT: 'secondary',
-  PENDING_SECRETARY: 'warning',
-  SUBMITTED: 'outline',
-  VERIFIED: 'success',
-  REJECTED: 'destructive',
+const STATUS_VARIANTS: Record<
+  string,
+  "default" | "secondary" | "success" | "destructive" | "warning" | "outline"
+> = {
+  DRAFT: "secondary",
+  PENDING_SECRETARY: "warning",
+  SUBMITTED: "outline",
+  VERIFIED: "success",
+  REJECTED: "destructive",
 };
 
 export default function DelegacionesPage() {
   const { user } = useAuth();
   const [meetings, setMeetings] = useState<Meeting[]>([]);
-  const [cartasPoder, setCartasPoder] = useState<Record<string, CartaPoder[]>>({});
+  const [cartasPoder, setCartasPoder] = useState<Record<string, CartaPoder[]>>(
+    {},
+  );
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
-  const [delegateSearch, setDelegateSearch] = useState('');
+  const [delegateSearch, setDelegateSearch] = useState("");
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [selectedDelegate, setSelectedDelegate] = useState<User | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   // Legacy took memberships[0]; prefer the club this person presides.
-  const primaryMembership = user?.memberships?.find((m) => m.isPresident) ?? user?.memberships?.[0];
+  const primaryMembership =
+    user?.memberships?.find((m) => m.isPresident) ?? user?.memberships?.[0];
   const clubId = primaryMembership?.clubId;
 
   const loadMeetings = useCallback(async () => {
@@ -75,7 +87,12 @@ export default function DelegacionesPage() {
     setLoading(true);
     try {
       const all = (await meetingsApi.list()) as Meeting[];
-      const district = all.filter((m) => m.isDistrictMeeting && m.status !== 'FINISHED' && m.status !== 'ARCHIVED');
+      const district = all.filter(
+        (m) =>
+          m.isDistrictMeeting &&
+          m.status !== "FINISHED" &&
+          m.status !== "ARCHIVED",
+      );
       setMeetings(district);
 
       // Load cartas poder for each meeting
@@ -83,7 +100,10 @@ export default function DelegacionesPage() {
       await Promise.all(
         district.map(async (m) => {
           try {
-            const cps = (await cartaPoderApi.listMyClub(m.id, clubId)) as CartaPoder[];
+            const cps = (await cartaPoderApi.listMyClub(
+              m.id,
+              clubId,
+            )) as CartaPoder[];
             cpMap[m.id] = cps;
           } catch {
             cpMap[m.id] = [];
@@ -92,7 +112,7 @@ export default function DelegacionesPage() {
       );
       setCartasPoder(cpMap);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error al cargar reuniones');
+      toast.error(e instanceof Error ? e.message : "Error al cargar reuniones");
     } finally {
       setLoading(false);
     }
@@ -104,28 +124,30 @@ export default function DelegacionesPage() {
 
   async function openDialog(meeting: Meeting) {
     setSelectedMeeting(meeting);
-    setDelegateSearch('');
+    setDelegateSearch("");
     setSelectedDelegate(null);
     setDialogOpen(true);
     if (allUsers.length === 0) {
       setUsersLoading(true);
       try {
         const members = clubId ? await clubsApi.members(clubId) : [];
-        setAllUsers(members.map((m) => ({ ...m, role: 'PARTICIPANT' })));
+        setAllUsers(members.map((m) => ({ ...m, role: "PARTICIPANT" })));
       } catch {
-        toast.error('No se pudo cargar la lista de socios del club');
+        toast.error("No se pudo cargar la lista de socios del club");
       } finally {
         setUsersLoading(false);
       }
     }
   }
 
-  const filteredUsers = allUsers.filter(
-    (u) =>
-      u.id !== user?.id &&
-      (u.fullName.toLowerCase().includes(delegateSearch.toLowerCase()) ||
-        u.email.toLowerCase().includes(delegateSearch.toLowerCase())),
-  ).slice(0, 8);
+  const filteredUsers = allUsers
+    .filter(
+      (u) =>
+        u.id !== user?.id &&
+        (u.fullName.toLowerCase().includes(delegateSearch.toLowerCase()) ||
+          u.email.toLowerCase().includes(delegateSearch.toLowerCase())),
+    )
+    .slice(0, 8);
 
   async function handleSubmit() {
     if (!selectedMeeting || !selectedDelegate || !clubId) return;
@@ -135,21 +157,23 @@ export default function DelegacionesPage() {
         clubId,
         delegateUserId: selectedDelegate.id,
       });
-      toast.success('Delegación enviada. El Secretario Distrital la revisará.');
+      toast.success("Delegación enviada. El Secretario Distrital la revisará.");
       setDialogOpen(false);
       await loadMeetings();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error al crear delegación');
+      toast.error(e instanceof Error ? e.message : "Error al crear delegación");
     } finally {
       setSubmitting(false);
     }
   }
 
-  if (!user || user.role !== 'PRESIDENT') {
+  if (!user || user.role !== "PRESIDENT") {
     return (
       <Card>
         <CardContent className="p-6">
-          <p className="text-sm text-muted-foreground">Solo los presidentes de club pueden gestionar delegaciones.</p>
+          <p className="text-sm text-muted-foreground">
+            Solo los presidentes de club pueden gestionar delegaciones.
+          </p>
         </CardContent>
       </Card>
     );
@@ -173,7 +197,9 @@ export default function DelegacionesPage() {
       ) : meetings.length === 0 ? (
         <Card>
           <CardContent className="p-6">
-            <p className="text-sm text-muted-foreground">No hay reuniones distritales próximas.</p>
+            <p className="text-sm text-muted-foreground">
+              No hay reuniones distritales próximas.
+            </p>
           </CardContent>
         </Card>
       ) : (
@@ -189,12 +215,19 @@ export default function DelegacionesPage() {
                       <CardTitle className="text-base">{m.title}</CardTitle>
                       <CardDescription>
                         {m.scheduledAt
-                          ? new Date(m.scheduledAt).toLocaleString('es-AR', { dateStyle: 'medium', timeStyle: 'short' })
-                          : 'Fecha por confirmar'}
+                          ? new Date(m.scheduledAt).toLocaleString("es-AR", {
+                              dateStyle: "medium",
+                              timeStyle: "short",
+                            })
+                          : "Fecha por confirmar"}
                       </CardDescription>
                     </div>
                     {activeCp ? (
-                      <Badge variant={STATUS_VARIANTS[activeCp.status] ?? 'secondary'}>
+                      <Badge
+                        variant={
+                          STATUS_VARIANTS[activeCp.status] ?? "secondary"
+                        }
+                      >
                         {STATUS_LABELS[activeCp.status] ?? activeCp.status}
                       </Badge>
                     ) : (
@@ -206,19 +239,27 @@ export default function DelegacionesPage() {
                   {activeCp ? (
                     <div className="text-sm space-y-1">
                       <p className="text-muted-foreground">
-                        Delegado: <span className="font-medium text-foreground">{activeCp.delegateUser?.fullName ?? '—'}</span>
-                        {' '}<span className="text-muted-foreground">({activeCp.delegateUser?.email})</span>
+                        Delegado:{" "}
+                        <span className="font-medium text-foreground">
+                          {activeCp.delegateUser?.fullName ?? "—"}
+                        </span>{" "}
+                        <span className="text-muted-foreground">
+                          ({activeCp.delegateUser?.email})
+                        </span>
                       </p>
-                      {activeCp.status === 'REJECTED' && activeCp.rejectionReason && (
-                        <p className="text-destructive text-xs">Motivo: {activeCp.rejectionReason}</p>
-                      )}
+                      {activeCp.status === "REJECTED" &&
+                        activeCp.rejectionReason && (
+                          <p className="text-destructive text-xs">
+                            Motivo: {activeCp.rejectionReason}
+                          </p>
+                        )}
                     </div>
                   ) : (
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => openDialog(m)}
-                      disabled={m.status === 'FINISHED' || m.status === 'LIVE'}
+                      disabled={m.status === "FINISHED" || m.status === "LIVE"}
                     >
                       Crear delegación
                     </Button>
@@ -236,10 +277,13 @@ export default function DelegacionesPage() {
           <DialogHeader>
             <DialogTitle>Crear delegación</DialogTitle>
             <DialogDescription>
-              {selectedMeeting?.title} —{' '}
+              {selectedMeeting?.title} —{" "}
               {selectedMeeting?.scheduledAt
-                ? new Date(selectedMeeting.scheduledAt).toLocaleDateString('es-AR', { dateStyle: 'long' })
-                : 'Fecha por confirmar'}
+                ? new Date(selectedMeeting.scheduledAt).toLocaleDateString(
+                    "es-AR",
+                    { dateStyle: "long" },
+                  )
+                : "Fecha por confirmar"}
             </DialogDescription>
           </DialogHeader>
 
@@ -256,12 +300,16 @@ export default function DelegacionesPage() {
                 autoFocus
               />
               {usersLoading && (
-                <p className="text-xs text-muted-foreground">Cargando socios...</p>
+                <p className="text-xs text-muted-foreground">
+                  Cargando socios...
+                </p>
               )}
               {delegateSearch.length >= 2 && !selectedDelegate && (
                 <div className="rounded-lg border border-border overflow-hidden">
                   {filteredUsers.length === 0 ? (
-                    <p className="p-3 text-sm text-muted-foreground">Sin resultados</p>
+                    <p className="p-3 text-sm text-muted-foreground">
+                      Sin resultados
+                    </p>
                   ) : (
                     filteredUsers.map((u) => (
                       <button
@@ -278,7 +326,9 @@ export default function DelegacionesPage() {
                         </div>
                         <div>
                           <p className="font-medium">{u.fullName}</p>
-                          <p className="text-xs text-muted-foreground">{u.email}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {u.email}
+                          </p>
                         </div>
                       </button>
                     ))
@@ -290,13 +340,16 @@ export default function DelegacionesPage() {
             {selectedDelegate && (
               <div className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-sm">
                 <p className="font-medium">Delegado seleccionado:</p>
-                <p>{selectedDelegate.fullName} ({selectedDelegate.email})</p>
+                <p>
+                  {selectedDelegate.fullName} ({selectedDelegate.email})
+                </p>
               </div>
             )}
 
             <p className="text-xs text-muted-foreground">
-              Al confirmar, la delegación quedará pendiente de aprobación por el Secretario Distrital.
-              Las cartas poder deben enviarse con al menos 7 días de anticipación (Art. 46).
+              Al confirmar, la delegación quedará pendiente de aprobación por el
+              Secretario Distrital. Las cartas poder deben enviarse con al menos
+              7 días de anticipación (Art. 46).
             </p>
           </div>
 
@@ -308,7 +361,7 @@ export default function DelegacionesPage() {
               disabled={!selectedDelegate || submitting}
               onClick={handleSubmit}
             >
-              {submitting ? 'Enviando...' : 'Enviar delegación'}
+              {submitting ? "Enviando..." : "Enviar delegación"}
             </Button>
           </DialogFooter>
         </DialogContent>

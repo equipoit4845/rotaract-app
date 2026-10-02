@@ -1,4 +1,5 @@
-export type Role = 'PARTICIPANT' | 'SECRETARY' | 'PRESIDENT' | 'RDR' | 'COMPANY' | 'SUPERADMIN';
+export type Role =
+  "PARTICIPANT" | "SECRETARY" | "PRESIDENT" | "RDR" | "COMPANY" | "SUPERADMIN";
 
 export interface AuthMembership {
   clubId: string;
@@ -21,7 +22,7 @@ export interface LoginResponse {
   user: AuthUser;
 }
 
-export type CompanyStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED';
+export type CompanyStatus = "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED";
 
 export interface CompanySummary {
   id: string;
@@ -34,7 +35,8 @@ export interface CompanySummary {
   status: CompanyStatus;
 }
 
-export type TalentContactRequestStatus = 'NEW' | 'SHARED_WITH_MEMBER' | 'CLOSED';
+export type TalentContactRequestStatus =
+  "NEW" | "SHARED_WITH_MEMBER" | "CLOSED";
 
 export interface TalentContactRequestSummary {
   id: string;

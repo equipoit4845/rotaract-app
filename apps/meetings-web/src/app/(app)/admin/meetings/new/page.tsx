@@ -1,45 +1,52 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { meetingsApi } from '@/lib/api';
-import { useClubsListQuery } from '@/lib/queries';
-import { SectionHeader } from '@/components/layout/SectionHeader';
-import { FormSection } from '@/components/ui/form-section';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { meetingsApi } from "@/lib/api";
+import { useClubsListQuery } from "@/lib/queries";
+import { SectionHeader } from "@/components/layout/SectionHeader";
+import { FormSection } from "@/components/ui/form-section";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+} from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function NewMeetingPage() {
   const router = useRouter();
-  const { data: clubsData, isLoading: clubsLoading } = useClubsListQuery(false, true);
-  const clubs = (clubsData ?? []) as { id: string; name: string; code: string }[];
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [scheduledAt, setScheduledAt] = useState('');
-  const [clubId, setClubId] = useState('');
-  const [meetingType, setMeetingType] = useState('ORDINARY');
+  const { data: clubsData, isLoading: clubsLoading } = useClubsListQuery(
+    false,
+    true,
+  );
+  const clubs = (clubsData ?? []) as {
+    id: string;
+    name: string;
+    code: string;
+  }[];
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [scheduledAt, setScheduledAt] = useState("");
+  const [clubId, setClubId] = useState("");
+  const [meetingType, setMeetingType] = useState("ORDINARY");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim()) {
-      setError('El título es obligatorio.');
+      setError("El título es obligatorio.");
       return;
     }
-    setError('');
+    setError("");
     setLoading(true);
     try {
       const m = (await meetingsApi.create({
@@ -51,7 +58,7 @@ export default function NewMeetingPage() {
       })) as { id: string };
       router.push(`/admin/meetings/${m.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al crear');
+      setError(err instanceof Error ? err.message : "Error al crear");
     } finally {
       setLoading(false);
     }
@@ -79,7 +86,10 @@ export default function NewMeetingPage() {
                 <p className="text-sm text-destructive font-medium">{error}</p>
               )}
 
-              <FormSection title="Información general" description="Datos básicos de la reunión.">
+              <FormSection
+                title="Información general"
+                description="Datos básicos de la reunión."
+              >
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="title">Título *</Label>
@@ -104,7 +114,10 @@ export default function NewMeetingPage() {
                 </div>
               </FormSection>
 
-              <FormSection title="Programación" description="Tipo, fecha y club de la reunión.">
+              <FormSection
+                title="Programación"
+                description="Tipo, fecha y club de la reunión."
+              >
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label>Tipo de reunión</Label>
@@ -113,14 +126,18 @@ export default function NewMeetingPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="ORDINARY">Ordinaria (Art. 37)</SelectItem>
-                        <SelectItem value="EXTRAORDINARY">Extraordinaria (Art. 39)</SelectItem>
+                        <SelectItem value="ORDINARY">
+                          Ordinaria (Art. 37)
+                        </SelectItem>
+                        <SelectItem value="EXTRAORDINARY">
+                          Extraordinaria (Art. 39)
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                     <p className="text-xs text-muted-foreground">
-                      {meetingType === 'ORDINARY'
-                        ? 'Preaviso de 15 días. Mínimo 4 por período.'
-                        : 'Preaviso de 30 días (presencial) o 15 días (virtual).'}
+                      {meetingType === "ORDINARY"
+                        ? "Preaviso de 15 días. Mínimo 4 por período."
+                        : "Preaviso de 30 días (presencial) o 15 días (virtual)."}
                     </p>
                   </div>
                   <div className="space-y-2">
@@ -156,7 +173,7 @@ export default function NewMeetingPage() {
 
               <div className="flex gap-2 pt-2">
                 <Button type="submit" disabled={loading}>
-                  {loading ? 'Creando...' : 'Crear reunión'}
+                  {loading ? "Creando..." : "Crear reunión"}
                 </Button>
                 <Button type="button" variant="outline" asChild>
                   <Link href="/admin/meetings">Cancelar</Link>

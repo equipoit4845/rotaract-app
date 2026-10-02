@@ -1,11 +1,18 @@
-'use client';
+"use client";
 
-import { ProtectedAppLayout } from '@/components/auth/ProtectedAppLayout';
-import { ADMIN_ROLES } from '@/lib/permissions';
+import { ProtectedAppLayout } from "@/components/auth/ProtectedAppLayout";
+import { ADMIN_ROLES } from "@/lib/permissions";
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <ProtectedAppLayout title="Reuniones — Administración" allowRoles={ADMIN_ROLES}>
+    <ProtectedAppLayout
+      title="Reuniones — Administración"
+      allowRoles={ADMIN_ROLES}
+    >
       {children}
     </ProtectedAppLayout>
   );

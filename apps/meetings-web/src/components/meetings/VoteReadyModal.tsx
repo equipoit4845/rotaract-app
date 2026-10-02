@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -10,8 +10,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 
 type Club = { clubId: string; clubName: string; connected: boolean };
 
@@ -48,14 +48,16 @@ export function VoteReadyModal({
         <DialogHeader>
           <DialogTitle>Clubes no presentes</DialogTitle>
           <DialogDescription>
-            Hay {disconnected.length} club{disconnected.length === 1 ? '' : 'es'} sin
-            conexión activa. Podés continuar sin ellos o esperar a que se conecten.
+            Hay {disconnected.length} club
+            {disconnected.length === 1 ? "" : "es"} sin conexión activa. Podés
+            continuar sin ellos o esperar a que se conecten.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           <p className="text-sm text-muted-foreground">
-            Votación: <span className="font-medium text-foreground">{topicTitle}</span>
+            Votación:{" "}
+            <span className="font-medium text-foreground">{topicTitle}</span>
           </p>
 
           <div className="flex items-center gap-2 text-sm">
@@ -112,7 +114,8 @@ export function VoteReadyModal({
             Esperar
           </Button>
           <Button onClick={onContinue}>
-            Continuar con {connected.length} papeleta{connected.length === 1 ? '' : 's'}
+            Continuar con {connected.length} papeleta
+            {connected.length === 1 ? "" : "s"}
           </Button>
         </DialogFooter>
       </DialogContent>

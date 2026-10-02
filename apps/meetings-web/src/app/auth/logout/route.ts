@@ -1,6 +1,6 @@
-import { getMiRotaract } from '@/lib/server/mirotaract';
+import { getMiRotaract } from "@/lib/server/mirotaract";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 /** POST /auth/logout (form in the account menu) → clears the session cookie. */
 export function POST(request: Request) {

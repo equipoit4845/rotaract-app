@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { historyApi } from '@/lib/api';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { historyApi } from "@/lib/api";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type AuditItem = { action: string; createdAt: string };
 
@@ -24,13 +24,13 @@ export function AuditSidebar({
   const [open, setOpen] = useState(defaultOpen);
 
   const { data: audit = [], isLoading } = useQuery({
-    queryKey: ['audit', meetingId],
+    queryKey: ["audit", meetingId],
     queryFn: () => historyApi.audit(meetingId) as Promise<AuditItem[]>,
     enabled: !!meetingId,
   });
 
   return (
-    <div className={cn('lg:w-80 lg:shrink-0', className)}>
+    <div className={cn("lg:w-80 lg:shrink-0", className)}>
       <Card>
         <CardHeader className="py-3">
           <div className="flex items-center justify-between">
@@ -42,11 +42,11 @@ export function AuditSidebar({
               onClick={() => setOpen((o) => !o)}
               aria-expanded={open}
             >
-              {open ? 'Ocultar' : 'Mostrar'}
+              {open ? "Ocultar" : "Mostrar"}
             </Button>
           </div>
         </CardHeader>
-        <div className={cn('lg:block', !open && 'hidden')}>
+        <div className={cn("lg:block", !open && "hidden")}>
           <CardContent className="pt-0">
             {isLoading ? (
               <p className="text-sm text-muted-foreground">Cargando...</p>
@@ -61,7 +61,7 @@ export function AuditSidebar({
                   >
                     <span>{a.action}</span>
                     <span className="text-muted-foreground text-xs">
-                      {new Date(a.createdAt).toLocaleString('es-AR')}
+                      {new Date(a.createdAt).toLocaleString("es-AR")}
                     </span>
                   </li>
                 ))}

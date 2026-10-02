@@ -1,5 +1,5 @@
-import * as React from 'react';
-import { cn } from '@/lib/utils';
+import * as React from "react";
+import { cn } from "@/lib/utils";
 
 type StatItem = {
   label: string;
@@ -15,8 +15,8 @@ export function StatStrip({ items, className }: StatStripProps) {
   return (
     <div
       className={cn(
-        'flex flex-wrap gap-6 rounded-xl border border-border bg-muted/20 px-4 py-3',
-        className
+        "flex flex-wrap gap-6 rounded-xl border border-border bg-muted/20 px-4 py-3",
+        className,
       )}
     >
       {items.map((item, i) => (

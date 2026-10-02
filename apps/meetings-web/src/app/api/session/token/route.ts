@@ -1,9 +1,9 @@
-import { cookies } from 'next/headers';
+import { cookies } from "next/headers";
 
-import { getMiRotaract } from '@/lib/server/mirotaract';
-import { sessionTokenResponse } from '@/lib/server/token-route';
+import { getMiRotaract } from "@/lib/server/mirotaract";
+import { sessionTokenResponse } from "@/lib/server/token-route";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 /** Mints the 15-minute meetings token from the encrypted session cookie. */
 export async function GET() {

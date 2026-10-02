@@ -1,8 +1,10 @@
-import { mintMeetingsToken } from './meetings-token';
+import { mintMeetingsToken } from "./meetings-token";
 
-type SessionLike = { user: { sub: string; name?: string; email?: string } } | null;
+type SessionLike = {
+  user: { sub: string; name?: string; email?: string };
+} | null;
 
-const noStore = { 'cache-control': 'no-store' };
+const noStore = { "cache-control": "no-store" };
 
 /**
  * `GET /api/session/token`: 401 without a session, otherwise
@@ -14,17 +16,30 @@ export async function sessionTokenResponse(
   now: number = Date.now(),
 ): Promise<Response> {
   if (!session) {
-    return Response.json({ error: 'unauthenticated' }, { status: 401, headers: noStore });
+    return Response.json(
+      { error: "unauthenticated" },
+      { status: 401, headers: noStore },
+    );
   }
   try {
     const minted = await mintMeetingsToken(
-      { sub: session.user.sub, name: session.user.name, email: session.user.email },
+      {
+        sub: session.user.sub,
+        name: session.user.name,
+        email: session.user.email,
+      },
       secret,
       now,
     );
     return Response.json(minted, { headers: noStore });
   } catch (error) {
-    console.error('[session/token]', error instanceof Error ? error.message : error);
-    return Response.json({ error: 'token_unavailable' }, { status: 500, headers: noStore });
+    console.error(
+      "[session/token]",
+      error instanceof Error ? error.message : error,
+    );
+    return Response.json(
+      { error: "token_unavailable" },
+      { status: 500, headers: noStore },
+    );
   }
 }

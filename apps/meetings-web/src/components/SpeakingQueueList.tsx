@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { EmptyState } from '@/components/ui/empty-state';
-import { cn } from '@/lib/utils';
-import { queueApi } from '@/lib/api';
-import { toast } from 'sonner';
-import { SPEAKING_STATUS_LABELS } from '@/lib/meeting-constants';
+import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { cn } from "@/lib/utils";
+import { queueApi } from "@/lib/api";
+import { toast } from "sonner";
+import { SPEAKING_STATUS_LABELS } from "@/lib/meeting-constants";
 
 export type QueueItem = {
   id: string;
@@ -45,9 +45,9 @@ export function SpeakingQueueList({
     setLoading(userId);
     try {
       await queueApi.setCurrentSpeaker(meetingId, userId);
-      toast.success('Orador actualizado.');
+      toast.success("Orador actualizado.");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error');
+      toast.error(e instanceof Error ? e.message : "Error");
     } finally {
       setLoading(null);
     }
@@ -58,9 +58,9 @@ export function SpeakingQueueList({
     setLoading(`next-${userId}`);
     try {
       await queueApi.setNextSpeaker(meetingId, userId);
-      toast.success('Siguiente orador asignado.');
+      toast.success("Siguiente orador asignado.");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error');
+      toast.error(e instanceof Error ? e.message : "Error");
     } finally {
       setLoading(null);
     }
@@ -71,9 +71,9 @@ export function SpeakingQueueList({
     setLoading(`cancel-${requestId}`);
     try {
       await queueApi.cancel(meetingId, requestId);
-      toast.success('Pedido de palabra cancelado (mano bajada).');
+      toast.success("Pedido de palabra cancelado (mano bajada).");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error al bajar la mano');
+      toast.error(e instanceof Error ? e.message : "Error al bajar la mano");
     } finally {
       setLoading(null);
     }
@@ -108,36 +108,45 @@ export function SpeakingQueueList({
                 <li
                   key={item.id}
                   className={cn(
-                    'flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm transition-colors',
+                    "flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm transition-colors",
                     isCurrent
-                      ? 'border-primary/30 bg-primary/5'
+                      ? "border-primary/30 bg-primary/5"
                       : isNext
-                        ? 'border-accent bg-accent/5'
-                        : 'border-border bg-muted/30',
+                        ? "border-accent bg-accent/5"
+                        : "border-border bg-muted/30",
                   )}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     {/* Position circle */}
                     <span
                       className={cn(
-                        'flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold',
+                        "flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
                         isCurrent
-                          ? 'bg-primary text-primary-foreground'
+                          ? "bg-primary text-primary-foreground"
                           : isNext
-                            ? 'bg-accent text-accent-foreground'
-                            : 'bg-muted text-muted-foreground',
+                            ? "bg-accent text-accent-foreground"
+                            : "bg-muted text-muted-foreground",
                       )}
                     >
                       {item.position}
                     </span>
-                    <span className={cn('font-medium truncate', isCurrent && 'text-primary')}>
+                    <span
+                      className={cn(
+                        "font-medium truncate",
+                        isCurrent && "text-primary",
+                      )}
+                    >
                       {item.fullName}
                     </span>
                     {isCurrent && (
-                      <Badge variant="default" className="text-xs shrink-0">Hablando</Badge>
+                      <Badge variant="default" className="text-xs shrink-0">
+                        Hablando
+                      </Badge>
                     )}
                     {isNext && !isCurrent && (
-                      <Badge variant="secondary" className="text-xs shrink-0">Siguiente</Badge>
+                      <Badge variant="secondary" className="text-xs shrink-0">
+                        Siguiente
+                      </Badge>
                     )}
                     {item.status && !isCurrent && !isNext && (
                       <Badge variant="outline" className="text-xs shrink-0">

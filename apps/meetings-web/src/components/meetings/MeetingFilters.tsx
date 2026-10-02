@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { MEETING_STATUS_LABELS } from '@/lib/meeting-constants';
-import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import { useEffect, useState } from 'react';
+} from "@/components/ui/select";
+import { MEETING_STATUS_LABELS } from "@/lib/meeting-constants";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { useEffect, useState } from "react";
 
 export type MeetingFiltersState = {
   status?: string;
@@ -24,8 +24,12 @@ type MeetingFiltersProps = {
   className?: string;
 };
 
-export function MeetingFilters({ filters, onFiltersChange, className }: MeetingFiltersProps) {
-  const [search, setSearch] = useState(filters.search ?? '');
+export function MeetingFilters({
+  filters,
+  onFiltersChange,
+  className,
+}: MeetingFiltersProps) {
+  const [search, setSearch] = useState(filters.search ?? "");
   const debouncedSearch = useDebouncedValue(search, 300);
 
   useEffect(() => {
@@ -34,11 +38,14 @@ export function MeetingFilters({ filters, onFiltersChange, className }: MeetingF
   }, [debouncedSearch]);
 
   function handleStatusChange(value: string) {
-    onFiltersChange({ ...filters, status: value === '__all__' ? undefined : value });
+    onFiltersChange({
+      ...filters,
+      status: value === "__all__" ? undefined : value,
+    });
   }
 
   function handleClear() {
-    setSearch('');
+    setSearch("");
     onFiltersChange({});
   }
 
@@ -54,7 +61,7 @@ export function MeetingFilters({ filters, onFiltersChange, className }: MeetingF
           className="w-64"
         />
         <Select
-          value={filters.status ?? '__all__'}
+          value={filters.status ?? "__all__"}
           onValueChange={handleStatusChange}
         >
           <SelectTrigger className="w-44">
@@ -63,7 +70,9 @@ export function MeetingFilters({ filters, onFiltersChange, className }: MeetingF
           <SelectContent>
             <SelectItem value="__all__">Todos los estados</SelectItem>
             {Object.entries(MEETING_STATUS_LABELS).map(([key, label]) => (
-              <SelectItem key={key} value={key}>{label}</SelectItem>
+              <SelectItem key={key} value={key}>
+                {label}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>

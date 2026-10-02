@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { queueApi } from '@/lib/api';
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
+import { useState } from "react";
+import { queueApi } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 type RequestToSpeakButtonProps = {
   meetingId: string;
@@ -27,9 +27,9 @@ export function RequestToSpeakButton({
     setLoading(true);
     try {
       await queueApi.request(meetingId);
-      toast.success('Pedido de palabra enviado.');
+      toast.success("Pedido de palabra enviado.");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error al pedir palabra.');
+      toast.error(e instanceof Error ? e.message : "Error al pedir palabra.");
     } finally {
       setLoading(false);
     }
@@ -40,9 +40,9 @@ export function RequestToSpeakButton({
     setLoading(true);
     try {
       await queueApi.cancel(meetingId, requestId);
-      toast.success('Pedido de palabra cancelado.');
+      toast.success("Pedido de palabra cancelado.");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error al cancelar pedido.');
+      toast.error(e instanceof Error ? e.message : "Error al cancelar pedido.");
     } finally {
       setLoading(false);
     }
@@ -55,10 +55,10 @@ export function RequestToSpeakButton({
         variant="destructive"
         size="lg"
         disabled={disabled || loading}
-        className={cn('w-full', className)}
+        className={cn("w-full", className)}
         aria-label="Bajar la mano"
       >
-        {loading ? 'Cancelando...' : '✋ Bajar mano'}
+        {loading ? "Cancelando..." : "✋ Bajar mano"}
       </Button>
     );
   }
@@ -68,10 +68,10 @@ export function RequestToSpeakButton({
       onClick={handleRequest}
       disabled={disabled || loading}
       size="lg"
-      className={cn('w-full', className)}
+      className={cn("w-full", className)}
       aria-label="Pedir la palabra"
     >
-      {loading ? 'Enviando...' : '✋ Pedir palabra'}
+      {loading ? "Enviando..." : "✋ Pedir palabra"}
     </Button>
   );
 }

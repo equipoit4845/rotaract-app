@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { TimerDisplay } from '@/components/TimerDisplay';
-import { StatusBadge } from '@/components/ui/status-badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
-import { TOPIC_TYPE_LABELS } from '@/lib/meeting-constants';
+import { TimerDisplay } from "@/components/TimerDisplay";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { TOPIC_TYPE_LABELS } from "@/lib/meeting-constants";
 
 type Topic = {
   id?: string;
@@ -46,7 +46,7 @@ export function CurrentTopicCard({
   const currentIndex = topics?.findIndex((t) => t.id === currentTopicId) ?? -1;
 
   return (
-    <Card className={cn('border-primary/30 bg-primary/5', className)}>
+    <Card className={cn("border-primary/30 bg-primary/5", className)}>
       <CardContent className="pt-4">
         <div className="space-y-3">
           {/* Agenda progress bar */}
@@ -56,12 +56,12 @@ export function CurrentTopicCard({
                 <div
                   key={t.id}
                   className={cn(
-                    'h-1.5 flex-1 rounded-full transition-colors',
+                    "h-1.5 flex-1 rounded-full transition-colors",
                     i < currentIndex
-                      ? 'bg-success'
+                      ? "bg-success"
                       : i === currentIndex
-                        ? 'bg-primary animate-pulse'
-                        : 'bg-muted',
+                        ? "bg-primary animate-pulse"
+                        : "bg-muted",
                   )}
                 />
               ))}
@@ -79,7 +79,7 @@ export function CurrentTopicCard({
                 )}
               </p>
               <p className="mt-1 text-xl font-semibold text-foreground">
-                {topic?.title ?? '—'}
+                {topic?.title ?? "—"}
               </p>
               {topic && (
                 <div className="mt-2 flex items-center gap-2">

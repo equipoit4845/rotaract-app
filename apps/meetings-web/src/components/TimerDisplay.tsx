@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { cn } from '@/lib/utils';
-import { formatClock } from '@/lib/format';
+import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
+import { formatClock } from "@/lib/format";
 
 const formatSec = formatClock;
 
@@ -11,7 +11,7 @@ type TimerDisplayProps = {
   overtimeSec: number;
   /** Total planned duration in seconds – needed for the progress ring */
   plannedDurationSec?: number;
-  size?: 'sm' | 'lg';
+  size?: "sm" | "lg";
   className?: string;
 };
 
@@ -19,7 +19,7 @@ export function TimerDisplay({
   remainingSec: initialRemaining,
   overtimeSec,
   plannedDurationSec,
-  size = 'sm',
+  size = "sm",
   className,
 }: TimerDisplayProps) {
   const [remaining, setRemaining] = useState(initialRemaining);
@@ -54,19 +54,14 @@ export function TimerDisplay({
   const isWarning = !isOvertime && total > 0 && remaining / total < 0.2;
 
   // SVG ring dimensions
-  const ringSize = size === 'lg' ? 160 : 80;
-  const strokeWidth = size === 'lg' ? 8 : 5;
+  const ringSize = size === "lg" ? 160 : 80;
+  const strokeWidth = size === "lg" ? 8 : 5;
   const radius = (ringSize - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference * (1 - progress);
 
   return (
-    <div
-      className={cn(
-        'inline-flex flex-col items-center gap-1',
-        className,
-      )}
-    >
+    <div className={cn("inline-flex flex-col items-center gap-1", className)}>
       <div className="relative" style={{ width: ringSize, height: ringSize }}>
         {/* Background ring */}
         <svg
@@ -93,31 +88,31 @@ export function TimerDisplay({
             strokeDasharray={circumference}
             strokeDashoffset={isOvertime ? 0 : strokeDashoffset}
             className={cn(
-              'transition-[stroke-dashoffset] duration-1000 ease-linear',
+              "transition-[stroke-dashoffset] duration-1000 ease-linear",
               isOvertime
-                ? 'stroke-destructive'
+                ? "stroke-destructive"
                 : isWarning
-                  ? 'stroke-warning'
-                  : 'stroke-primary',
+                  ? "stroke-warning"
+                  : "stroke-primary",
             )}
           />
         </svg>
         {/* Time text */}
         <div
           className={cn(
-            'absolute inset-0 flex items-center justify-center',
-            isWarning && !isOvertime && 'animate-pulse',
+            "absolute inset-0 flex items-center justify-center",
+            isWarning && !isOvertime && "animate-pulse",
           )}
         >
           <span
             className={cn(
-              'font-semibold tabular-nums',
-              size === 'lg' ? 'text-3xl' : 'text-lg',
+              "font-semibold tabular-nums",
+              size === "lg" ? "text-3xl" : "text-lg",
               isOvertime
-                ? 'text-destructive'
+                ? "text-destructive"
                 : isWarning
-                  ? 'text-warning'
-                  : 'text-foreground',
+                  ? "text-warning"
+                  : "text-foreground",
             )}
           >
             {isOvertime ? `+${formatSec(overtime)}` : formatSec(remaining)}
@@ -127,8 +122,8 @@ export function TimerDisplay({
       {isOvertime && (
         <span
           className={cn(
-            'font-medium text-destructive',
-            size === 'lg' ? 'text-base' : 'text-xs',
+            "font-medium text-destructive",
+            size === "lg" ? "text-base" : "text-xs",
           )}
         >
           Destiempo

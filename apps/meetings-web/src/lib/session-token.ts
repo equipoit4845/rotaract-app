@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { SESSION_TOKEN_PATH, loginHref } from '@/lib/config';
+import { SESSION_TOKEN_PATH, loginHref } from "@/lib/config";
 
 /**
  * Browser-side holder of the short-lived meetings token (HS256, 15 min)
@@ -20,8 +20,8 @@ const listeners = new Set<(token: string | null) => void>();
 
 export class SessionExpiredError extends Error {
   constructor() {
-    super('Tu sesión expiró. Volvé a ingresar.');
-    this.name = 'SessionExpiredError';
+    super("Tu sesión expiró. Volvé a ingresar.");
+    this.name = "SessionExpiredError";
   }
 }
 
@@ -34,15 +34,15 @@ export function isTokenStale(
 }
 
 function redirectToLogin() {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   const here = `${window.location.pathname}${window.location.search}`;
   window.location.assign(loginHref(here));
 }
 
 async function fetchToken(): Promise<string> {
   const res = await fetch(SESSION_TOKEN_PATH, {
-    credentials: 'same-origin',
-    cache: 'no-store',
+    credentials: "same-origin",
+    cache: "no-store",
   });
   if (res.status === 401) {
     current = null;
@@ -50,7 +50,7 @@ async function fetchToken(): Promise<string> {
     redirectToLogin();
     throw new SessionExpiredError();
   }
-  if (!res.ok) throw new Error('No se pudo obtener el token de sesión');
+  if (!res.ok) throw new Error("No se pudo obtener el token de sesión");
   const body = (await res.json()) as TokenResponse;
   current = body;
   listeners.forEach((l) => l(body.token));

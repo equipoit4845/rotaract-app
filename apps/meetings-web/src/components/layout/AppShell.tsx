@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   ArrowUpRight,
@@ -13,13 +13,13 @@ import {
   ShieldCheck,
   UserCheck,
   X,
-} from 'lucide-react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useState, type ReactNode } from 'react';
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useState, type ReactNode } from "react";
 
-import { ThemeToggle } from '@/components/layout/ThemeToggle';
-import { Button } from '@/components/ui/button';
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,20 +27,20 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useAuthActions } from '@/context/AuthContext';
-import { MIROTARACT_URL } from '@/lib/config';
-import { activeNavHref, visibleNav } from '@/lib/permissions';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/dropdown-menu";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAuthActions } from "@/context/AuthContext";
+import { MIROTARACT_URL } from "@/lib/config";
+import { activeNavHref, visibleNav } from "@/lib/permissions";
+import { cn } from "@/lib/utils";
 
 const NAV_ICONS: Record<string, ReactNode> = {
-  '/meetings': <CalendarDays />,
-  '/admin/meetings': <Settings />,
-  '/history': <History />,
-  '/admin/clubes': <ShieldCheck />,
-  '/delegaciones': <UserCheck />,
+  "/meetings": <CalendarDays />,
+  "/admin/meetings": <Settings />,
+  "/history": <History />,
+  "/admin/clubes": <ShieldCheck />,
+  "/delegaciones": <UserCheck />,
 };
 
 type AppShellProps = {
@@ -63,7 +63,7 @@ export function AppShell({
   title,
   user,
   backHref,
-  backLabel = 'Volver',
+  backLabel = "Volver",
   actions,
   children,
   className,
@@ -72,7 +72,12 @@ export function AppShell({
   const closeMobile = () => setMobileOpen(false);
 
   return (
-    <div className={cn('flex min-h-screen bg-background text-foreground', className)}>
+    <div
+      className={cn(
+        "flex min-h-screen bg-background text-foreground",
+        className,
+      )}
+    >
       <Button
         variant="ghost"
         size="icon"
@@ -85,8 +90,8 @@ export function AppShell({
 
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-30 w-56 shrink-0 transition-transform md:sticky md:top-0 md:z-0 md:h-screen md:translate-x-0',
-          mobileOpen ? 'translate-x-0' : '-translate-x-full',
+          "fixed inset-y-0 left-0 z-30 w-56 shrink-0 transition-transform md:sticky md:top-0 md:z-0 md:h-screen md:translate-x-0",
+          mobileOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
         <div className="flex h-full flex-col border-r border-sidebar-border bg-sidebar">
@@ -118,8 +123,12 @@ export function AppShell({
             <div className="flex items-center gap-2 px-1">
               <InitialAvatar name={user.fullName} />
               <div className="min-w-0">
-                <span className="block truncate text-xs font-medium">{user.fullName}</span>
-                <span className="block truncate text-[11px] text-muted-foreground">Distrito 4845</span>
+                <span className="block truncate text-xs font-medium">
+                  {user.fullName}
+                </span>
+                <span className="block truncate text-[11px] text-muted-foreground">
+                  Distrito 4845
+                </span>
               </div>
             </div>
           </div>
@@ -127,7 +136,11 @@ export function AppShell({
       </aside>
 
       {mobileOpen ? (
-        <div className="fixed inset-0 z-20 bg-black/50 md:hidden" onClick={closeMobile} aria-hidden />
+        <div
+          className="fixed inset-0 z-20 bg-black/50 md:hidden"
+          onClick={closeMobile}
+          aria-hidden
+        />
       ) : null}
 
       <div className="flex min-w-0 flex-1 flex-col">
@@ -146,7 +159,9 @@ export function AppShell({
                   <Separator orientation="vertical" className="h-4" />
                 </>
               ) : null}
-              <span className="truncate text-sm font-semibold text-foreground">{title}</span>
+              <span className="truncate text-sm font-semibold text-foreground">
+                {title}
+              </span>
             </div>
             <div className="flex shrink-0 items-center gap-2">
               {actions}
@@ -170,7 +185,7 @@ function initialsOf(name: string) {
       .filter(Boolean)
       .slice(0, 2)
       .map((part) => part[0]?.toUpperCase())
-      .join('') || '?'
+      .join("") || "?"
   );
 }
 
@@ -193,7 +208,9 @@ function AccountMenu({ fullName }: { fullName: string }) {
           className="flex items-center gap-2 rounded-full py-0.5 pl-0.5 pr-2 outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/50"
         >
           <InitialAvatar name={fullName} />
-          <span className="hidden max-w-40 truncate text-sm text-muted-foreground lg:inline">{fullName}</span>
+          <span className="hidden max-w-40 truncate text-sm text-muted-foreground lg:inline">
+            {fullName}
+          </span>
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-48">
@@ -216,12 +233,19 @@ function AccountMenu({ fullName }: { fullName: string }) {
 }
 
 const linkBase =
-  'flex items-center gap-2 rounded-lg text-sm transition-colors [&_svg]:size-[18px] [&_svg]:shrink-0';
-const linkIdle = 'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground';
-const linkActive = 'bg-primary/10 text-primary';
+  "flex items-center gap-2 rounded-lg text-sm transition-colors [&_svg]:size-[18px] [&_svg]:shrink-0";
+const linkIdle =
+  "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground";
+const linkActive = "bg-primary/10 text-primary";
 
-function SidebarNav({ role, onNavigate }: { role: string; onNavigate: () => void }) {
-  const pathname = usePathname() ?? '';
+function SidebarNav({
+  role,
+  onNavigate,
+}: {
+  role: string;
+  onNavigate: () => void;
+}) {
+  const pathname = usePathname() ?? "";
   const entries = visibleNav(role);
   const active = activeNavHref(pathname, entries);
   const [open, setOpen] = useState(true);
@@ -233,11 +257,21 @@ function SidebarNav({ role, onNavigate }: { role: string; onNavigate: () => void
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
-          className={cn(linkBase, 'w-full px-3 py-2 text-left font-medium', active ? linkActive : linkIdle)}
+          className={cn(
+            linkBase,
+            "w-full px-3 py-2 text-left font-medium",
+            active ? linkActive : linkIdle,
+          )}
         >
           <Calendar />
           <span className="min-w-0 flex-1">Reuniones</span>
-          <ChevronRight className={cn('transition-transform', open ? 'rotate-90' : 'rotate-0')} aria-hidden />
+          <ChevronRight
+            className={cn(
+              "transition-transform",
+              open ? "rotate-90" : "rotate-0",
+            )}
+            aria-hidden
+          />
         </button>
         {open ? (
           <div className="ml-1 flex flex-col gap-0.5 border-l border-sidebar-border pl-3">
@@ -246,11 +280,13 @@ function SidebarNav({ role, onNavigate }: { role: string; onNavigate: () => void
                 key={entry.href}
                 href={entry.href}
                 onClick={onNavigate}
-                aria-current={entry.href === active ? 'page' : undefined}
+                aria-current={entry.href === active ? "page" : undefined}
                 className={cn(
                   linkBase,
-                  'px-2 py-1.5',
-                  entry.href === active ? cn(linkActive, 'font-medium') : linkIdle,
+                  "px-2 py-1.5",
+                  entry.href === active
+                    ? cn(linkActive, "font-medium")
+                    : linkIdle,
                 )}
               >
                 {NAV_ICONS[entry.href]}
@@ -260,7 +296,10 @@ function SidebarNav({ role, onNavigate }: { role: string; onNavigate: () => void
           </div>
         ) : null}
       </div>
-      <a href={MIROTARACT_URL} className={cn(linkBase, linkIdle, 'mt-3 px-3 py-2 font-medium')}>
+      <a
+        href={MIROTARACT_URL}
+        className={cn(linkBase, linkIdle, "mt-3 px-3 py-2 font-medium")}
+      >
         <ArrowUpRight />
         Volver a Mi Rotaract
       </a>

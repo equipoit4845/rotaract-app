@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
-import Link from 'next/link';
-import { useMeetingRoom } from '@/hooks/useMeetingRoom';
-import { useAuthState } from '@/context/AuthContext';
-import { CurrentTopicCard } from '@/components/CurrentTopicCard';
-import { SpeakingQueueList } from '@/components/SpeakingQueueList';
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import Link from "next/link";
+import { useMeetingRoom } from "@/hooks/useMeetingRoom";
+import { useAuthState } from "@/context/AuthContext";
+import { CurrentTopicCard } from "@/components/CurrentTopicCard";
+import { SpeakingQueueList } from "@/components/SpeakingQueueList";
 import {
   AdminAttendanceControl,
   AdminTopicControl,
@@ -14,20 +14,21 @@ import {
   AdminVotingControl,
   AdminMotionsControl,
   AdminTranscriptionControl,
-} from '@/components/AdminLiveControls';
-import { QuorumIndicator } from '@/components/meetings/QuorumIndicator';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { StatusBadge } from '@/components/ui/status-badge';
-import { cn } from '@/lib/utils';
-import { LiveTranscriber } from '@/components/meetings/LiveTranscriber';
+} from "@/components/AdminLiveControls";
+import { QuorumIndicator } from "@/components/meetings/QuorumIndicator";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { cn } from "@/lib/utils";
+import { LiveTranscriber } from "@/components/meetings/LiveTranscriber";
 
 export default function AdminLivePage() {
   const params = useParams();
   const meetingId = params.id as string;
-  const { snapshot, voteResult, connected, joinError } = useMeetingRoom(meetingId);
+  const { snapshot, voteResult, connected, joinError } =
+    useMeetingRoom(meetingId);
   const { user } = useAuthState();
 
   // "Tomar voz en nombre de…": nombre del invitado bajo el cual la mesa transcribe.
@@ -62,8 +63,15 @@ export default function AdminLivePage() {
           {snapshot && <StatusBadge status={snapshot.status} />}
         </div>
         <div className="flex items-center gap-2">
-          <div className={cn('size-2 rounded-full', connected ? 'bg-success animate-pulse' : 'bg-destructive')} />
-          <span className="text-xs text-muted-foreground">{connected ? 'Conectado' : 'Desconectado'}</span>
+          <div
+            className={cn(
+              "size-2 rounded-full",
+              connected ? "bg-success animate-pulse" : "bg-destructive",
+            )}
+          />
+          <span className="text-xs text-muted-foreground">
+            {connected ? "Conectado" : "Desconectado"}
+          </span>
         </div>
       </div>
 
@@ -101,7 +109,7 @@ export default function AdminLivePage() {
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <div className="space-y-6 lg:col-span-2">
               <CurrentTopicCard
-                topic={snapshot.currentTopic ?? { title: '—' }}
+                topic={snapshot.currentTopic ?? { title: "—" }}
                 timer={snapshot.activeTimer ?? null}
                 topics={snapshot.topics}
                 currentTopicId={snapshot.currentTopicId}
@@ -137,7 +145,9 @@ export default function AdminLivePage() {
               />
               <AdminTranscriptionControl
                 meetingId={meetingId}
-                transcriptionEnabled={snapshot.meeting?.transcriptionEnabled ?? true}
+                transcriptionEnabled={
+                  snapshot.meeting?.transcriptionEnabled ?? true
+                }
               />
               <AdminTopicControl
                 meetingId={meetingId}

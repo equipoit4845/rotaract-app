@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * Replaces the legacy AuthContext (email/password + JWT in localStorage).
@@ -8,10 +8,21 @@
  * isLoading }` shape are kept so the ported screens work unchanged.
  */
 
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { authApi, type MeResponse } from '@/lib/api';
-import { getCachedToken, onTokenChange, SessionExpiredError } from '@/lib/session-token';
-import type { AuthUser, Role } from '@/types/auth';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { authApi, type MeResponse } from "@/lib/api";
+import {
+  getCachedToken,
+  onTokenChange,
+  SessionExpiredError,
+} from "@/lib/session-token";
+import type { AuthUser, Role } from "@/types/auth";
 
 type AuthContextType = {
   user: AuthUser | null;
@@ -31,7 +42,7 @@ const AuthActionsContext = createContext<AuthActionsContextType | null>(null);
 
 /** Maps `GET /meetings-api/auth/me` to the legacy `AuthUser` shape. */
 export function toAuthUser(data: MeResponse | { user: MeResponse }): AuthUser {
-  const me = 'user' in data && data.user ? data.user : (data as MeResponse);
+  const me = "user" in data && data.user ? data.user : (data as MeResponse);
   return {
     id: me.id,
     fullName: me.fullName,
@@ -40,8 +51,8 @@ export function toAuthUser(data: MeResponse | { user: MeResponse }): AuthUser {
     memberships: (me.clubs ?? []).map((club) => ({
       clubId: club.id,
       clubName: club.name,
-      clubCode: '',
-      title: club.isPresident ? 'Presidente' : null,
+      clubCode: "",
+      title: club.isPresident ? "Presidente" : null,
       isPresident: club.isPresident,
     })),
   };
@@ -72,7 +83,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
         // A SessionExpiredError already redirected to /auth/login.
         if (!(e instanceof SessionExpiredError)) {
-          setError(e instanceof Error ? e.message : 'No se pudo conectar con el servidor de reuniones');
+          setError(
+            e instanceof Error
+              ? e.message
+              : "No se pudo conectar con el servidor de reuniones",
+          );
         }
       })
       .finally(() => {
@@ -84,34 +99,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [attempt]);
 
   const logout = useCallback(() => {
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = '/auth/logout';
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "/auth/logout";
     document.body.appendChild(form);
     form.submit();
   }, []);
 
   const reload = useCallback(() => setAttempt((n) => n + 1), []);
 
-  const stateValue = useMemo(() => ({ user, token, isLoading, error }), [user, token, isLoading, error]);
+  const stateValue = useMemo(
+    () => ({ user, token, isLoading, error }),
+    [user, token, isLoading, error],
+  );
   const actionsValue = useMemo(() => ({ logout, reload }), [logout, reload]);
 
   return (
     <AuthStateContext.Provider value={stateValue}>
-      <AuthActionsContext.Provider value={actionsValue}>{children}</AuthActionsContext.Provider>
+      <AuthActionsContext.Provider value={actionsValue}>
+        {children}
+      </AuthActionsContext.Provider>
     </AuthStateContext.Provider>
   );
 }
 
 export function useAuthState() {
   const ctx = useContext(AuthStateContext);
-  if (!ctx) throw new Error('useAuthState must be used within AuthProvider');
+  if (!ctx) throw new Error("useAuthState must be used within AuthProvider");
   return ctx;
 }
 
 export function useAuthActions() {
   const ctx = useContext(AuthActionsContext);
-  if (!ctx) throw new Error('useAuthActions must be used within AuthProvider');
+  if (!ctx) throw new Error("useAuthActions must be used within AuthProvider");
   return ctx;
 }
 

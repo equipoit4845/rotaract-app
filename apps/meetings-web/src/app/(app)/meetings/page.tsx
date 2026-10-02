@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useMeetingsQuery } from '@/lib/queries';
-import { MeetingsTable } from '@/components/MeetingsTable';
-import { MeetingCard } from '@/components/meetings/MeetingCard';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { SectionHeader } from '@/components/layout/SectionHeader';
-import { EmptyState } from '@/components/ui/empty-state';
+import Link from "next/link";
+import { useMeetingsQuery } from "@/lib/queries";
+import { MeetingsTable } from "@/components/MeetingsTable";
+import { MeetingCard } from "@/components/meetings/MeetingCard";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { SectionHeader } from "@/components/layout/SectionHeader";
+import { EmptyState } from "@/components/ui/empty-state";
 
 type Meeting = {
   id: string;
@@ -23,9 +23,11 @@ export default function MyMeetingsPage() {
   const { data, isLoading, error } = useMeetingsQuery();
   const meetings = (data ?? []) as Meeting[];
 
-  const liveMeeting = meetings.find((m) => m.status === 'LIVE' || m.status === 'PAUSED');
+  const liveMeeting = meetings.find(
+    (m) => m.status === "LIVE" || m.status === "PAUSED",
+  );
   const nextMeeting = !liveMeeting
-    ? meetings.find((m) => m.status === 'SCHEDULED')
+    ? meetings.find((m) => m.status === "SCHEDULED")
     : null;
   const heroMeeting = liveMeeting ?? nextMeeting;
 
@@ -44,7 +46,9 @@ export default function MyMeetingsPage() {
       <Card className="border-destructive shadow-sm">
         <CardContent className="p-6">
           <p className="text-sm font-medium text-destructive">
-            {error instanceof Error ? error.message : 'No se pudo cargar reuniones.'}
+            {error instanceof Error
+              ? error.message
+              : "No se pudo cargar reuniones."}
           </p>
         </CardContent>
       </Card>
@@ -57,7 +61,7 @@ export default function MyMeetingsPage() {
         title="Mis reuniones"
         description={
           meetings.length > 0
-            ? `Tenés ${meetings.length} reunión${meetings.length === 1 ? '' : 'es'} asignada${meetings.length === 1 ? '' : 's'}.`
+            ? `Tenés ${meetings.length} reunión${meetings.length === 1 ? "" : "es"} asignada${meetings.length === 1 ? "" : "s"}.`
             : undefined
         }
       />
@@ -67,7 +71,7 @@ export default function MyMeetingsPage() {
         <MeetingCard
           meeting={heroMeeting}
           href={
-            heroMeeting.status === 'LIVE' || heroMeeting.status === 'PAUSED'
+            heroMeeting.status === "LIVE" || heroMeeting.status === "PAUSED"
               ? `/meetings/${heroMeeting.id}/live`
               : `/meetings/${heroMeeting.id}`
           }

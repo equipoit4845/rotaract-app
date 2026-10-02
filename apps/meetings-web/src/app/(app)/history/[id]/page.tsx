@@ -1,17 +1,23 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
-import { historyApi, actaApi } from '@/lib/api';
-import { AuditSidebar } from '@/components/AuditSidebar';
-import { ActaEditor } from '@/components/meetings/ActaEditor';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { toast } from 'sonner';
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { historyApi, actaApi } from "@/lib/api";
+import { AuditSidebar } from "@/components/AuditSidebar";
+import { ActaEditor } from "@/components/meetings/ActaEditor";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
-const ADMIN_ROLES = ['SECRETARY', 'PRESIDENT', 'RDR'];
+const ADMIN_ROLES = ["SECRETARY", "PRESIDENT", "RDR"];
 
 type VoteSession = {
   id: string;
@@ -33,14 +39,17 @@ export default function HistoryMeetingPage() {
   const params = useParams();
   const id = params.id as string;
   const { user } = useAuth();
-  const [meeting, setMeeting] = useState<{ title: string; status: string } | null>(null);
+  const [meeting, setMeeting] = useState<{
+    title: string;
+    status: string;
+  } | null>(null);
   const [voteSessions, setVoteSessions] = useState<VoteSession[]>([]);
   const [acta, setActa] = useState<Acta | null>(null);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [generatingActa, setGeneratingActa] = useState(false);
   const isAdmin = user && ADMIN_ROLES.includes(user.role);
-  const isSecretary = user?.role === 'SECRETARY';
+  const isSecretary = user?.role === "SECRETARY";
 
   async function loadData() {
     if (!id || !user) return;
@@ -76,9 +85,9 @@ export default function HistoryMeetingPage() {
     setExporting(true);
     try {
       await historyApi.downloadCsv(id);
-      toast.success('Descarga iniciada.');
+      toast.success("Descarga iniciada.");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error al exportar.');
+      toast.error(e instanceof Error ? e.message : "Error al exportar.");
     } finally {
       setExporting(false);
     }
@@ -89,9 +98,9 @@ export default function HistoryMeetingPage() {
     try {
       const a = await actaApi.generate(id);
       setActa(a as Acta);
-      toast.success('Acta generada.');
+      toast.success("Acta generada.");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error al generar acta.');
+      toast.error(e instanceof Error ? e.message : "Error al generar acta.");
     } finally {
       setGeneratingActa(false);
     }
@@ -119,7 +128,8 @@ export default function HistoryMeetingPage() {
     );
   }
 
-  const isFinished = meeting.status === 'FINISHED' || meeting.status === 'ARCHIVED';
+  const isFinished =
+    meeting.status === "FINISHED" || meeting.status === "ARCHIVED";
 
   return (
     <div className="flex flex-col gap-6 lg:flex-row">
@@ -127,7 +137,9 @@ export default function HistoryMeetingPage() {
         <Card>
           <CardHeader>
             <CardTitle>{meeting.title}</CardTitle>
-            <CardDescription>Detalle y auditoría de la reunión.</CardDescription>
+            <CardDescription>
+              Detalle y auditoría de la reunión.
+            </CardDescription>
           </CardHeader>
         </Card>
 
@@ -148,7 +160,7 @@ export default function HistoryMeetingPage() {
                 No se generó acta para esta reunión.
               </p>
               <Button disabled={generatingActa} onClick={handleGenerateActa}>
-                {generatingActa ? 'Generando...' : 'Generar acta'}
+                {generatingActa ? "Generando..." : "Generar acta"}
               </Button>
             </CardContent>
           </Card>
@@ -159,7 +171,9 @@ export default function HistoryMeetingPage() {
           <Card>
             <CardHeader>
               <CardTitle>Votaciones</CardTitle>
-              <CardDescription>Sesiones de votación de esta reunión.</CardDescription>
+              <CardDescription>
+                Sesiones de votación de esta reunión.
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {voteSessions.length === 0 ? (
@@ -173,7 +187,8 @@ export default function HistoryMeetingPage() {
                     >
                       <span>{s.topicTitle ?? s.topicId}</span>
                       <span className="text-muted-foreground text-xs">
-                        {new Date(s.openedAt).toLocaleString('es-AR')} — {s.status}
+                        {new Date(s.openedAt).toLocaleString("es-AR")} —{" "}
+                        {s.status}
                       </span>
                     </li>
                   ))}
@@ -184,7 +199,7 @@ export default function HistoryMeetingPage() {
                 disabled={exporting || voteSessions.length === 0}
                 onClick={handleExportCsv}
               >
-                {exporting ? 'Exportando...' : 'Exportar CSV'}
+                {exporting ? "Exportando..." : "Exportar CSV"}
               </Button>
             </CardContent>
           </Card>

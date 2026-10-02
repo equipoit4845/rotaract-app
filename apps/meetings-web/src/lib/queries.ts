@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useQuery } from '@tanstack/react-query';
-import { clubsApi, meetingsApi, topicsApi } from '@/lib/api';
+import { useQuery } from "@tanstack/react-query";
+import { clubsApi, meetingsApi, topicsApi } from "@/lib/api";
 
 export const queryKeys = {
-  meetings: ['meetings'] as const,
-  meetingDetail: (id: string) => ['meetings', id] as const,
-  meetingTopics: (id: string) => ['meetings', id, 'topics'] as const,
-  clubsList: (includeInactive = false) => ['clubs', includeInactive] as const,
+  meetings: ["meetings"] as const,
+  meetingDetail: (id: string) => ["meetings", id] as const,
+  meetingTopics: (id: string) => ["meetings", id, "topics"] as const,
+  clubsList: (includeInactive = false) => ["clubs", includeInactive] as const,
 };
 
 export function useMeetingsQuery() {

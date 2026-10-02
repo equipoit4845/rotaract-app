@@ -124,6 +124,34 @@ services:
     depends_on:
       api: { condition: service_healthy }
 
+  # Reuniones distritales (https://reuniones.rotaract4845.com). cloudflared
+  # routes "/" here and "/meetings-api/*" + "/socket.io/*" to meetings-api.
+  meetings-web:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: infra/docker/meetings-web.Dockerfile
+      args:
+        NEXT_PUBLIC_MEETINGS_API_URL: ${NEXT_PUBLIC_MEETINGS_API_URL:-}
+        NEXT_PUBLIC_MEETINGS_SOCKET_URL: ${NEXT_PUBLIC_MEETINGS_SOCKET_URL:-}
+        NEXT_PUBLIC_MIROTARACT_URL: ${NEXT_PUBLIC_MIROTARACT_URL:-https://app.rotaract4845.com}
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+      HOSTNAME: 0.0.0.0
+      # Defaults are empty on purpose: a `:?` here would make every
+      # `docker compose` command fail until these exist in .env. The app
+      # refuses to log anyone in without them.
+      # "Ingresar con Mi Rotaract" (CONFIDENTIAL kernel app).
+      MIROTARACT_ISSUER: ${MIROTARACT_ISSUER:-https://api.rotaract4845.com/api/kernel/v1}
+      MIROTARACT_CLIENT_ID: ${MIROTARACT_CLIENT_ID:-}
+      MIROTARACT_CLIENT_SECRET: ${MIROTARACT_CLIENT_SECRET:-}
+      MIROTARACT_REDIRECT_URI: ${MIROTARACT_REDIRECT_URI:-https://reuniones.rotaract4845.com/auth/callback}
+      SESSION_SECRET: ${SESSION_SECRET:-}
+      # Shared with meetings-api: signs the 15-minute meetings token.
+      MEETINGS_TOKEN_SECRET: ${MEETINGS_TOKEN_SECRET:-}
+    ports: ["127.0.0.1:3002:3002"]
+
 volumes:
   postgres-data:
   redis-data:

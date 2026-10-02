@@ -1,17 +1,19 @@
-import { Gem } from 'lucide-react';
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { Gem } from "lucide-react";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
-import { ThemeToggle } from '@/components/layout/ThemeToggle';
-import { Card, CardContent } from '@/components/ui/card';
-import { MIROTARACT_URL } from '@/lib/config';
-import { getMiRotaract } from '@/lib/server/mirotaract';
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { Card, CardContent } from "@/components/ui/card";
+import { MIROTARACT_URL } from "@/lib/config";
+import { getMiRotaract } from "@/lib/server/mirotaract";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 const LOGIN_ERRORS: Record<string, string> = {
-  access_denied: 'Cancelaste el ingreso con Mi Rotaract.',
-  login_expired: 'El intento de ingreso expiró. Probá de nuevo.',
+  access_denied: "Cancelaste el ingreso con Mi Rotaract.",
+  login_expired: "El intento de ingreso expiró. Probá de nuevo.",
+  unavailable:
+    "Mi Rotaract no está disponible en este momento. Probá de nuevo en unos minutos.",
 };
 
 async function hasSession(): Promise<boolean> {
@@ -23,17 +25,33 @@ async function hasSession(): Promise<boolean> {
 }
 
 /** `/`: logged in → "Mis reuniones"; otherwise a small landing (same chrome as Mi Rotaract's AuthShell). */
-export default async function Home({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
-  if (await hasSession()) redirect('/meetings');
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  if (await hasSession()) redirect("/meetings");
   const { error } = await searchParams;
-  const errorMessage = error ? (LOGIN_ERRORS[error] ?? 'No se pudo completar el ingreso. Probá de nuevo.') : null;
+  const errorMessage = error
+    ? (LOGIN_ERRORS[error] ??
+      "No se pudo completar el ingreso. Probá de nuevo.")
+    : null;
 
   return (
     <div className="grid min-h-screen bg-background lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
       <aside className="relative hidden overflow-hidden bg-primary p-10 text-primary-foreground lg:flex lg:flex-col lg:justify-between">
-        <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 size-96 rounded-full bg-white/10 blur-2xl" />
-        <div aria-hidden className="pointer-events-none absolute -bottom-32 -left-16 size-96 rounded-full bg-black/10 blur-2xl" />
-        <a href={MIROTARACT_URL} className="relative flex items-center gap-2 text-lg font-semibold">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-24 -top-24 size-96 rounded-full bg-white/10 blur-2xl"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -bottom-32 -left-16 size-96 rounded-full bg-black/10 blur-2xl"
+        />
+        <a
+          href={MIROTARACT_URL}
+          className="relative flex items-center gap-2 text-lg font-semibold"
+        >
           <span className="grid size-9 place-items-center rounded-lg bg-white/15">
             <Gem size={20} strokeWidth={1.8} aria-hidden />
           </span>
@@ -44,10 +62,13 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ e
             Reuniones distritales, en vivo.
           </p>
           <p className="mt-4 text-primary-foreground/80">
-            Asistencia y quórum, orden del día, pedidos de palabra, mociones, votaciones y actas del Distrito 4845.
+            Asistencia y quórum, orden del día, pedidos de palabra, mociones,
+            votaciones y actas del Distrito 4845.
           </p>
         </div>
-        <p className="relative text-sm text-primary-foreground/70">Rotaract Distrito 4845</p>
+        <p className="relative text-sm text-primary-foreground/70">
+          Rotaract Distrito 4845
+        </p>
       </aside>
 
       <main className="flex flex-col">
@@ -65,9 +86,12 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ e
             <Card className="shadow-sm">
               <CardContent className="space-y-6 p-6 sm:p-8">
                 <div className="space-y-1.5">
-                  <h1 className="text-2xl font-semibold tracking-tight text-foreground">Reuniones</h1>
+                  <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                    Reuniones
+                  </h1>
                   <p className="text-sm text-muted-foreground">
-                    Ingresá con tu cuenta de Mi Rotaract para ver tus reuniones distritales.
+                    Ingresá con tu cuenta de Mi Rotaract para ver tus reuniones
+                    distritales.
                   </p>
                 </div>
                 {errorMessage ? (

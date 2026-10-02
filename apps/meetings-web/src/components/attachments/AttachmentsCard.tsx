@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useRef } from 'react';
-import { toast } from 'sonner';
-import { downloadAttachment } from '@/lib/api';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useEffect, useState, useRef } from "react";
+import { toast } from "sonner";
+import { downloadAttachment } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type Attachment = { id: string; fileName: string; sizeBytes?: number };
 
@@ -22,21 +22,21 @@ export interface AttachmentsCardProps {
 }
 
 export function AttachmentsCard({
-  title = 'Adjuntos',
+  title = "Adjuntos",
   fetchKey,
   list,
   upload,
   deleteAttachment,
   maxFiles,
   maxSizeBytes,
-  accept = '.pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png',
+  accept = ".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png",
   disabled = false,
   onChanged,
 }: AttachmentsCardProps) {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const load = () => {
@@ -46,7 +46,7 @@ export function AttachmentsCard({
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchKey ?? '']);
+  }, [fetchKey ?? ""]);
 
   function validateFile(file: File): string | null {
     if (maxSizeBytes && file.size > maxSizeBytes) {
@@ -60,24 +60,25 @@ export function AttachmentsCard({
     const blob = await downloadAttachment(attachmentId);
     if (!blob) return;
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = attachments.find((x) => x.id === attachmentId)?.fileName ?? 'download';
+    a.download =
+      attachments.find((x) => x.id === attachmentId)?.fileName ?? "download";
     a.click();
     URL.revokeObjectURL(url);
   };
 
   const handleDelete = async (attachmentId: string) => {
-    if (!confirm('¿Eliminar adjunto?')) return;
+    if (!confirm("¿Eliminar adjunto?")) return;
     setLoading(true);
-    setError('');
+    setError("");
     try {
       await deleteAttachment(attachmentId);
       load();
       onChanged?.();
-      toast.success('Archivo eliminado');
+      toast.success("Archivo eliminado");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Error al eliminar');
+      toast.error(err instanceof Error ? err.message : "Error al eliminar");
     } finally {
       setLoading(false);
     }
@@ -86,12 +87,12 @@ export function AttachmentsCard({
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setError('');
+    setError("");
     const validationErr = validateFile(file);
     if (validationErr) {
       setError(validationErr);
       toast.error(validationErr);
-      e.target.value = '';
+      e.target.value = "";
       return;
     }
     setUploading(true);
@@ -99,10 +100,10 @@ export function AttachmentsCard({
       await upload(file);
       load();
       onChanged?.();
-      toast.success('Archivo subido');
-      e.target.value = '';
+      toast.success("Archivo subido");
+      e.target.value = "";
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Error al subir';
+      const msg = err instanceof Error ? err.message : "Error al subir";
       setError(msg);
       toast.error(msg);
     } finally {
@@ -110,15 +111,14 @@ export function AttachmentsCard({
     }
   };
 
-  const uploadDisabled = disabled || uploading || attachments.length >= maxFiles;
+  const uploadDisabled =
+    disabled || uploading || attachments.length >= maxFiles;
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-base">{title}</CardTitle>
-        {error && (
-          <p className="text-sm text-destructive">{error}</p>
-        )}
+        {error && <p className="text-sm text-destructive">{error}</p>}
         <div>
           <input
             ref={fileInputRef}
@@ -135,7 +135,7 @@ export function AttachmentsCard({
             onClick={() => fileInputRef.current?.click()}
             disabled={uploadDisabled}
           >
-            {uploading ? 'Subiendo...' : 'Agregar archivo'}
+            {uploading ? "Subiendo..." : "Agregar archivo"}
             {attachments.length >= maxFiles && ` (máx. ${maxFiles})`}
           </Button>
         </div>
@@ -146,7 +146,10 @@ export function AttachmentsCard({
         ) : (
           <ul className="space-y-2 text-sm">
             {attachments.map((a) => (
-              <li key={a.id} className="flex items-center justify-between gap-2">
+              <li
+                key={a.id}
+                className="flex items-center justify-between gap-2"
+              >
                 <button
                   type="button"
                   onClick={() => handleDownload(a.id)}

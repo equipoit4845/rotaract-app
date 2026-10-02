@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { topicsApi } from '@/lib/api';
-import { TOPIC_TYPE_LABELS } from '@/lib/meeting-constants';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { useState } from "react";
+import { topicsApi } from "@/lib/api";
+import { TOPIC_TYPE_LABELS } from "@/lib/meeting-constants";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -22,8 +22,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { toast } from 'sonner';
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 type Topic = {
   id: string;
@@ -40,30 +40,33 @@ type TopicCreateDialogProps = {
   onCreated: (topic: Topic) => void;
 };
 
-export function TopicCreateDialog({ meetingId, onCreated }: TopicCreateDialogProps) {
+export function TopicCreateDialog({
+  meetingId,
+  onCreated,
+}: TopicCreateDialogProps) {
   const [open, setOpen] = useState(false);
-  const [title, setTitle] = useState('');
-  const [type, setType] = useState('DISCUSSION');
-  const [description, setDescription] = useState('');
-  const [durationMin, setDurationMin] = useState('');
+  const [title, setTitle] = useState("");
+  const [type, setType] = useState("DISCUSSION");
+  const [description, setDescription] = useState("");
+  const [durationMin, setDurationMin] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   function reset() {
-    setTitle('');
-    setType('DISCUSSION');
-    setDescription('');
-    setDurationMin('');
-    setError('');
+    setTitle("");
+    setType("DISCUSSION");
+    setDescription("");
+    setDurationMin("");
+    setError("");
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim()) {
-      setError('El título es obligatorio.');
+      setError("El título es obligatorio.");
       return;
     }
-    setError('');
+    setError("");
     setLoading(true);
     try {
       const durSec = durationMin ? parseInt(durationMin, 10) * 60 : undefined;
@@ -76,16 +79,22 @@ export function TopicCreateDialog({ meetingId, onCreated }: TopicCreateDialogPro
       onCreated(t);
       reset();
       setOpen(false);
-      toast.success('Tema agregado.');
+      toast.success("Tema agregado.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al crear tema.');
+      setError(err instanceof Error ? err.message : "Error al crear tema.");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        setOpen(v);
+        if (!v) reset();
+      }}
+    >
       <DialogTrigger asChild>
         <Button variant="outline">+ Agregar tema</Button>
       </DialogTrigger>
@@ -93,7 +102,9 @@ export function TopicCreateDialog({ meetingId, onCreated }: TopicCreateDialogPro
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Agregar tema</DialogTitle>
-            <DialogDescription>Agregá un tema a la agenda de la reunión.</DialogDescription>
+            <DialogDescription>
+              Agregá un tema a la agenda de la reunión.
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
@@ -118,7 +129,9 @@ export function TopicCreateDialog({ meetingId, onCreated }: TopicCreateDialogPro
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(TOPIC_TYPE_LABELS).map(([key, label]) => (
-                    <SelectItem key={key} value={key}>{label}</SelectItem>
+                    <SelectItem key={key} value={key}>
+                      {label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -134,7 +147,9 @@ export function TopicCreateDialog({ meetingId, onCreated }: TopicCreateDialogPro
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="topic-duration">Duración estimada (minutos)</Label>
+              <Label htmlFor="topic-duration">
+                Duración estimada (minutos)
+              </Label>
               <Input
                 id="topic-duration"
                 type="number"
@@ -149,11 +164,15 @@ export function TopicCreateDialog({ meetingId, onCreated }: TopicCreateDialogPro
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+            >
               Cancelar
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? 'Creando...' : 'Agregar'}
+              {loading ? "Creando..." : "Agregar"}
             </Button>
           </DialogFooter>
         </form>

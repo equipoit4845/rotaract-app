@@ -1,22 +1,32 @@
-'use client';
+"use client";
 
-import { useCallback, useState, useEffect } from 'react';
-import { votingApi, timersApi, topicsApi, queueApi, meetingsApi, usersApi, clubsApi, motionsApi, districtApi } from '@/lib/api';
-import { VoteReadyModal } from '@/components/meetings/VoteReadyModal';
-import { VoteResultSummary } from '@/components/VoteResultSummary';
-import { TakeFloorControl } from '@/components/meetings/TakeFloorControl';
-import { useAuthState } from '@/context/AuthContext';
-import { Button } from '@/components/ui/button';
+import { useCallback, useState, useEffect } from "react";
+import {
+  votingApi,
+  timersApi,
+  topicsApi,
+  queueApi,
+  meetingsApi,
+  usersApi,
+  clubsApi,
+  motionsApi,
+  districtApi,
+} from "@/lib/api";
+import { VoteReadyModal } from "@/components/meetings/VoteReadyModal";
+import { VoteResultSummary } from "@/components/VoteResultSummary";
+import { TakeFloorControl } from "@/components/meetings/TakeFloorControl";
+import { useAuthState } from "@/context/AuthContext";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { FormSection } from '@/components/ui/form-section';
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { FormSection } from "@/components/ui/form-section";
 import {
   Dialog,
   DialogContent,
@@ -24,12 +34,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
-import type { VoteResult, CandidateResult } from '@/hooks/useMeetingRoom';
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import type { VoteResult, CandidateResult } from "@/hooks/useMeetingRoom";
 
 export type Topic = { id: string; title: string; type?: string };
 export type Speaker = { id: string; fullName: string };
@@ -37,7 +47,7 @@ export type Speaker = { id: string; fullName: string };
 export type ActiveVoteSession = {
   id: string;
   topicTitle: string;
-  ballotType?: 'YES_NO' | 'CANDIDATE';
+  ballotType?: "YES_NO" | "CANDIDATE";
   isElection?: boolean;
   round?: number;
   candidates?: { id: string; displayName: string }[];
@@ -47,9 +57,9 @@ export type ActiveVoteSession = {
 };
 
 const TIMER_PRESETS = [
-  { label: '5 min', value: 300 },
-  { label: '10 min', value: 600 },
-  { label: '15 min', value: 900 },
+  { label: "5 min", value: 300 },
+  { label: "10 min", value: 600 },
+  { label: "15 min", value: 900 },
 ];
 
 // ==========================================
@@ -93,12 +103,13 @@ export function AdminAttendanceControl({
   const [allClubs, setAllClubs] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
-    clubsApi.list(false)
+    clubsApi
+      .list(false)
       .then((res: any) => {
         setAllClubs(res || []);
       })
       .catch((err) => {
-        console.error('Error fetching all clubs:', err);
+        console.error("Error fetching all clubs:", err);
       });
   }, []);
 
@@ -106,9 +117,9 @@ export function AdminAttendanceControl({
     setLockingAttendance(true);
     try {
       await meetingsApi.lockAttendance(meetingId);
-      toast.success('Asistencia cerrada.');
+      toast.success("Asistencia cerrada.");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error');
+      toast.error(e instanceof Error ? e.message : "Error");
     } finally {
       setLockingAttendance(false);
     }
@@ -116,7 +127,7 @@ export function AdminAttendanceControl({
 
   const presentCount = clubAttendance.filter((c) => c.isPresent).length;
   const absentOfflineClubs = allClubs.filter(
-    (club) => !clubAttendance.some((c) => c.clubId === club.id)
+    (club) => !clubAttendance.some((c) => c.clubId === club.id),
   );
 
   return (
@@ -131,7 +142,9 @@ export function AdminAttendanceControl({
               {presentCount} presentes
             </span>
             {attendanceLocked ? (
-              <Badge variant="secondary" className="text-xs">Cerrada</Badge>
+              <Badge variant="secondary" className="text-xs">
+                Cerrada
+              </Badge>
             ) : (
               <Button
                 variant="outline"
@@ -140,7 +153,7 @@ export function AdminAttendanceControl({
                 disabled={lockingAttendance}
                 onClick={handleLockAttendance}
               >
-                {lockingAttendance ? 'Cerrando...' : 'Cerrar asistencia'}
+                {lockingAttendance ? "Cerrando..." : "Cerrar asistencia"}
               </Button>
             )}
           </div>
@@ -157,24 +170,24 @@ export function AdminAttendanceControl({
                 type="button"
                 onClick={() => setSelectedClub(c)}
                 className={cn(
-                  'inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] cursor-pointer hover:opacity-80 transition-opacity text-left border',
+                  "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] cursor-pointer hover:opacity-80 transition-opacity text-left border",
                   c.isYellow
-                    ? 'border-warning/30 bg-warning/10 text-warning font-medium'
+                    ? "border-warning/30 bg-warning/10 text-warning font-medium"
                     : c.isPresent
                       ? c.addedAfterLock
-                        ? 'border-warning/30 bg-warning/10 text-warning font-medium'
-                        : 'border-success/30 bg-success/10 text-success font-medium'
-                      : 'border-border bg-muted/30 text-muted-foreground',
+                        ? "border-warning/30 bg-warning/10 text-warning font-medium"
+                        : "border-success/30 bg-success/10 text-success font-medium"
+                      : "border-border bg-muted/30 text-muted-foreground",
                 )}
               >
                 <span
                   className={cn(
-                    'size-1.5 rounded-full',
+                    "size-1.5 rounded-full",
                     c.isYellow
-                      ? 'bg-warning animate-pulse'
+                      ? "bg-warning animate-pulse"
                       : c.connected
-                        ? 'bg-success animate-pulse'
-                        : 'bg-muted-foreground/50',
+                        ? "bg-success animate-pulse"
+                        : "bg-muted-foreground/50",
                   )}
                 />
                 {c.clubName}
@@ -254,8 +267,10 @@ function ClubAttendanceDialog({
   onClose: () => void;
 }) {
   const [loading, setLoading] = useState(false);
-  const [members, setMembers] = useState<{ userId: string; fullName: string; email: string }[]>([]);
-  const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [members, setMembers] = useState<
+    { userId: string; fullName: string; email: string }[]
+  >([]);
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
 
   useEffect(() => {
     if (!open) return;
@@ -272,7 +287,7 @@ function ClubAttendanceDialog({
         }
       })
       .catch((err) => {
-        toast.error('Error al cargar socios del club: ' + err.message);
+        toast.error("Error al cargar socios del club: " + err.message);
       })
       .finally(() => {
         setLoading(false);
@@ -283,11 +298,19 @@ function ClubAttendanceDialog({
     if (!selectedUserId) return;
     setLoading(true);
     try {
-      await meetingsApi.updateClubRepresentative(meetingId, clubId, selectedUserId);
-      toast.success(isPresent ? 'Representante actualizado' : 'Asistencia registrada con éxito');
+      await meetingsApi.updateClubRepresentative(
+        meetingId,
+        clubId,
+        selectedUserId,
+      );
+      toast.success(
+        isPresent
+          ? "Representante actualizado"
+          : "Asistencia registrada con éxito",
+      );
       onClose();
     } catch (err: any) {
-      toast.error(err.message || 'Error al guardar');
+      toast.error(err.message || "Error al guardar");
     } finally {
       setLoading(false);
     }
@@ -297,10 +320,10 @@ function ClubAttendanceDialog({
     setLoading(true);
     try {
       await meetingsApi.removeClubAttendance(meetingId, clubId);
-      toast.success('El club ha sido quitado de la lista de presentes');
+      toast.success("El club ha sido quitado de la lista de presentes");
       onClose();
     } catch (err: any) {
-      toast.error(err.message || 'Error al quitar asistencia');
+      toast.error(err.message || "Error al quitar asistencia");
     } finally {
       setLoading(false);
     }
@@ -311,28 +334,32 @@ function ClubAttendanceDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {isPresent ? `Cambiar Representante — ${clubName}` : `Registrar Asistencia — ${clubName}`}
+            {isPresent
+              ? `Cambiar Representante — ${clubName}`
+              : `Registrar Asistencia — ${clubName}`}
           </DialogTitle>
           <DialogDescription>
             {isPresent
-              ? 'Selecciona el socio que representará al club y ejercerá el voto.'
-              : 'Registra la presencia del club en la reunión seleccionando su representante.'}
+              ? "Selecciona el socio que representará al club y ejercerá el voto."
+              : "Registra la presencia del club en la reunión seleccionando su representante."}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-3">
           {isPresent && (
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-foreground">Representante Actual</label>
+              <label className="text-sm font-semibold text-foreground">
+                Representante Actual
+              </label>
               <p className="text-sm text-muted-foreground bg-muted/50 p-2 rounded-md border border-border/40">
-                {currentAttendeeName || 'Ninguno asignado'}
+                {currentAttendeeName || "Ninguno asignado"}
               </p>
             </div>
           )}
 
           <div className="space-y-1.5">
             <label className="text-sm font-semibold text-foreground">
-              {isPresent ? 'Nuevo Representante' : 'Seleccionar Representante'}
+              {isPresent ? "Nuevo Representante" : "Seleccionar Representante"}
             </label>
             {loading && members.length === 0 ? (
               <div className="animate-pulse h-10 bg-muted rounded-md" />
@@ -356,7 +383,11 @@ function ClubAttendanceDialog({
         <DialogFooter className="flex flex-col sm:flex-row sm:justify-between gap-2">
           <div className="flex justify-start">
             {isPresent && (
-              <Button variant="destructive" onClick={handleRemovePresence} disabled={loading}>
+              <Button
+                variant="destructive"
+                onClick={handleRemovePresence}
+                disabled={loading}
+              >
                 Quitar de presentes
               </Button>
             )}
@@ -366,7 +397,11 @@ function ClubAttendanceDialog({
               Cancelar
             </Button>
             <Button onClick={handleSave} disabled={loading || !selectedUserId}>
-              {loading ? 'Guardando...' : isPresent ? 'Asignar' : 'Marcar Presente'}
+              {loading
+                ? "Guardando..."
+                : isPresent
+                  ? "Asignar"
+                  : "Marcar Presente"}
             </Button>
           </div>
         </DialogFooter>
@@ -399,16 +434,16 @@ export function AdminTopicControl({
   onTimerChanged,
   className,
 }: AdminTopicControlProps) {
-  const [newTopicTitle, setNewTopicTitle] = useState('');
-  const [newTopicType, setNewTopicType] = useState('DISCUSSION');
+  const [newTopicTitle, setNewTopicTitle] = useState("");
+  const [newTopicType, setNewTopicType] = useState("DISCUSSION");
   const [creatingTopic, setCreatingTopic] = useState(false);
-  const [timerDuration, setTimerDuration] = useState('300');
+  const [timerDuration, setTimerDuration] = useState("300");
   const [startingTimer, setStartingTimer] = useState(false);
   const [stoppingTimer, setStoppingTimer] = useState(false);
 
   async function handleCreateTopic() {
     if (!newTopicTitle.trim()) {
-      toast.error('El título del tema es requerido.');
+      toast.error("El título del tema es requerido.");
       return;
     }
     setCreatingTopic(true);
@@ -417,10 +452,10 @@ export function AdminTopicControl({
         title: newTopicTitle.trim(),
         type: newTopicType as any,
       });
-      toast.success('Tema creado.');
-      setNewTopicTitle('');
+      toast.success("Tema creado.");
+      setNewTopicTitle("");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error al crear tema.');
+      toast.error(e instanceof Error ? e.message : "Error al crear tema.");
     } finally {
       setCreatingTopic(false);
     }
@@ -429,10 +464,12 @@ export function AdminTopicControl({
   async function setCurrentTopic(topicId: string | null) {
     try {
       await topicsApi.setCurrent(meetingId, topicId);
-      toast.success(topicId ? 'Tema actual actualizado.' : 'Tema actual borrado.');
+      toast.success(
+        topicId ? "Tema actual actualizado." : "Tema actual borrado.",
+      );
       onTopicChanged?.();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error');
+      toast.error(e instanceof Error ? e.message : "Error");
     }
   }
 
@@ -441,10 +478,10 @@ export function AdminTopicControl({
     setStartingTimer(true);
     try {
       await timersApi.startTopic(meetingId, topicId, dur);
-      toast.success('Timer iniciado.');
+      toast.success("Timer iniciado.");
       onTimerChanged?.();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error');
+      toast.error(e instanceof Error ? e.message : "Error");
     } finally {
       setStartingTimer(false);
     }
@@ -454,10 +491,10 @@ export function AdminTopicControl({
     setStoppingTimer(true);
     try {
       await timersApi.stop(meetingId, timerId);
-      toast.success('Timer detenido.');
+      toast.success("Timer detenido.");
       onTimerChanged?.();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error');
+      toast.error(e instanceof Error ? e.message : "Error");
     } finally {
       setStoppingTimer(false);
     }
@@ -470,10 +507,12 @@ export function AdminTopicControl({
       </CardHeader>
       <CardContent className="space-y-3.5">
         <div className="space-y-1.5 text-left">
-          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tema activo de debate</Label>
+          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            Tema activo de debate
+          </Label>
           <Select
-            value={currentTopicId ?? '__none__'}
-            onValueChange={(v) => setCurrentTopic(v === '__none__' ? null : v)}
+            value={currentTopicId ?? "__none__"}
+            onValueChange={(v) => setCurrentTopic(v === "__none__" ? null : v)}
           >
             <SelectTrigger className="w-full h-9 text-xs">
               <SelectValue placeholder="Sin tema activo" />
@@ -481,7 +520,9 @@ export function AdminTopicControl({
             <SelectContent>
               <SelectItem value="__none__">— Sin tema —</SelectItem>
               {topics.map((t) => (
-                <SelectItem key={t.id} value={t.id}>{t.title}</SelectItem>
+                <SelectItem key={t.id} value={t.id}>
+                  {t.title}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -490,7 +531,9 @@ export function AdminTopicControl({
         {/* Timer presets */}
         {currentTopic && (
           <div className="pt-2.5 border-t border-border space-y-2.5">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider text-left block">Cronómetro</Label>
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider text-left block">
+              Cronómetro
+            </Label>
             {activeTimer && activeTimer.topicId === currentTopic.id ? (
               <Button
                 variant="destructive"
@@ -506,7 +549,11 @@ export function AdminTopicControl({
                   {TIMER_PRESETS.map((preset) => (
                     <Button
                       key={preset.value}
-                      variant={timerDuration === String(preset.value) ? 'default' : 'outline'}
+                      variant={
+                        timerDuration === String(preset.value)
+                          ? "default"
+                          : "outline"
+                      }
                       size="sm"
                       className="h-7 px-2 text-xs flex-1"
                       onClick={() => setTimerDuration(String(preset.value))}
@@ -526,7 +573,9 @@ export function AdminTopicControl({
                       onChange={(e) => setTimerDuration(e.target.value)}
                       className="h-7 text-xs w-16 shrink-0"
                     />
-                    <span className="text-[10px] text-muted-foreground font-medium">segundos</span>
+                    <span className="text-[10px] text-muted-foreground font-medium">
+                      segundos
+                    </span>
                   </div>
                   <Button
                     size="sm"
@@ -544,7 +593,9 @@ export function AdminTopicControl({
 
         {/* Quick topic creation */}
         <div className="pt-2.5 border-t border-border space-y-2">
-          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider text-left block">Añadir tema al final</Label>
+          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider text-left block">
+            Añadir tema al final
+          </Label>
           <div className="flex gap-1.5 flex-col">
             <Input
               placeholder="Título del tema..."
@@ -569,7 +620,7 @@ export function AdminTopicControl({
                 onClick={handleCreateTopic}
                 disabled={creatingTopic}
               >
-                {creatingTopic ? '...' : 'Añadir'}
+                {creatingTopic ? "..." : "Añadir"}
               </Button>
             </div>
           </div>
@@ -602,16 +653,16 @@ export function AdminSpeakerControl({
   className,
 }: AdminSpeakerControlProps) {
   const { user } = useAuthState();
-  const canSpeakOnBehalf = user?.role === 'SECRETARY' || user?.role === 'RDR';
+  const canSpeakOnBehalf = user?.role === "SECRETARY" || user?.role === "RDR";
   const [naming, setNaming] = useState(false);
-  const [guestName, setGuestName] = useState('');
+  const [guestName, setGuestName] = useState("");
 
   async function handleSetCurrentSpeaker(userId: string | null) {
     try {
       await queueApi.setCurrentSpeaker(meetingId, userId);
-      toast.success(userId ? 'Orador actualizado.' : 'Orador quitado.');
+      toast.success(userId ? "Orador actualizado." : "Orador quitado.");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error');
+      toast.error(e instanceof Error ? e.message : "Error");
     }
   }
 
@@ -622,14 +673,16 @@ export function AdminSpeakerControl({
       await queueApi.setCurrentSpeaker(meetingId, user.id);
       onSetOnBehalfOf?.(name);
       setNaming(false);
-      setGuestName('');
+      setGuestName("");
       if (!currentTopicId) {
-        toast.info('No hay un tema activo: la transcripción no se guardará hasta que se active un tema.');
+        toast.info(
+          "No hay un tema activo: la transcripción no se guardará hasta que se active un tema.",
+        );
       } else {
         toast.success(`Tomaste la voz en nombre de ${name}.`);
       }
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error');
+      toast.error(e instanceof Error ? e.message : "Error");
     }
   }
 
@@ -637,9 +690,9 @@ export function AdminSpeakerControl({
     try {
       await queueApi.setCurrentSpeaker(meetingId, null);
       onSetOnBehalfOf?.(null);
-      toast.success('Terminó la intervención en nombre del invitado.');
+      toast.success("Terminó la intervención en nombre del invitado.");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error');
+      toast.error(e instanceof Error ? e.message : "Error");
     }
   }
 
@@ -647,9 +700,9 @@ export function AdminSpeakerControl({
     if (!nextSpeaker) return;
     try {
       await queueApi.setCurrentSpeaker(meetingId, nextSpeaker.id);
-      toast.success('Se dio la palabra al siguiente orador.');
+      toast.success("Se dio la palabra al siguiente orador.");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error');
+      toast.error(e instanceof Error ? e.message : "Error");
     }
   }
 
@@ -663,7 +716,9 @@ export function AdminSpeakerControl({
           <div className="flex items-center justify-between gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2">
             <div className="flex items-center gap-2 min-w-0">
               <div className="size-2 rounded-full bg-primary animate-pulse shrink-0" />
-              <span className="text-sm font-semibold truncate">{currentSpeaker.fullName}</span>
+              <span className="text-sm font-semibold truncate">
+                {currentSpeaker.fullName}
+              </span>
             </div>
             <Button
               variant="ghost"
@@ -683,8 +738,15 @@ export function AdminSpeakerControl({
         {nextSpeaker ? (
           <div className="flex items-center justify-between gap-2 rounded-lg border border-border bg-muted/20 px-3 py-2">
             <div className="flex items-center gap-2 min-w-0">
-              <span className="text-sm font-semibold truncate">{nextSpeaker.fullName}</span>
-              <Badge variant="secondary" className="text-[9px] px-1.5 py-0 shrink-0">Siguiente</Badge>
+              <span className="text-sm font-semibold truncate">
+                {nextSpeaker.fullName}
+              </span>
+              <Badge
+                variant="secondary"
+                className="text-[9px] px-1.5 py-0 shrink-0"
+              >
+                Siguiente
+              </Badge>
             </div>
             <Button
               variant="outline"
@@ -708,9 +770,15 @@ export function AdminSpeakerControl({
             {onBehalfOf ? (
               <div className="rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 space-y-2">
                 <p className="text-xs text-warning-foreground">
-                  🎤 Hablando en nombre de <span className="font-semibold">{onBehalfOf}</span>
+                  🎤 Hablando en nombre de{" "}
+                  <span className="font-semibold">{onBehalfOf}</span>
                 </p>
-                <Button variant="outline" size="sm" className="w-full h-7 text-xs" onClick={endOnBehalf}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full h-7 text-xs"
+                  onClick={endOnBehalf}
+                >
                   Terminar intervención
                 </Button>
               </div>
@@ -722,8 +790,11 @@ export function AdminSpeakerControl({
                   value={guestName}
                   onChange={(e) => setGuestName(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') startOnBehalf();
-                    if (e.key === 'Escape') { setNaming(false); setGuestName(''); }
+                    if (e.key === "Enter") startOnBehalf();
+                    if (e.key === "Escape") {
+                      setNaming(false);
+                      setGuestName("");
+                    }
                   }}
                   className="h-8 text-sm"
                 />
@@ -732,7 +803,10 @@ export function AdminSpeakerControl({
                     variant="outline"
                     size="sm"
                     className="flex-1 h-7 text-xs"
-                    onClick={() => { setNaming(false); setGuestName(''); }}
+                    onClick={() => {
+                      setNaming(false);
+                      setGuestName("");
+                    }}
                   >
                     Cancelar
                   </Button>
@@ -793,31 +867,53 @@ export function AdminVotingControl({
 }: AdminVotingControlProps) {
   const [closing, setClosing] = useState(false);
   const [confirmCloseVote, setConfirmCloseVote] = useState(false);
-  const [votingMethod, setVotingMethod] = useState('PUBLIC');
-  const [requiredMajority, setRequiredMajority] = useState('SIMPLE');
-  const [ballotType, setBallotType] = useState<'YES_NO' | 'CANDIDATE'>('YES_NO');
-  const [candidates, setCandidates] = useState<{ displayName: string; userId?: string | null }[]>([{ displayName: '' }, { displayName: '' }]);
-  const [voteType, setVoteType] = useState<'GENERAL' | 'RDR' | 'EVENT' | 'CUSTOM_CANDIDATE'>('GENERAL');
-  const [availableUsers, setAvailableUsers] = useState<{ id: string; fullName: string; email: string }[]>([]);
-  const [availableClubs, setAvailableClubs] = useState<{ id: string; name: string }[]>([]);
+  const [votingMethod, setVotingMethod] = useState("PUBLIC");
+  const [requiredMajority, setRequiredMajority] = useState("SIMPLE");
+  const [ballotType, setBallotType] = useState<"YES_NO" | "CANDIDATE">(
+    "YES_NO",
+  );
+  const [candidates, setCandidates] = useState<
+    { displayName: string; userId?: string | null }[]
+  >([{ displayName: "" }, { displayName: "" }]);
+  const [voteType, setVoteType] = useState<
+    "GENERAL" | "RDR" | "EVENT" | "CUSTOM_CANDIDATE"
+  >("GENERAL");
+  const [availableUsers, setAvailableUsers] = useState<
+    { id: string; fullName: string; email: string }[]
+  >([]);
+  const [availableClubs, setAvailableClubs] = useState<
+    { id: string; name: string }[]
+  >([]);
   const [actionLoading, setActionLoading] = useState(false);
-  const [rdrChoice, setRdrChoice] = useState<'YES' | 'NO' | null>(null);
+  const [rdrChoice, setRdrChoice] = useState<"YES" | "NO" | null>(null);
   const [rdrCandidateId, setRdrCandidateId] = useState<string | null>(null);
   const [showVoteReadyModal, setShowVoteReadyModal] = useState(false);
-  const [pendingVoteTopicId, setPendingVoteTopicId] = useState<string | null>(null);
+  const [pendingVoteTopicId, setPendingVoteTopicId] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
-    usersApi.list().then(setAvailableUsers).catch(() => {});
-    clubsApi.list().then(setAvailableClubs).catch(() => {});
+    usersApi
+      .list()
+      .then(setAvailableUsers)
+      .catch(() => {});
+    clubsApi
+      .list()
+      .then(setAvailableClubs)
+      .catch(() => {});
   }, []);
 
   const pendingClubs = activeVoteSession
-    ? clubAttendance.filter((c) => !activeVoteSession.votedClubIds?.includes(c.clubId))
+    ? clubAttendance.filter(
+        (c) => !activeVoteSession.votedClubIds?.includes(c.clubId),
+      )
     : [];
 
   const tiedCandidates: CandidateResult[] = voteResult?.candidateResult
     ? voteResult.candidateResult.candidateResults.filter(
-        (c) => c.votes === voteResult.candidateResult!.candidateResults[0]?.votes && c.votes > 0,
+        (c) =>
+          c.votes === voteResult.candidateResult!.candidateResults[0]?.votes &&
+          c.votes > 0,
       )
     : [];
 
@@ -826,31 +922,33 @@ export function AdminVotingControl({
   if (currentTopicIndex > -1) {
     for (let i = currentTopicIndex - 1; i >= 0; i--) {
       const t = topics[i];
-      if (t.type !== 'VOTING' && !t.title?.startsWith('Moción:')) {
+      if (t.type !== "VOTING" && !t.title?.startsWith("Moción:")) {
         previousNormalTopic = t;
         break;
       }
     }
   }
-  const currentTopicIsMotion = currentTopic?.title?.startsWith('Moción:');
+  const currentTopicIsMotion = currentTopic?.title?.startsWith("Moción:");
   const showReturnButton = !!(currentTopicIsMotion && previousNormalTopic);
 
   async function setCurrentTopic(topicId: string | null) {
     try {
       await topicsApi.setCurrent(meetingId, topicId);
-      toast.success(topicId ? 'Tema actual actualizado.' : 'Tema actual borrado.');
+      toast.success(
+        topicId ? "Tema actual actualizado." : "Tema actual borrado.",
+      );
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error');
+      toast.error(e instanceof Error ? e.message : "Error");
     }
   }
 
   async function openVote(topicId: string) {
     const opts: Parameters<typeof votingApi.open>[2] = {
-      votingMethod: votingMethod as 'PUBLIC' | 'SECRET',
+      votingMethod: votingMethod as "PUBLIC" | "SECRET",
       requiredMajority,
       ballotType,
     };
-    if (ballotType === 'CANDIDATE') {
+    if (ballotType === "CANDIDATE") {
       opts.candidates = candidates
         .filter((c) => c.displayName.trim())
         .map((c) => ({
@@ -858,24 +956,25 @@ export function AdminVotingControl({
           userId: c.userId || undefined,
         }));
       opts.isElection = true;
-      opts.electionType = voteType === 'RDR' ? 'RDR' : voteType === 'EVENT' ? 'EVENT' : undefined;
+      opts.electionType =
+        voteType === "RDR" ? "RDR" : voteType === "EVENT" ? "EVENT" : undefined;
     }
     try {
       await votingApi.open(meetingId, topicId, opts);
       setShowVoteReadyModal(false);
       setPendingVoteTopicId(null);
-      toast.success('Votación abierta.');
+      toast.success("Votación abierta.");
       onVoteOpened?.();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error');
+      toast.error(e instanceof Error ? e.message : "Error");
     }
   }
 
   function handleOpenVoteClick(topicId: string) {
-    if (ballotType === 'CANDIDATE') {
+    if (ballotType === "CANDIDATE") {
       const valid = candidates.filter((c) => c.displayName.trim());
       if (valid.length < 1) {
-        toast.error('Ingresá al menos un candidato.');
+        toast.error("Ingresá al menos un candidato.");
         return;
       }
     }
@@ -894,18 +993,18 @@ export function AdminVotingControl({
       openVote(pendingVoteTopicId);
       setPendingVoteTopicId(null);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingVoteTopicId]);
 
   async function closeVote(voteSessionId: string) {
     setClosing(true);
     try {
       await votingApi.close(meetingId, voteSessionId);
-      toast.success('Votación cerrada.');
+      toast.success("Votación cerrada.");
       setConfirmCloseVote(false);
       onVoteClosed?.();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error');
+      toast.error(e instanceof Error ? e.message : "Error");
     } finally {
       setClosing(false);
     }
@@ -915,38 +1014,48 @@ export function AdminVotingControl({
     setActionLoading(true);
     try {
       await votingApi.openRunoff(meetingId, previousSessionId);
-      toast.success('Segunda vuelta abierta (Art. 64i).');
+      toast.success("Segunda vuelta abierta (Art. 64i).");
       onVoteOpened?.();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error');
+      toast.error(e instanceof Error ? e.message : "Error");
     } finally {
       setActionLoading(false);
     }
   }
 
   async function handleRdrTiebreaker(voteSessionId: string) {
-    if (!rdrChoice) { toast.error('Seleccioná una opción de desempate.'); return; }
+    if (!rdrChoice) {
+      toast.error("Seleccioná una opción de desempate.");
+      return;
+    }
     setActionLoading(true);
     try {
       await votingApi.rdrTiebreaker(meetingId, voteSessionId, rdrChoice);
-      toast.success('Desempate del RDR aplicado (Art. 49).');
+      toast.success("Desempate del RDR aplicado (Art. 49).");
       setRdrChoice(null);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error');
+      toast.error(e instanceof Error ? e.message : "Error");
     } finally {
       setActionLoading(false);
     }
   }
 
   async function handleRdrCandidateTiebreaker(voteSessionId: string) {
-    if (!rdrCandidateId) { toast.error('Seleccioná el candidato ganador.'); return; }
+    if (!rdrCandidateId) {
+      toast.error("Seleccioná el candidato ganador.");
+      return;
+    }
     setActionLoading(true);
     try {
-      await votingApi.rdrCandidateTiebreaker(meetingId, voteSessionId, rdrCandidateId);
-      toast.success('Desempate del RDR aplicado (Art. 49).');
+      await votingApi.rdrCandidateTiebreaker(
+        meetingId,
+        voteSessionId,
+        rdrCandidateId,
+      );
+      toast.success("Desempate del RDR aplicado (Art. 49).");
       setRdrCandidateId(null);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error');
+      toast.error(e instanceof Error ? e.message : "Error");
     } finally {
       setActionLoading(false);
     }
@@ -958,7 +1067,12 @@ export function AdminVotingControl({
         <CardTitle className="text-base flex items-center justify-between gap-3">
           <span>Control de Votaciones</span>
           {activeVoteSession && (
-            <Badge variant="success" className="animate-pulse px-2 py-0.5 text-xs">Voto Activo</Badge>
+            <Badge
+              variant="success"
+              className="animate-pulse px-2 py-0.5 text-xs"
+            >
+              Voto Activo
+            </Badge>
           )}
         </CardTitle>
       </CardHeader>
@@ -968,8 +1082,13 @@ export function AdminVotingControl({
             <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-primary/10 pb-2">
                 <Badge variant="info">
-                  {activeVoteSession.ballotType === 'CANDIDATE' ? 'Elección' : 'Votación'} abierta
-                  {(activeVoteSession.round ?? 1) > 1 ? ` — Ronda ${activeVoteSession.round}` : ''}
+                  {activeVoteSession.ballotType === "CANDIDATE"
+                    ? "Elección"
+                    : "Votación"}{" "}
+                  abierta
+                  {(activeVoteSession.round ?? 1) > 1
+                    ? ` — Ronda ${activeVoteSession.round}`
+                    : ""}
                 </Badge>
                 <Button
                   variant="destructive"
@@ -981,21 +1100,31 @@ export function AdminVotingControl({
                 </Button>
               </div>
               <div className="text-left">
-                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Asunto de Votación</p>
-                <h4 className="font-bold text-base text-foreground mt-0.5 leading-snug">{activeVoteSession.topicTitle}</h4>
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+                  Asunto de Votación
+                </p>
+                <h4 className="font-bold text-base text-foreground mt-0.5 leading-snug">
+                  {activeVoteSession.topicTitle}
+                </h4>
               </div>
-              {activeVoteSession.ballotType === 'CANDIDATE' && (activeVoteSession.candidates?.length ?? 0) > 0 && (
-                <div className="text-xs text-muted-foreground space-y-1 text-left">
-                  <p className="font-semibold uppercase tracking-wider text-[10px]">Candidatos:</p>
-                  <div className="flex flex-wrap gap-1.5 mt-1">
-                    {activeVoteSession.candidates!.map((c, i) => (
-                      <span key={c.id} className="inline-flex items-center gap-1 rounded bg-muted px-2 py-0.5 text-[10px] font-medium border border-border">
-                        {String.fromCharCode(65 + i)}. {c.displayName}
-                      </span>
-                    ))}
+              {activeVoteSession.ballotType === "CANDIDATE" &&
+                (activeVoteSession.candidates?.length ?? 0) > 0 && (
+                  <div className="text-xs text-muted-foreground space-y-1 text-left">
+                    <p className="font-semibold uppercase tracking-wider text-[10px]">
+                      Candidatos:
+                    </p>
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {activeVoteSession.candidates!.map((c, i) => (
+                        <span
+                          key={c.id}
+                          className="inline-flex items-center gap-1 rounded bg-muted px-2 py-0.5 text-[10px] font-medium border border-border"
+                        >
+                          {String.fromCharCode(65 + i)}. {c.displayName}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </div>
 
             {/* Live progress indicators */}
@@ -1004,117 +1133,180 @@ export function AdminVotingControl({
                 <span className="text-2xl font-bold tabular-nums block text-foreground">
                   {activeVoteSession.votedClubIds?.length ?? 0}
                 </span>
-                <span className="text-[10px] text-muted-foreground uppercase font-medium">Votos Recibidos</span>
+                <span className="text-[10px] text-muted-foreground uppercase font-medium">
+                  Votos Recibidos
+                </span>
               </div>
               <div className="pb-1">
                 <span className="text-2xl font-bold tabular-nums block text-foreground">
                   {pendingClubs.length}
                 </span>
-                <span className="text-[10px] text-muted-foreground uppercase font-medium">Pendientes</span>
+                <span className="text-[10px] text-muted-foreground uppercase font-medium">
+                  Pendientes
+                </span>
               </div>
             </div>
 
             {/* Inline Manual Voting Panel */}
-            {pendingClubs.length > 0 && activeVoteSession.votingMethod !== 'SECRET' && (
-              <div className="rounded-xl border border-border p-4 space-y-3">
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider text-left">
-                  Carga rápida de Votos Manuales ({pendingClubs.length})
-                </h4>
-                <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
-                  {pendingClubs.map((club) => (
-                    <div
-                      key={club.clubId}
-                      className="flex items-center justify-between gap-3 border-b border-border/50 pb-2 last:border-0 last:pb-0"
-                    >
-                      <span className="text-xs font-medium truncate flex-1 flex flex-col text-left">
-                        <span>{club.clubName}</span>
-                        <span className={cn('text-[9px]', club.connected ? 'text-success font-medium' : 'text-muted-foreground')}>
-                          {club.connected ? '● En línea' : '○ Offline'}
+            {pendingClubs.length > 0 &&
+              activeVoteSession.votingMethod !== "SECRET" && (
+                <div className="rounded-xl border border-border p-4 space-y-3">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider text-left">
+                    Carga rápida de Votos Manuales ({pendingClubs.length})
+                  </h4>
+                  <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+                    {pendingClubs.map((club) => (
+                      <div
+                        key={club.clubId}
+                        className="flex items-center justify-between gap-3 border-b border-border/50 pb-2 last:border-0 last:pb-0"
+                      >
+                        <span className="text-xs font-medium truncate flex-1 flex flex-col text-left">
+                          <span>{club.clubName}</span>
+                          <span
+                            className={cn(
+                              "text-[9px]",
+                              club.connected
+                                ? "text-success font-medium"
+                                : "text-muted-foreground",
+                            )}
+                          >
+                            {club.connected ? "● En línea" : "○ Offline"}
+                          </span>
                         </span>
-                      </span>
-                      {activeVoteSession.ballotType === 'CANDIDATE' && (activeVoteSession.candidates?.length ?? 0) > 1 ? (
-                        <Select
-                          onValueChange={async (candidateId) => {
-                            try {
-                              await votingApi.manual(
+                        {activeVoteSession.ballotType === "CANDIDATE" &&
+                        (activeVoteSession.candidates?.length ?? 0) > 1 ? (
+                          <Select
+                            onValueChange={async (candidateId) => {
+                              try {
+                                await votingApi.manual(
                                   meetingId,
                                   activeVoteSession.id,
                                   club.clubId,
-                                  candidateId === 'ABSTAIN' ? 'ABSTAIN' : 'YES',
-                                  candidateId === 'ABSTAIN' ? undefined : candidateId,
+                                  candidateId === "ABSTAIN" ? "ABSTAIN" : "YES",
+                                  candidateId === "ABSTAIN"
+                                    ? undefined
+                                    : candidateId,
                                 );
-                              toast.success(`Voto registrado para ${club.clubName}`);
-                            } catch (e) {
-                              toast.error(e instanceof Error ? e.message : 'Error');
-                            }
-                          }}
-                        >
-                          <SelectTrigger className="h-7 text-xs w-28 shrink-0">
-                            <SelectValue placeholder="Votar" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {activeVoteSession.candidates?.map((cand) => (
-                              <SelectItem key={cand.id} value={cand.id}>
-                                {cand.displayName}
+                                toast.success(
+                                  `Voto registrado para ${club.clubName}`,
+                                );
+                              } catch (e) {
+                                toast.error(
+                                  e instanceof Error ? e.message : "Error",
+                                );
+                              }
+                            }}
+                          >
+                            <SelectTrigger className="h-7 text-xs w-28 shrink-0">
+                              <SelectValue placeholder="Votar" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {activeVoteSession.candidates?.map((cand) => (
+                                <SelectItem key={cand.id} value={cand.id}>
+                                  {cand.displayName}
+                                </SelectItem>
+                              ))}
+                              <SelectItem value="ABSTAIN">
+                                Abstención
                               </SelectItem>
-                            ))}
-                            <SelectItem value="ABSTAIN">Abstención</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <div className="flex gap-1 shrink-0">
-                          <Button
-                            size="sm"
-                            className="h-6 px-2 text-[10px] bg-success/15 hover:bg-success/25 text-success border-0 animate-none"
-                            onClick={async () => {
-                              try {
-                                const candId = activeVoteSession.ballotType === 'CANDIDATE' && activeVoteSession.candidates?.[0]?.id || undefined;
-                                await votingApi.manual(meetingId, activeVoteSession.id, club.clubId, 'YES', candId);
-                                toast.success(`A favor registrado para ${club.clubName}`);
-                              } catch (e) {
-                                toast.error(e instanceof Error ? e.message : 'Error');
-                              }
-                            }}
-                          >
-                            Sí
-                          </Button>
-                          <Button
-                            size="sm"
-                            className="h-6 px-2 text-[10px] bg-destructive/15 hover:bg-destructive/25 text-destructive border-0 animate-none"
-                            onClick={async () => {
-                              try {
-                                const candId = activeVoteSession.ballotType === 'CANDIDATE' && activeVoteSession.candidates?.[0]?.id || undefined;
-                                await votingApi.manual(meetingId, activeVoteSession.id, club.clubId, 'NO', candId);
-                                toast.success(`En contra registrado para ${club.clubName}`);
-                              } catch (e) {
-                                toast.error(e instanceof Error ? e.message : 'Error');
-                              }
-                            }}
-                          >
-                            No
-                          </Button>
-                          <Button
-                            size="sm"
-                            className="h-6 px-2 text-[10px] bg-muted-foreground/15 hover:bg-muted-foreground/25 text-muted-foreground border-0 animate-none"
-                            onClick={async () => {
-                              try {
-                                const candId = activeVoteSession.ballotType === 'CANDIDATE' && activeVoteSession.candidates?.[0]?.id || undefined;
-                                await votingApi.manual(meetingId, activeVoteSession.id, club.clubId, 'ABSTAIN', candId);
-                                toast.success(`Abstención registrada para ${club.clubName}`);
-                              } catch (e) {
-                                toast.error(e instanceof Error ? e.message : 'Error');
-                              }
-                            }}
-                          >
-                            Abs
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <div className="flex gap-1 shrink-0">
+                            <Button
+                              size="sm"
+                              className="h-6 px-2 text-[10px] bg-success/15 hover:bg-success/25 text-success border-0 animate-none"
+                              onClick={async () => {
+                                try {
+                                  const candId =
+                                    (activeVoteSession.ballotType ===
+                                      "CANDIDATE" &&
+                                      activeVoteSession.candidates?.[0]?.id) ||
+                                    undefined;
+                                  await votingApi.manual(
+                                    meetingId,
+                                    activeVoteSession.id,
+                                    club.clubId,
+                                    "YES",
+                                    candId,
+                                  );
+                                  toast.success(
+                                    `A favor registrado para ${club.clubName}`,
+                                  );
+                                } catch (e) {
+                                  toast.error(
+                                    e instanceof Error ? e.message : "Error",
+                                  );
+                                }
+                              }}
+                            >
+                              Sí
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="h-6 px-2 text-[10px] bg-destructive/15 hover:bg-destructive/25 text-destructive border-0 animate-none"
+                              onClick={async () => {
+                                try {
+                                  const candId =
+                                    (activeVoteSession.ballotType ===
+                                      "CANDIDATE" &&
+                                      activeVoteSession.candidates?.[0]?.id) ||
+                                    undefined;
+                                  await votingApi.manual(
+                                    meetingId,
+                                    activeVoteSession.id,
+                                    club.clubId,
+                                    "NO",
+                                    candId,
+                                  );
+                                  toast.success(
+                                    `En contra registrado para ${club.clubName}`,
+                                  );
+                                } catch (e) {
+                                  toast.error(
+                                    e instanceof Error ? e.message : "Error",
+                                  );
+                                }
+                              }}
+                            >
+                              No
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="h-6 px-2 text-[10px] bg-muted-foreground/15 hover:bg-muted-foreground/25 text-muted-foreground border-0 animate-none"
+                              onClick={async () => {
+                                try {
+                                  const candId =
+                                    (activeVoteSession.ballotType ===
+                                      "CANDIDATE" &&
+                                      activeVoteSession.candidates?.[0]?.id) ||
+                                    undefined;
+                                  await votingApi.manual(
+                                    meetingId,
+                                    activeVoteSession.id,
+                                    club.clubId,
+                                    "ABSTAIN",
+                                    candId,
+                                  );
+                                  toast.success(
+                                    `Abstención registrada para ${club.clubName}`,
+                                  );
+                                } catch (e) {
+                                  toast.error(
+                                    e instanceof Error ? e.message : "Error",
+                                  );
+                                }
+                              }}
+                            >
+                              Abs
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
           </div>
         ) : (
           <div className="space-y-4">
@@ -1134,7 +1326,9 @@ export function AdminVotingControl({
             {/* Post-close result + actions */}
             {voteResult && (
               <div className="space-y-3 p-4 bg-muted/10 border border-border rounded-xl">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 text-center">Último resultado</p>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 text-center">
+                  Último resultado
+                </p>
                 <VoteResultSummary
                   yes={voteResult.yes}
                   no={voteResult.no}
@@ -1150,112 +1344,152 @@ export function AdminVotingControl({
                 />
 
                 {/* RDR Tiebreaker — YES/NO vote */}
-                {voteResult.isTied && voteResult.ballotType !== 'CANDIDATE' && !voteResult.rdrTiebreakerUsed && (
-                  <div className="rounded-lg border border-warning/45 bg-warning/5 p-3 space-y-2 mt-3 text-left">
-                    <p className="text-xs font-semibold text-warning-foreground">⚠️ Desempate RDR (Art. 49)</p>
-                    <p className="text-[11px] text-muted-foreground">La votación resultó en empate. Seleccioná el voto de calidad:</p>
-                    <div className="flex gap-1.5 justify-between">
-                      <div className="flex gap-1">
+                {voteResult.isTied &&
+                  voteResult.ballotType !== "CANDIDATE" &&
+                  !voteResult.rdrTiebreakerUsed && (
+                    <div className="rounded-lg border border-warning/45 bg-warning/5 p-3 space-y-2 mt-3 text-left">
+                      <p className="text-xs font-semibold text-warning-foreground">
+                        ⚠️ Desempate RDR (Art. 49)
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        La votación resultó en empate. Seleccioná el voto de
+                        calidad:
+                      </p>
+                      <div className="flex gap-1.5 justify-between">
+                        <div className="flex gap-1">
+                          <Button
+                            size="sm"
+                            variant={
+                              rdrChoice === "YES" ? "default" : "outline"
+                            }
+                            className={cn(
+                              "h-7 text-xs font-medium",
+                              rdrChoice === "YES" &&
+                                "bg-success hover:bg-success/90 border-success text-white",
+                            )}
+                            onClick={() => setRdrChoice("YES")}
+                          >
+                            Sí
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant={rdrChoice === "NO" ? "default" : "outline"}
+                            className={cn(
+                              "h-7 text-xs font-medium",
+                              rdrChoice === "NO" &&
+                                "bg-destructive hover:bg-destructive/90 border-destructive text-white",
+                            )}
+                            onClick={() => setRdrChoice("NO")}
+                          >
+                            No
+                          </Button>
+                        </div>
                         <Button
                           size="sm"
-                          variant={rdrChoice === 'YES' ? 'default' : 'outline'}
-                          className={cn("h-7 text-xs font-medium", rdrChoice === 'YES' && 'bg-success hover:bg-success/90 border-success text-white')}
-                          onClick={() => setRdrChoice('YES')}
+                          className="h-7 text-xs font-semibold"
+                          disabled={!rdrChoice || actionLoading}
+                          onClick={() =>
+                            handleRdrTiebreaker(voteResult.voteSessionId)
+                          }
                         >
-                          Sí
+                          {actionLoading ? "..." : "Aplicar"}
                         </Button>
-                        <Button
-                          size="sm"
-                          variant={rdrChoice === 'NO' ? 'default' : 'outline'}
-                          className={cn("h-7 text-xs font-medium", rdrChoice === 'NO' && 'bg-destructive hover:bg-destructive/90 border-destructive text-white')}
-                          onClick={() => setRdrChoice('NO')}
-                        >
-                          No
-                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                {/* RDR Tiebreaker — Candidate vote */}
+                {voteResult.candidateResult?.isTied &&
+                  !voteResult.rdrTiebreakerUsed && (
+                    <div className="rounded-lg border border-warning/45 bg-warning/5 p-3 space-y-2.5 mt-3 text-left">
+                      <p className="text-xs font-semibold text-warning-foreground">
+                        ⚠️ Desempate RDR — Elección (Art. 49)
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        Elegí al candidato que ganará el empate:
+                      </p>
+                      <div className="space-y-1">
+                        {tiedCandidates.map((c) => (
+                          <button
+                            key={c.candidateId}
+                            onClick={() => setRdrCandidateId(c.candidateId)}
+                            className={cn(
+                              "w-full text-left rounded-md px-2.5 py-1.5 text-xs border transition-colors font-medium flex items-center justify-between",
+                              rdrCandidateId === c.candidateId
+                                ? "border-primary bg-primary/10 text-primary font-semibold"
+                                : "border-border bg-background hover:bg-muted",
+                            )}
+                          >
+                            <span>{c.displayName}</span>
+                            <span className="font-semibold tabular-nums">
+                              {c.votes} v
+                            </span>
+                          </button>
+                        ))}
                       </div>
                       <Button
                         size="sm"
-                        className="h-7 text-xs font-semibold"
-                        disabled={!rdrChoice || actionLoading}
-                        onClick={() => handleRdrTiebreaker(voteResult.voteSessionId)}
+                        className="w-full h-8 text-xs mt-1 font-semibold"
+                        disabled={!rdrCandidateId || actionLoading}
+                        onClick={() =>
+                          handleRdrCandidateTiebreaker(voteResult.voteSessionId)
+                        }
                       >
-                        {actionLoading ? '...' : 'Aplicar'}
+                        {actionLoading ? "Aplicando..." : "Confirmar ganador"}
                       </Button>
                     </div>
-                  </div>
-                )}
-
-                {/* RDR Tiebreaker — Candidate vote */}
-                {voteResult.candidateResult?.isTied && !voteResult.rdrTiebreakerUsed && (
-                  <div className="rounded-lg border border-warning/45 bg-warning/5 p-3 space-y-2.5 mt-3 text-left">
-                    <p className="text-xs font-semibold text-warning-foreground">⚠️ Desempate RDR — Elección (Art. 49)</p>
-                    <p className="text-[11px] text-muted-foreground">Elegí al candidato que ganará el empate:</p>
-                    <div className="space-y-1">
-                      {tiedCandidates.map((c) => (
-                        <button
-                          key={c.candidateId}
-                          onClick={() => setRdrCandidateId(c.candidateId)}
-                          className={cn(
-                            'w-full text-left rounded-md px-2.5 py-1.5 text-xs border transition-colors font-medium flex items-center justify-between',
-                            rdrCandidateId === c.candidateId
-                              ? 'border-primary bg-primary/10 text-primary font-semibold'
-                              : 'border-border bg-background hover:bg-muted',
-                          )}
-                        >
-                          <span>{c.displayName}</span>
-                          <span className="font-semibold tabular-nums">{c.votes} v</span>
-                        </button>
-                      ))}
-                    </div>
-                    <Button
-                      size="sm"
-                      className="w-full h-8 text-xs mt-1 font-semibold"
-                      disabled={!rdrCandidateId || actionLoading}
-                      onClick={() => handleRdrCandidateTiebreaker(voteResult.voteSessionId)}
-                    >
-                      {actionLoading ? 'Aplicando...' : 'Confirmar ganador'}
-                    </Button>
-                  </div>
-                )}
+                  )}
 
                 {/* Open runoff */}
-                {voteResult.candidateResult?.needsRunoff && !voteResult.candidateResult?.winner && (
-                  <div className="rounded-lg border border-info/40 bg-info/5 p-3 space-y-2 mt-3 text-left">
-                    <p className="text-xs font-semibold text-info-foreground">🗳️ Segunda vuelta requerida (Art. 64i)</p>
-                    <p className="text-[11px] text-muted-foreground">Ningún candidato obtuvo mayoría absoluta. Se requiere segunda vuelta.</p>
-                    <Button
-                      size="sm"
-                      className="w-full h-8 text-xs mt-1 font-semibold"
-                      disabled={actionLoading}
-                      onClick={() => handleOpenRunoff(voteResult.voteSessionId)}
-                    >
-                      {actionLoading ? 'Abriendo...' : 'Abrir segunda vuelta'}
-                    </Button>
-                  </div>
-                )}
+                {voteResult.candidateResult?.needsRunoff &&
+                  !voteResult.candidateResult?.winner && (
+                    <div className="rounded-lg border border-info/40 bg-info/5 p-3 space-y-2 mt-3 text-left">
+                      <p className="text-xs font-semibold text-info-foreground">
+                        🗳️ Segunda vuelta requerida (Art. 64i)
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        Ningún candidato obtuvo mayoría absoluta. Se requiere
+                        segunda vuelta.
+                      </p>
+                      <Button
+                        size="sm"
+                        className="w-full h-8 text-xs mt-1 font-semibold"
+                        disabled={actionLoading}
+                        onClick={() =>
+                          handleOpenRunoff(voteResult.voteSessionId)
+                        }
+                      >
+                        {actionLoading ? "Abriendo..." : "Abrir segunda vuelta"}
+                      </Button>
+                    </div>
+                  )}
               </div>
             )}
 
             {/* Launch new vote form */}
             {meetingId && !currentTopicIsMotion && currentTopic && (
               <div className="space-y-3.5 pt-2 text-left">
-                <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Lanzar votación en este tema</h4>
-                
+                <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  Lanzar votación en este tema
+                </h4>
+
                 {/* Vote type selector */}
                 <div className="space-y-1">
-                  <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Tipo de votación</Label>
+                  <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Tipo de votación
+                  </Label>
                   <Select
                     value={voteType}
                     onValueChange={(val: any) => {
                       setVoteType(val);
-                      if (val === 'GENERAL') {
-                        setBallotType('YES_NO');
-                        setRequiredMajority('SIMPLE');
+                      if (val === "GENERAL") {
+                        setBallotType("YES_NO");
+                        setRequiredMajority("SIMPLE");
                       } else {
-                        setBallotType('CANDIDATE');
-                        setRequiredMajority('ABSOLUTE');
+                        setBallotType("CANDIDATE");
+                        setRequiredMajority("ABSOLUTE");
                         if (candidates.length < 1) {
-                          setCandidates([{ displayName: '' }]);
+                          setCandidates([{ displayName: "" }]);
                         }
                       }
                     }}
@@ -1264,30 +1498,45 @@ export function AdminVotingControl({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="GENERAL">Moción General (Sí/No/Abs)</SelectItem>
-                      <SelectItem value="RDR">Elección de RDR (Art. 64)</SelectItem>
-                      <SelectItem value="EVENT">Elección de Sede (Eventos)</SelectItem>
-                      <SelectItem value="CUSTOM_CANDIDATE">Elección Personalizada</SelectItem>
+                      <SelectItem value="GENERAL">
+                        Moción General (Sí/No/Abs)
+                      </SelectItem>
+                      <SelectItem value="RDR">
+                        Elección de RDR (Art. 64)
+                      </SelectItem>
+                      <SelectItem value="EVENT">
+                        Elección de Sede (Eventos)
+                      </SelectItem>
+                      <SelectItem value="CUSTOM_CANDIDATE">
+                        Elección Personalizada
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 {/* Candidate list configuration */}
-                {ballotType === 'CANDIDATE' && (
+                {ballotType === "CANDIDATE" && (
                   <div className="space-y-2 rounded-lg border border-border p-3 bg-muted/5">
-                    <Label className="text-[11px] font-semibold">Candidatos / Opciones</Label>
-                    
-                    {voteType === 'RDR' ? (
+                    <Label className="text-[11px] font-semibold">
+                      Candidatos / Opciones
+                    </Label>
+
+                    {voteType === "RDR" ? (
                       <div className="space-y-2">
                         {candidates.map((c, idx) => (
                           <div key={idx} className="flex gap-2 items-center">
-                            <span className="text-xs font-bold text-primary w-4">{String.fromCharCode(65 + idx)}</span>
+                            <span className="text-xs font-bold text-primary w-4">
+                              {String.fromCharCode(65 + idx)}
+                            </span>
                             <Input
                               placeholder={`Nombre del candidato ${idx + 1}...`}
                               value={c.displayName}
                               onChange={(e) => {
                                 const next = [...candidates];
-                                next[idx] = { displayName: e.target.value, userId: null };
+                                next[idx] = {
+                                  displayName: e.target.value,
+                                  userId: null,
+                                };
                                 setCandidates(next);
                               }}
                               className="h-8 text-xs flex-1"
@@ -1296,7 +1545,11 @@ export function AdminVotingControl({
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => setCandidates(candidates.filter((_, i) => i !== idx))}
+                                onClick={() =>
+                                  setCandidates(
+                                    candidates.filter((_, i) => i !== idx),
+                                  )
+                                }
                                 className="h-8 px-2 text-destructive hover:bg-destructive/5 shrink-0"
                               >
                                 Quitar
@@ -1307,19 +1560,26 @@ export function AdminVotingControl({
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => setCandidates([...candidates, { displayName: '', userId: null }])}
+                          onClick={() =>
+                            setCandidates([
+                              ...candidates,
+                              { displayName: "", userId: null },
+                            ])
+                          }
                           className="h-7 text-xs w-full"
                         >
                           ＋ Añadir candidato
                         </Button>
                       </div>
-                    ) : voteType === 'EVENT' ? (
+                    ) : voteType === "EVENT" ? (
                       <div className="space-y-2">
                         {candidates.map((c, idx) => (
                           <div key={idx} className="flex gap-2 items-center">
-                            <span className="text-xs font-bold text-primary w-4">{String.fromCharCode(65 + idx)}</span>
+                            <span className="text-xs font-bold text-primary w-4">
+                              {String.fromCharCode(65 + idx)}
+                            </span>
                             <Select
-                              value={c.displayName || '__none__'}
+                              value={c.displayName || "__none__"}
                               onValueChange={(v) => {
                                 const next = [...candidates];
                                 next[idx] = { displayName: v, userId: null };
@@ -1330,7 +1590,9 @@ export function AdminVotingControl({
                                 <SelectValue placeholder="Seleccionar Club" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="__none__">— Seleccionar Club —</SelectItem>
+                                <SelectItem value="__none__">
+                                  — Seleccionar Club —
+                                </SelectItem>
                                 {availableClubs.map((club) => (
                                   <SelectItem key={club.id} value={club.name}>
                                     {club.name}
@@ -1342,7 +1604,11 @@ export function AdminVotingControl({
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => setCandidates(candidates.filter((_, i) => i !== idx))}
+                                onClick={() =>
+                                  setCandidates(
+                                    candidates.filter((_, i) => i !== idx),
+                                  )
+                                }
                                 className="h-8 px-2 text-destructive hover:bg-destructive/5 shrink-0"
                               >
                                 Quitar
@@ -1353,7 +1619,12 @@ export function AdminVotingControl({
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => setCandidates([...candidates, { displayName: '', userId: null }])}
+                          onClick={() =>
+                            setCandidates([
+                              ...candidates,
+                              { displayName: "", userId: null },
+                            ])
+                          }
                           className="h-7 text-xs w-full"
                         >
                           ＋ Añadir sede
@@ -1363,13 +1634,18 @@ export function AdminVotingControl({
                       <div className="space-y-2">
                         {candidates.map((cand, idx) => (
                           <div key={idx} className="flex gap-2 items-center">
-                            <span className="text-xs font-bold text-primary w-4">{String.fromCharCode(65 + idx)}</span>
+                            <span className="text-xs font-bold text-primary w-4">
+                              {String.fromCharCode(65 + idx)}
+                            </span>
                             <Input
                               placeholder={`Candidato ${idx + 1}...`}
                               value={cand.displayName}
                               onChange={(e) => {
                                 const next = [...candidates];
-                                next[idx] = { displayName: e.target.value, userId: cand.userId };
+                                next[idx] = {
+                                  displayName: e.target.value,
+                                  userId: cand.userId,
+                                };
                                 setCandidates(next);
                               }}
                               className="h-8 text-xs flex-1"
@@ -1378,7 +1654,11 @@ export function AdminVotingControl({
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => setCandidates(candidates.filter((_, i) => i !== idx))}
+                                onClick={() =>
+                                  setCandidates(
+                                    candidates.filter((_, i) => i !== idx),
+                                  )
+                                }
                                 className="h-8 px-2 text-destructive hover:bg-destructive/5 shrink-0"
                               >
                                 Quitar
@@ -1389,7 +1669,12 @@ export function AdminVotingControl({
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => setCandidates([...candidates, { displayName: '', userId: null }])}
+                          onClick={() =>
+                            setCandidates([
+                              ...candidates,
+                              { displayName: "", userId: null },
+                            ])
+                          }
                           className="h-7 text-xs w-full"
                         >
                           ＋ Añadir opción
@@ -1402,8 +1687,13 @@ export function AdminVotingControl({
                 {/* Voting method & majority controls */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Sistema</Label>
-                    <Select value={votingMethod} onValueChange={setVotingMethod}>
+                    <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      Sistema
+                    </Label>
+                    <Select
+                      value={votingMethod}
+                      onValueChange={setVotingMethod}
+                    >
                       <SelectTrigger className="h-8 text-xs w-full">
                         <SelectValue />
                       </SelectTrigger>
@@ -1414,8 +1704,13 @@ export function AdminVotingControl({
                     </Select>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Mayoría</Label>
-                    <Select value={requiredMajority} onValueChange={setRequiredMajority}>
+                    <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      Mayoría
+                    </Label>
+                    <Select
+                      value={requiredMajority}
+                      onValueChange={setRequiredMajority}
+                    >
                       <SelectTrigger className="h-8 text-xs w-full">
                         <SelectValue />
                       </SelectTrigger>
@@ -1432,7 +1727,9 @@ export function AdminVotingControl({
                 {/* Open vote button */}
                 <Button
                   className="w-full mt-1.5 h-9 text-xs font-bold"
-                  onClick={() => currentTopic && handleOpenVoteClick(currentTopic.id)}
+                  onClick={() =>
+                    currentTopic && handleOpenVoteClick(currentTopic.id)
+                  }
                 >
                   🚀 Lanzar Votación General
                 </Button>
@@ -1455,7 +1752,7 @@ export function AdminVotingControl({
             <DialogDescription>
               {pendingClubs.length > 0
                 ? `Hay ${pendingClubs.length} clubes que aún no han emitido su voto. Podés registrar sus votos manualmente o finalizar la votación con los votos actuales.`
-                : '¿Estás seguro? No se podrán registrar más votos una vez cerrada.'}
+                : "¿Estás seguro? No se podrán registrar más votos una vez cerrada."}
             </DialogDescription>
           </DialogHeader>
 
@@ -1472,29 +1769,42 @@ export function AdminVotingControl({
                   >
                     <span className="text-xs font-medium truncate flex-1 flex flex-col text-left">
                       <span>{club.clubName}</span>
-                      <span className={cn(
-                        'text-[10px]',
-                        club.connected ? 'text-success font-medium' : 'text-muted-foreground'
-                      )}>
-                        {club.connected ? '● Conectado (Activo)' : '○ Desconectado (Inactivo)'}
+                      <span
+                        className={cn(
+                          "text-[10px]",
+                          club.connected
+                            ? "text-success font-medium"
+                            : "text-muted-foreground",
+                        )}
+                      >
+                        {club.connected
+                          ? "● Conectado (Activo)"
+                          : "○ Desconectado (Inactivo)"}
                       </span>
                     </span>
-                    {activeVoteSession.votingMethod !== 'SECRET' ? (
-                      activeVoteSession.ballotType === 'CANDIDATE' && (activeVoteSession.candidates?.length ?? 0) > 1 ? (
+                    {activeVoteSession.votingMethod !== "SECRET" ? (
+                      activeVoteSession.ballotType === "CANDIDATE" &&
+                      (activeVoteSession.candidates?.length ?? 0) > 1 ? (
                         <div className="flex items-center gap-1.5 shrink-0">
                           <Select
                             onValueChange={async (candidateId) => {
                               try {
-                                  await votingApi.manual(
-                                    meetingId,
-                                    activeVoteSession.id,
-                                    club.clubId,
-                                    candidateId === 'ABSTAIN' ? 'ABSTAIN' : 'YES',
-                                    candidateId === 'ABSTAIN' ? undefined : candidateId,
-                                  );
-                                  toast.success(`Voto registrado para ${club.clubName}`);
+                                await votingApi.manual(
+                                  meetingId,
+                                  activeVoteSession.id,
+                                  club.clubId,
+                                  candidateId === "ABSTAIN" ? "ABSTAIN" : "YES",
+                                  candidateId === "ABSTAIN"
+                                    ? undefined
+                                    : candidateId,
+                                );
+                                toast.success(
+                                  `Voto registrado para ${club.clubName}`,
+                                );
                               } catch (e) {
-                                  toast.error(e instanceof Error ? e.message : 'Error');
+                                toast.error(
+                                  e instanceof Error ? e.message : "Error",
+                                );
                               }
                             }}
                           >
@@ -1507,7 +1817,9 @@ export function AdminVotingControl({
                                   {cand.displayName}
                                 </SelectItem>
                               ))}
-                              <SelectItem value="ABSTAIN">Abstención</SelectItem>
+                              <SelectItem value="ABSTAIN">
+                                Abstención
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -1518,11 +1830,25 @@ export function AdminVotingControl({
                             className="h-7 px-2 text-[10px] bg-success/15 hover:bg-success/25 text-success border-0 animate-none"
                             onClick={async () => {
                               try {
-                                const candId = activeVoteSession.ballotType === 'CANDIDATE' && activeVoteSession.candidates?.[0]?.id || undefined;
-                                await votingApi.manual(meetingId, activeVoteSession.id, club.clubId, 'YES', candId);
-                                toast.success(`A favor registrado para ${club.clubName}`);
+                                const candId =
+                                  (activeVoteSession.ballotType ===
+                                    "CANDIDATE" &&
+                                    activeVoteSession.candidates?.[0]?.id) ||
+                                  undefined;
+                                await votingApi.manual(
+                                  meetingId,
+                                  activeVoteSession.id,
+                                  club.clubId,
+                                  "YES",
+                                  candId,
+                                );
+                                toast.success(
+                                  `A favor registrado para ${club.clubName}`,
+                                );
                               } catch (e) {
-                                toast.error(e instanceof Error ? e.message : 'Error');
+                                toast.error(
+                                  e instanceof Error ? e.message : "Error",
+                                );
                               }
                             }}
                           >
@@ -1533,11 +1859,25 @@ export function AdminVotingControl({
                             className="h-7 px-2 text-[10px] bg-destructive/15 hover:bg-destructive/25 text-destructive border-0 animate-none"
                             onClick={async () => {
                               try {
-                                const candId = activeVoteSession.ballotType === 'CANDIDATE' && activeVoteSession.candidates?.[0]?.id || undefined;
-                                await votingApi.manual(meetingId, activeVoteSession.id, club.clubId, 'NO', candId);
-                                toast.success(`En contra registrado para ${club.clubName}`);
+                                const candId =
+                                  (activeVoteSession.ballotType ===
+                                    "CANDIDATE" &&
+                                    activeVoteSession.candidates?.[0]?.id) ||
+                                  undefined;
+                                await votingApi.manual(
+                                  meetingId,
+                                  activeVoteSession.id,
+                                  club.clubId,
+                                  "NO",
+                                  candId,
+                                );
+                                toast.success(
+                                  `En contra registrado para ${club.clubName}`,
+                                );
                               } catch (e) {
-                                toast.error(e instanceof Error ? e.message : 'Error');
+                                toast.error(
+                                  e instanceof Error ? e.message : "Error",
+                                );
                               }
                             }}
                           >
@@ -1548,11 +1888,25 @@ export function AdminVotingControl({
                             className="h-7 px-2 text-[10px] bg-muted-foreground/15 hover:bg-muted-foreground/25 text-muted-foreground border-0 animate-none"
                             onClick={async () => {
                               try {
-                                const candId = activeVoteSession.ballotType === 'CANDIDATE' && activeVoteSession.candidates?.[0]?.id || undefined;
-                                await votingApi.manual(meetingId, activeVoteSession.id, club.clubId, 'ABSTAIN', candId);
-                                toast.success(`Abstención registrada para ${club.clubName}`);
+                                const candId =
+                                  (activeVoteSession.ballotType ===
+                                    "CANDIDATE" &&
+                                    activeVoteSession.candidates?.[0]?.id) ||
+                                  undefined;
+                                await votingApi.manual(
+                                  meetingId,
+                                  activeVoteSession.id,
+                                  club.clubId,
+                                  "ABSTAIN",
+                                  candId,
+                                );
+                                toast.success(
+                                  `Abstención registrada para ${club.clubName}`,
+                                );
                               } catch (e) {
-                                toast.error(e instanceof Error ? e.message : 'Error');
+                                toast.error(
+                                  e instanceof Error ? e.message : "Error",
+                                );
                               }
                             }}
                           >
@@ -1572,15 +1926,20 @@ export function AdminVotingControl({
           )}
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmCloseVote(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setConfirmCloseVote(false)}
+            >
               Cancelar
             </Button>
             <Button
               variant="destructive"
               disabled={closing}
-              onClick={() => activeVoteSession && closeVote(activeVoteSession.id)}
+              onClick={() =>
+                activeVoteSession && closeVote(activeVoteSession.id)
+              }
             >
-              {closing ? 'Cerrando...' : 'Cerrar votación de todas formas'}
+              {closing ? "Cerrando..." : "Cerrar votación de todas formas"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1591,7 +1950,7 @@ export function AdminVotingControl({
         open={showVoteReadyModal}
         onOpenChange={setShowVoteReadyModal}
         clubAttendance={clubAttendance}
-        topicTitle={activeVoteSession?.topicTitle ?? ''}
+        topicTitle={activeVoteSession?.topicTitle ?? ""}
         onContinue={() => {
           if (pendingVoteTopicId) openVote(pendingVoteTopicId);
         }}
@@ -1617,20 +1976,27 @@ export function AdminMotionsControl({
   onVoteOpened,
   className,
 }: AdminMotionsControlProps) {
-  const [motionVoteMethod, setMotionVoteMethod] = useState<Record<string, 'PUBLIC' | 'SECRET'>>({});
-  const [motionVoteMajority, setMotionVoteMajority] = useState<Record<string, 'SIMPLE' | 'ABSOLUTE' | 'TWO_THIRDS' | 'THREE_QUARTERS'>>({});
+  const [motionVoteMethod, setMotionVoteMethod] = useState<
+    Record<string, "PUBLIC" | "SECRET">
+  >({});
+  const [motionVoteMajority, setMotionVoteMajority] = useState<
+    Record<string, "SIMPLE" | "ABSOLUTE" | "TWO_THIRDS" | "THREE_QUARTERS">
+  >({});
   const [actionLoading, setActionLoading] = useState(false);
 
   async function handleLaunchMotionVote(motionId: string) {
-    const method = motionVoteMethod[motionId] ?? 'PUBLIC';
-    const majority = motionVoteMajority[motionId] ?? 'SIMPLE';
+    const method = motionVoteMethod[motionId] ?? "PUBLIC";
+    const majority = motionVoteMajority[motionId] ?? "SIMPLE";
     setActionLoading(true);
     try {
-      await motionsApi.launchVote(meetingId, motionId, { votingMethod: method, requiredMajority: majority });
-      toast.success('Votación de moción iniciada.');
+      await motionsApi.launchVote(meetingId, motionId, {
+        votingMethod: method,
+        requiredMajority: majority,
+      });
+      toast.success("Votación de moción iniciada.");
       onVoteOpened?.();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error al lanzar votación');
+      toast.error(e instanceof Error ? e.message : "Error al lanzar votación");
     } finally {
       setActionLoading(false);
     }
@@ -1649,39 +2015,67 @@ export function AdminMotionsControl({
         ) : (
           <div className="space-y-3.5">
             {motions.map((m) => {
-              const isProposed = m.status === 'PROPOSED';
-              const isSeconded = m.status === 'SECONDED';
-              const isVoting = m.status === 'VOTING';
-              const isApproved = m.status === 'APPROVED';
-              const isRejected = m.status === 'REJECTED';
+              const isProposed = m.status === "PROPOSED";
+              const isSeconded = m.status === "SECONDED";
+              const isVoting = m.status === "VOTING";
+              const isApproved = m.status === "APPROVED";
+              const isRejected = m.status === "REJECTED";
               const canVote = isSeconded;
 
               return (
-                <div key={m.id} className="rounded-xl border border-border p-3.5 space-y-3 bg-muted/5">
+                <div
+                  key={m.id}
+                  className="rounded-xl border border-border p-3.5 space-y-3 bg-muted/5"
+                >
                   <div className="flex items-start justify-between gap-3 flex-wrap sm:flex-nowrap">
                     <div className="space-y-1 min-w-0 flex-1 text-left">
-                      <h4 className="font-bold text-sm text-foreground truncate">{m.title}</h4>
-                      {m.description && <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{m.description}</p>}
+                      <h4 className="font-bold text-sm text-foreground truncate">
+                        {m.title}
+                      </h4>
+                      {m.description && (
+                        <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
+                          {m.description}
+                        </p>
+                      )}
                       <p className="text-[10px] text-muted-foreground mt-1">
-                        Propone: <span className="font-semibold text-foreground">{m.proposedByClubName}</span>
+                        Propone:{" "}
+                        <span className="font-semibold text-foreground">
+                          {m.proposedByClubName}
+                        </span>
                         {m.secondedByClubName && (
-                          <> • Secunda: <span className="font-semibold text-foreground">{m.secondedByClubName}</span></>
+                          <>
+                            {" "}
+                            • Secunda:{" "}
+                            <span className="font-semibold text-foreground">
+                              {m.secondedByClubName}
+                            </span>
+                          </>
                         )}
                       </p>
                     </div>
                     <Badge
                       className="shrink-0 text-[10px] px-2 py-0.5 font-semibold"
                       variant={
-                        isApproved ? 'success' :
-                        isRejected ? 'destructive' :
-                        isVoting ? 'warning' :
-                        isSeconded ? 'info' : 'outline'
+                        isApproved
+                          ? "success"
+                          : isRejected
+                            ? "destructive"
+                            : isVoting
+                              ? "warning"
+                              : isSeconded
+                                ? "info"
+                                : "outline"
                       }
                     >
-                      {isApproved ? 'Aprobada' :
-                       isRejected ? 'Rechazada' :
-                       isVoting ? 'Votando' :
-                       isSeconded ? 'Segundada' : 'Propuesta'}
+                      {isApproved
+                        ? "Aprobada"
+                        : isRejected
+                          ? "Rechazada"
+                          : isVoting
+                            ? "Votando"
+                            : isSeconded
+                              ? "Segundada"
+                              : "Propuesta"}
                     </Badge>
                   </div>
 
@@ -1689,10 +2083,17 @@ export function AdminMotionsControl({
                     <div className="pt-2.5 border-t border-border/50 flex flex-wrap items-center justify-between gap-2.5">
                       <div className="flex gap-2 flex-1 min-w-[200px]">
                         <div className="space-y-0.5 flex-1 text-left">
-                          <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Sistema</label>
+                          <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
+                            Sistema
+                          </label>
                           <Select
-                            value={motionVoteMethod[m.id] ?? 'PUBLIC'}
-                            onValueChange={(val: any) => setMotionVoteMethod({ ...motionVoteMethod, [m.id]: val })}
+                            value={motionVoteMethod[m.id] ?? "PUBLIC"}
+                            onValueChange={(val: any) =>
+                              setMotionVoteMethod({
+                                ...motionVoteMethod,
+                                [m.id]: val,
+                              })
+                            }
                           >
                             <SelectTrigger className="h-7 text-xs px-2 py-0">
                               <SelectValue />
@@ -1704,10 +2105,17 @@ export function AdminMotionsControl({
                           </Select>
                         </div>
                         <div className="space-y-0.5 flex-1 text-left">
-                          <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Mayoría</label>
+                          <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
+                            Mayoría
+                          </label>
                           <Select
-                            value={motionVoteMajority[m.id] ?? 'SIMPLE'}
-                            onValueChange={(val: any) => setMotionVoteMajority({ ...motionVoteMajority, [m.id]: val })}
+                            value={motionVoteMajority[m.id] ?? "SIMPLE"}
+                            onValueChange={(val: any) =>
+                              setMotionVoteMajority({
+                                ...motionVoteMajority,
+                                [m.id]: val,
+                              })
+                            }
                           >
                             <SelectTrigger className="h-7 text-xs px-2 py-0">
                               <SelectValue />
@@ -1716,7 +2124,9 @@ export function AdminMotionsControl({
                               <SelectItem value="SIMPLE">Simple</SelectItem>
                               <SelectItem value="ABSOLUTE">Absoluta</SelectItem>
                               <SelectItem value="TWO_THIRDS">2/3</SelectItem>
-                              <SelectItem value="THREE_QUARTERS">3/4</SelectItem>
+                              <SelectItem value="THREE_QUARTERS">
+                                3/4
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -1763,60 +2173,70 @@ export function AdminTranscriptionControl({
       await meetingsApi.toggleTranscription(meetingId, !transcriptionEnabled);
       toast.success(
         !transcriptionEnabled
-          ? '🎙️ Transcripción habilitada. Los participantes podrán transcribir al hablar.'
-          : '🔇 Transcripción deshabilitada. No se grabará audio hasta que se reactive.',
+          ? "🎙️ Transcripción habilitada. Los participantes podrán transcribir al hablar."
+          : "🔇 Transcripción deshabilitada. No se grabará audio hasta que se reactive.",
       );
     } catch {
-      toast.error('No se pudo cambiar el estado de la transcripción.');
+      toast.error("No se pudo cambiar el estado de la transcripción.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Card className={cn('border', transcriptionEnabled ? 'border-primary/30' : 'border-border', className)}>
+    <Card
+      className={cn(
+        "border",
+        transcriptionEnabled ? "border-primary/30" : "border-border",
+        className,
+      )}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-base">🎙️</span>
-            <CardTitle className="text-sm font-semibold">Transcripción automática</CardTitle>
+            <CardTitle className="text-sm font-semibold">
+              Transcripción automática
+            </CardTitle>
           </div>
           <span
             className={cn(
-              'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold',
+              "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold",
               transcriptionEnabled
-                ? 'bg-primary/15 text-primary'
-                : 'bg-muted text-muted-foreground',
+                ? "bg-primary/15 text-primary"
+                : "bg-muted text-muted-foreground",
             )}
           >
             <span
               className={cn(
-                'size-1.5 rounded-full',
-                transcriptionEnabled ? 'bg-primary animate-pulse' : 'bg-muted-foreground/50',
+                "size-1.5 rounded-full",
+                transcriptionEnabled
+                  ? "bg-primary animate-pulse"
+                  : "bg-muted-foreground/50",
               )}
             />
-            {transcriptionEnabled ? 'Activa' : 'Inactiva'}
+            {transcriptionEnabled ? "Activa" : "Inactiva"}
           </span>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
         <p className="text-xs text-muted-foreground leading-relaxed">
           {transcriptionEnabled
-            ? 'Los participantes que reciban la palabra verán el modal para activar su micrófono y se grabará audio para el acta.'
-            : 'La transcripción está desactivada. Los participantes no verán el modal de micrófono aunque se les otorgue la palabra.'}
+            ? "Los participantes que reciban la palabra verán el modal para activar su micrófono y se grabará audio para el acta."
+            : "La transcripción está desactivada. Los participantes no verán el modal de micrófono aunque se les otorgue la palabra."}
         </p>
         <Button
-          variant={transcriptionEnabled ? 'outline' : 'default'}
+          variant={transcriptionEnabled ? "outline" : "default"}
           size="sm"
           className="w-full"
           onClick={handleToggle}
           disabled={loading}
         >
           {loading
-            ? 'Actualizando...'
+            ? "Actualizando..."
             : transcriptionEnabled
-              ? '🔇 Deshabilitar transcripción'
-              : '🎙️ Habilitar transcripción'}
+              ? "🔇 Deshabilitar transcripción"
+              : "🎙️ Habilitar transcripción"}
         </Button>
       </CardContent>
     </Card>

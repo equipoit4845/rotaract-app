@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { useAuthState } from '@/context/AuthContext';
-import { topicsApi, queueApi } from '@/lib/api';
-import { toast } from 'sonner';
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { useAuthState } from "@/context/AuthContext";
+import { topicsApi, queueApi } from "@/lib/api";
+import { toast } from "sonner";
 
 interface LiveTranscriberProps {
   meetingId: string;
@@ -33,16 +33,16 @@ function MicrophoneModal({ onActivate }: { onActivate: () => void }) {
   return createPortal(
     <div
       style={{
-        position: 'fixed',
+        position: "fixed",
         inset: 0,
         zIndex: 9999,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.65)',
-        backdropFilter: 'blur(4px)',
-        WebkitBackdropFilter: 'blur(4px)',
-        animation: 'ltFadeIn 0.2s ease',
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "rgba(0, 0, 0, 0.65)",
+        backdropFilter: "blur(4px)",
+        WebkitBackdropFilter: "blur(4px)",
+        animation: "ltFadeIn 0.2s ease",
       }}
     >
       <style>{`
@@ -53,31 +53,31 @@ function MicrophoneModal({ onActivate }: { onActivate: () => void }) {
       `}</style>
       <div
         style={{
-          background: '#ffffff',
-          borderRadius: '20px',
-          padding: '40px 36px',
-          maxWidth: '440px',
-          width: '90%',
-          boxShadow: '0 24px 60px rgba(0,0,0,0.25)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '20px',
-          animation: 'ltSlideUp 0.25s ease',
-          textAlign: 'center',
+          background: "#ffffff",
+          borderRadius: "20px",
+          padding: "40px 36px",
+          maxWidth: "440px",
+          width: "90%",
+          boxShadow: "0 24px 60px rgba(0,0,0,0.25)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "20px",
+          animation: "ltSlideUp 0.25s ease",
+          textAlign: "center",
         }}
       >
         {/* Mic icon */}
         <div
           style={{
-            width: '72px',
-            height: '72px',
-            borderRadius: '50%',
-            background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 8px 24px rgba(37,99,235,0.35)',
+            width: "72px",
+            height: "72px",
+            borderRadius: "50%",
+            background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 8px 24px rgba(37,99,235,0.35)",
             flexShrink: 0,
           }}
         >
@@ -88,12 +88,12 @@ function MicrophoneModal({ onActivate }: { onActivate: () => void }) {
         <div>
           <p
             style={{
-              margin: '0 0 4px 0',
-              fontSize: '11px',
+              margin: "0 0 4px 0",
+              fontSize: "11px",
               fontWeight: 600,
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-              color: '#2563eb',
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              color: "#2563eb",
             }}
           >
             Es tu turno de hablar
@@ -101,9 +101,9 @@ function MicrophoneModal({ onActivate }: { onActivate: () => void }) {
           <h2
             style={{
               margin: 0,
-              fontSize: '22px',
+              fontSize: "22px",
               fontWeight: 700,
-              color: '#0f172a',
+              color: "#0f172a",
               lineHeight: 1.3,
             }}
           >
@@ -115,13 +115,13 @@ function MicrophoneModal({ onActivate }: { onActivate: () => void }) {
         <p
           style={{
             margin: 0,
-            fontSize: '15px',
-            color: '#475569',
+            fontSize: "15px",
+            color: "#475569",
             lineHeight: 1.65,
           }}
         >
-          Tu micrófono será usado para la transcripción del acta{' '}
-          <strong style={{ color: '#0f172a', fontWeight: 600 }}>
+          Tu micrófono será usado para la transcripción del acta{" "}
+          <strong style={{ color: "#0f172a", fontWeight: 600 }}>
             solo cuando se habilite la palabra.
           </strong>
         </p>
@@ -131,18 +131,18 @@ function MicrophoneModal({ onActivate }: { onActivate: () => void }) {
           id="lt-activate-btn"
           onClick={onActivate}
           style={{
-            marginTop: '4px',
-            padding: '14px 32px',
-            fontSize: '15px',
+            marginTop: "4px",
+            padding: "14px 32px",
+            fontSize: "15px",
             fontWeight: 600,
-            color: '#ffffff',
-            background: '#2563eb',
-            border: 'none',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            width: '100%',
-            transition: 'background 0.15s ease, transform 0.1s ease',
-            boxShadow: '0 4px 14px rgba(37,99,235,0.4)',
+            color: "#ffffff",
+            background: "#2563eb",
+            border: "none",
+            borderRadius: "12px",
+            cursor: "pointer",
+            width: "100%",
+            transition: "background 0.15s ease, transform 0.1s ease",
+            boxShadow: "0 4px 14px rgba(37,99,235,0.4)",
           }}
         >
           🎙️ Activar micrófono
@@ -153,7 +153,7 @@ function MicrophoneModal({ onActivate }: { onActivate: () => void }) {
   );
 }
 
-type FabState = 'recording' | 'confirming' | 'releasing';
+type FabState = "recording" | "confirming" | "releasing";
 
 /**
  * Botón flotante persistente mientras el usuario tiene la palabra.
@@ -170,24 +170,29 @@ function MicFloatingButton({
   onTap: () => void;
   onBehalfOf?: string | null;
 }) {
-  const visuals: Record<FabState, { bg: string; shadow: string; title: string; subtitle: string }> = {
+  const visuals: Record<
+    FabState,
+    { bg: string; shadow: string; title: string; subtitle: string }
+  > = {
     recording: {
-      bg: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
-      shadow: '0 8px 24px rgba(220,38,38,0.35)',
-      title: onBehalfOf ? `Transcribiendo en nombre de ${onBehalfOf}` : 'Transcribiendo tu voz',
-      subtitle: 'Tocá para terminar tu intervención',
+      bg: "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)",
+      shadow: "0 8px 24px rgba(220,38,38,0.35)",
+      title: onBehalfOf
+        ? `Transcribiendo en nombre de ${onBehalfOf}`
+        : "Transcribiendo tu voz",
+      subtitle: "Tocá para terminar tu intervención",
     },
     confirming: {
-      bg: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
-      shadow: '0 8px 24px rgba(217,119,6,0.4)',
-      title: '¿Terminar tu intervención?',
-      subtitle: 'Tocá de nuevo para confirmar',
+      bg: "linear-gradient(135deg, #d97706 0%, #b45309 100%)",
+      shadow: "0 8px 24px rgba(217,119,6,0.4)",
+      title: "¿Terminar tu intervención?",
+      subtitle: "Tocá de nuevo para confirmar",
     },
     releasing: {
-      bg: 'linear-gradient(135deg, #475569 0%, #334155 100%)',
-      shadow: '0 8px 24px rgba(51,65,85,0.35)',
-      title: 'Finalizando...',
-      subtitle: 'Guardando tu transcripción',
+      bg: "linear-gradient(135deg, #475569 0%, #334155 100%)",
+      shadow: "0 8px 24px rgba(51,65,85,0.35)",
+      title: "Finalizando...",
+      subtitle: "Guardando tu transcripción",
     },
   };
   const v = visuals[state];
@@ -195,12 +200,12 @@ function MicFloatingButton({
   return createPortal(
     <div
       style={{
-        position: 'fixed',
-        bottom: '24px',
-        left: '50%',
-        transform: 'translateX(-50%)',
+        position: "fixed",
+        bottom: "24px",
+        left: "50%",
+        transform: "translateX(-50%)",
         zIndex: 9998,
-        animation: 'ltFabIn 0.3s ease',
+        animation: "ltFabIn 0.3s ease",
       }}
     >
       <style>{`
@@ -219,55 +224,75 @@ function MicFloatingButton({
       <button
         id="lt-fab"
         onClick={onTap}
-        disabled={state === 'releasing'}
+        disabled={state === "releasing"}
         title={v.subtitle}
         style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          padding: '12px 22px 12px 14px',
-          borderRadius: '9999px',
-          border: 'none',
-          cursor: state === 'releasing' ? 'wait' : 'pointer',
-          color: '#ffffff',
-          fontSize: '14px',
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          padding: "12px 22px 12px 14px",
+          borderRadius: "9999px",
+          border: "none",
+          cursor: state === "releasing" ? "wait" : "pointer",
+          color: "#ffffff",
+          fontSize: "14px",
           fontWeight: 600,
-          transition: 'transform 0.1s ease, background 0.2s ease',
+          transition: "transform 0.1s ease, background 0.2s ease",
           background: v.bg,
-          animation: state === 'recording' ? 'ltPulseRing 1.6s ease-out infinite' : 'none',
+          animation:
+            state === "recording"
+              ? "ltPulseRing 1.6s ease-out infinite"
+              : "none",
           boxShadow: v.shadow,
         }}
       >
         <span
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '38px',
-            height: '38px',
-            borderRadius: '50%',
-            background: 'rgba(255,255,255,0.18)',
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "38px",
+            height: "38px",
+            borderRadius: "50%",
+            background: "rgba(255,255,255,0.18)",
             flexShrink: 0,
           }}
         >
           <MicIcon size={20} />
         </span>
-        <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1.25 }}>
+        <span
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-start",
+            lineHeight: 1.25,
+          }}
+        >
           <span>{v.title}</span>
-          <span style={{ fontSize: '11px', fontWeight: 500, opacity: 0.85 }}>{v.subtitle}</span>
+          <span style={{ fontSize: "11px", fontWeight: 500, opacity: 0.85 }}>
+            {v.subtitle}
+          </span>
         </span>
-        {state === 'recording' && (
-          <span style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', height: '20px', marginLeft: '4px' }}>
+        {state === "recording" && (
+          <span
+            style={{
+              display: "flex",
+              alignItems: "flex-end",
+              gap: "3px",
+              height: "20px",
+              marginLeft: "4px",
+            }}
+          >
             {[0, 1, 2, 3].map((i) => (
               <span
                 key={i}
                 style={{
-                  width: '3px',
-                  height: '20px',
-                  borderRadius: '2px',
-                  background: 'rgba(255,255,255,0.9)',
+                  width: "3px",
+                  height: "20px",
+                  borderRadius: "2px",
+                  background: "rgba(255,255,255,0.9)",
                   animation: `ltWave 1s ease-in-out ${i * 0.15}s infinite`,
-                  transformOrigin: 'bottom',
+                  transformOrigin: "bottom",
                 }}
               />
             ))}
@@ -296,13 +321,18 @@ export function LiveTranscriber({
   const chunkTimeoutRef = useRef<any>(null);
   const confirmTimeoutRef = useRef<any>(null);
 
-  const isSpeaking = !!(user && currentSpeakerId && currentSpeakerId === user.id && transcriptionEnabled);
+  const isSpeaking = !!(
+    user &&
+    currentSpeakerId &&
+    currentSpeakerId === user.id &&
+    transcriptionEnabled
+  );
 
   // Keep latest state in refs to prevent closure stale state bugs
   const isSpeakingRef = useRef(isSpeaking);
   const currentTopicIdRef = useRef(currentTopicId);
   const onBehalfOfRef = useRef(onBehalfOf);
-  const mimeTypeRef = useRef('audio/webm');
+  const mimeTypeRef = useRef("audio/webm");
 
   useEffect(() => {
     onBehalfOfRef.current = onBehalfOf;
@@ -325,11 +355,15 @@ export function LiveTranscriber({
   useEffect(() => {
     currentTopicIdRef.current = currentTopicId;
     // If topic changes while recording, trigger slice immediately to flush old topic audio
-    if (isSpeaking && mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+    if (
+      isSpeaking &&
+      mediaRecorderRef.current &&
+      mediaRecorderRef.current.state === "recording"
+    ) {
       try {
         mediaRecorderRef.current.stop();
       } catch (e) {
-        console.error('Error stopping recorder on topic change:', e);
+        console.error("Error stopping recorder on topic change:", e);
       }
     }
   }, [currentTopicId, isSpeaking]);
@@ -340,7 +374,7 @@ export function LiveTranscriber({
       chunkTimeoutRef.current = null;
     }
     if (mediaRecorderRef.current) {
-      if (mediaRecorderRef.current.state === 'recording') {
+      if (mediaRecorderRef.current.state === "recording") {
         try {
           mediaRecorderRef.current.stop();
         } catch (e) {}
@@ -375,16 +409,22 @@ export function LiveTranscriber({
     // Speaker is active and has activated microphone
     const startRecording = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
         streamRef.current = stream;
 
         // Determine best mimeType
-        let mimeType = 'audio/webm';
-        if (typeof MediaRecorder.isTypeSupported === 'function') {
-          if (MediaRecorder.isTypeSupported('audio/webm')) mimeType = 'audio/webm';
-          else if (MediaRecorder.isTypeSupported('audio/mp4')) mimeType = 'audio/mp4';
-          else if (MediaRecorder.isTypeSupported('audio/ogg')) mimeType = 'audio/ogg';
-          else if (MediaRecorder.isTypeSupported('audio/wav')) mimeType = 'audio/wav';
+        let mimeType = "audio/webm";
+        if (typeof MediaRecorder.isTypeSupported === "function") {
+          if (MediaRecorder.isTypeSupported("audio/webm"))
+            mimeType = "audio/webm";
+          else if (MediaRecorder.isTypeSupported("audio/mp4"))
+            mimeType = "audio/mp4";
+          else if (MediaRecorder.isTypeSupported("audio/ogg"))
+            mimeType = "audio/ogg";
+          else if (MediaRecorder.isTypeSupported("audio/wav"))
+            mimeType = "audio/wav";
         }
         mimeTypeRef.current = mimeType;
 
@@ -399,30 +439,45 @@ export function LiveTranscriber({
         };
 
         recorder.onstop = async () => {
-          const audioBlob = new Blob(audioChunks, { type: mimeTypeRef.current });
+          const audioBlob = new Blob(audioChunks, {
+            type: mimeTypeRef.current,
+          });
           audioChunks = [];
 
           const activeTopicId = currentTopicIdRef.current;
           if (audioBlob.size > 0 && isSpeakingRef.current && activeTopicId) {
-            let filename = 'audio.webm';
-            if (mimeTypeRef.current.includes('mp4')) filename = 'audio.mp4';
-            else if (mimeTypeRef.current.includes('wav')) filename = 'audio.wav';
-            else if (mimeTypeRef.current.includes('ogg')) filename = 'audio.ogg';
+            let filename = "audio.webm";
+            if (mimeTypeRef.current.includes("mp4")) filename = "audio.mp4";
+            else if (mimeTypeRef.current.includes("wav"))
+              filename = "audio.wav";
+            else if (mimeTypeRef.current.includes("ogg"))
+              filename = "audio.ogg";
 
             topicsApi
-              .addTranscriptionAudio(meetingId, activeTopicId, audioBlob, filename, onBehalfOfRef.current ?? undefined)
+              .addTranscriptionAudio(
+                meetingId,
+                activeTopicId,
+                audioBlob,
+                filename,
+                onBehalfOfRef.current ?? undefined,
+              )
               .catch((err) => {
-                console.error('Error transcribing audio chunk:', err);
+                console.error("Error transcribing audio chunk:", err);
               });
           }
 
           // Restart recording if still speaking
-          if (isSpeakingRef.current && currentTopicIdRef.current && mediaRecorderRef.current && stream.active) {
+          if (
+            isSpeakingRef.current &&
+            currentTopicIdRef.current &&
+            mediaRecorderRef.current &&
+            stream.active
+          ) {
             try {
               mediaRecorderRef.current.start();
               scheduleNextSlice();
             } catch (e) {
-              console.error('Error restarting media recorder:', e);
+              console.error("Error restarting media recorder:", e);
             }
           }
         };
@@ -430,11 +485,14 @@ export function LiveTranscriber({
         const scheduleNextSlice = () => {
           if (chunkTimeoutRef.current) clearTimeout(chunkTimeoutRef.current);
           chunkTimeoutRef.current = setTimeout(() => {
-            if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+            if (
+              mediaRecorderRef.current &&
+              mediaRecorderRef.current.state === "recording"
+            ) {
               try {
                 mediaRecorderRef.current.stop();
               } catch (e) {
-                console.error('Error stopping recorder in timeout:', e);
+                console.error("Error stopping recorder in timeout:", e);
               }
             }
           }, 8000); // 8-second segments
@@ -442,10 +500,11 @@ export function LiveTranscriber({
 
         recorder.start();
         scheduleNextSlice();
-
       } catch (err) {
-        console.error('Failed to start audio recording:', err);
-        toast.error('No se pudo acceder al micrófono para la transcripción en vivo.');
+        console.error("Failed to start audio recording:", err);
+        toast.error(
+          "No se pudo acceder al micrófono para la transcripción en vivo.",
+        );
         setHasActivated(false);
       }
     };
@@ -469,7 +528,10 @@ export function LiveTranscriber({
     if (!confirmingEnd) {
       setConfirmingEnd(true);
       if (confirmTimeoutRef.current) clearTimeout(confirmTimeoutRef.current);
-      confirmTimeoutRef.current = setTimeout(() => setConfirmingEnd(false), 4000);
+      confirmTimeoutRef.current = setTimeout(
+        () => setConfirmingEnd(false),
+        4000,
+      );
       return;
     }
 
@@ -481,7 +543,10 @@ export function LiveTranscriber({
     setReleasing(true);
 
     try {
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      if (
+        mediaRecorderRef.current &&
+        mediaRecorderRef.current.state === "recording"
+      ) {
         try {
           mediaRecorderRef.current.stop();
         } catch (e) {}
@@ -489,15 +554,23 @@ export function LiveTranscriber({
         await new Promise((r) => setTimeout(r, 350));
       }
       await queueApi.releaseFloor(meetingId);
-      toast.success('Terminaste tu intervención. Tu transcripción quedó guardada.');
+      toast.success(
+        "Terminaste tu intervención. Tu transcripción quedó guardada.",
+      );
       // El snapshot entrante pone isSpeaking en false y desmonta el botón.
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error al terminar la intervención');
+      toast.error(
+        e instanceof Error ? e.message : "Error al terminar la intervención",
+      );
       setReleasing(false);
     }
   };
 
-  const fabState: FabState = releasing ? 'releasing' : confirmingEnd ? 'confirming' : 'recording';
+  const fabState: FabState = releasing
+    ? "releasing"
+    : confirmingEnd
+      ? "confirming"
+      : "recording";
 
   return (
     <>
@@ -510,7 +583,11 @@ export function LiveTranscriber({
         />
       )}
       {isSpeaking && hasActivated && (
-        <MicFloatingButton state={fabState} onTap={handleEndIntervention} onBehalfOf={onBehalfOf} />
+        <MicFloatingButton
+          state={fabState}
+          onTap={handleEndIntervention}
+          onBehalfOf={onBehalfOf}
+        />
       )}
     </>
   );

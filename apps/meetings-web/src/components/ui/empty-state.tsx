@@ -1,6 +1,6 @@
-import * as React from 'react';
-import { cn } from '@/lib/utils';
-import { FileQuestion } from 'lucide-react';
+import * as React from "react";
+import { cn } from "@/lib/utils";
+import { FileQuestion } from "lucide-react";
 
 type EmptyStateProps = {
   /** Título principal */
@@ -13,7 +13,7 @@ type EmptyStateProps = {
   action?: React.ReactNode;
   /** Acciones secundarias */
   secondaryActions?: React.ReactNode;
-  variant?: 'default' | 'compact';
+  variant?: "default" | "compact";
   className?: string;
 };
 
@@ -27,17 +27,19 @@ export function EmptyState({
   icon,
   action,
   secondaryActions,
-  variant = 'default',
+  variant = "default",
   className,
 }: EmptyStateProps) {
-  const IconWrapper = icon ?? <FileQuestion className="size-12 text-muted-foreground/60" />;
+  const IconWrapper = icon ?? (
+    <FileQuestion className="size-12 text-muted-foreground/60" />
+  );
 
-  if (variant === 'compact') {
+  if (variant === "compact") {
     return (
       <div
         className={cn(
-          'flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-muted/20 px-4 py-6 text-center',
-          className
+          "flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-muted/20 px-4 py-6 text-center",
+          className,
         )}
       >
         <p className="font-medium text-foreground">{title}</p>
@@ -57,8 +59,8 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        'flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-muted/20 px-6 py-12 text-center',
-        className
+        "flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-muted/20 px-6 py-12 text-center",
+        className,
       )}
     >
       <div className="mb-4 flex size-12 items-center justify-center [&>svg]:size-12 [&>svg]:text-muted-foreground/60">
