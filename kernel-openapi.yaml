@@ -60,6 +60,12 @@ tags:
       Apps que los comités construyen sobre el kernel (E2). Las registra el
       distrito; cada app queda atada a una organización y a un conjunto de
       scopes.
+  - name: Webhooks
+    description: >
+      Eventos firmados que el kernel le manda a una app (E7): endpoints,
+      secretos, envíos, reintentos y reenvío. Mismos permisos que la app.
+  - name: Events
+    description: Catálogo público de eventos (E7.3).
   - name: OAuth
     description: >
       "Ingresar con Mi Rotaract" (E3): proveedor OAuth 2.0 / OpenID Connect,
@@ -2938,6 +2944,281 @@ paths:
               schema: { $ref: "#/components/schemas/DeveloperApp" }
         "409": { $ref: "#/components/responses/InvalidTransition" }
 
+  # --- Webhooks (E7) ------------------------------------------------------
+
+  /developer/apps/{appId}/webhooks/stream:
+    get:
+      operationId: streamWebhookEvents
+      tags: [Webhooks]
+      summary: Stream de eventos para desarrollo (Server-Sent Events)
+      description: >
+        Para `mirotaract webhooks listen`. Emite cada evento que la app
+        recibiría por webhook, tal cual se haría el POST: primero
+        `event: ready` con `{ "secret": "whsec_..." }` (secreto propio de
+        este stream), después un `event: webhook` por evento con
+        `data: {"headers": {...}, "body": "<json crudo>"}`, firmado con ese
+        secreto. Se autentica con las credenciales de la app (Basic
+        `client_id:secreto`), no con una sesión. Solo existe si
+        `KERNEL_WEBHOOK_STREAM_ENABLED=true` (kernel local o de pruebas); si
+        no, 404.
+      security:
+        - clientBasic: []
+      x-required-permission: null
+      parameters:
+        - $ref: "#/components/parameters/appId"
+        - name: events
+          in: query
+          schema: { type: string }
+          description: Tipos separados por coma. Por defecto, todos los que la app puede recibir.
+      responses:
+        "200":
+          description: Stream abierto.
+          content:
+            text/event-stream:
+              schema: { type: string }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /developer-apps/{appId}/webhooks/stream:
+    get:
+      operationId: streamWebhookEventsAlias
+      tags: [Webhooks]
+      summary: Stream de eventos para desarrollo (ruta del contrato E6/E7)
+      description: Igual que `GET /developer/apps/{appId}/webhooks/stream`.
+      security:
+        - clientBasic: []
+      x-required-permission: null
+      parameters:
+        - $ref: "#/components/parameters/appId"
+        - name: events
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Stream abierto.
+          content:
+            text/event-stream:
+              schema: { type: string }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /developer/apps/{appId}/webhooks:
+    get:
+      operationId: listWebhookEndpoints
+      tags: [Webhooks]
+      summary: Listar los endpoints de webhooks de una app
+      x-required-permission: kernel.app.read
+      parameters:
+        - $ref: "#/components/parameters/appId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/WebhookEndpoint" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    post:
+      operationId: createWebhookEndpoint
+      tags: [Webhooks]
+      summary: Registrar un endpoint
+      description: >
+        Devuelve el secreto de firma (`whsec_...`) una única vez. La URL
+        tiene que ser https y apuntar a una dirección pública (se verifica
+        también después de resolver el DNS). Cada tipo de evento exige el
+        scope de la app indicado en el catálogo.
+      x-required-permission: kernel.app.manage
+      parameters:
+        - $ref: "#/components/parameters/appId"
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateWebhookEndpointRequest" }
+      responses:
+        "201":
+          description: Creado.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WebhookEndpointWithSecret" }
+        "400": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  /developer/apps/{appId}/webhooks/{endpointId}:
+    get:
+      operationId: getWebhookEndpoint
+      tags: [Webhooks]
+      summary: Ver un endpoint
+      x-required-permission: kernel.app.read
+      parameters:
+        - $ref: "#/components/parameters/appId"
+        - $ref: "#/components/parameters/endpointId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WebhookEndpoint" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      operationId: updateWebhookEndpoint
+      tags: [Webhooks]
+      summary: Cambiar URL, eventos o descripción, o activar / desactivar
+      description: >
+        `status: ENABLED` reactiva un endpoint desactivado (a mano o
+        automáticamente tras 72 h de fallas) y reinicia su racha de fallas.
+      x-required-permission: kernel.app.manage
+      parameters:
+        - $ref: "#/components/parameters/appId"
+        - $ref: "#/components/parameters/endpointId"
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateWebhookEndpointRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WebhookEndpoint" }
+        "400": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      operationId: deleteWebhookEndpoint
+      tags: [Webhooks]
+      summary: Borrar un endpoint (y su historial de envíos)
+      x-required-permission: kernel.app.manage
+      parameters:
+        - $ref: "#/components/parameters/appId"
+        - $ref: "#/components/parameters/endpointId"
+      responses:
+        "204": { description: Borrado. }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /developer/apps/{appId}/webhooks/{endpointId}/rotate-secret:
+    post:
+      operationId: rotateWebhookSecret
+      tags: [Webhooks]
+      summary: Crear un secreto de firma nuevo
+      description: >
+        Devuelve el secreto nuevo una única vez. Durante 24 h los envíos
+        llevan dos firmas (`v1=` nueva, `v1=` anterior) para poder actualizar
+        el receptor sin rechazar eventos.
+      x-required-permission: kernel.app.manage
+      parameters:
+        - $ref: "#/components/parameters/appId"
+        - $ref: "#/components/parameters/endpointId"
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema: { type: string }
+      responses:
+        "201":
+          description: Creado.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WebhookEndpointWithSecret" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /developer/apps/{appId}/webhooks/{endpointId}/test:
+    post:
+      operationId: sendWebhookTest
+      tags: [Webhooks]
+      summary: Mandar un evento de prueba (ping.v1)
+      description: Queda en cola y se envía en segundos. Es un único intento, sin reintentos.
+      x-required-permission: kernel.app.manage
+      parameters:
+        - $ref: "#/components/parameters/appId"
+        - $ref: "#/components/parameters/endpointId"
+      responses:
+        "202":
+          description: En cola.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WebhookDelivery" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  /developer/apps/{appId}/webhooks/{endpointId}/deliveries:
+    get:
+      operationId: listWebhookDeliveries
+      tags: [Webhooks]
+      summary: Envíos de un endpoint, del más reciente al más viejo
+      x-required-permission: kernel.app.read
+      parameters:
+        - $ref: "#/components/parameters/appId"
+        - $ref: "#/components/parameters/endpointId"
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/WebhookDeliveryStatus" }
+        - $ref: "#/components/parameters/cursor"
+        - $ref: "#/components/parameters/limit"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WebhookDeliveryPage" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /developer/apps/{appId}/webhooks/{endpointId}/deliveries/{deliveryId}/redeliver:
+    post:
+      operationId: redeliverWebhook
+      tags: [Webhooks]
+      summary: Reenviar un evento ya enviado (o fallido)
+      description: >
+        Mismo evento (mismo id y mismo cuerpo), un intento más, ahora. Si
+        falla vuelve a FAILED; no reinicia los reintentos automáticos.
+      x-required-permission: kernel.app.manage
+      parameters:
+        - $ref: "#/components/parameters/appId"
+        - $ref: "#/components/parameters/endpointId"
+        - name: deliveryId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "202":
+          description: En cola.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WebhookDelivery" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  /events/catalog:
+    get:
+      operationId: getEventCatalog
+      tags: [Events]
+      summary: Catálogo público de eventos
+      description: >
+        Tipos de evento que una app puede recibir por webhook, con su
+        versión, el scope que exige, el JSON Schema de `data` y un ejemplo
+        completo del cuerpo que se envía. Generado de la misma fuente que
+        usa el kernel para emitirlos.
+      security: []
+      x-required-permission: null
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EventCatalog" }
+
   # --- OAuth 2.0 / OIDC (E3) ---------------------------------------------
 
   /oauth/apps/{clientId}:
@@ -3137,6 +3418,13 @@ components:
         `institutional-kernel`. Requerido para todos los endpoints bajo
         `/service/*`; el kernel rechaza estas rutas con token de usuario.
 
+    clientBasic:
+      type: http
+      scheme: basic
+      description: >
+        Credenciales de una app CONFIDENTIAL: `client_id:client_secret`
+        (cada parte codificada como en RFC 6749 §2.3.1).
+
     oidcAccessToken:
       type: http
       scheme: bearer
@@ -3158,6 +3446,11 @@ components:
       description: ETag de una respuesta anterior; si no hubo cambios responde 304.
     appId:
       name: appId
+      in: path
+      required: true
+      schema: { type: string }
+    endpointId:
+      name: endpointId
       in: path
       required: true
       schema: { type: string }
@@ -4565,3 +4858,141 @@ components:
         status: { $ref: "#/components/schemas/PeriodStatus" }
         startDate: { type: string, format: date-time }
         endDate: { type: string, format: date-time }
+    # --- Webhooks (E7) ----------------------------------------------------
+    WebhookEndpointStatus:
+      type: string
+      enum: [ENABLED, DISABLED]
+    WebhookDeliveryStatus:
+      type: string
+      enum: [PENDING, SUCCEEDED, FAILED]
+    WebhookEndpoint:
+      type: object
+      required: [id, appId, url, eventTypes, status, secretHint, consecutiveFailures, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        appId: { type: string }
+        url: { type: string }
+        description: { type: string, nullable: true }
+        eventTypes: { type: array, items: { type: string } }
+        status: { $ref: "#/components/schemas/WebhookEndpointStatus" }
+        disabledReason:
+          type: string
+          nullable: true
+          enum: [MANUAL, AUTO_FAILURES, null]
+          description: AUTO_FAILURES = se desactivó solo tras 72 h en que fallaron todos los envíos.
+        disabledAt: { type: string, format: date-time, nullable: true }
+        secretHint: { type: string, description: Últimos 4 caracteres del secreto vigente. }
+        previousSecretExpiresAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Hasta cuándo se firma también con el secreto anterior (rotación).
+        secretRotatedAt: { type: string, format: date-time, nullable: true }
+        failingSince: { type: string, format: date-time, nullable: true }
+        consecutiveFailures: { type: integer }
+        lastSuccessAt: { type: string, format: date-time, nullable: true }
+        lastFailureAt: { type: string, format: date-time, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    WebhookEndpointWithSecret:
+      type: object
+      required: [endpoint, secret]
+      properties:
+        endpoint: { $ref: "#/components/schemas/WebhookEndpoint" }
+        secret:
+          type: string
+          description: "`whsec_...`. Se muestra una única vez."
+    CreateWebhookEndpointRequest:
+      type: object
+      required: [url, eventTypes]
+      properties:
+        url: { type: string, maxLength: 2048 }
+        eventTypes: { type: array, minItems: 1, items: { type: string } }
+        description: { type: string, nullable: true, maxLength: 200 }
+    UpdateWebhookEndpointRequest:
+      type: object
+      properties:
+        url: { type: string, maxLength: 2048 }
+        eventTypes: { type: array, minItems: 1, items: { type: string } }
+        description: { type: string, nullable: true, maxLength: 200 }
+        status: { $ref: "#/components/schemas/WebhookEndpointStatus" }
+    WebhookDelivery:
+      type: object
+      required: [id, endpointId, eventId, eventType, status, attempts, retryUntil, createdAt]
+      properties:
+        id: { type: string }
+        endpointId: { type: string }
+        eventId: { type: string, description: "`evt_...`, igual a MiRotaract-Webhook-Id." }
+        eventType: { type: string }
+        organizationId: { type: string, nullable: true }
+        status: { $ref: "#/components/schemas/WebhookDeliveryStatus" }
+        attempts: { type: integer }
+        nextAttemptAt: { type: string, format: date-time, nullable: true }
+        retryUntil: { type: string, format: date-time }
+        firstAttemptAt: { type: string, format: date-time, nullable: true }
+        lastAttemptAt: { type: string, format: date-time, nullable: true }
+        lastResponseStatus: { type: integer, nullable: true }
+        lastResponseBody:
+          type: string
+          nullable: true
+          description: Primer KB de la respuesta del receptor.
+        lastLatencyMs: { type: integer, nullable: true }
+        lastError: { type: string, nullable: true }
+        deliveredAt: { type: string, format: date-time, nullable: true }
+        createdAt: { type: string, format: date-time }
+    WebhookDeliveryPage:
+      type: object
+      required: [items, pageInfo]
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/WebhookDelivery" } }
+        pageInfo: { $ref: "#/components/schemas/PageInfo" }
+    EventCatalog:
+      type: object
+      required: [version, signature, envelope, events]
+      properties:
+        version: { type: integer }
+        signature:
+          type: object
+          required: [algorithm, signedPayload, headers, toleranceSec]
+          properties:
+            algorithm: { type: string }
+            signedPayload: { type: string }
+            headers:
+              type: object
+              required: [id, timestamp, signature]
+              properties:
+                id: { type: string }
+                timestamp: { type: string }
+                signature: { type: string }
+            toleranceSec: { type: integer }
+        envelope:
+          type: object
+          description: JSON Schema del cuerpo (igual para todos los tipos).
+        events:
+          type: array
+          items: { $ref: "#/components/schemas/EventCatalogEntry" }
+    EventCatalogEntry:
+      type: object
+      required: [type, name, version, title, description, schema, example]
+      properties:
+        type: { type: string, description: "Con versión, p. ej. membership.activated.v1." }
+        name: { type: string }
+        version: { type: integer }
+        title: { type: string }
+        description: { type: string }
+        scope:
+          type: string
+          nullable: true
+          description: Scope de servicio que necesita la app para recibirlo.
+        schema:
+          type: object
+          description: JSON Schema de `data`.
+        example:
+          type: object
+          required: [id, type, createdAt, organizationId, data]
+          properties:
+            id: { type: string }
+            type: { type: string }
+            createdAt: { type: string, format: date-time }
+            organizationId: { type: string }
+            data: { type: object }

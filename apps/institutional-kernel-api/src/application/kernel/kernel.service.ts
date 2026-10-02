@@ -226,7 +226,8 @@ export class KernelService {
         type: "Person",
         id,
         event: "kernel.person.updated.v1",
-        payload: { personId: id },
+        // kernel-events-contract.md: names of the changed fields, not values.
+        payload: { personId: id, changedFields: Object.keys(input) },
       },
       (tx) => tx.person.update({ where: { id }, data: input }),
     );
@@ -347,7 +348,7 @@ export class KernelService {
         type: "Organization",
         id,
         event: "kernel.organization.updated.v1",
-        payload: { organizationId: id },
+        payload: { organizationId: id, changedFields: Object.keys(input) },
       },
       async (tx) => {
         const updated = await tx.organization.update({
@@ -642,8 +643,17 @@ export class KernelService {
             : "kernel.membership.status-changed.v1",
           "OrganizationMembership",
           id,
-          { membershipId: id, fromStatus: previous.status, toStatus: target },
+          {
+            membershipId: id,
+            organizationId: previous.organizationId,
+            personId: previous.personId,
+            transitionType: type,
+            fromStatus: previous.status,
+            toStatus: target,
+            effectiveAt: now.toISOString(),
+          },
           this.context(context),
+          previous.organizationId,
         );
         return membership;
       },

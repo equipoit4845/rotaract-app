@@ -54,6 +54,11 @@ const publicOperations = new Set([
   "issueOAuthToken",
   "revokeOAuthToken",
   "getOAuthUserInfo",
+  // E7: the public event catalog, and the development event stream, which
+  // authenticates the app's client credentials itself (WebhookStreamService).
+  "getEventCatalog",
+  "streamWebhookEvents",
+  "streamWebhookEventsAlias",
 ]);
 const accountOperations = new Set([
   // A person acting on their own OAuth consents (any signed-in account).
@@ -76,6 +81,9 @@ const idempotentMutations = new Set([
   "suspendDeveloperApp",
   "activateDeveloperApp",
   "revokeDeveloperApp",
+  "createWebhookEndpoint",
+  "updateWebhookEndpoint",
+  "rotateWebhookSecret",
   "createPerson",
   "updatePerson",
   "archivePerson",
@@ -204,6 +212,16 @@ const permissionByHandler: Record<string, string> = {
   suspendDeveloperApp: "kernel.app.manage",
   activateDeveloperApp: "kernel.app.manage",
   revokeDeveloperApp: "kernel.app.manage",
+  // Webhooks (E7): same permissions as the app they belong to.
+  listWebhookEndpoints: "kernel.app.read",
+  getWebhookEndpoint: "kernel.app.read",
+  listWebhookDeliveries: "kernel.app.read",
+  createWebhookEndpoint: "kernel.app.manage",
+  updateWebhookEndpoint: "kernel.app.manage",
+  deleteWebhookEndpoint: "kernel.app.manage",
+  rotateWebhookSecret: "kernel.app.manage",
+  sendWebhookTest: "kernel.app.manage",
+  redeliverWebhook: "kernel.app.manage",
   // Fallback defaults only: canActivate() overrides these with the
   // position's own editPermissionCode when the position can be resolved —
   // see the positionHandlers special-case.
@@ -545,6 +563,15 @@ const organizationResolverByHandler: Record<string, OrganizationResolver> = {
   suspendDeveloperApp: developerAppOrganization,
   activateDeveloperApp: developerAppOrganization,
   revokeDeveloperApp: developerAppOrganization,
+  listWebhookEndpoints: developerAppOrganization,
+  getWebhookEndpoint: developerAppOrganization,
+  listWebhookDeliveries: developerAppOrganization,
+  createWebhookEndpoint: developerAppOrganization,
+  updateWebhookEndpoint: developerAppOrganization,
+  deleteWebhookEndpoint: developerAppOrganization,
+  rotateWebhookSecret: developerAppOrganization,
+  sendWebhookTest: developerAppOrganization,
+  redeliverWebhook: developerAppOrganization,
   createPosition: positionOwnerOrganization,
   listPositionPermissions: existingPositionOwnerOrganization,
   updateMembership: membershipOrganization,

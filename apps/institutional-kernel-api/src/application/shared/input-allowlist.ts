@@ -116,6 +116,8 @@ export const INPUT_FIELDS = {
     "redirectUris",
   ],
   updateDeveloperApp: ["name", "description", "scopes", "redirectUris"],
+  createWebhookEndpoint: ["url", "eventTypes", "description"],
+  updateWebhookEndpoint: ["url", "eventTypes", "description", "status"],
 } as const;
 
 export type InputOperation = keyof typeof INPUT_FIELDS;

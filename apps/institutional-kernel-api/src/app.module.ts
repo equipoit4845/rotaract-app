@@ -42,6 +42,12 @@ import { OidcService } from "./application/oauth/oidc.service";
 import { OidcAccessGuard } from "./application/oauth/oidc-access.guard";
 import { KernelThrottlerGuard } from "./interfaces/http/kernel-throttler.guard";
 import { DataApiService } from "./application/data-api/data-api.service";
+import { WebhooksService } from "./application/webhooks/webhooks.service";
+import { WebhookDispatcherService } from "./application/webhooks/webhook-dispatcher.service";
+import { WebhookStreamService } from "./application/webhooks/webhook-stream.service";
+import { WebhooksController } from "./interfaces/http/webhooks.controller";
+import { WebhookStreamAliasController } from "./interfaces/http/webhook-stream-alias.controller";
+import { EventsController } from "./interfaces/http/events.controller";
 
 @Module({
   imports: [
@@ -71,6 +77,9 @@ import { DataApiService } from "./application/data-api/data-api.service";
     WellKnownController,
     DeveloperAppsController,
     OAuthController,
+    WebhooksController,
+    WebhookStreamAliasController,
+    EventsController,
   ],
   providers: [
     HealthService,
@@ -95,6 +104,9 @@ import { DataApiService } from "./application/data-api/data-api.service";
     ClientAuthenticator,
     OidcService,
     OidcAccessGuard,
+    WebhooksService,
+    WebhookDispatcherService,
+    WebhookStreamService,
     { provide: APP_INTERCEPTOR, useClass: OpenApiValidationInterceptor },
     // Order matters: rate limiting runs before authentication, so floods are
     // rejected before any token verification or database work.

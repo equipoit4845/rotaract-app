@@ -645,8 +645,12 @@ model OutboxMessage {
   nextAttemptAt    DateTime?
   publishedAt      DateTime?
   lastError        String?
+  /// E7: when the webhook dispatcher turned this message into deliveries
+  /// (or decided no endpoint wants it). Independent of the NATS `status`.
+  webhooksFannedOutAt DateTime?
 
   @@index([status, nextAttemptAt])
+  @@index([webhooksFannedOutAt, occurredAt])
   @@index([aggregateType, aggregateId, aggregateVersion])
   @@index([occurredAt])
 }
@@ -731,6 +735,7 @@ model DeveloperApp {
   consents      OAuthConsent[]
   codes         OAuthAuthorizationCode[]
   refreshTokens OAuthRefreshToken[]
+  webhooks      WebhookEndpoint[]
 
   @@index([organizationId])
   @@index([status])
@@ -823,4 +828,93 @@ model SigningKey {
   retiredAt     DateTime?
 
   @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// E7 — events and signed webhooks (docs/13-events-and-webhooks.md)
+// ---------------------------------------------------------------------------
+
+enum WebhookEndpointStatus {
+  ENABLED
+  DISABLED
+}
+
+enum WebhookDeliveryStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+}
+
+/// Where a developer app wants its events. The signing secret is stored
+/// encrypted (AES-256-GCM, key derived from KERNEL_SIGNING_KEY_SECRET)
+/// because the Kernel needs the plaintext to compute each HMAC.
+model WebhookEndpoint {
+  id                      String                @id @default(cuid())
+  appId                   String
+  url                     String
+  description             String?
+  /// Public catalog types (e.g. "membership.activated.v1").
+  eventTypes              String[]
+  status                  WebhookEndpointStatus @default(ENABLED)
+  /// "MANUAL" | "AUTO_FAILURES" while DISABLED.
+  disabledReason          String?
+  disabledAt              DateTime?
+  secretEnc               String
+  /// Last 4 characters of the current secret.
+  secretHint              String
+  /// After a rotation the previous secret still signs (second `v1=`) until it expires.
+  previousSecretEnc       String?
+  previousSecretExpiresAt DateTime?
+  secretRotatedAt         DateTime?
+  /// Start of the current streak of failed attempts (null after any success).
+  failingSince            DateTime?
+  consecutiveFailures     Int                   @default(0)
+  lastSuccessAt           DateTime?
+  lastFailureAt           DateTime?
+  createdById             String?
+  createdAt               DateTime              @default(now())
+  updatedAt               DateTime              @updatedAt
+
+  app        DeveloperApp      @relation(fields: [appId], references: [id], onDelete: Cascade)
+  deliveries WebhookDelivery[]
+
+  @@index([appId])
+  @@index([status])
+}
+
+/// One event for one endpoint. `payload` is the exact JSON body that is
+/// signed and POSTed, so retries and redeliveries send identical bytes.
+model WebhookDelivery {
+  id                 String                @id @default(cuid())
+  endpointId         String
+  /// "evt_..." — stable across retries; receivers deduplicate on it.
+  eventId            String
+  eventType          String
+  outboxMessageId    String?
+  organizationId     String?
+  payload            String
+  status             WebhookDeliveryStatus @default(PENDING)
+  attempts           Int                   @default(0)
+  nextAttemptAt      DateTime?             @default(now())
+  /// No automatic retry is scheduled after this instant (72 h after creation;
+  /// "now" for a manual redelivery, which is a single attempt).
+  retryUntil         DateTime
+  /// Lease held by the worker that claimed it (multi-worker safety).
+  lockedUntil        DateTime?
+  firstAttemptAt     DateTime?
+  lastAttemptAt      DateTime?
+  lastResponseStatus Int?
+  /// First 1 KB of the receiver's answer.
+  lastResponseBody   String?
+  lastLatencyMs      Int?
+  lastError          String?
+  deliveredAt        DateTime?
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+
+  endpoint WebhookEndpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+
+  @@unique([endpointId, eventId])
+  @@index([status, nextAttemptAt])
+  @@index([endpointId, createdAt])
 }
