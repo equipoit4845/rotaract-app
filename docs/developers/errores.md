@@ -65,7 +65,7 @@ WWW-Authenticate: Bearer error="invalid_token"
 | `403` | Autenticado pero sin permiso: falta un scope o el recurso está fuera del alcance de tu app. | No es transitorio. Revisá scopes y organización. | No |
 | `404` | No existe (o no es visible). | | No |
 | `409` | Transición de estado inválida, o `Idempotency-Key` reutilizada con otro cuerpo. | Releé el estado actual. | No |
-| `429` | Demasiados pedidos. | Esperá lo que diga `Retry-After`. | Sí, respetando `Retry-After` |
+| `429` | Demasiados pedidos. Límites actuales por cliente y por minuto: 120 en general, 10 en login, 5 en registro, recuperación de contraseña e invitaciones. | Esperá lo que diga `Retry-After`. | Sí, respetando `Retry-After` |
 | `500` | Error interno. | Reportalo con el `traceId`. | Con cuidado (backoff) |
 | `502`, `503`, `504` | Infraestructura momentáneamente no disponible. | | Sí, con backoff |
 

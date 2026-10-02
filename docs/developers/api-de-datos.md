@@ -124,8 +124,8 @@ el kernel. No la uses para "corregir" datos.
 
 ### ETag y `304 Not Modified`
 
-Los listados de organizaciones y de socios devuelven un encabezado `ETag`
-(débil, un hash del contenido). Si lo reenviás en `If-None-Match` y nada
+Todas las lecturas de la API de datos (listados y recursos individuales)
+devuelven un encabezado `ETag` (débil, un hash del contenido). Si lo reenviás en `If-None-Match` y nada
 cambió, la respuesta es `304` sin cuerpo:
 
 ```bash
@@ -497,7 +497,7 @@ necesita:
 
 | Endpoint | Scope | Devuelve |
 |---|---|---|
-| `GET /service/users/{accountId}/context` | `kernel.service.users.read` | `UserContext` de una cuenta (la persona tiene que estar en tu alcance). |
+| `GET /service/users/{accountId}/context` | `kernel.service.users.read` | `UserContext` de una cuenta (la persona tiene que estar en tu alcance; las membresías y espacios de trabajo se limitan a las organizaciones de tu app). |
 | `GET /service/modules/{moduleId}/installations/{organizationId}` | `kernel.service.modules.read` | `ModuleInstallation`, o `404`. |
 | `POST /auth/introspect` | `kernel.service.tokens.introspect` | Estado de un token de sesión de la plataforma. |
 

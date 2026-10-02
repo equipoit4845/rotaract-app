@@ -18,7 +18,7 @@ el bypass de desarrollo).
   (`updatedAt`, `id`).
 - **Sincronización incremental:** `?updatedSince=<ISO 8601>` devuelve solo lo
   modificado desde ese instante.
-- **ETag** débil en colecciones y recursos (hash del contenido). Con
+- **ETag** débil en todas las lecturas GET (hash del contenido). Con
   `If-None-Match` igual → `304` sin cuerpo.
 - **Datos de contacto** (`email`, `phone`, `birthDate`) solo con el scope
   nuevo `kernel.service.persons.contact.read`; sin él, esos campos no
@@ -45,7 +45,8 @@ la fila cruda, para que devuelvan `PersonView` y `OrganizationView`.
 - `OrganizationView`: `id, type, code, name, slug, status, parentId, countryCode, region, city, timezone, logoUrl, description, updatedAt`.
 - `PersonView`: `id, displayName, firstName, lastName, avatarUrl, updatedAt` (+ `email, phone, birthDate` con scope de contacto).
 - `MemberView`: `membershipId, organizationId, personId, status, joinedAt, memberNumber, person: PersonView, updatedAt`.
-- `AuthorityView`: `appointmentId, organizationId, periodId, positionCode, positionName, status, startsAt, endsAt, person: PersonView (sin contacto)`.
+- `AuthorityView`: `appointmentId, organizationId, periodId, positionCode, positionName, status, startsAt, endsAt, person: { id, displayName, avatarUrl }` (sin contacto).
+- `PersonMembershipView`: `membershipId, organizationId, organizationName, organizationType, status, joinedAt, endedAt`.
 - `PeriodView`: `id, organizationId, code, name, status, startDate, endDate`.
 
 ## E5 · SDKs oficiales
