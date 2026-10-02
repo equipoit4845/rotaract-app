@@ -1,0 +1,25 @@
+# Copiá este archivo a .env.local (o corré `mirotaract dev up --app-url http://localhost:8000`,
+# que lo escribe solo con las credenciales del kernel local). .env.local NO va al repositorio.
+
+# API del kernel = issuer OIDC.
+#   Local:      http://localhost:54321/api/kernel/v1
+#   Producción: https://api.rotaract4845.com/api/kernel/v1
+MIROTARACT_ISSUER=http://localhost:54321/api/kernel/v1
+MIROTARACT_BASE_URL=http://localhost:54321/api/kernel/v1
+
+# App CONFIDENTIAL registrada por el RDR (en local, la crea `mirotaract dev up`).
+MIROTARACT_CLIENT_ID=mra_xxxxxxxxxxxxxxxxxxxx
+# Secreto: solo en el servidor. Nunca en el navegador ni en una app móvil.
+MIROTARACT_CLIENT_SECRET=mrs_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+# Opcional: client_id de tu app móvil/SPA (PUBLIC) cuyos access tokens acepta /api/members.
+MIROTARACT_PUBLIC_CLIENT_ID=
+
+# Para `mirotaract webhooks listen` (id interno de la app, no el client_id).
+MIROTARACT_APP_ID=
+# Secreto de firma de webhooks (whsec_…). En local lo imprime `mirotaract webhooks listen`.
+MIROTARACT_WEBHOOK_SECRET=
+
+# URL pública de esta app: la dirección de regreso es ${APP_URL}/auth/callback
+# y tiene que estar registrada en la app (igualdad exacta).
+APP_URL=http://localhost:8000

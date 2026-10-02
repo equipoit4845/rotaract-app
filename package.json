@@ -27,6 +27,7 @@
     "db:migrate": "pnpm --filter @mirotaract/institutional-kernel-api prisma:migrate",
     "db:deploy": "pnpm --filter @mirotaract/institutional-kernel-api prisma:deploy",
     "db:seed": "pnpm --filter @mirotaract/institutional-kernel-api prisma:seed",
+    "db:seed:synthetic": "tsx prisma/seed-synthetic.ts",
     "db:seed:legacy:dry-run": "tsx prisma/seed-legacy.ts",
     "db:seed:legacy": "tsx prisma/seed-legacy.ts --apply",
     "db:seed:current-presidents:dry-run": "tsx prisma/seed-current-presidents.ts",

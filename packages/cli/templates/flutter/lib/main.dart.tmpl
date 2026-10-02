@@ -1,0 +1,149 @@
+import 'package:flutter/material.dart';
+
+import 'src/auth_service.dart';
+import 'src/config.dart';
+import 'src/members_api.dart';
+
+void main() {
+  runApp(const MiRotaractApp());
+}
+
+class MiRotaractApp extends StatelessWidget {
+  const MiRotaractApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: '{{PROJECT_TITLE}}',
+      theme: ThemeData(colorSchemeSeed: const Color(0xFFD41367), useMaterial3: true),
+      home: const HomePage(),
+    );
+  }
+}
+
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final _auth = AuthService();
+  final _api = MembersApi();
+  bool _busy = true;
+  String? _error;
+  List<ClubRoster>? _clubs;
+
+  @override
+  void initState() {
+    super.initState();
+    _run(() async {
+      await _auth.restore();
+    });
+  }
+
+  Future<void> _run(Future<void> Function() action) async {
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await action();
+    } on MembersApiException catch (error) {
+      if (error.unauthorized) await _auth.signOut();
+      _error = error.message;
+    } on Exception catch (error) {
+      _error = 'No pudimos completar la operación ($error).';
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _signIn() => _run(() async {
+        await _auth.signIn();
+      });
+
+  Future<void> _loadMembers() => _run(() async {
+        final token = await _auth.accessToken();
+        if (token == null) {
+          await _auth.signOut();
+          return;
+        }
+        _clubs = await _api.myClubs(token);
+      });
+
+  Future<void> _signOut() => _run(() async {
+        await _auth.signOut();
+        _clubs = null;
+      });
+
+  @override
+  Widget build(BuildContext context) {
+    final missing = AppConfig.missing();
+    final user = _auth.user;
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('{{PROJECT_TITLE}}'),
+        actions: [
+          if (user != null) IconButton(onPressed: _busy ? null : _signOut, icon: const Icon(Icons.logout), tooltip: 'Salir'),
+        ],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: missing.isNotEmpty
+            ? Text('Falta configurar: ${missing.join(', ')}. Mirá el README (--dart-define-from-file).')
+            : _busy
+                ? const Center(child: CircularProgressIndicator())
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (_error != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                        ),
+                      if (user == null)
+                        FilledButton(onPressed: _signIn, child: const Text('Ingresar con Mi Rotaract'))
+                      else ...[
+                        Text('Hola, ${user.givenName ?? user.name ?? 'socio/a'}', style: Theme.of(context).textTheme.headlineSmall),
+                        const SizedBox(height: 12),
+                        FilledButton(onPressed: _loadMembers, child: const Text('Ver el padrón de mi club')),
+                        const SizedBox(height: 12),
+                        Expanded(child: _Roster(clubs: _clubs)),
+                      ],
+                    ],
+                  ),
+      ),
+    );
+  }
+}
+
+class _Roster extends StatelessWidget {
+  const _Roster({required this.clubs});
+
+  final List<ClubRoster>? clubs;
+
+  static const _status = {'ACTIVE': 'Activo/a', 'ON_LEAVE': 'De licencia'};
+
+  @override
+  Widget build(BuildContext context) {
+    final data = clubs;
+    if (data == null) return const SizedBox.shrink();
+    if (data.isEmpty) return const Text('No tenés una membresía activa en ningún club de esta app.');
+    return ListView(
+      children: [
+        for (final club in data) ...[
+          ListTile(title: Text(club.name, style: Theme.of(context).textTheme.titleMedium), subtitle: Text('${club.members.length} socios/as')),
+          for (final member in club.members)
+            ListTile(
+              dense: true,
+              title: Text(member.displayName),
+              subtitle: Text(_status[member.status] ?? member.status),
+              trailing: member.memberNumber == null ? null : Text(member.memberNumber!),
+            ),
+        ],
+      ],
+    );
+  }
+}

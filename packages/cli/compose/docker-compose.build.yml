@@ -1,0 +1,14 @@
+# Overlay de `mirotaract dev up --kernel-repo <ruta>`: construye las imágenes
+# desde un checkout del kernel. Cuando haya imágenes publicadas, alcanza con
+# no incluir este archivo y definir MIROTARACT_API_IMAGE / MIROTARACT_WEB_IMAGE.
+services:
+  api:
+    build:
+      context: ${MIROTARACT_KERNEL_REPO:?}
+      dockerfile: infra/docker/api.Dockerfile
+  web:
+    build:
+      context: ${MIROTARACT_KERNEL_REPO:?}
+      dockerfile: infra/docker/web.Dockerfile
+      args:
+        NEXT_PUBLIC_KERNEL_API_URL: http://localhost:${MIROTARACT_DEV_API_PORT:-54321}/api/kernel/v1

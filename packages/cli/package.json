@@ -1,0 +1,32 @@
+{
+  "name": "@mirotaract/cli",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CLI de Mi Rotaract: plantillas de apps, kernel local con distrito sintético, tipos generados y reenvío de webhooks.",
+  "license": "UNLICENSED",
+  "type": "module",
+  "bin": {
+    "mirotaract": "./bin/mirotaract.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "bin",
+    "src",
+    "compose",
+    "templates",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "lint": "prettier --check src bin test",
+    "test": "node --test --test-force-exit test/*.test.mjs"
+  },
+  "dependencies": {
+    "openapi-typescript": "^7.13.0",
+    "yaml": "^2.9.0"
+  }
+}

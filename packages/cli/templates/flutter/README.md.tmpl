@@ -1,0 +1,77 @@
+# {{PROJECT_TITLE}}
+
+App **Flutter** conectada a **Mi Rotaract**, creada con
+`mirotaract init --template flutter`.
+
+- **Ingresar con Mi Rotaract**: OAuth 2.0 authorization code + **PKCE**
+  (OpenID Connect) con [`flutter_appauth`](https://pub.dev/packages/flutter_appauth),
+  en el navegador del sistema. La app es un cliente **`PUBLIC`**: solo
+  `client_id`, **sin secretos**.
+- **Padrón de mi club**: la app llama a **tu backend** (plantillas `next` o
+  `fastapi`, `GET /api/members`) con el access token de la persona. La API de
+  datos del kernel exige un token de servicio con secreto, que una app móvil
+  no puede guardar; por eso el padrón pasa por el backend.
+- Access token solo en memoria; refresh token en Keychain/Keystore
+  (`flutter_secure_storage`).
+
+> **Estado:** plantilla **no verificada en CI** (la máquina donde se armó no
+> tiene Flutter). Corré `flutter analyze` al crearla y reportá lo que falle.
+
+## Requisitos
+
+- Flutter 3.22+ (Dart 3.4+). `flutter_appauth` soporta Android, iOS y macOS.
+- Un backend con `/api/members`: `mirotaract init backend --template fastapi`
+  (o `next`), configurado con `MIROTARACT_PUBLIC_CLIENT_ID` = el `client_id` de
+  esta app.
+
+## Empezar
+
+```bash
+flutter create --platforms=android,ios,macos .   # genera las carpetas nativas (no pisa lib/)
+flutter pub get
+cp dart_defines.example.json dart_defines.json   # completalo (no va al repo)
+flutter run --dart-define-from-file=dart_defines.json
+```
+
+`dart_defines.json` lleva solo datos **públicos**: `MIROTARACT_ISSUER`,
+`MIROTARACT_CLIENT_ID` (de la app `PUBLIC`), `MIROTARACT_REDIRECT_URI` y
+`BACKEND_URL`. **Nunca** uses el `.env.local` que escribe `mirotaract dev up`
+(tiene el secreto de la app de servidor).
+
+## Dirección de regreso (importante)
+
+El kernel acepta direcciones de regreso `https://…` o `http://localhost` /
+`http://127.0.0.1`. **No acepta esquemas propios** (`com.miclub.app:/cb`).
+En móvil eso significa:
+
+- **Android**: un App Link verificado (`https://tu-dominio/auth/mobile-callback`
+  con `/.well-known/assetlinks.json`). En `android/app/build.gradle` definí
+  `manifestPlaceholders += [appAuthRedirectScheme: "https"]` y agregá en
+  `AndroidManifest.xml` un `intent-filter` con `android:autoVerify="true"`
+  para `net.openid.appauth.RedirectUriReceiverActivity` con tu host y path.
+- **iOS/macOS**: un Universal Link (`apple-app-site-association`) para esa
+  misma URL.
+
+Pedile al RDR que registre esa URL en la app `PUBLIC` (igualdad exacta).
+
+### Desarrollo con el kernel local (`mirotaract dev`)
+
+El kernel local registra una app `PUBLIC` de prueba
+(`mirotaract dev status` → "App PUBLIC") con la dirección
+`http://localhost:8765/callback`, pensada para clientes de escritorio o
+pruebas de backend. Con `flutter_appauth` en un emulador **no** podés usar
+esa dirección (no hay App Links hacia `localhost`), así que para probar el
+login de punta a punta en un teléfono necesitás un dominio con App Links /
+Universal Links o un túnel https. Mientras tanto, podés probar tu backend
+(`/api/members`) con un token obtenido desde una prueba de escritorio.
+
+## Estructura
+
+| Archivo | Qué hace |
+|---|---|
+| `lib/src/config.dart` | Configuración pública (`--dart-define`). |
+| `lib/src/auth_service.dart` | Login PKCE, refresh, logout; tokens en memoria / almacenamiento seguro. |
+| `lib/src/members_api.dart` | Llama a `GET {BACKEND_URL}/api/members` con `Bearer`. |
+| `lib/main.dart` | Pantallas: ingresar, padrón, salir. |
+
+Repasá **AGENTS.md** (checklist de seguridad) antes de publicar la app.

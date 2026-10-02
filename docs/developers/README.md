@@ -77,10 +77,25 @@ curl -s -H "Authorization: Bearer $TOKEN" \
   "$API/service/organizations/$ORGANIZATION_ID" | jq
 ```
 
+## Empezar en 15 minutos (sin datos reales)
+
+```bash
+mirotaract init mi-app --template next --kernel-repo ~/rotaract-app   # o fastapi / flutter
+cd mi-app && npm install
+mirotaract dev up --kernel-repo ~/rotaract-app   # kernel local + Distrito 9999 (sandbox) + .env.local
+npm run dev                                      # entrá con socio.norte@example.org / sandbox-9999
+```
+
+La CLI levanta un kernel local en Docker con un distrito sintético, registra
+una app de prueba y escribe sus credenciales en `.env.local`. Además genera
+tipos (`mirotaract gen types`) y reenvía webhooks a tu servidor local
+(`mirotaract webhooks listen`). Guía completa: [cli.md](cli.md).
+
 ## Guías
 
 | Documento | Contenido |
 |---|---|
+| [cli.md](cli.md) | CLI `mirotaract`: plantillas (Next.js, FastAPI, Flutter), kernel local con datos sintéticos, tipos y webhooks en local. |
 | [conceptos.md](conceptos.md) | Organizaciones, personas, membresías, períodos, cargos; apps, tipos, alcance, scopes y consentimiento. |
 | [registrar-una-app.md](registrar-una-app.md) | Para el RDR: alta de una app en la consola, secretos, rotación, pausa y revocación. |
 | [autenticacion-servidor.md](autenticacion-servidor.md) | `client_credentials`: pedir, verificar y cachear el token de servicio. |
@@ -200,7 +215,8 @@ etapa.
 
 ## Lo que todavía no existe
 
-Para que no lo busques: hoy **no** hay entorno sandbox separado, registro dinámico de clientes (las apps las registra el
+Para que no lo busques: hoy **no** hay entorno sandbox **compartido** (sí hay
+uno local: `mirotaract dev`, ver [cli.md](cli.md)), registro dinámico de clientes (las apps las registra el
 RDR), cierre de sesión OIDC (`end_session`) ni consentimiento parcial (la
 persona acepta o rechaza el pedido completo). Están planificados.
 

@@ -1,0 +1,83 @@
+# {{PROJECT_TITLE}}
+
+App Next.js 15 (App Router) conectada a **Mi Rotaract**, creada con
+`mirotaract init --template next`.
+
+- **Ingresar con Mi Rotaract** (OAuth 2.0 + PKCE + OpenID Connect) con
+  `@mirotaract/sdk/next`: la sesión es una cookie `httpOnly` cifrada; ningún
+  token llega al navegador.
+- **Padrón de mi club** (`/padron`): el servidor consulta la API de datos con
+  el token de servicio de la app (`client_credentials`) y muestra los socios
+  de los clubes donde la persona es socia activa.
+- `/api/members`: lo mismo en JSON para tu app móvil (plantilla `flutter`),
+  con el access token de la persona como `Bearer`.
+- `/api/webhooks`: recibe eventos firmados (socio activado, cargo asumido…).
+
+## Empezar (kernel local, sin datos reales)
+
+Necesitás Node 20+, Docker y una copia del repositorio del kernel
+(`rotaract-app`).
+
+```bash
+npm install
+mirotaract dev up --kernel-repo /ruta/a/rotaract-app   # kernel local + .env.local
+npm run dev                                           # http://localhost:3000
+```
+
+Entrá con una cuenta de prueba (`mirotaract dev status` las lista; la
+contraseña es `sandbox-9999`), por ejemplo `socio.norte@example.org`, aceptá
+los permisos y abrí **Ver el padrón de mi club**.
+
+> El SDK todavía no está en npm: `package.json` lo toma de
+> `{{SDK_JS_DEPENDENCY}}`. Compilalo una vez en el repo del kernel con
+> `npx pnpm@10.13.1 install && npx pnpm@10.13.1 --filter @mirotaract/sdk build`.
+> Cuando se publique, cambiá la dependencia a `"@mirotaract/sdk": "^0.1.0"`.
+
+¿Tu app corre en otro puerto? `mirotaract dev up --app-url http://localhost:3100`
+registra `http://localhost:3100/auth/callback` y lo escribe en `APP_URL`.
+
+## Variables (`.env.local`)
+
+| Variable | Qué es |
+|---|---|
+| `MIROTARACT_ISSUER`, `MIROTARACT_BASE_URL` | URL de la API del kernel (es también el issuer OIDC). |
+| `MIROTARACT_CLIENT_ID`, `MIROTARACT_CLIENT_SECRET` | Credenciales de la app `CONFIDENTIAL`. El secreto vive solo en el servidor. |
+| `APP_URL` | URL de esta app; la dirección de regreso es `${APP_URL}/auth/callback`. |
+| `SESSION_SECRET` | 32+ caracteres aleatorios para cifrar la cookie de sesión. |
+| `MIROTARACT_PUBLIC_CLIENT_ID` | (Opcional) app móvil/SPA cuyos tokens acepta `/api/members`. |
+| `MIROTARACT_APP_ID`, `MIROTARACT_WEBHOOK_SECRET` | Para recibir webhooks. |
+
+`.env.example` documenta todas. `.env.local` **no** va al repositorio.
+
+## Webhooks en local
+
+```bash
+mirotaract webhooks listen --forward-to http://localhost:3000/api/webhooks
+# copiá el "Secreto de firma de esta sesión" a MIROTARACT_WEBHOOK_SECRET y reiniciá `npm run dev`
+```
+
+## Tipos
+
+```bash
+npm run types:mirotaract   # = mirotaract gen types --out src/lib/mirotaract-types.ts
+```
+
+## Estructura
+
+| Archivo | Qué hace |
+|---|---|
+| `src/lib/mirotaract.ts` | Configuración del SDK (login, sesión, API de datos). Solo servidor. |
+| `src/lib/clubs.ts` | Regla de acceso al padrón: solo clubes donde la persona es socia activa. |
+| `src/app/auth/*/route.ts` | Login, callback y logout. |
+| `src/app/padron/page.tsx` | Padrón (Server Component). |
+| `src/app/api/members/route.ts` | Padrón en JSON para apps móviles (`Bearer`). |
+| `src/app/api/webhooks/route.ts` | Receptor de webhooks con verificación de firma. |
+
+## Producción
+
+1. Pedile al RDR una app `CONFIDENTIAL` con los datos mínimos (ver
+   `docs/developers/registrar-una-app.md` en el repo del kernel) y la
+   dirección de regreso `https://tu-dominio/auth/callback`.
+2. Configurá las variables en tu hosting (no en el repo). `MIROTARACT_ISSUER`
+   = `https://api.rotaract4845.com/api/kernel/v1`.
+3. Repasá **AGENTS.md** (checklist de seguridad) antes de pedir producción.

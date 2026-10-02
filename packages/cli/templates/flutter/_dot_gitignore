@@ -1,0 +1,16 @@
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+*.iml
+.idea/
+
+# Configuración local
+dart_defines.json
+.env
+.env.local
+.env.*.local

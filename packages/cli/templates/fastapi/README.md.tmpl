@@ -1,0 +1,79 @@
+# {{PROJECT_TITLE}}
+
+App **FastAPI** conectada a **Mi Rotaract**, creada con
+`mirotaract init --template fastapi`.
+
+- **Ingresar con Mi Rotaract** (OAuth 2.0 + PKCE + OpenID Connect) con el
+  SDK `mirotaract` (`AsyncMiRotaractAuth`). Sesión del lado del servidor: el
+  navegador solo tiene una cookie `httpOnly` con un id aleatorio.
+- **Padrón de mi club** (`/padron`): el servidor consulta la API de datos con
+  el token de servicio de la app (`AsyncMiRotaract`, `client_credentials`).
+- `/api/members`: lo mismo en JSON para tu app móvil (plantilla `flutter`),
+  con el access token de la persona como `Bearer`.
+- `/api/webhooks`: recibe eventos firmados.
+
+## Empezar (kernel local, sin datos reales)
+
+Necesitás Python 3.10+, Docker y una copia del repositorio del kernel
+(`rotaract-app`).
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+mirotaract dev up --kernel-repo /ruta/a/rotaract-app --app-url http://localhost:8000
+.venv/bin/uvicorn app.main:app --reload --port 8000     # http://localhost:8000
+```
+
+Entrá con una cuenta de prueba (`mirotaract dev status`; contraseña
+`sandbox-9999`), por ejemplo `socio.norte@example.org`, aceptá los permisos y
+abrí **Ver el padrón de mi club**.
+
+> El SDK todavía no está en PyPI: `requirements.txt` lo toma de
+> `{{SDK_PY_REQUIREMENT}}`. Cuando se publique: `mirotaract[fastapi]>=0.1.0`.
+
+## Variables (`.env.local`)
+
+| Variable | Qué es |
+|---|---|
+| `MIROTARACT_ISSUER`, `MIROTARACT_BASE_URL` | URL de la API del kernel (es también el issuer OIDC). |
+| `MIROTARACT_CLIENT_ID`, `MIROTARACT_CLIENT_SECRET` | Credenciales de la app `CONFIDENTIAL`. El secreto vive solo en el servidor. |
+| `APP_URL` | URL de esta app; la dirección de regreso es `${APP_URL}/auth/callback`. |
+| `MIROTARACT_PUBLIC_CLIENT_ID` | (Opcional) app móvil/SPA cuyos tokens acepta `/api/members`. |
+| `MIROTARACT_APP_ID`, `MIROTARACT_WEBHOOK_SECRET` | Para recibir webhooks. |
+
+`app/config.py` carga `.env.local` y después `.env` (sin pisar variables ya
+definidas). `.env.local` **no** va al repositorio.
+
+## Webhooks en local
+
+```bash
+mirotaract webhooks listen --forward-to http://localhost:8000/api/webhooks
+# copiá el "Secreto de firma de esta sesión" a MIROTARACT_WEBHOOK_SECRET y reiniciá uvicorn
+```
+
+## Tipos y pruebas
+
+```bash
+mirotaract gen types --lang python --out app/mirotaract_types.py
+.venv/bin/pip install pytest && .venv/bin/python -m pytest
+```
+
+## Estructura
+
+| Archivo | Qué hace |
+|---|---|
+| `app/main.py` | Rutas: login, callback, logout, `/padron`, `/api/members`, `/api/webhooks`. |
+| `app/config.py` | Variables de entorno y scopes del login. |
+| `app/sessions.py` | Sesiones del lado del servidor (en memoria; en producción, Redis o tu base). |
+| `app/webhooks.py` | Verificación de firmas de webhooks. |
+
+## Producción
+
+1. Pedile al RDR una app `CONFIDENTIAL` con los datos mínimos y la dirección
+   de regreso `https://tu-dominio/auth/callback`.
+2. Variables en tu hosting (no en el repo); `MIROTARACT_ISSUER` =
+   `https://api.rotaract4845.com/api/kernel/v1`; `APP_URL` con `https://`
+   (activa la cookie `Secure`).
+3. Reemplazá `MemorySessionStore` por un almacén compartido si corrés más de
+   un proceso.
+4. Repasá **AGENTS.md** (checklist de seguridad).
