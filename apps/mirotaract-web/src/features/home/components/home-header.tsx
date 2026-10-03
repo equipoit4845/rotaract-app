@@ -16,7 +16,7 @@ export function HomeHeader() {
           href="/"
           className="flex shrink-0 items-center gap-3 font-semibold text-foreground"
         >
-          <Logo size={36} />
+          <Logo size={40} />
           <span aria-hidden className="hidden h-6 w-px bg-border sm:block" />
           <span className="hidden sm:inline">Mi Rotaract</span>
         </Link>

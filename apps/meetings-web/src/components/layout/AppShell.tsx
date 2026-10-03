@@ -99,14 +99,10 @@ export function AppShell({
             <Link
               href="/meetings"
               onClick={closeMobile}
-              className="flex items-center gap-2 text-sm font-semibold text-sidebar-foreground transition-colors hover:text-primary"
+              aria-label="Reuniones"
+              className="flex"
             >
-              <Logo size={28} />
-              <span
-                aria-hidden
-                className="hidden h-5 w-px bg-sidebar-border md:block"
-              />
-              <span className="hidden md:inline">Reuniones</span>
+              <Logo size={38} aria-hidden />
             </Link>
             <Button
               variant="ghost"

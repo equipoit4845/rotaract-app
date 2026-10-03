@@ -79,16 +79,8 @@ function DashboardShellContent({
     <SuperadminModeProvider value={superadminMode}>
       <AppShell
         brand={
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-2 text-sm font-semibold text-sidebar-foreground transition-colors hover:text-primary"
-          >
-            <Logo size={28} />
-            <span
-              aria-hidden
-              className="hidden h-5 w-px bg-sidebar-border md:block"
-            />
-            <span className="hidden md:inline">Mi Rotaract</span>
+          <Link href="/dashboard" aria-label="Mi Rotaract" className="flex">
+            <Logo size={38} aria-hidden />
           </Link>
         }
         mark={

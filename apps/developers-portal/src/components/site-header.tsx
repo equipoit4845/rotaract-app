@@ -23,7 +23,7 @@ export function SiteHeader() {
           aria-label="Mi Rotaract para desarrolladores"
           className="flex shrink-0 items-center gap-2.5 font-semibold text-foreground"
         >
-          <Logo size={34} aria-hidden />
+          <Logo size={40} aria-hidden />
           <span aria-hidden className="hidden h-6 w-px bg-border sm:block" />
           <span className="hidden sm:inline">Mi Rotaract</span>
           <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary">
@@ -66,7 +66,7 @@ export function SiteFooter({ contractVersion }: { contractVersion: string }) {
     <footer className="mt-20 border-t border-border">
       <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-8 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between md:px-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <Logo size={32} className="shrink-0" />
+          <Logo size={40} className="shrink-0" />
           <p>
             Mi Rotaract para desarrolladores · Contrato de la API v
             {contractVersion}
