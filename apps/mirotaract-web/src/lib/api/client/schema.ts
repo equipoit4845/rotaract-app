@@ -1093,7 +1093,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Listar definiciones de permiso */
+        /**
+         * Listar definiciones de permiso
+         * @description Incluye los permisos de los módulos registrados (`moduleId` no nulo). `organizationId` indica desde qué organización se consulta (E8: el RDR la usa para la pantalla de permisos de cargos del distrito).
+         */
         get: operations["listPermissions"];
         put?: never;
         /**
@@ -1498,12 +1501,15 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Listar módulos registrados */
+        /**
+         * Listar módulos registrados (catálogo)
+         * @description Incluye los permisos de cada módulo. `organizationId` indica desde qué organización se consulta (el permiso se evalúa ahí): sin él sólo responde a permisos de alcance plataforma.
+         */
         get: operations["listModules"];
         put?: never;
         /**
-         * Registrar un módulo
-         * @description Un módulo se registra sin migrar tablas del kernel (CA-MOD-01). El registro administra metadatos; no ejecuta código externo (decisión final #10).
+         * Registrar un módulo desde su manifiesto
+         * @description Registra un módulo a partir de su manifiesto (`mirotaract.module.json`, contrato v1, ver `packages/module-manifest`), vinculado a la app de desarrollador que lo publica. Quién: el RDR (o la plataforma), con `kernel.module.register` en la organización de esa app. El módulo queda `ACTIVE` y gobernado desde esa organización. Cada permiso del manifiesto se crea como `PermissionDefinition` en el espacio de nombres del módulo (`<id>.*`), listo para asignarse a cargos. No ejecuta código externo (decisión final #10) ni migra tablas (CA-MOD-01). Errores de validación: 422 con `errors[]` en español.
          */
         post: operations["registerModule"];
         delete?: never;
@@ -1519,7 +1525,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Obtener un módulo */
+        /** Obtener un módulo (con sus permisos) */
         get: operations["getModule"];
         put?: never;
         post?: never;
@@ -1537,7 +1543,10 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Reemplazar el manifiesto de un módulo */
+        /**
+         * Publicar una versión nueva del manifiesto
+         * @description Reemplaza el manifiesto. El `id` no cambia y la versión no puede ser anterior a la publicada. Los permisos se sincronizan: se crean los nuevos, se actualizan nombre y descripción de los existentes y se borran los que ya no están (también de los cargos que los tenían). Se autoriza contra la organización dueña del módulo.
+         */
         put: operations["updateModuleManifest"];
         post?: never;
         delete?: never;
@@ -1557,7 +1566,7 @@ export interface paths {
         put?: never;
         /**
          * Marcar un módulo como DEPRECATED
-         * @description Un módulo `DEPRECATED` no admite instalaciones nuevas (invariante 6.10.3).
+         * @description Un módulo `DEPRECATED` no admite instalaciones nuevas (invariante 6.10.3); las existentes siguen funcionando. Se autoriza contra la organización dueña del módulo.
          */
         post: operations["deprecateModule"];
         delete?: never;
@@ -1577,7 +1586,7 @@ export interface paths {
         put?: never;
         /**
          * Instalar un módulo en una organización (PENDING)
-         * @description Una organización tiene como máximo una instalación por módulo (invariante 6.10.2).
+         * @description Una organización tiene como máximo una instalación por módulo (invariante 6.10.2). Si la instalación anterior está `DISABLED`, se reinstala (vuelve a `PENDING`). Si se manda `configuration`, se valida contra el `configurationSchema` del módulo y se guarda con sus valores por defecto. Quién: la presidencia del club (`kernel.module.install` en ese club) o un cargo de distrito para el distrito y sus clubes.
          */
         post: operations["installModule"];
         delete?: never;
@@ -1597,7 +1606,7 @@ export interface paths {
         put?: never;
         /**
          * Activar una instalación (PENDING/SUSPENDED → ACTIVE)
-         * @description Valida `configurationSchema` (invariante 6.10.4, CA-MOD-02). Emite evento (CA-MOD-03).
+         * @description Valida la configuración guardada contra `configurationSchema` (invariante 6.10.4, CA-MOD-02) y le aplica los valores por defecto. Emite `kernel.module-activated.v1` (CA-MOD-03). Desde que está activa, los permisos del módulo valen en esta organización.
          */
         post: operations["activateModuleInstallation"];
         delete?: never;
@@ -1619,7 +1628,10 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Actualizar la configuración de una instalación */
+        /**
+         * Actualizar la configuración de una instalación
+         * @description Reemplaza la configuración entera. Se valida contra `configurationSchema` y se guarda con los valores por defecto.
+         */
         patch: operations["updateModuleConfiguration"];
         trace?: never;
     };
@@ -1632,7 +1644,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Suspender una instalación (ACTIVE → SUSPENDED) */
+        /**
+         * Desactivar una instalación (ACTIVE → SUSPENDED)
+         * @description Reversible con `activate`. Mientras tanto, los permisos del módulo no valen en esta organización.
+         */
         post: operations["suspendModuleInstallation"];
         delete?: never;
         options?: never;
@@ -1650,8 +1665,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Deshabilitar una instalación
-         * @description No elimina datos del servicio consumidor (invariante 6.10.5, CA-MOD-04).
+         * Desinstalar (DISABLED)
+         * @description No elimina datos del servicio consumidor (invariante 6.10.5, CA-MOD-04). Para volver a usarlo, se instala de nuevo.
          */
         post: operations["disableModuleInstallation"];
         delete?: never;
@@ -1677,6 +1692,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/organizations/{organizationId}/module-installations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Instalaciones de una organización y de las que dependen de ella
+         * @description Vista de distrito: las instalaciones del distrito y de todos sus clubes, con el nombre de cada organización.
+         */
+        get: operations["listModuleInstallationsInTree"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/organizations/{organizationId}/capabilities": {
         parameters: {
             query?: never;
@@ -1685,7 +1720,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Obtener capacidades habilitadas (módulos activos + permisos)
+         * Obtener capacidades habilitadas (módulos activos)
          * @description Refleja instalación y permisos (CA-MOD-05).
          */
         get: operations["getOrganizationCapabilities"];
@@ -2482,6 +2517,12 @@ export interface components {
             detail?: string;
             instance: string;
             traceId?: string;
+            /** @description Errores por campo (p. ej. un manifiesto o una configuración de módulo). `path` es la ruta del campo (`permissions[0].code`, "" para la raíz) y `message` está en español, listo para mostrar. */
+            errors?: {
+                path: string;
+                message: string;
+                keyword?: string;
+            }[];
         };
         PageInfo: {
             nextCursor?: string | null;
@@ -2977,6 +3018,7 @@ export interface components {
             permission: string;
             matchedAssignments?: string[];
             /**
+             * @description `ROLE_ALLOWED`, `SUPERADMIN_BYPASS`, `EXPLICIT_DENY`, `NO_GRANT`; para permisos de módulos (E8) además `MODULE_NOT_INSTALLED`, `MODULE_NOT_ACTIVE` (instalación pendiente o desactivada en esa organización) y `MODULE_DISABLED`.
              * @example [
              *       "ROLE_ALLOWED"
              *     ]
@@ -3072,28 +3114,72 @@ export interface components {
             password: string;
         };
         ModuleDefinition: {
-            /** @description Identificador estable, p. ej. `meetings` (invariante 6.10.1). */
+            /** @description Identificador estable, p. ej. `reuniones` (invariante 6.10.1). Es el prefijo de sus permisos. */
             id: string;
             name: string;
             description?: string | null;
             version: string;
             contractVersion: number;
             status: components["schemas"]["ModuleStatus"];
-            /** @description Declara permisos, eventos publicados/suscritos y capacidades (§19.3). */
+            /** @description Manifiesto tal como se publicó (ver ModuleManifest). */
             manifest: Record<string, never>;
             configurationSchema?: Record<string, never> | null;
+            /** @description App de desarrollador dueña del módulo (E8). Nulo en módulos anteriores a E8. */
+            developerAppId?: string | null;
+            /** @description Organización desde la que se gobierna (la de la app). */
+            ownerOrganizationId?: string | null;
+            /** @description Permisos del módulo (en `GET /modules`, `GET /modules/{id}` y al registrar o actualizar). */
+            permissions?: components["schemas"]["PermissionDefinition"][];
             /** Format: date-time */
             registeredAt: string;
             /** Format: date-time */
             updatedAt: string;
         };
-        CreateModuleRequest: {
-            id: string;
-            name: string;
-            description?: string | null;
-            version: string;
-            manifest: Record<string, never>;
-            configurationSchema?: Record<string, never> | null;
+        /**
+         * @description `mirotaract.module.json`, contrato v1. Esquema completo (JSON Schema draft-07): https://developers.rotaract4845.com/schemas/module-manifest.v1.json (fuente: `packages/module-manifest/schema/module-manifest.v1.json`). El kernel lo valida entero y responde 422 con `errors[]` en español; acá se declara abierto para que esos errores lleguen tal cual.
+         * @example {
+         *       "id": "reuniones",
+         *       "name": "Reuniones distritales",
+         *       "version": "1.0.0",
+         *       "contractVersion": 1,
+         *       "permissions": [
+         *         {
+         *           "code": "reuniones.vote.cast",
+         *           "name": "Votar en nombre del club",
+         *           "scopeType": "ORGANIZATION"
+         *         }
+         *       ],
+         *       "events": {
+         *         "subscribes": [
+         *           "appointment.activated.v1"
+         *         ],
+         *         "emits": []
+         *       },
+         *       "configurationSchema": {
+         *         "type": "object",
+         *         "required": [
+         *           "emailContacto"
+         *         ],
+         *         "properties": {
+         *           "emailContacto": {
+         *             "type": "string",
+         *             "format": "email",
+         *             "title": "Email de contacto del club"
+         *           }
+         *         }
+         *       },
+         *       "ui": {
+         *         "entryUrl": "https://reuniones.rotaract4845.com",
+         *         "navLabel": "Reuniones",
+         *         "icon": "calendar-check"
+         *       }
+         *     }
+         */
+        ModuleManifest: Record<string, never>;
+        RegisterModuleRequest: {
+            /** @description App de desarrollador dueña del módulo. Tiene que estar activa. */
+            appId: string;
+            manifest: components["schemas"]["ModuleManifest"];
         };
         ModuleInstallation: {
             id: string;
@@ -3110,6 +3196,12 @@ export interface components {
             disabledAt?: string | null;
             /** Format: date-time */
             updatedAt: string;
+            /** @description El módulo (sólo en `GET /organizations/{id}/modules`), sin `permissions`. */
+            module?: components["schemas"]["ModuleDefinition"];
+        };
+        ModuleInstallationInTree: components["schemas"]["ModuleInstallation"] & {
+            organizationName: string;
+            organizationType: components["schemas"]["OrganizationType"];
         };
         UserContext: {
             accountId: string;
@@ -3131,6 +3223,13 @@ export interface components {
                 organizationType: components["schemas"]["OrganizationType"];
                 sources: ("MEMBERSHIP" | "ROLE_ASSIGNMENT")[];
                 roleCodes: string[];
+                /**
+                 * @description E8: permisos de módulos que la persona tiene en esta organización, sólo de módulos activos ahí (la misma decisión que daría `/authorization/check`).
+                 * @example [
+                 *       "reuniones.vote.cast"
+                 *     ]
+                 */
+                modulePermissions?: string[];
             }[];
             contextVersion: number;
         };
@@ -3631,6 +3730,8 @@ export interface components {
         periodId: string;
         appointmentId: string;
         positionDefinitionId: string;
+        /** @description Organización desde la que se consulta; el permiso requerido se evalúa en ella. */
+        scopeOrganizationId: string;
         moduleId: string;
         applicationId: string;
         transferId: string;
@@ -5486,7 +5587,10 @@ export interface operations {
     };
     listPermissions: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Organización desde la que se consulta; el permiso requerido se evalúa en ella. */
+                organizationId?: components["parameters"]["scopeOrganizationId"];
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -6151,6 +6255,8 @@ export interface operations {
         parameters: {
             query?: {
                 status?: components["schemas"]["ModuleStatus"];
+                /** @description Organización desde la que se consulta; el permiso requerido se evalúa en ella. */
+                organizationId?: components["parameters"]["scopeOrganizationId"];
             };
             header?: never;
             path?: never;
@@ -6178,11 +6284,11 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateModuleRequest"];
+                "application/json": components["schemas"]["RegisterModuleRequest"];
             };
         };
         responses: {
-            /** @description Creado. */
+            /** @description Registrado. */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -6191,11 +6297,33 @@ export interface operations {
                     "application/json": components["schemas"]["ModuleDefinition"];
                 };
             };
+            404: components["responses"]["NotFound"];
+            /** @description Ya existe un módulo con ese id, la app no está activa o un código de permiso ya pertenece a otro. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Manifiesto inválido (`KERNEL_MODULE_MANIFEST_INVALID`) u `oauth.clientId` de otra app (`KERNEL_MODULE_APP_MISMATCH`). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Error"];
+                };
+            };
         };
     };
     getModule: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Organización desde la que se consulta; el permiso requerido se evalúa en ella. */
+                organizationId?: components["parameters"]["scopeOrganizationId"];
+            };
             header?: never;
             path: {
                 moduleId: components["parameters"]["moduleId"];
@@ -6228,8 +6356,7 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    manifest: Record<string, never>;
-                    configurationSchema?: Record<string, never> | null;
+                    manifest: components["schemas"]["ModuleManifest"];
                 };
             };
         };
@@ -6241,6 +6368,25 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ModuleDefinition"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+            /** @description Un código de permiso nuevo ya pertenece a otro. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Manifiesto inválido, de otro módulo, versión anterior u `oauth.clientId` de otra app. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Error"];
                 };
             };
         };
@@ -6294,8 +6440,18 @@ export interface operations {
                     "application/json": components["schemas"]["ModuleInstallation"];
                 };
             };
-            /** @description Ya existe una instalación para ese módulo/organización. */
+            404: components["responses"]["NotFound"];
+            /** @description Ya está instalado, o el módulo no admite instalaciones (`DEPRECATED`/`DISABLED`). */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Configuración inválida contra `configurationSchema` (`KERNEL_MODULE_CONFIGURATION_INVALID`). */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -6326,6 +6482,8 @@ export interface operations {
                     "application/json": components["schemas"]["ModuleInstallation"];
                 };
             };
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["InvalidTransition"];
             /** @description Configuración inválida contra `configurationSchema` (CA-MOD-02). */
             422: {
                 headers: {
@@ -6364,6 +6522,16 @@ export interface operations {
                     "application/json": components["schemas"]["ModuleInstallation"];
                 };
             };
+            404: components["responses"]["NotFound"];
+            /** @description La instalación está `DISABLED`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Error"];
+                };
+            };
             /** @description Configuración inválida contra `configurationSchema`. */
             422: {
                 headers: {
@@ -6396,6 +6564,7 @@ export interface operations {
                     "application/json": components["schemas"]["ModuleInstallation"];
                 };
             };
+            409: components["responses"]["InvalidTransition"];
         };
     };
     disableModuleInstallation: {
@@ -6419,6 +6588,7 @@ export interface operations {
                     "application/json": components["schemas"]["ModuleInstallation"];
                 };
             };
+            409: components["responses"]["InvalidTransition"];
         };
     };
     listOrganizationModules: {
@@ -6443,6 +6613,32 @@ export interface operations {
             };
         };
     };
+    listModuleInstallationsInTree: {
+        parameters: {
+            query?: {
+                includeDescendants?: boolean;
+                moduleId?: string;
+                status?: components["schemas"]["InstallationStatus"];
+            };
+            header?: never;
+            path: {
+                organizationId: components["parameters"]["organizationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModuleInstallationInTree"][];
+                };
+            };
+        };
+    };
     getOrganizationCapabilities: {
         parameters: {
             query?: never;
@@ -6461,10 +6657,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        organizationId?: string;
-                        modules?: {
-                            moduleId?: string;
-                            status?: components["schemas"]["InstallationStatus"];
+                        organizationId: string;
+                        modules: {
+                            moduleId: string;
+                            status: components["schemas"]["InstallationStatus"];
+                        }[];
+                        capabilities: {
+                            moduleId: string;
+                            capability: string;
                         }[];
                     };
                 };

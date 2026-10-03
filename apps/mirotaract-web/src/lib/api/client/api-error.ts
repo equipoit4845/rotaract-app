@@ -15,6 +15,8 @@ export class KernelApiError extends Error {
   readonly detail?: string;
   readonly instance?: string;
   readonly traceId?: string;
+  /** Field errors, already in Spanish (e.g. a module configuration checked against its schema). */
+  readonly fieldErrors: Array<{ path: string; message: string }>;
 
   constructor(problem: Partial<ProblemDetails> & { status: number }) {
     super(problem.detail ?? problem.title ?? "Kernel API request failed");
@@ -26,6 +28,9 @@ export class KernelApiError extends Error {
     this.detail = problem.detail;
     this.instance = problem.instance;
     this.traceId = problem.traceId;
+    this.fieldErrors = Array.isArray(problem.errors)
+      ? problem.errors.map(({ path, message }) => ({ path, message }))
+      : [];
   }
 
   /** `problem` is the already-parsed openapi-fetch `error` body (RFC 9457 Problem Details), if any. */

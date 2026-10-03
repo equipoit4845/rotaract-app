@@ -12,6 +12,7 @@ import {
   FileText,
   Home,
   Landmark,
+  Puzzle,
   ShieldCheck,
   UserCog,
   Users,
@@ -55,6 +56,7 @@ export function useShellNavItems(
   const canReadPositions = useCan("kernel.position.read", scope);
   const canReadPeriods = useCan("kernel.period.read", scope);
   const canReadApps = useCan("kernel.app.read", scope);
+  const canReadModules = useCan("kernel.module.read", scope);
   const isDistrictAdminView = superadminMode === "ADMIN";
 
   const district: NavEntry[] = [];
@@ -90,6 +92,11 @@ export function useShellNavItems(
   }
   if (canReadPeriods) {
     club.push({ label: "Períodos", href: "/periods", icon: CalendarRange });
+  }
+  // E8: committee modules the club (or, in the district workspace, the
+  // district) installs and configures.
+  if (canReadModules) {
+    club.push({ label: "Módulos", href: "/modules", icon: Puzzle });
   }
 
   const procedures: NavEntry[] = [];

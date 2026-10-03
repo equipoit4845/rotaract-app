@@ -12,9 +12,13 @@ import type {
 } from "./authorization.types";
 
 export const authorizationApi = {
-  listPermissions: (opts?: { signal?: AbortSignal }) =>
+  /** `organizationId`: where kernel.role.read is evaluated (E8: the RDR reads the catalog from the district). */
+  listPermissions: (organizationId?: string, opts?: { signal?: AbortSignal }) =>
     apiRequest(() =>
-      httpClient.GET("/permissions", { signal: opts?.signal }),
+      httpClient.GET("/permissions", {
+        params: { query: { organizationId } },
+        signal: opts?.signal,
+      }),
     ) as Promise<PermissionDefinition[]>,
 
   registerPermission: (payload: CreatePermissionRequest) =>

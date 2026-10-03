@@ -2,21 +2,32 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { authorizationKeys } from "../authorization/authorization.keys";
 import { modulesApi } from "./modules.api";
 import { moduleKeys } from "./modules.keys";
-import type { CreateModuleRequest, ModuleStatus } from "./modules.types";
+import type { ModuleStatus, RegisterModuleRequest } from "./modules.types";
 
-export function useModules(status?: ModuleStatus) {
+/** Module catalog, read from (and authorized at) `organizationId`. */
+export function useModules(
+  organizationId: string | undefined,
+  status?: ModuleStatus,
+) {
   return useQuery({
-    queryKey: moduleKeys.list(status),
-    queryFn: ({ signal }) => modulesApi.list(status, { signal }),
+    queryKey: moduleKeys.list(status, organizationId),
+    queryFn: ({ signal }) =>
+      modulesApi.list({ status, organizationId }, { signal }),
+    enabled: Boolean(organizationId),
   });
 }
 
-export function useModule(moduleId: string | undefined) {
+export function useModule(
+  moduleId: string | undefined,
+  organizationId?: string,
+) {
   return useQuery({
     queryKey: moduleKeys.detail(moduleId ?? ""),
-    queryFn: ({ signal }) => modulesApi.get(moduleId as string, { signal }),
+    queryFn: ({ signal }) =>
+      modulesApi.get(moduleId as string, organizationId, { signal }),
     enabled: Boolean(moduleId),
   });
 }
@@ -27,6 +38,23 @@ export function useOrganizationModules(organizationId: string | undefined) {
     queryFn: ({ signal }) =>
       modulesApi.listOrganizationModules(organizationId as string, { signal }),
     enabled: Boolean(organizationId),
+  });
+}
+
+/** District view: installations of the district and all its clubs. */
+export function useModuleInstallationsInTree(
+  organizationId: string | undefined,
+  options: { enabled?: boolean } = {},
+) {
+  return useQuery({
+    queryKey: moduleKeys.installationsInTree(organizationId ?? ""),
+    queryFn: ({ signal }) =>
+      modulesApi.listInstallationsInTree(
+        organizationId as string,
+        {},
+        { signal },
+      ),
+    enabled: Boolean(organizationId) && (options.enabled ?? true),
   });
 }
 
@@ -41,12 +69,18 @@ export function useOrganizationCapabilities(
   });
 }
 
+/** A new module brings new permissions: refresh the permission catalog too. */
+function invalidateCatalog(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.invalidateQueries({ queryKey: moduleKeys.lists() });
+  queryClient.invalidateQueries({ queryKey: authorizationKeys.all });
+}
+
 export function useRegisterModule() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: CreateModuleRequest) => modulesApi.register(payload),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: moduleKeys.lists() }),
+    mutationFn: (payload: RegisterModuleRequest) =>
+      modulesApi.register(payload),
+    onSuccess: () => invalidateCatalog(queryClient),
   });
 }
 
@@ -55,19 +89,16 @@ export function useUpdateModuleManifest() {
   return useMutation({
     mutationFn: ({
       moduleId,
-      payload,
+      manifest,
     }: {
       moduleId: string;
-      payload: {
-        manifest: Record<string, unknown>;
-        configurationSchema?: Record<string, unknown> | null;
-      };
-    }) => modulesApi.updateManifest(moduleId, payload),
+      manifest: Record<string, unknown>;
+    }) => modulesApi.updateManifest(moduleId, manifest),
     onSuccess: (module_) => {
       queryClient.invalidateQueries({
         queryKey: moduleKeys.detail(module_.id),
       });
-      queryClient.invalidateQueries({ queryKey: moduleKeys.lists() });
+      invalidateCatalog(queryClient);
     },
   });
 }
@@ -95,7 +126,12 @@ function invalidateInstallation(
   queryClient.invalidateQueries({
     queryKey: moduleKeys.capabilities(organizationId),
   });
+  queryClient.invalidateQueries({
+    queryKey: [...moduleKeys.all, "installationsInTree"],
+  });
 }
+
+type InstallationTarget = { organizationId: string; moduleId: string };
 
 export function useInstallModule() {
   const queryClient = useQueryClient();
@@ -104,12 +140,10 @@ export function useInstallModule() {
       organizationId,
       moduleId,
       configuration,
-    }: {
-      organizationId: string;
-      moduleId: string;
+    }: InstallationTarget & {
       configuration?: Record<string, unknown> | null;
     }) => modulesApi.install(organizationId, moduleId, configuration),
-    onSuccess: (_installation, { organizationId }) =>
+    onSettled: (_installation, _error, { organizationId }) =>
       invalidateInstallation(queryClient, organizationId),
   });
 }
@@ -117,14 +151,9 @@ export function useInstallModule() {
 export function useActivateModuleInstallation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      organizationId,
-      moduleId,
-    }: {
-      organizationId: string;
-      moduleId: string;
-    }) => modulesApi.activateInstallation(organizationId, moduleId),
-    onSuccess: (_installation, { organizationId }) =>
+    mutationFn: ({ organizationId, moduleId }: InstallationTarget) =>
+      modulesApi.activateInstallation(organizationId, moduleId),
+    onSettled: (_installation, _error, { organizationId }) =>
       invalidateInstallation(queryClient, organizationId),
   });
 }
@@ -136,11 +165,7 @@ export function useUpdateModuleConfiguration() {
       organizationId,
       moduleId,
       configuration,
-    }: {
-      organizationId: string;
-      moduleId: string;
-      configuration: Record<string, unknown>;
-    }) =>
+    }: InstallationTarget & { configuration: Record<string, unknown> }) =>
       modulesApi.updateConfiguration(organizationId, moduleId, configuration),
     onSuccess: (_installation, { organizationId }) =>
       invalidateInstallation(queryClient, organizationId),
@@ -150,13 +175,8 @@ export function useUpdateModuleConfiguration() {
 export function useSuspendModuleInstallation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      organizationId,
-      moduleId,
-    }: {
-      organizationId: string;
-      moduleId: string;
-    }) => modulesApi.suspendInstallation(organizationId, moduleId),
+    mutationFn: ({ organizationId, moduleId }: InstallationTarget) =>
+      modulesApi.suspendInstallation(organizationId, moduleId),
     onSuccess: (_installation, { organizationId }) =>
       invalidateInstallation(queryClient, organizationId),
   });
@@ -165,13 +185,8 @@ export function useSuspendModuleInstallation() {
 export function useDisableModuleInstallation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      organizationId,
-      moduleId,
-    }: {
-      organizationId: string;
-      moduleId: string;
-    }) => modulesApi.disableInstallation(organizationId, moduleId),
+    mutationFn: ({ organizationId, moduleId }: InstallationTarget) =>
+      modulesApi.disableInstallation(organizationId, moduleId),
     onSuccess: (_installation, { organizationId }) =>
       invalidateInstallation(queryClient, organizationId),
   });

@@ -1,46 +1,50 @@
 import { apiRequest, httpClient } from "../client/http-client";
 import type {
-  CreateModuleRequest,
+  InstallationStatus,
   ModuleDefinition,
   ModuleInstallation,
+  ModuleInstallationInTree,
   ModuleStatus,
   OrganizationCapabilities,
+  RegisterModuleRequest,
 } from "./modules.types";
 
 export const modulesApi = {
-  list: (status?: ModuleStatus, opts?: { signal?: AbortSignal }) =>
+  /** `organizationId`: where kernel.module.read is evaluated (the active organization). */
+  list: (
+    params: { status?: ModuleStatus; organizationId?: string } = {},
+    opts?: { signal?: AbortSignal },
+  ) =>
     apiRequest(() =>
       httpClient.GET("/modules", {
-        params: { query: { status } },
+        params: { query: params },
         signal: opts?.signal,
       }),
     ) as Promise<ModuleDefinition[]>,
 
-  get: (moduleId: string, opts?: { signal?: AbortSignal }) =>
+  get: (
+    moduleId: string,
+    organizationId?: string,
+    opts?: { signal?: AbortSignal },
+  ) =>
     apiRequest(() =>
       httpClient.GET("/modules/{moduleId}", {
-        params: { path: { moduleId } },
+        params: { path: { moduleId }, query: { organizationId } },
         signal: opts?.signal,
       }),
     ) as Promise<ModuleDefinition>,
 
-  register: (payload: CreateModuleRequest) =>
+  register: (payload: RegisterModuleRequest) =>
     apiRequest(() =>
-      httpClient.POST("/modules", { body: payload }),
+      httpClient.POST("/modules", { body: payload as never }),
     ) as Promise<ModuleDefinition>,
 
-  updateManifest: (
-    moduleId: string,
-    payload: {
-      manifest: Record<string, unknown>;
-      configurationSchema?: Record<string, unknown> | null;
-    },
-  ) =>
+  updateManifest: (moduleId: string, manifest: Record<string, unknown>) =>
     apiRequest(() =>
       httpClient.PUT("/modules/{moduleId}/manifest", {
         params: { path: { moduleId } },
         // `as never`: see memberships.api.ts — untyped `object` schema fields.
-        body: payload as never,
+        body: { manifest } as never,
       }),
     ) as Promise<ModuleDefinition>,
 
@@ -61,10 +65,7 @@ export const modulesApi = {
         "/organizations/{organizationId}/modules/{moduleId}/install",
         {
           params: { path: { organizationId, moduleId } },
-          body:
-            configuration !== undefined
-              ? ({ configuration } as never)
-              : undefined,
+          body: (configuration !== undefined ? { configuration } : {}) as never,
         },
       ),
     ) as Promise<ModuleInstallation>,
@@ -124,6 +125,19 @@ export const modulesApi = {
         signal: opts?.signal,
       }),
     ) as Promise<ModuleInstallation[]>,
+
+  /** District view: installations in the organization and every one below it. */
+  listInstallationsInTree: (
+    organizationId: string,
+    filters: { moduleId?: string; status?: InstallationStatus } = {},
+    opts?: { signal?: AbortSignal },
+  ) =>
+    apiRequest(() =>
+      httpClient.GET("/organizations/{organizationId}/module-installations", {
+        params: { path: { organizationId }, query: filters },
+        signal: opts?.signal,
+      }),
+    ) as Promise<ModuleInstallationInTree[]>,
 
   organizationCapabilities: (
     organizationId: string,

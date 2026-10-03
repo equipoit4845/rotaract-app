@@ -3,6 +3,8 @@ import type { RoleAssignmentFilters } from "./authorization.types";
 export const authorizationKeys = {
   all: ["authorization"] as const,
   permissions: () => [...authorizationKeys.all, "permissions"] as const,
+  permissionList: (organizationId?: string) =>
+    [...authorizationKeys.permissions(), organizationId ?? null] as const,
   roles: () => [...authorizationKeys.all, "roles"] as const,
   roleAssignments: () => [...authorizationKeys.all, "roleAssignments"] as const,
   roleAssignmentList: (filters: RoleAssignmentFilters) =>

@@ -14,10 +14,12 @@ import type {
   RoleAssignmentFilters,
 } from "./authorization.types";
 
-export function usePermissions() {
+/** Permission catalog (kernel + modules), read from `organizationId`. */
+export function usePermissions(organizationId?: string) {
   return useQuery({
-    queryKey: authorizationKeys.permissions(),
-    queryFn: ({ signal }) => authorizationApi.listPermissions({ signal }),
+    queryKey: authorizationKeys.permissionList(organizationId),
+    queryFn: ({ signal }) =>
+      authorizationApi.listPermissions(organizationId, { signal }),
     staleTime: 5 * 60_000,
   });
 }

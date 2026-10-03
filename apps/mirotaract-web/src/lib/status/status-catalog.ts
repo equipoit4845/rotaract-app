@@ -3,6 +3,7 @@ import type {
   ApplicationStatus,
   AppointmentStatus,
   DeveloperAppStatus,
+  InstallationStatus,
   MembershipStatus,
   OrganizationStatus,
   PeriodStatus,
@@ -87,6 +88,14 @@ const catalog = {
     SUSPENDED: { label: "Pausada", tone: "warning" },
     REVOKED: { label: "Revocada", tone: "danger" },
   } satisfies Record<DeveloperAppStatus, StatusEntry>,
+  // E8: a module in a club. "Desactivado" is reversible; "Desinstalado" too
+  // (it can be installed again), so neither reads as a negative outcome.
+  moduleInstallation: {
+    PENDING: { label: "Falta activar", tone: "info" },
+    ACTIVE: { label: "Activo", tone: "success" },
+    SUSPENDED: { label: "Desactivado", tone: "warning" },
+    DISABLED: { label: "Desinstalado", tone: "neutral" },
+  } satisfies Record<InstallationStatus, StatusEntry>,
 } as const;
 
 export type StatusKind = keyof typeof catalog;

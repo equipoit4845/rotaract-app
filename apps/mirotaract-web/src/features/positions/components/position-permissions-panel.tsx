@@ -1,14 +1,16 @@
 "use client";
 
-import type { PositionDefinition } from "@/lib/api";
+import type { PermissionDefinition, PositionDefinition } from "@/lib/api";
 import {
   useAttachPermissionToPosition,
   useDetachPermissionFromPosition,
+  useModules,
   usePermissions,
   usePositionPermissions,
 } from "@/lib/api";
 import {
   Alert,
+  Badge,
   Button,
   Card,
   CardContent,
@@ -29,6 +31,11 @@ import { describePositionPermissionError } from "../forms/position-mutation-erro
  * position's current permissions (GET /position-definitions/{id}/permissions)
  * listed by name, each removable, plus a picker for the ones it doesn't
  * have yet. Permission codes never reach the screen.
+ *
+ * E8: permissions of committee modules (e.g. "Votar en nombre del club" of
+ * Reuniones) are in the same catalog, grouped by module, so the RDR assigns
+ * them to positions like any other. The catalog is read from the
+ * organization that owns the position (the district for its catalog).
  */
 export function PositionPermissionsPanel({
   position,
@@ -39,7 +46,9 @@ export function PositionPermissionsPanel({
   ownerName?: string;
 }) {
   const [permissionId, setPermissionId] = useState("");
-  const catalog = usePermissions();
+  const scopeOrganizationId = position.ownerOrganizationId ?? undefined;
+  const catalog = usePermissions(scopeOrganizationId);
+  const modules = useModules(scopeOrganizationId);
   const current = usePositionPermissions(position.id);
   const attach = useAttachPermissionToPosition();
   const detach = useDetachPermissionFromPosition();
@@ -61,10 +70,14 @@ export function PositionPermissionsPanel({
     );
   }
 
+  const moduleName = (moduleId: string | null | undefined) =>
+    moduleId
+      ? (modules.data?.find((module) => module.id === moduleId)?.name ??
+        moduleId)
+      : undefined;
   const currentIds = new Set((current.data ?? []).map((p) => p.id));
-  const available = (catalog.data ?? [])
-    .filter((p) => !currentIds.has(p.id))
-    .sort((a, b) => a.name.localeCompare(b.name, "es"));
+  const available = (catalog.data ?? []).filter((p) => !currentIds.has(p.id));
+  const groups = groupByModule(available, moduleName);
   const error = attach.isError
     ? attach.error
     : detach.isError
@@ -82,7 +95,8 @@ export function PositionPermissionsPanel({
       <CardHeader>
         <CardTitle>Qué puede hacer este cargo</CardTitle>
         <CardDescription>
-          Los cambios se aplican {reach}, desde su próximo ingreso.
+          Los cambios se aplican {reach}, desde su próximo ingreso. Los permisos
+          de un módulo valen solo donde el módulo está activo.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
@@ -102,9 +116,14 @@ export function PositionPermissionsPanel({
                 key={permission.id}
                 className="flex items-center justify-between gap-3 px-3 py-2"
               >
-                <span className="flex items-center gap-2 text-sm">
+                <span className="flex flex-wrap items-center gap-2 text-sm">
                   <Check className="size-4 text-success" aria-hidden />
                   {permission.name}
+                  {permission.moduleId ? (
+                    <Badge tone="info">
+                      Módulo {moduleName(permission.moduleId)}
+                    </Badge>
+                  ) : null}
                 </span>
                 <Button
                   type="button"
@@ -139,10 +158,14 @@ export function PositionPermissionsPanel({
               onChange={(event) => setPermissionId(event.target.value)}
             >
               <option value="">Elegí qué más puede hacer…</option>
-              {available.map((permission) => (
-                <option key={permission.id} value={permission.id}>
-                  {permission.name}
-                </option>
+              {groups.map((group) => (
+                <optgroup key={group.label} label={group.label}>
+                  {group.permissions.map((permission) => (
+                    <option key={permission.id} value={permission.id}>
+                      {permission.name}
+                    </option>
+                  ))}
+                </optgroup>
               ))}
             </Select>
           </FormField>
@@ -166,4 +189,30 @@ export function PositionPermissionsPanel({
       </CardContent>
     </Card>
   );
+}
+
+/** Mi Rotaract's own permissions first, then one group per module. */
+export function groupByModule(
+  permissions: PermissionDefinition[],
+  moduleName: (moduleId: string | null | undefined) => string | undefined,
+): Array<{ label: string; permissions: PermissionDefinition[] }> {
+  const byName = (a: PermissionDefinition, b: PermissionDefinition) =>
+    a.name.localeCompare(b.name, "es");
+  const own = permissions.filter((p) => !p.moduleId).sort(byName);
+  const moduleIds = [
+    ...new Set(
+      permissions.map((p) => p.moduleId).filter((id): id is string => !!id),
+    ),
+  ].sort((a, b) =>
+    (moduleName(a) ?? a).localeCompare(moduleName(b) ?? b, "es"),
+  );
+  return [
+    ...(own.length ? [{ label: "Mi Rotaract", permissions: own }] : []),
+    ...moduleIds.map((moduleId) => ({
+      label: `Módulo ${moduleName(moduleId)}`,
+      permissions: permissions
+        .filter((p) => p.moduleId === moduleId)
+        .sort(byName),
+    })),
+  ];
 }
