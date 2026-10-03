@@ -36,7 +36,10 @@ Destinos:
   agents   AGENTS.md (bloque propio; respeta el resto del archivo)
 `;
 
-export function main(argv, { cwd = process.cwd(), out = process.stdout, err = process.stderr } = {}) {
+export function main(
+  argv,
+  { cwd = process.cwd(), out = process.stdout, err = process.stderr } = {},
+) {
   const { values, positionals } = parseArgs({
     args: argv,
     allowPositionals: true,
@@ -51,35 +54,61 @@ export function main(argv, { cwd = process.cwd(), out = process.stdout, err = pr
     },
   });
   const [command, ...rest] = positionals;
-  if (values.version) return out.write(`${VERSION}\n`), 0;
-  if (values.help || !command) return out.write(HELP), command || values.help ? 0 : 1;
+  if (values.version) return (out.write(`${VERSION}\n`), 0);
+  if (values.help || !command)
+    return (out.write(HELP), command || values.help ? 0 : 1);
   try {
     switch (command) {
       case "install": {
         const targets = parseTargets(values.target);
         const dir = resolve(cwd, rest[0] ?? ".");
-        const only = values.skills?.split(",").map((s) => s.trim()).filter(Boolean);
-        const results = install({ targets, dir, skills: only, force: values.force, dryRun: values["dry-run"] });
-        const labels = { created: "creado", updated: "actualizado", merged: "agregado al archivo existente", unchanged: "sin cambios", skipped: "OMITIDO (no lo generó este paquete; --force para pisarlo)" };
-        for (const r of results) out.write(`${values["dry-run"] ? "[simulación] " : ""}${r.path}: ${labels[r.action]}\n`);
-        out.write(`\nListo: ${targets.join(", ")} en ${dir}. Cada skill termina con el checklist de seguridad.\n`);
+        const only = values.skills
+          ?.split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
+        const results = install({
+          targets,
+          dir,
+          skills: only,
+          force: values.force,
+          dryRun: values["dry-run"],
+        });
+        const labels = {
+          created: "creado",
+          updated: "actualizado",
+          merged: "agregado al archivo existente",
+          unchanged: "sin cambios",
+          skipped: "OMITIDO (no lo generó este paquete; --force para pisarlo)",
+        };
+        for (const r of results)
+          out.write(
+            `${values["dry-run"] ? "[simulación] " : ""}${r.path}: ${labels[r.action]}\n`,
+          );
+        out.write(
+          `\nListo: ${targets.join(", ")} en ${dir}. Cada skill termina con el checklist de seguridad.\n`,
+        );
         return results.some((r) => r.action === "skipped") ? 2 : 0;
       }
       case "list":
-        for (const s of loadSkills()) out.write(`${s.name.padEnd(26)} ${s.title}\n`);
+        for (const s of loadSkills())
+          out.write(`${s.name.padEnd(26)} ${s.title}\n`);
         return 0;
       case "show": {
         const name = rest[0];
-        if (!name) throw new SkillError("Falta el nombre de la skill (ver `list`).");
+        if (!name)
+          throw new SkillError("Falta el nombre de la skill (ver `list`).");
         const target = parseTargets(values.target ?? "claude")[0];
-        const files = renderTarget(target, { only: [name] }).filter((f) => !f.managed || target === "agents");
+        const files = renderTarget(target, { only: [name] }).filter(
+          (f) => !f.managed || target === "agents",
+        );
         out.write(files.map((f) => f.content).join("\n"));
         return 0;
       }
       case "prompts": {
         const prompts = loadPrompts();
         if (!rest[0]) {
-          for (const p of prompts) out.write(`${p.name.padEnd(26)} ${p.title}\n`);
+          for (const p of prompts)
+            out.write(`${p.name.padEnd(26)} ${p.title}\n`);
           return 0;
         }
         const prompt = prompts.find((p) => p.name === rest[0]);
@@ -90,7 +119,9 @@ export function main(argv, { cwd = process.cwd(), out = process.stdout, err = pr
       case "build": {
         loadChecklist();
         const files = buildAll(resolve(cwd, values.out ?? "dist"));
-        out.write(`${files.length} archivos en ${resolve(cwd, values.out ?? "dist")}\n`);
+        out.write(
+          `${files.length} archivos en ${resolve(cwd, values.out ?? "dist")}\n`,
+        );
         return 0;
       }
       default:

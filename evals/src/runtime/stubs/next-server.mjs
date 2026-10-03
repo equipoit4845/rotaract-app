@@ -9,5 +9,9 @@ export class NextResponse extends Response {
 }
 export const NextRequest = Request;
 export function after(fn) {
-  queueMicrotask(() => Promise.resolve().then(fn).catch(() => {}));
+  queueMicrotask(() =>
+    Promise.resolve()
+      .then(fn)
+      .catch(() => {}),
+  );
 }

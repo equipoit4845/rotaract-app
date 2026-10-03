@@ -29,6 +29,10 @@ contratos públicos son [`kernel-openapi.yaml`](../kernel-openapi.yaml),
   `dev`, `gen types` y `webhooks listen`; distrito sintético
   (`prisma/seed-synthetic.ts`) y compose `mirotaract-dev`. Guía para
   desarrolladores: [developers/cli.md](developers/cli.md).
+- [Skills de IA, servidor MCP, llms.txt y evals](17-ai-skills.md): skills
+  por tarea para Claude Code, Cursor, Copilot y AGENTS.md, `@mirotaract/mcp`,
+  `dist/llms/`, evals con graders y gate de publicación. Guía para
+  desarrolladores: [developers/ia.md](developers/ia.md).
 - [Validación v1 del Design System](design-system-v1-validation.md):
   veredicto por área con comandos y resultados reales — no afirmaciones sin
   evidencia.

@@ -11,5 +11,17 @@ import webhookRuntime from "./webhook-runtime.js";
 import webhookSignature from "./webhook-signature.js";
 
 export const GRADERS = Object.fromEntries(
-  [noWebStorageTokens, jwksVerification, minimalScopes, noClientSecrets, webhookSignature, webhookIdempotency, webhookRuntime, noPiiLogs, pagination, manifestValid, kernelScopes].map((g) => [g.id, g]),
+  [
+    noWebStorageTokens,
+    jwksVerification,
+    minimalScopes,
+    noClientSecrets,
+    webhookSignature,
+    webhookIdempotency,
+    webhookRuntime,
+    noPiiLogs,
+    pagination,
+    manifestValid,
+    kernelScopes,
+  ].map((g) => [g.id, g]),
 );

@@ -16,6 +16,8 @@ try {
     `mirotaract-mcp ${VERSION} listo (stdio). Kernel: ${config.baseUrl ?? "ninguno"} → ${config.mode === "sandbox" ? "sandbox local habilitado" : "solo lectura de docs y contratos"}.\n`,
   );
 } catch (error) {
-  process.stderr.write(`mirotaract-mcp no pudo arrancar: ${error?.stack ?? error}\n`);
+  process.stderr.write(
+    `mirotaract-mcp no pudo arrancar: ${error?.stack ?? error}\n`,
+  );
   process.exit(1);
 }

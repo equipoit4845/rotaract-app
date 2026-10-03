@@ -105,6 +105,7 @@ tipos (`mirotaract gen types`) y reenvía webhooks a tu servidor local
 | [catalogo-de-eventos.md](catalogo-de-eventos.md) | Todos los tipos de evento, con sus campos y un ejemplo (generado del contrato). |
 | [errores.md](errores.md) | Formatos de error, códigos y qué hacer con cada uno; reintentos. |
 | [seguridad.md](seguridad.md) | Checklist obligatoria antes de pedir producción. |
+| [ia.md](ia.md) | Programar con asistentes de IA: skills para Claude Code, Cursor, Copilot y AGENTS.md, servidor MCP, llms.txt, plantillas de prompt y evals. |
 | [faq.md](faq.md) | Preguntas frecuentes. |
 
 ## Datos de referencia

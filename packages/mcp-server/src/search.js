@@ -5,7 +5,9 @@
  */
 
 const STOP = new Set(
-  "a al algo como con cual cuando de del desde donde el ella en es esa ese eso esta este esto hay la las lo los mas me mi muy no o para pero por que se si sin sobre su sus te tu un una uno y ya the of to and in is for on".split(" "),
+  "a al algo como con cual cuando de del desde donde el ella en es esa ese eso esta este esto hay la las lo los mas me mi muy no o para pero por que se si sin sobre su sus te tu un una uno y ya the of to and in is for on".split(
+    " ",
+  ),
 );
 
 export function fold(text) {
@@ -54,14 +56,19 @@ export function splitSections(doc) {
 
 export function createIndex(docs) {
   const sections = docs.flatMap(splitSections).map((s) => {
-    const tokens = [...tokenize(`${s.heading} ${s.heading} ${s.docTitle}`), ...tokenize(s.text)];
+    const tokens = [
+      ...tokenize(`${s.heading} ${s.heading} ${s.docTitle}`),
+      ...tokenize(s.text),
+    ];
     const tf = new Map();
     for (const t of tokens) tf.set(t, (tf.get(t) ?? 0) + 1);
     return { ...s, tf, length: tokens.length };
   });
   const df = new Map();
-  for (const s of sections) for (const t of s.tf.keys()) df.set(t, (df.get(t) ?? 0) + 1);
-  const avg = sections.reduce((n, s) => n + s.length, 0) / Math.max(sections.length, 1);
+  for (const s of sections)
+    for (const t of s.tf.keys()) df.set(t, (df.get(t) ?? 0) + 1);
+  const avg =
+    sections.reduce((n, s) => n + s.length, 0) / Math.max(sections.length, 1);
   return { sections, df, avg };
 }
 
@@ -92,7 +99,9 @@ export function search(index, query, limit = 5) {
         if (!f) continue;
         const n = index.df.get(t) ?? 0;
         const idf = Math.log(1 + (N - n + 0.5) / (n + 0.5));
-        score += idf * ((f * (k1 + 1)) / (f + k1 * (1 - b + (b * s.length) / index.avg)));
+        score +=
+          idf *
+          ((f * (k1 + 1)) / (f + k1 * (1 - b + (b * s.length) / index.avg)));
       }
       return { s, score };
     })

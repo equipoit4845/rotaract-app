@@ -9,13 +9,18 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const PACKAGE_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 export const BUNDLE_PATH = join(PACKAGE_DIR, "dist/bundle.json");
-const REPO_SOURCES = join(PACKAGE_DIR, "../../scripts/lib/developer-sources.mjs");
+const REPO_SOURCES = join(
+  PACKAGE_DIR,
+  "../../scripts/lib/developer-sources.mjs",
+);
 
 export const BUNDLE_FORMAT = 1;
 
 export async function buildBundleData() {
   if (!existsSync(REPO_SOURCES))
-    throw new Error("No encuentro las fuentes del monorepo (scripts/lib/developer-sources.mjs) para armar el bundle.");
+    throw new Error(
+      "No encuentro las fuentes del monorepo (scripts/lib/developer-sources.mjs) para armar el bundle.",
+    );
   const src = await import(pathToFileURL(REPO_SOURCES).href);
   const openapiText = src.loadOpenApiText();
   const openapi = src.loadOpenApi();
@@ -23,7 +28,15 @@ export async function buildBundleData() {
   return {
     format: BUNDLE_FORMAT,
     contractVersion: openapi.info?.version ?? null,
-    docs: src.loadDeveloperDocs().map(({ slug, path, title, description, content }) => ({ slug, path, title, description, content })),
+    docs: src
+      .loadDeveloperDocs()
+      .map(({ slug, path, title, description, content }) => ({
+        slug,
+        path,
+        title,
+        description,
+        content,
+      })),
     openapi,
     openapiText,
     events: await src.loadEventCatalog(),

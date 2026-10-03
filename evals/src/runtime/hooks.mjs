@@ -26,22 +26,42 @@ function withExtension(base) {
 }
 
 export async function resolve(specifier, context, next) {
-  if (specifier === "server-only" || specifier === "client-only") return { url: pathToFileURL(join(STUBS, "empty.mjs")).href, shortCircuit: true };
-  if (specifier === "next/server") return { url: pathToFileURL(join(STUBS, "next-server.mjs")).href, shortCircuit: true };
+  if (specifier === "server-only" || specifier === "client-only")
+    return {
+      url: pathToFileURL(join(STUBS, "empty.mjs")).href,
+      shortCircuit: true,
+    };
+  if (specifier === "next/server")
+    return {
+      url: pathToFileURL(join(STUBS, "next-server.mjs")).href,
+      shortCircuit: true,
+    };
   if (SDK && /^@mirotaract\/sdk(\/(next|express))?$/.test(specifier)) {
     const sub = specifier.split("/")[2] ?? "index";
     const src = join(SDK, "src", `${sub}.ts`);
     const dist = join(SDK, "dist/esm", `${sub}.js`);
-    return { url: pathToFileURL(existsSync(dist) ? dist : src).href, shortCircuit: true };
+    return {
+      url: pathToFileURL(existsSync(dist) ? dist : src).href,
+      shortCircuit: true,
+    };
   }
   if (specifier.startsWith("@/")) {
-    const found = withExtension(join(ROOT, "src", specifier.slice(2))) ?? withExtension(join(ROOT, specifier.slice(2)));
+    const found =
+      withExtension(join(ROOT, "src", specifier.slice(2))) ??
+      withExtension(join(ROOT, specifier.slice(2)));
     if (found) return { url: pathToFileURL(found).href, shortCircuit: true };
   }
-  if ((specifier.startsWith("./") || specifier.startsWith("../")) && context.parentURL?.startsWith("file:")) {
-    const base = resolvePath(dirname(fileURLToPath(context.parentURL)), specifier);
+  if (
+    (specifier.startsWith("./") || specifier.startsWith("../")) &&
+    context.parentURL?.startsWith("file:")
+  ) {
+    const base = resolvePath(
+      dirname(fileURLToPath(context.parentURL)),
+      specifier,
+    );
     const found = withExtension(base);
-    if (found && found !== base) return { url: pathToFileURL(found).href, shortCircuit: true };
+    if (found && found !== base)
+      return { url: pathToFileURL(found).href, shortCircuit: true };
   }
   return next(specifier, context);
 }

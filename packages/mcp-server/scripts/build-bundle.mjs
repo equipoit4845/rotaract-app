@@ -11,7 +11,10 @@ import { fileURLToPath } from "node:url";
 
 import { buildBundleData } from "../src/bundle.js";
 
-const OUT = resolve(dirname(fileURLToPath(import.meta.url)), "../dist/bundle.json");
+const OUT = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  "../dist/bundle.json",
+);
 
 const bundle = await buildBundleData();
 mkdirSync(dirname(OUT), { recursive: true });

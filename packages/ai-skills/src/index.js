@@ -12,7 +12,13 @@
  * copilot-instructions.md get a managed block).
  */
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -21,7 +27,9 @@ import { parse as parseYaml } from "yaml";
 const PACKAGE_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 export const SKILLS_DIR = join(PACKAGE_DIR, "skills-src");
 export const PROMPTS_DIR = join(PACKAGE_DIR, "prompts");
-export const VERSION = JSON.parse(readFileSync(join(PACKAGE_DIR, "package.json"), "utf8")).version;
+export const VERSION = JSON.parse(
+  readFileSync(join(PACKAGE_DIR, "package.json"), "utf8"),
+).version;
 export const TARGETS = ["claude", "cursor", "copilot", "agents"];
 export const GENERATED_MARK = "Generado por @mirotaract/ai-skills";
 export const BLOCK_BEGIN = "<!-- mirotaract-ai-skills:begin -->";
@@ -39,19 +47,30 @@ export function parseFrontmatter(text, file = "") {
 /** Claude Code constraints (name ≤ 64, lowercase/digits/hyphens; description ≤ 1024, no XML tags). */
 export function validateSkill(skill) {
   const errors = [];
-  if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(skill.name ?? "") || skill.name.length > 64)
+  if (
+    !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(skill.name ?? "") ||
+    skill.name.length > 64
+  )
     errors.push("name: minúsculas, números y guiones, hasta 64 caracteres");
-  if (typeof skill.description !== "string" || !skill.description.trim()) errors.push("description: obligatoria");
+  if (typeof skill.description !== "string" || !skill.description.trim())
+    errors.push("description: obligatoria");
   else {
-    if (skill.description.length > 1024) errors.push("description: hasta 1024 caracteres");
+    if (skill.description.length > 1024)
+      errors.push("description: hasta 1024 caracteres");
     if (/[<>]/.test(skill.description)) errors.push("description: sin < ni >");
   }
-  if (typeof skill.title !== "string" || !skill.title.trim()) errors.push("title: obligatorio");
-  if (!Array.isArray(skill.globs) || skill.globs.some((g) => typeof g !== "string"))
+  if (typeof skill.title !== "string" || !skill.title.trim())
+    errors.push("title: obligatorio");
+  if (
+    !Array.isArray(skill.globs) ||
+    skill.globs.some((g) => typeof g !== "string")
+  )
     errors.push("globs: lista de strings");
   if (!skill.body.trim()) errors.push("cuerpo vacío");
   if (/^## Checklist de seguridad/m.test(skill.body))
-    errors.push("el checklist se agrega solo (skills-src/_checklist.md); no lo repitas");
+    errors.push(
+      "el checklist se agrega solo (skills-src/_checklist.md); no lo repitas",
+    );
   return errors;
 }
 
@@ -65,12 +84,18 @@ export function loadSkills(dir = SKILLS_DIR) {
     .filter((f) => f.endsWith(".md") && !f.startsWith("_"))
     .sort()
     .map((file) => {
-      const { data, body } = parseFrontmatter(readFileSync(join(dir, file), "utf8"), file);
+      const { data, body } = parseFrontmatter(
+        readFileSync(join(dir, file), "utf8"),
+        file,
+      );
       const skill = {
         file,
         name: data.name,
         title: data.title,
-        description: typeof data.description === "string" ? data.description.replace(/\s+/g, " ").trim() : data.description,
+        description:
+          typeof data.description === "string"
+            ? data.description.replace(/\s+/g, " ").trim()
+            : data.description,
         globs: data.globs ?? [],
         alwaysApply: Boolean(data.alwaysApply),
         body: body.trim(),
@@ -82,7 +107,8 @@ export function loadSkills(dir = SKILLS_DIR) {
     .sort((a, b) => a.name.localeCompare(b.name));
   const names = new Set();
   for (const skill of skills) {
-    if (names.has(skill.name)) throw new SkillError(`nombre repetido: ${skill.name}`);
+    if (names.has(skill.name))
+      throw new SkillError(`nombre repetido: ${skill.name}`);
     names.add(skill.name);
   }
   return skills;
@@ -92,7 +118,9 @@ export function loadSkills(dir = SKILLS_DIR) {
 export function expandBraces(glob) {
   const match = glob.match(/^(.*?)\{([^{}]+)\}(.*)$/);
   if (!match) return [glob];
-  return match[2].split(",").flatMap((alt) => expandBraces(`${match[1]}${alt}${match[3]}`));
+  return match[2]
+    .split(",")
+    .flatMap((alt) => expandBraces(`${match[1]}${alt}${match[3]}`));
 }
 
 function flatGlobs(skill) {
@@ -232,7 +260,14 @@ export function renderAgents(skills, checklist) {
     "",
     ...skills.map((s) => `- **${s.title}** (\`${s.name}\`): ${s.description}`),
     "",
-    ...skills.flatMap((s) => [`## ${s.title}`, "", `<!-- skill: ${s.name} -->`, "", demote(s.body), ""]),
+    ...skills.flatMap((s) => [
+      `## ${s.title}`,
+      "",
+      `<!-- skill: ${s.name} -->`,
+      "",
+      demote(s.body),
+      "",
+    ]),
     demote(checklist),
     BLOCK_END,
     "",
@@ -243,32 +278,59 @@ export function renderAgents(skills, checklist) {
  * Files of a target, relative to the project root. `managed: true` means the
  * content is a block merged into a file that may have the user's own text.
  */
-export function renderTarget(target, { skills = loadSkills(), checklist = loadChecklist(), only } = {}) {
-  const chosen = only?.length ? skills.filter((s) => only.includes(s.name)) : skills;
+export function renderTarget(
+  target,
+  { skills = loadSkills(), checklist = loadChecklist(), only } = {},
+) {
+  const chosen = only?.length
+    ? skills.filter((s) => only.includes(s.name))
+    : skills;
   if (only?.length) {
     const unknown = only.filter((name) => !skills.some((s) => s.name === name));
-    if (unknown.length) throw new SkillError(`No conozco las skills: ${unknown.join(", ")}`);
+    if (unknown.length)
+      throw new SkillError(`No conozco las skills: ${unknown.join(", ")}`);
   }
   switch (target) {
     case "claude":
-      return chosen.map((s) => ({ path: `.claude/skills/${s.name}/SKILL.md`, content: renderClaude(s, checklist) }));
+      return chosen.map((s) => ({
+        path: `.claude/skills/${s.name}/SKILL.md`,
+        content: renderClaude(s, checklist),
+      }));
     case "cursor":
       return [
-        ...chosen.map((s) => ({ path: `.cursor/rules/${s.name}.mdc`, content: renderCursor(s, checklist) })),
-        { path: ".cursor/rules/mirotaract-seguridad.mdc", content: renderCursorSecurity(checklist) },
+        ...chosen.map((s) => ({
+          path: `.cursor/rules/${s.name}.mdc`,
+          content: renderCursor(s, checklist),
+        })),
+        {
+          path: ".cursor/rules/mirotaract-seguridad.mdc",
+          content: renderCursorSecurity(checklist),
+        },
       ];
     case "copilot":
       return [
-        { path: ".github/copilot-instructions.md", content: renderCopilotRoot(chosen, checklist), managed: true },
+        {
+          path: ".github/copilot-instructions.md",
+          content: renderCopilotRoot(chosen, checklist),
+          managed: true,
+        },
         ...chosen.map((s) => ({
           path: `.github/instructions/${s.name}.instructions.md`,
           content: renderCopilotInstruction(s, checklist),
         })),
       ];
     case "agents":
-      return [{ path: "AGENTS.md", content: renderAgents(chosen, checklist), managed: true }];
+      return [
+        {
+          path: "AGENTS.md",
+          content: renderAgents(chosen, checklist),
+          managed: true,
+        },
+      ];
     default:
-      throw new SkillError(`Destino desconocido: ${target}. Usá ${TARGETS.join(", ")} o all.`);
+      throw new SkillError(
+        `Destino desconocido: ${target}. Usá ${TARGETS.join(", ")} o all.`,
+      );
   }
 }
 
@@ -280,7 +342,12 @@ export function mergeManagedBlock(existing, block) {
     const after = existing.slice(end + BLOCK_END.length).replace(/^\r?\n/, "");
     return `${existing.slice(0, begin)}${block.trimEnd()}\n${after}`;
   }
-  const separator = existing.length && !existing.endsWith("\n\n") ? (existing.endsWith("\n") ? "\n" : "\n\n") : "";
+  const separator =
+    existing.length && !existing.endsWith("\n\n")
+      ? existing.endsWith("\n")
+        ? "\n"
+        : "\n\n"
+      : "";
   return `${existing}${separator}${block}`;
 }
 
@@ -289,9 +356,14 @@ export function parseTargets(value) {
     .split(",")
     .map((t) => t.trim().toLowerCase())
     .filter(Boolean);
-  if (!list.length) throw new SkillError(`Falta --target (${TARGETS.join(", ")} o all).`);
+  if (!list.length)
+    throw new SkillError(`Falta --target (${TARGETS.join(", ")} o all).`);
   if (list.includes("all")) return [...TARGETS];
-  for (const t of list) if (!TARGETS.includes(t)) throw new SkillError(`Destino desconocido: ${t}. Usá ${TARGETS.join(", ")} o all.`);
+  for (const t of list)
+    if (!TARGETS.includes(t))
+      throw new SkillError(
+        `Destino desconocido: ${t}. Usá ${TARGETS.join(", ")} o all.`,
+      );
   return [...new Set(list)];
 }
 
@@ -300,7 +372,14 @@ export function parseTargets(value) {
  * generate unless `force`. Returns [{ path, action }] with action
  * created | updated | unchanged | merged | skipped.
  */
-export function install({ targets, dir = process.cwd(), skills: only, force = false, dryRun = false, sources } = {}) {
+export function install({
+  targets,
+  dir = process.cwd(),
+  skills: only,
+  force = false,
+  dryRun = false,
+  sources,
+} = {}) {
   const results = [];
   for (const target of targets) {
     for (const file of renderTarget(target, { ...(sources ?? {}), only })) {
@@ -343,7 +422,14 @@ export function buildAll(outDir) {
 /** Content hash of the skill sources: ties eval results to an exact skills version. */
 export function fingerprint(dir = SKILLS_DIR) {
   const hash = createHash("sha256");
-  for (const file of readdirSync(dir).filter((f) => f.endsWith(".md")).sort()) hash.update(file).update("\0").update(readFileSync(join(dir, file))).update("\0");
+  for (const file of readdirSync(dir)
+    .filter((f) => f.endsWith(".md"))
+    .sort())
+    hash
+      .update(file)
+      .update("\0")
+      .update(readFileSync(join(dir, file)))
+      .update("\0");
   return `${VERSION}+${hash.digest("hex").slice(0, 12)}`;
 }
 
@@ -353,7 +439,17 @@ export function loadPrompts(dir = PROMPTS_DIR) {
     .filter((f) => f.endsWith(".md"))
     .sort()
     .map((file) => {
-      const { data, body } = parseFrontmatter(readFileSync(join(dir, file), "utf8"), file);
-      return { file, name: file.replace(/\.md$/, ""), title: data.title, description: data.description, template: data.template, body: body.trim() };
+      const { data, body } = parseFrontmatter(
+        readFileSync(join(dir, file), "utf8"),
+        file,
+      );
+      return {
+        file,
+        name: file.replace(/\.md$/, ""),
+        title: data.title,
+        description: data.description,
+        template: data.template,
+        body: body.trim(),
+      };
     });
 }

@@ -55,8 +55,16 @@ function apiSummary(openapi, endpointScopes) {
     "Mi Rotaract) o `público`. Detalle completo de cada operación: el contrato",
     "OpenAPI o la herramienta MCP `describe_operation`.",
   ];
-  for (const [tag, list] of [...byTag.entries()].sort(([a], [b]) => a.localeCompare(b))) {
-    lines.push("", `## ${tag || "(sin tag)"}`, "", "| Operación | Método y ruta | Qué hace | Requiere |", "|---|---|---|---|");
+  for (const [tag, list] of [...byTag.entries()].sort(([a], [b]) =>
+    a.localeCompare(b),
+  )) {
+    lines.push(
+      "",
+      `## ${tag || "(sin tag)"}`,
+      "",
+      "| Operación | Método y ruta | Qué hace | Requiere |",
+      "|---|---|---|---|",
+    );
     for (const op of list) {
       const needs = op.scope
         ? `scope \`${op.scope}\``
@@ -65,7 +73,9 @@ function apiSummary(openapi, endpointScopes) {
           : op.public || op.permission === null
             ? "público"
             : `\`${op.permission}\``;
-      lines.push(`| \`${op.operationId}\` | \`${op.method} ${op.path}\` | ${op.summary.replace(/\|/g, "\\|")} | ${needs} |`);
+      lines.push(
+        `| \`${op.operationId}\` | \`${op.method} ${op.path}\` | ${op.summary.replace(/\|/g, "\\|")} | ${needs} |`,
+      );
     }
   }
   return lines.join("\n");
@@ -86,7 +96,10 @@ function eventSummary(catalog) {
 }
 
 /** Pure builder: returns both files as strings. */
-export async function buildLlms({ root = REPO_ROOT, baseUrl = DEFAULT_BASE_URL } = {}) {
+export async function buildLlms({
+  root = REPO_ROOT,
+  baseUrl = DEFAULT_BASE_URL,
+} = {}) {
   const base = baseUrl.replace(/\/+$/, "");
   const docs = loadDeveloperDocs(root);
   const openapi = loadOpenApi(root);
@@ -101,7 +114,7 @@ export async function buildLlms({ root = REPO_ROOT, baseUrl = DEFAULT_BASE_URL }
     "> Plataforma de desarrolladores del Distrito Rotaract 4845 (Paraguay): el Kernel",
     "> Institucional es la única fuente de verdad de personas, clubes, membresías,",
     "> períodos, cargos y autoridades. Las apps de los comités se integran por OAuth 2.0 /",
-    "> OpenID Connect (\"Ingresar con Mi Rotaract\"), la API de datos `/service/*` con",
+    '> OpenID Connect ("Ingresar con Mi Rotaract"), la API de datos `/service/*` con',
     "> token de servicio y webhooks firmados. Documentación en castellano.",
     "",
     "Reglas que no se negocian: tokens nunca en localStorage/sessionStorage; verificar",
@@ -111,12 +124,16 @@ export async function buildLlms({ root = REPO_ROOT, baseUrl = DEFAULT_BASE_URL }
     "",
     "## Empezar",
     "",
-    ...(readme ? [`- [${readme.title}](${base}/docs/README.md): ${readme.description}`] : []),
+    ...(readme
+      ? [`- [${readme.title}](${base}/docs/README.md): ${readme.description}`]
+      : []),
     `- [Documentación completa en un archivo](${base}/llms-full.txt): todas las guías, el catálogo de eventos y un resumen de la API.`,
     "",
     "## Guías",
     "",
-    ...guides.map((d) => `- [${d.title}](${base}/docs/${d.slug}.md): ${d.description}`),
+    ...guides.map(
+      (d) => `- [${d.title}](${base}/docs/${d.slug}.md): ${d.description}`,
+    ),
     "",
     "## Contratos",
     "",
@@ -137,7 +154,15 @@ export async function buildLlms({ root = REPO_ROOT, baseUrl = DEFAULT_BASE_URL }
     "> Todas las guías de docs/developers, el catálogo de eventos y un resumen de la",
     "> API, en un solo archivo para asistentes de IA. Índice: llms.txt.",
     "",
-    ...docs.flatMap((d) => ["", "---", "", `<!-- source: ${d.path} -->`, "", d.content.trim(), ""]),
+    ...docs.flatMap((d) => [
+      "",
+      "---",
+      "",
+      `<!-- source: ${d.path} -->`,
+      "",
+      d.content.trim(),
+      "",
+    ]),
     "",
     "---",
     "",
@@ -149,7 +174,15 @@ export async function buildLlms({ root = REPO_ROOT, baseUrl = DEFAULT_BASE_URL }
     "",
   ].join("\n");
 
-  return { llms, full, stats: { docs: docs.length, events: catalog.events.length, operations: listOperations(openapi).length } };
+  return {
+    llms,
+    full,
+    stats: {
+      docs: docs.length,
+      events: catalog.events.length,
+      operations: listOperations(openapi).length,
+    },
+  };
 }
 
 async function main() {
@@ -160,7 +193,9 @@ async function main() {
     },
   });
   const out = resolve(process.cwd(), values.out);
-  const { llms, full, stats } = await buildLlms({ baseUrl: values["base-url"] });
+  const { llms, full, stats } = await buildLlms({
+    baseUrl: values["base-url"],
+  });
   mkdirSync(out, { recursive: true });
   writeFileSync(join(out, "llms.txt"), llms);
   writeFileSync(join(out, "llms-full.txt"), full);
@@ -169,7 +204,10 @@ async function main() {
   );
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (
+  process.argv[1] &&
+  resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+) {
   main().catch((error) => {
     process.stderr.write(`${error.stack ?? error}\n`);
     process.exit(1);

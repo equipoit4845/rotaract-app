@@ -11,14 +11,23 @@
  * Nothing here talks to a network or a database.
  */
 import { createHash } from "node:crypto";
-import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { parse as parseYaml } from "yaml";
 
-export const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+export const REPO_ROOT = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  "../..",
+);
 
 export const PATHS = {
   docs: "docs/developers",
@@ -56,7 +65,8 @@ export function describeMarkdown(content) {
   const withoutComments = content.replace(/<!--[\s\S]*?-->/g, "");
   const lines = withoutComments.split("\n");
   const titleIndex = lines.findIndex((l) => /^#\s+/.test(l));
-  const title = titleIndex >= 0 ? plainText(lines[titleIndex].replace(/^#\s+/, "")) : "";
+  const title =
+    titleIndex >= 0 ? plainText(lines[titleIndex].replace(/^#\s+/, "")) : "";
   const paragraph = [];
   for (const line of lines.slice(titleIndex + 1)) {
     if (/^\s*$/.test(line)) {
@@ -81,12 +91,15 @@ export function loadDeveloperDocs(root = REPO_ROOT) {
   const files = readdirSync(dir)
     .filter((f) => f.endsWith(".md"))
     .sort();
-  const readme = files.includes("README.md") ? readFileSync(join(dir, "README.md"), "utf8") : "";
+  const readme = files.includes("README.md")
+    ? readFileSync(join(dir, "README.md"), "utf8")
+    : "";
   // Order of the "## Guías" table (fallback: the whole README).
   const guides = readme.split(/^## Guías\s*$/m)[1]?.split(/^## /m)[0] ?? readme;
   const linked = [];
   for (const match of guides.matchAll(/\]\(([a-z0-9-]+\.md)(#[^)]*)?\)/g))
-    if (files.includes(match[1]) && !linked.includes(match[1])) linked.push(match[1]);
+    if (files.includes(match[1]) && !linked.includes(match[1]))
+      linked.push(match[1]);
   const ordered = [
     ...(files.includes("README.md") ? ["README.md"] : []),
     ...linked.filter((f) => f !== "README.md"),
@@ -128,10 +141,18 @@ export async function importTsModule(path) {
     try {
       return await import(pathToFileURL(file).href);
     } catch (error) {
-      if (!/ERR_UNKNOWN_FILE_EXTENSION|Unexpected token|strip/i.test(`${error?.code} ${error?.message}`)) throw error;
+      if (
+        !/ERR_UNKNOWN_FILE_EXTENSION|Unexpected token|strip/i.test(
+          `${error?.code} ${error?.message}`,
+        )
+      )
+        throw error;
       const ts = (await import("typescript")).default;
       const js = ts.transpileModule(source, {
-        compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+        compilerOptions: {
+          module: ts.ModuleKind.ESNext,
+          target: ts.ScriptTarget.ES2022,
+        },
       }).outputText;
       const jsFile = join(dir, `module-${hash}.mjs`);
       writeFileSync(jsFile, js);
@@ -154,23 +175,32 @@ function parseStringArray(text) {
 
 /** `const name = [ ... ];` or `const name: T = [ ... ];` → strings. */
 function arrayLiteral(source, name) {
-  const match = source.match(new RegExp(`const ${name}(?::[^=]+)?\\s*=\\s*\\[([\\s\\S]*?)\\];`));
+  const match = source.match(
+    new RegExp(`const ${name}(?::[^=]+)?\\s*=\\s*\\[([\\s\\S]*?)\\];`),
+  );
   return match ? parseStringArray(match[1].replace(/\/\/.*$/gm, "")) : [];
 }
 
 /** rolePermissions from prisma/seed.ts → { ROLE: [codes] } (spreads resolved). */
 export function parseRolePermissions(seedSource) {
-  const shared = { selfServicePermissions: arrayLiteral(seedSource, "selfServicePermissions") };
-  const block = seedSource.match(/const rolePermissions[^=]*=\s*\{([\s\S]*?)\n\};/)?.[1] ?? "";
+  const shared = {
+    selfServicePermissions: arrayLiteral(seedSource, "selfServicePermissions"),
+  };
+  const block =
+    seedSource.match(/const rolePermissions[^=]*=\s*\{([\s\S]*?)\n\};/)?.[1] ??
+    "";
   const roles = {};
-  for (const match of block.matchAll(/([A-Z_]+):\s*(\[[\s\S]*?\]|[A-Za-z]+),/g)) {
+  for (const match of block.matchAll(
+    /([A-Z_]+):\s*(\[[\s\S]*?\]|[A-Za-z]+),/g,
+  )) {
     const [, role, value] = match;
     if (!value.startsWith("[")) {
       roles[role] = [...(shared[value] ?? [])];
       continue;
     }
     const codes = [];
-    for (const spread of value.matchAll(/\.\.\.([A-Za-z]+)/g)) codes.push(...(shared[spread[1]] ?? []));
+    for (const spread of value.matchAll(/\.\.\.([A-Za-z]+)/g))
+      codes.push(...(shared[spread[1]] ?? []));
     codes.push(...parseStringArray(value.replace(/\/\/.*$/gm, "")));
     roles[role] = [...new Set(codes)];
   }
@@ -183,9 +213,12 @@ export function parseRolePermissions(seedSource) {
  * don't carry `x-required-scope`).
  */
 export function parseScopeTable(apiDocsMarkdown) {
-  const section = apiDocsMarkdown.split(/^## Resumen de scopes por endpoint/m)[1] ?? "";
+  const section =
+    apiDocsMarkdown.split(/^## Resumen de scopes por endpoint/m)[1] ?? "";
   const map = {};
-  for (const match of section.matchAll(/^\|\s*`(GET|POST|PUT|PATCH|DELETE) ([^`]+)`\s*\|\s*`([^`]+)`\s*\|/gm))
+  for (const match of section.matchAll(
+    /^\|\s*`(GET|POST|PUT|PATCH|DELETE) ([^`]+)`\s*\|\s*`([^`]+)`\s*\|/gm,
+  ))
     map[`${match[1]} ${match[2]}`] = match[3];
   return map;
 }
@@ -197,10 +230,14 @@ export async function loadPermissionCatalog(root = REPO_ROOT) {
   const seed = readFileSync(join(root, PATHS.seed), "utf8");
   const codes = arrayLiteral(seed, "permissionCodes");
   const rolePermissions = parseRolePermissions(seed);
-  const apiDocs = readFileSync(join(root, PATHS.docs, "api-de-datos.md"), "utf8");
+  const apiDocs = readFileSync(
+    join(root, PATHS.docs, "api-de-datos.md"),
+    "utf8",
+  );
   const endpointScopes = parseScopeTable(apiDocs);
   const endpointsByScope = {};
-  for (const [endpoint, scope] of Object.entries(endpointScopes)) (endpointsByScope[scope] ??= []).push(endpoint);
+  for (const [endpoint, scope] of Object.entries(endpointScopes))
+    (endpointsByScope[scope] ??= []).push(endpoint);
   return {
     kernelPermissions: codes.map((code) => ({
       code,
@@ -212,15 +249,28 @@ export async function loadPermissionCatalog(root = REPO_ROOT) {
     roles: Object.keys(rolePermissions)
       .sort()
       .map((code) => ({ code, name: labels.roleNames[code] ?? code })),
-    positions: Object.entries(labels.positionNames).map(([code, name]) => ({ code, name })),
-    oidcScopes: Object.entries(scopes.OIDC_SCOPES).map(([scope, label]) => ({ scope, label })),
-    serviceScopes: Object.entries(scopes.SERVICE_SCOPE_LABELS).map(([scope, label]) => ({
+    positions: Object.entries(labels.positionNames).map(([code, name]) => ({
+      code,
+      name,
+    })),
+    oidcScopes: Object.entries(scopes.OIDC_SCOPES).map(([scope, label]) => ({
       scope,
       label,
-      endpoints: (endpointsByScope[scope] ?? []).sort(),
     })),
+    serviceScopes: Object.entries(scopes.SERVICE_SCOPE_LABELS).map(
+      ([scope, label]) => ({
+        scope,
+        label,
+        endpoints: (endpointsByScope[scope] ?? []).sort(),
+      }),
+    ),
     endpointScopes,
-    sources: [PATHS.seed, PATHS.labels, PATHS.scopes, `${PATHS.docs}/api-de-datos.md`],
+    sources: [
+      PATHS.seed,
+      PATHS.labels,
+      PATHS.scopes,
+      `${PATHS.docs}/api-de-datos.md`,
+    ],
   };
 }
 
@@ -243,7 +293,8 @@ export function listOperations(openapi, endpointScopes = {}) {
         permission: op["x-required-permission"] ?? null,
         scope: op["x-required-scope"] ?? endpointScopes[key] ?? null,
         public: Array.isArray(op.security) && op.security.length === 0,
-        serviceOnly: Boolean(op["x-service-only"]) || path.startsWith("/service/"),
+        serviceOnly:
+          Boolean(op["x-service-only"]) || path.startsWith("/service/"),
       });
     }
   return ops;

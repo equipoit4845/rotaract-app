@@ -6,7 +6,20 @@ const cache = new Map();
 export function parse(file) {
   const key = `${file.path}\u0000${file.content}`;
   if (!cache.has(key))
-    cache.set(key, ts.createSourceFile(file.path, file.content, ts.ScriptTarget.Latest, true, file.path.endsWith("x") ? ts.ScriptKind.TSX : file.lang === "js" ? ts.ScriptKind.JS : ts.ScriptKind.TS));
+    cache.set(
+      key,
+      ts.createSourceFile(
+        file.path,
+        file.content,
+        ts.ScriptTarget.Latest,
+        true,
+        file.path.endsWith("x")
+          ? ts.ScriptKind.TSX
+          : file.lang === "js"
+            ? ts.ScriptKind.JS
+            : ts.ScriptKind.TS,
+      ),
+    );
   return cache.get(key);
 }
 
@@ -22,13 +35,23 @@ export function calleeName(expr) {
     const left = calleeName(expr.expression);
     return left ? `${left}.${expr.name.text}` : expr.name.text;
   }
-  if (ts.isElementAccessExpression(expr) && ts.isStringLiteralLike(expr.argumentExpression)) {
+  if (
+    ts.isElementAccessExpression(expr) &&
+    ts.isStringLiteralLike(expr.argumentExpression)
+  ) {
     const left = calleeName(expr.expression);
-    return left ? `${left}.${expr.argumentExpression.text}` : expr.argumentExpression.text;
+    return left
+      ? `${left}.${expr.argumentExpression.text}`
+      : expr.argumentExpression.text;
   }
   if (ts.isCallExpression(expr)) return calleeName(expr.expression);
   if (expr.kind === ts.SyntaxKind.ThisKeyword) return "this";
-  if (ts.isParenthesizedExpression(expr) || ts.isNonNullExpression?.(expr) || ts.isAsExpression?.(expr)) return calleeName(expr.expression);
+  if (
+    ts.isParenthesizedExpression(expr) ||
+    ts.isNonNullExpression?.(expr) ||
+    ts.isAsExpression?.(expr)
+  )
+    return calleeName(expr.expression);
   return null;
 }
 
@@ -39,7 +62,12 @@ export function calls(file) {
   walk(sf, (node) => {
     if (ts.isCallExpression(node) || ts.isNewExpression(node)) {
       const name = node.expression ? calleeName(node.expression) : null;
-      out.push({ name, node, args: (node.arguments ?? []).map((a) => a.getText(sf)), sf });
+      out.push({
+        name,
+        node,
+        args: (node.arguments ?? []).map((a) => a.getText(sf)),
+        sf,
+      });
     }
   });
   return out;
@@ -50,13 +78,23 @@ export function imports(file) {
   const sf = parse(file);
   const out = [];
   walk(sf, (node) => {
-    if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier)) {
+    if (
+      ts.isImportDeclaration(node) &&
+      ts.isStringLiteral(node.moduleSpecifier)
+    ) {
       const names = [];
       const clause = node.importClause;
       if (clause?.name) names.push(clause.name.text);
-      if (clause?.namedBindings && ts.isNamedImports(clause.namedBindings)) for (const el of clause.namedBindings.elements) names.push(el.name.text);
+      if (clause?.namedBindings && ts.isNamedImports(clause.namedBindings))
+        for (const el of clause.namedBindings.elements)
+          names.push(el.name.text);
       out.push({ from: node.moduleSpecifier.text, names });
-    } else if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword && node.arguments[0] && ts.isStringLiteralLike(node.arguments[0])) {
+    } else if (
+      ts.isCallExpression(node) &&
+      node.expression.kind === ts.SyntaxKind.ImportKeyword &&
+      node.arguments[0] &&
+      ts.isStringLiteralLike(node.arguments[0])
+    ) {
       out.push({ from: node.arguments[0].text, names: ["*"] });
     }
   });
@@ -69,7 +107,10 @@ export function objectProps(node, sf) {
   const props = {};
   for (const p of node.properties) {
     if (ts.isPropertyAssignment(p) || ts.isShorthandPropertyAssignment(p)) {
-      const key = p.name && (ts.isIdentifier(p.name) || ts.isStringLiteralLike(p.name)) ? p.name.text : p.name?.getText(sf);
+      const key =
+        p.name && (ts.isIdentifier(p.name) || ts.isStringLiteralLike(p.name))
+          ? p.name.text
+          : p.name?.getText(sf);
       props[key] = ts.isPropertyAssignment(p) ? p.initializer.getText(sf) : key;
     }
   }

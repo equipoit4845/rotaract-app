@@ -28,7 +28,8 @@
     "build": "node bin/ai-skills.js build --out dist",
     "test": "node --test --test-force-exit test/*.test.mjs",
     "gate": "node ../../evals/bin/evals.js gate",
-    "prepublishOnly": "node ../../evals/bin/evals.js gate"
+    "prepublishOnly": "node ../../evals/bin/evals.js gate",
+    "lint": "prettier --check src bin test"
   },
   "dependencies": {
     "yaml": "^2.9.0"

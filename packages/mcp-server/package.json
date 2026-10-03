@@ -29,7 +29,8 @@
   },
   "scripts": {
     "build": "node scripts/build-bundle.mjs",
-    "test": "node scripts/build-bundle.mjs && node --test --test-force-exit test/*.test.mjs"
+    "test": "node scripts/build-bundle.mjs && node --test --test-force-exit test/*.test.mjs",
+    "lint": "prettier --check src bin scripts test"
   },
   "dependencies": {
     "@mirotaract/cli": "workspace:*",
