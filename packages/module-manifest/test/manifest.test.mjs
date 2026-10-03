@@ -41,7 +41,10 @@ test("the example only subscribes to events of the public catalog", () => {
     "person.updated.v1",
     "period.created.v1",
   ];
-  assert.equal(validateManifest(example, { knownEventTypes: catalog }).ok, true);
+  assert.equal(
+    validateManifest(example, { knownEventTypes: catalog }).ok,
+    true,
+  );
   const manifest = clone();
   manifest.events.subscribes.push("meeting.started.v1");
   const result = validateManifest(manifest, { knownEventTypes: catalog });
@@ -61,10 +64,13 @@ test("non-objects are rejected without throwing", () => {
 test("missing required fields are reported in Spanish", () => {
   const result = validateManifest({});
   assert.equal(result.ok, false);
-  assert.deepEqual(
-    paths(result).sort(),
-    ["contractVersion", "id", "name", "permissions", "version"],
-  );
+  assert.deepEqual(paths(result).sort(), [
+    "contractVersion",
+    "id",
+    "name",
+    "permissions",
+    "version",
+  ]);
   assert.ok(messages(result).includes("Falta completar «Identificador»."));
 });
 
@@ -82,9 +88,15 @@ test("permission codes must live in the module's namespace", () => {
 });
 
 test("a code that only repeats the module id is not namespaced", () => {
-  assert.equal(isModulePermission("reuniones", "reuniones.meeting.manage"), true);
+  assert.equal(
+    isModulePermission("reuniones", "reuniones.meeting.manage"),
+    true,
+  );
   assert.equal(isModulePermission("reuniones", "reuniones."), false);
-  assert.equal(isModulePermission("reuniones", "reunionesx.meeting.manage"), false);
+  assert.equal(
+    isModulePermission("reuniones", "reunionesx.meeting.manage"),
+    false,
+  );
   assert.equal(isModulePermission("reuniones", "reuniones"), false);
   assert.equal(permissionNamespace("reuniones.vote.cast"), "reuniones");
 });
@@ -111,7 +123,14 @@ test("reserved and malformed ids are rejected", () => {
     const manifest = { ...clone(), id, permissions: [] };
     assert.equal(validateManifest(manifest).ok, false, id);
   }
-  for (const id of ["Reuniones", "re", "-reuniones", "reuniones-", "reu niones", "reuniones.x"]) {
+  for (const id of [
+    "Reuniones",
+    "re",
+    "-reuniones",
+    "reuniones-",
+    "reu niones",
+    "reuniones.x",
+  ]) {
     const manifest = { ...clone(), id, permissions: [] };
     assert.equal(validateManifest(manifest).ok, false, id);
   }
@@ -123,7 +142,9 @@ test("version must be semver and contractVersion must be 1", () => {
   manifest.contractVersion = 2;
   const result = validateManifest(manifest);
   assert.deepEqual(paths(result).sort(), ["contractVersion", "version"]);
-  assert.ok(messages(result).includes("«Versión del contrato» tiene que ser 1."));
+  assert.ok(
+    messages(result).includes("«Versión del contrato» tiene que ser 1."),
+  );
 });
 
 test("emitted events must be namespaced", () => {
@@ -155,15 +176,24 @@ test("configurationSchema must compile and have an object root", () => {
   let result = validateManifest(manifest);
   assert.deepEqual(paths(result), ["configurationSchema"]);
   assert.match(messages(result)[0], /tipo "object"/);
-  manifest.configurationSchema = { type: "object", properties: { a: { type: "nope" } } };
+  manifest.configurationSchema = {
+    type: "object",
+    properties: { a: { type: "nope" } },
+  };
   result = validateManifest(manifest);
   assert.deepEqual(paths(result), ["configurationSchema"]);
   assert.match(messages(result)[0], /no es un JSON Schema válido/);
 });
 
 test("the schema is draft-07 and published under the developers domain", () => {
-  assert.equal(manifestSchema.$schema, "http://json-schema.org/draft-07/schema#");
-  assert.match(MANIFEST_SCHEMA_URL, /^https:\/\/developers\.rotaract4845\.com\//);
+  assert.equal(
+    manifestSchema.$schema,
+    "http://json-schema.org/draft-07/schema#",
+  );
+  assert.match(
+    MANIFEST_SCHEMA_URL,
+    /^https:\/\/developers\.rotaract4845\.com\//,
+  );
 });
 
 // --- configuration ---------------------------------------------------------
@@ -171,7 +201,9 @@ test("the schema is draft-07 and published under the developers domain", () => {
 const schema = example.configurationSchema;
 
 test("a valid configuration passes and gets the schema defaults", () => {
-  const result = validateConfiguration(schema, { emailContacto: "club@example.org" });
+  const result = validateConfiguration(schema, {
+    emailContacto: "club@example.org",
+  });
   assert.equal(result.ok, true);
   assert.deepEqual(result.value, {
     emailContacto: "club@example.org",
@@ -195,13 +227,16 @@ test("configuration errors use the field titles, in Spanish", () => {
     color: "rojo",
   });
   assert.equal(result.ok, false);
-  assert.deepEqual(messages(result).sort(), [
-    "Falta completar «Email de contacto del club».",
-    "«Avisar por email cuando se convoca una reunión» tiene que ser sí o no.",
-    "«Idioma de las actas» tiene que ser uno de estos valores: \"es\", \"pt\".",
-    "«Votos por club» tiene que ser 2 o menos.",
-    "«color» no es un campo conocido. Revisá si está bien escrito.",
-  ].sort());
+  assert.deepEqual(
+    messages(result).sort(),
+    [
+      "Falta completar «Email de contacto del club».",
+      "«Avisar por email cuando se convoca una reunión» tiene que ser sí o no.",
+      '«Idioma de las actas» tiene que ser uno de estos valores: "es", "pt".',
+      "«Votos por club» tiene que ser 2 o menos.",
+      "«color» no es un campo conocido. Revisá si está bien escrito.",
+    ].sort(),
+  );
   assert.deepEqual(paths(result).sort(), [
     "avisarPorEmail",
     "color",
@@ -212,7 +247,9 @@ test("configuration errors use the field titles, in Spanish", () => {
 });
 
 test("formats are explained", () => {
-  const result = validateConfiguration(schema, { emailContacto: "no-es-un-email" });
+  const result = validateConfiguration(schema, {
+    emailContacto: "no-es-un-email",
+  });
   assert.deepEqual(messages(result), [
     "«Email de contacto del club» tiene que ser un email válido.",
   ]);
@@ -242,7 +279,9 @@ test("nested fields without title use their path", () => {
 test("the root must be an object", () => {
   const result = validateConfiguration(schema, "hola");
   assert.equal(result.ok, false);
-  assert.deepEqual(messages(result), ["La configuración tiene que ser un objeto."]);
+  assert.deepEqual(messages(result), [
+    "La configuración tiene que ser un objeto.",
+  ]);
 });
 
 test("a module without configurationSchema accepts any object", () => {
@@ -254,7 +293,9 @@ test("a module without configurationSchema accepts any object", () => {
 test("anyOf noise is summarised in one message", () => {
   const anyOf = {
     type: "object",
-    properties: { limite: { anyOf: [{ type: "integer" }, { const: "sin límite" }] } },
+    properties: {
+      limite: { anyOf: [{ type: "integer" }, { const: "sin límite" }] },
+    },
   };
   const result = validateConfiguration(anyOf, { limite: "mucho" });
   assert.deepEqual(messages(result), [

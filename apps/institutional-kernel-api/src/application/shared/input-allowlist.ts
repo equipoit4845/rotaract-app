@@ -98,14 +98,9 @@ export const INPUT_FIELDS = {
     "validUntil",
     "reason",
   ],
-  registerModule: [
-    "id",
-    "name",
-    "description",
-    "version",
-    "manifest",
-    "configurationSchema",
-  ],
+  // E8: a module is registered from its manifest; id, name, version and
+  // configurationSchema come from it (docs/15-modules.md).
+  registerModule: ["appId", "manifest"],
   createDeveloperApp: [
     "name",
     "description",

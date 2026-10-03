@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  UnprocessableEntityException,
 } from "@nestjs/common";
 import * as argon2 from "argon2";
 import { randomBytes, randomUUID } from "crypto";
@@ -26,6 +27,15 @@ import { CommandExecutorService } from "../shared/command-executor.service";
 import { NotificationService } from "../notifications/notification.service";
 import { webUrl } from "../shared/web-url";
 import { allowInput } from "../shared/input-allowlist";
+import {
+  compareSemver,
+  summarizeErrors,
+  validateConfiguration,
+  validateManifest,
+  type ModuleManifest,
+  type ValidationError,
+} from "../modules/manifest";
+import { SUBSCRIBABLE_EVENT_TYPES } from "../webhooks/catalog";
 
 /**
  * Permissions that act beyond a single club (structure, role delegation,
@@ -2073,36 +2083,241 @@ export class KernelService {
     return completed;
   }
 
-  // Modules
-  registerModule(input: any, context?: CommandContext) {
+  // Modules (E8, docs/15-modules.md). A module is registered from its
+  // manifest (mirotaract.module.json, contract v1) by the district (RDR)
+  // or the platform, linked to the developer app that owns it. Its
+  // permissions become PermissionDefinitions in its own namespace, which the
+  // RDR assigns to positions like any other permission.
+  private moduleError(
+    code: string,
+    message: string,
+    errors: ValidationError[] = [],
+  ): UnprocessableEntityException {
+    return new UnprocessableEntityException({ code, message, errors });
+  }
+  private assertValidManifest(manifest: unknown): ModuleManifest {
+    const result = validateManifest(manifest, {
+      knownEventTypes: SUBSCRIBABLE_EVENT_TYPES,
+    });
+    if (!result.ok)
+      throw this.moduleError(
+        "KERNEL_MODULE_MANIFEST_INVALID",
+        `El manifiesto no es válido. ${summarizeErrors(result.errors)}`,
+        result.errors,
+      );
+    return result.manifest;
+  }
+  private async modulePermissions(
+    db: Prisma.TransactionClient | PrismaService,
+    moduleIds: string[],
+  ) {
+    if (!moduleIds.length) return new Map<string, any[]>();
+    const permissions = await db.permissionDefinition.findMany({
+      where: { moduleId: { in: moduleIds } },
+      orderBy: { code: "asc" },
+    });
+    const byModule = new Map<string, any[]>();
+    for (const permission of permissions) {
+      const list = byModule.get(permission.moduleId as string) ?? [];
+      list.push(permission);
+      byModule.set(permission.moduleId as string, list);
+    }
+    return byModule;
+  }
+  private async presentModules(
+    db: Prisma.TransactionClient | PrismaService,
+    modules: Array<{ id: string } & Record<string, any>>,
+  ) {
+    const permissions = await this.modulePermissions(
+      db,
+      modules.map((module) => module.id),
+    );
+    return modules.map((module) => ({
+      ...module,
+      permissions: permissions.get(module.id) ?? [],
+    }));
+  }
+  /**
+   * Creates, updates and removes the module's PermissionDefinitions so they
+   * match its manifest. Removing a permission also removes it from every
+   * position/role that had it; those people's cached decisions are
+   * invalidated.
+   */
+  private async syncModulePermissions(
+    tx: Prisma.TransactionClient,
+    manifest: ModuleManifest,
+  ): Promise<{ added: string[]; removed: string[] }> {
+    const moduleId = manifest.id;
+    const declared = new Map(
+      manifest.permissions.map((permission) => [permission.code, permission]),
+    );
+    const existing = await tx.permissionDefinition.findMany({
+      where: { code: { in: [...declared.keys()] } },
+    });
+    const foreign = existing.filter(
+      (permission) => permission.moduleId !== moduleId,
+    );
+    if (foreign.length)
+      throw new ConflictException({
+        code: "KERNEL_MODULE_PERMISSION_TAKEN",
+        message: `Ya existe un permiso con el código ${foreign
+          .map((permission) => `«${permission.code}»`)
+          .join(", ")} que no pertenece al módulo «${moduleId}».`,
+      });
+    const current = await tx.permissionDefinition.findMany({
+      where: { moduleId },
+    });
+    const added: string[] = [];
+    for (const permission of declared.values()) {
+      const data = {
+        namespace: moduleId,
+        name: permission.name,
+        description: permission.description ?? null,
+        resourceType: permission.code.split(".")[1] ?? null,
+        moduleId,
+        isSystem: false,
+      };
+      const found = current.find((item) => item.code === permission.code);
+      if (found)
+        await tx.permissionDefinition.update({
+          where: { id: found.id },
+          data,
+        });
+      else {
+        // Same invariant 6.7.1/6.7.9 checks as POST /permissions.
+        this.assertPermissionCode(permission.code, moduleId, moduleId);
+        await tx.permissionDefinition.create({
+          data: { code: permission.code, ...data },
+        });
+        added.push(permission.code);
+      }
+    }
+    const stale = current.filter((item) => !declared.has(item.code));
+    const removed = stale.map((item) => item.code);
+    if (stale.length) {
+      const links = await tx.rolePermission.findMany({
+        where: { permissionDefinitionId: { in: stale.map((item) => item.id) } },
+        select: { roleDefinitionId: true },
+      });
+      await tx.permissionDefinition.deleteMany({
+        where: { id: { in: stale.map((item) => item.id) } },
+      });
+      for (const roleId of new Set(links.map((link) => link.roleDefinitionId)))
+        await this.invalidateRoleHolders(tx, roleId);
+    }
+    if (added.length || removed.length)
+      await this.outbox.record(
+        tx,
+        "kernel.permissions.changed.v1",
+        "ModuleDefinition",
+        moduleId,
+        { moduleId, added, removed },
+        this.commands.systemContext("SyncModulePermissions"),
+      );
+    return { added, removed };
+  }
+  private assertOAuthClient(
+    manifest: ModuleManifest,
+    app: { clientId: string; name: string },
+  ): void {
+    const clientId = manifest.oauth?.clientId;
+    if (clientId && clientId !== app.clientId)
+      throw this.moduleError(
+        "KERNEL_MODULE_APP_MISMATCH",
+        `El manifiesto dice oauth.clientId «${clientId}», pero el módulo pertenece a la app «${app.name}» (${app.clientId}).`,
+        [
+          {
+            path: "oauth.clientId",
+            message: `Tiene que ser el clientId de la app dueña del módulo (${app.clientId}).`,
+            keyword: "app",
+          },
+        ],
+      );
+  }
+  async registerModule(input: any, context?: CommandContext) {
     input = allowInput("registerModule", input);
+    const manifest = this.assertValidManifest(input.manifest);
     return this.mutate(
       "RegisterModule",
       context,
       input,
-      { type: "ModuleDefinition", id: input.id },
+      {
+        type: "ModuleDefinition",
+        id: manifest.id,
+        event: "kernel.module.registered.v1",
+        payload: { moduleId: manifest.id, version: manifest.version },
+      },
       async (tx) => {
-        this.assertManifest(input.manifest);
-        const module = await tx.moduleDefinition.create({ data: input });
-        await this.outbox.record(
-          tx,
-          "kernel.module.registered.v1",
-          "ModuleDefinition",
-          module.id,
-          { moduleId: module.id },
-          this.context(context),
-        );
-        return module;
+        if (!input.appId)
+          throw this.moduleError(
+            "KERNEL_MODULE_APP_REQUIRED",
+            "Indicá la app dueña del módulo (appId).",
+          );
+        const app = await tx.developerApp.findUnique({
+          where: { id: String(input.appId) },
+        });
+        if (!app)
+          throw new NotFoundException({
+            code: "KERNEL_NOT_FOUND",
+            message: "No existe la app indicada.",
+          });
+        if (app.status !== "ACTIVE")
+          throw new ConflictException({
+            code: "KERNEL_MODULE_APP_INACTIVE",
+            message: `La app «${app.name}» no está activa: reactivala antes de registrar su módulo.`,
+          });
+        this.assertOAuthClient(manifest, app);
+        const exists = await tx.moduleDefinition.findUnique({
+          where: { id: manifest.id },
+        });
+        if (exists)
+          throw new ConflictException({
+            code: "KERNEL_MODULE_EXISTS",
+            message: `Ya existe un módulo con el id «${manifest.id}». Para publicar una versión nueva usá PUT /modules/${manifest.id}/manifest.`,
+          });
+        const module = await tx.moduleDefinition.create({
+          data: {
+            id: manifest.id,
+            name: manifest.name,
+            description: manifest.description ?? null,
+            version: manifest.version,
+            contractVersion: manifest.contractVersion,
+            status: "ACTIVE",
+            manifest: manifest as unknown as Json,
+            configurationSchema:
+              (manifest.configurationSchema as Json | undefined) ??
+              Prisma.DbNull,
+            developerAppId: app.id,
+            ownerOrganizationId: app.organizationId,
+          },
+        });
+        await this.syncModulePermissions(tx, manifest);
+        const [presented] = await this.presentModules(tx, [module]);
+        return presented;
       },
     );
   }
-  listModules() {
-    return this.prisma.moduleDefinition.findMany({ orderBy: { id: "asc" } });
+  async listModules(query: any = {}) {
+    const modules = await this.prisma.moduleDefinition.findMany({
+      where: { status: query.status || undefined },
+      orderBy: { id: "asc" },
+    });
+    return this.presentModules(this.prisma, modules);
   }
-  getModule(id: string) {
-    return this.prisma.moduleDefinition.findUniqueOrThrow({ where: { id } });
+  async getModule(id: string) {
+    const module = await this.prisma.moduleDefinition.findUnique({
+      where: { id },
+    });
+    if (!module)
+      throw new NotFoundException({
+        code: "KERNEL_NOT_FOUND",
+        message: `No existe el módulo «${id}».`,
+      });
+    const [presented] = await this.presentModules(this.prisma, [module]);
+    return presented;
   }
-  updateModuleManifest(id: string, input: any, context?: CommandContext) {
+  async updateModuleManifest(id: string, input: any, context?: CommandContext) {
+    const manifest = this.assertValidManifest(input?.manifest);
     return this.mutate(
       "UpdateModuleManifest",
       context,
@@ -2111,14 +2326,61 @@ export class KernelService {
         type: "ModuleDefinition",
         id,
         event: "kernel.module.updated.v1",
-        payload: { moduleId: id },
+        payload: { moduleId: id, version: manifest.version },
       },
       async (tx) => {
-        this.assertManifest(input.manifest ?? input);
-        return tx.moduleDefinition.update({
+        if (manifest.id !== id)
+          throw this.moduleError(
+            "KERNEL_MODULE_MANIFEST_INVALID",
+            `El manifiesto es del módulo «${manifest.id}», no de «${id}». El id de un módulo no cambia.`,
+            [
+              {
+                path: "id",
+                message: `Tiene que ser «${id}».`,
+                keyword: "const",
+              },
+            ],
+          );
+        const module = await tx.moduleDefinition.findUnique({ where: { id } });
+        if (!module)
+          throw new NotFoundException({
+            code: "KERNEL_NOT_FOUND",
+            message: `No existe el módulo «${id}».`,
+          });
+        if (compareSemver(manifest.version, module.version) < 0)
+          throw this.moduleError(
+            "KERNEL_MODULE_VERSION_DOWNGRADE",
+            `La versión ${manifest.version} es anterior a la publicada (${module.version}).`,
+            [
+              {
+                path: "version",
+                message: `Tiene que ser ${module.version} o posterior.`,
+                keyword: "version",
+              },
+            ],
+          );
+        if (module.developerAppId) {
+          const app = await tx.developerApp.findUnique({
+            where: { id: module.developerAppId },
+          });
+          if (app) this.assertOAuthClient(manifest, app);
+        }
+        const updated = await tx.moduleDefinition.update({
           where: { id },
-          data: { manifest: input.manifest ?? input, version: input.version },
+          data: {
+            name: manifest.name,
+            description: manifest.description ?? null,
+            version: manifest.version,
+            contractVersion: manifest.contractVersion,
+            manifest: manifest as unknown as Json,
+            configurationSchema:
+              (manifest.configurationSchema as Json | undefined) ??
+              Prisma.DbNull,
+          },
         });
+        await this.syncModulePermissions(tx, manifest);
+        const [presented] = await this.presentModules(tx, [updated]);
+        return presented;
       },
     );
   }
@@ -2133,22 +2395,45 @@ export class KernelService {
         event: "kernel.module.deprecated.v1",
         payload: { moduleId: id },
       },
-      (tx) =>
-        tx.moduleDefinition.update({
+      async (tx) => {
+        const updated = await tx.moduleDefinition.update({
           where: { id },
           data: { status: "DEPRECATED" },
-        }),
+        });
+        const [presented] = await this.presentModules(tx, [updated]);
+        return presented;
+      },
     );
+  }
+  /** Validates a configuration against the module's schema (422 in Spanish). */
+  private assertModuleConfiguration(
+    module: { name: string; configurationSchema: unknown },
+    configuration: unknown,
+    prefix = "La configuración no es válida.",
+  ): Record<string, unknown> {
+    const result = validateConfiguration(
+      module.configurationSchema ?? null,
+      configuration,
+    );
+    if (!result.ok)
+      throw this.moduleError(
+        "KERNEL_MODULE_CONFIGURATION_INVALID",
+        `${prefix} ${summarizeErrors(result.errors)}`,
+        result.errors,
+      );
+    return result.value;
   }
   installModule(
     organizationId: string,
     moduleId: string,
+    input: any = {},
     context?: CommandContext,
   ) {
+    const configuration = input?.configuration;
     return this.mutate(
       "InstallModule",
       context,
-      { organizationId, moduleId },
+      { organizationId, moduleId, configuration },
       {
         type: "ModuleInstallation",
         id: `${moduleId}:${organizationId}`,
@@ -2157,21 +2442,72 @@ export class KernelService {
         payload: { moduleId, organizationId },
       },
       async (tx) => {
-        // 6.10.3: deprecated modules do not admit new installations.
-        const module = await tx.moduleDefinition.findUniqueOrThrow({
+        const module = await tx.moduleDefinition.findUnique({
           where: { id: moduleId },
         });
-        if (module.status === "DEPRECATED")
-          throw new ConflictException("Deprecated modules cannot be installed");
-        const installation = await tx.moduleInstallation.upsert({
-          where: { moduleId_organizationId: { moduleId, organizationId } },
-          create: {
-            moduleId,
-            organizationId,
-            installedById: this.context(context).actor.id,
-          },
-          update: {},
+        if (!module)
+          throw new NotFoundException({
+            code: "KERNEL_NOT_FOUND",
+            message: `No existe el módulo «${moduleId}».`,
+          });
+        // 6.10.3: deprecated (or retired) modules admit no new installations.
+        if (module.status !== "ACTIVE")
+          throw new ConflictException({
+            code: "KERNEL_MODULE_NOT_INSTALLABLE",
+            message:
+              module.status === "DEPRECATED"
+                ? `El módulo «${module.name}» está discontinuado y no admite instalaciones nuevas.`
+                : `El módulo «${module.name}» no está disponible para instalar.`,
+          });
+        const organization = await tx.organization.findUniqueOrThrow({
+          where: { id: organizationId },
+          select: { status: true },
         });
+        if (organization.status === "ARCHIVED")
+          throw new ConflictException({
+            code: "KERNEL_ORGANIZATION_ARCHIVED",
+            message:
+              "No se pueden instalar módulos en una organización archivada.",
+          });
+        const value =
+          configuration === undefined || configuration === null
+            ? undefined
+            : this.assertModuleConfiguration(module, configuration);
+        const existing = await tx.moduleInstallation.findUnique({
+          where: { moduleId_organizationId: { moduleId, organizationId } },
+        });
+        if (existing && existing.status !== "DISABLED")
+          throw new ConflictException({
+            code: "KERNEL_MODULE_ALREADY_INSTALLED",
+            message: `El módulo «${module.name}» ya está instalado.`,
+          });
+        const actorId = this.context(context).actor.id;
+        // A disabled installation is reinstalled in place (6.10.2: one per
+        // module/organization); its previous configuration is kept unless a
+        // new one is sent.
+        const installation = existing
+          ? await tx.moduleInstallation.update({
+              where: { id: existing.id },
+              data: {
+                status: "PENDING",
+                installedById: actorId,
+                installedAt: new Date(),
+                activatedAt: null,
+                ...(value !== undefined
+                  ? { configuration: value as Json }
+                  : {}),
+              },
+            })
+          : await tx.moduleInstallation.create({
+              data: {
+                moduleId,
+                organizationId,
+                installedById: actorId,
+                ...(value !== undefined
+                  ? { configuration: value as Json }
+                  : {}),
+              },
+            });
         await this.bumpCacheVersion(
           `kernel:module-version:${organizationId}:${moduleId}:v1`,
         );
@@ -2202,25 +2538,40 @@ export class KernelService {
         payload: { moduleId, organizationId, status: target },
       },
       async (tx) => {
-        const installation = await tx.moduleInstallation.findUniqueOrThrow({
+        const installation = await tx.moduleInstallation.findUnique({
           where: { moduleId_organizationId: { moduleId, organizationId } },
         });
+        if (!installation)
+          throw new NotFoundException({
+            code: "KERNEL_NOT_FOUND",
+            message: "El módulo no está instalado en esta organización.",
+          });
         installationStateMachine.assertTransition(installation.status, target);
+        let configuration = installation.configuration;
         if (target === "ACTIVE") {
           // 6.10.4: activation validates the configuration against the
           // module's declared schema, not only explicit config updates.
           const module = await tx.moduleDefinition.findUniqueOrThrow({
             where: { id: moduleId },
           });
-          this.assertConfiguration(
-            module.configurationSchema,
-            installation.configuration,
-          );
+          if (module.status === "DISABLED")
+            throw new ConflictException({
+              code: "KERNEL_MODULE_NOT_INSTALLABLE",
+              message: `El módulo «${module.name}» no está disponible.`,
+            });
+          configuration = this.assertModuleConfiguration(
+            module,
+            installation.configuration ?? undefined,
+            "Antes de activar el módulo, completá su configuración.",
+          ) as Prisma.JsonValue;
         }
         const updated = await tx.moduleInstallation.update({
           where: { moduleId_organizationId: { moduleId, organizationId } },
           data: {
             status: target,
+            ...(target === "ACTIVE"
+              ? { configuration: configuration as Json }
+              : {}),
             activatedAt:
               target === "ACTIVE" ? new Date() : installation.activatedAt,
             disabledAt:
@@ -2252,13 +2603,28 @@ export class KernelService {
         payload: { moduleId, organizationId },
       },
       async (tx) => {
-        const module = await tx.moduleDefinition.findUniqueOrThrow({
-          where: { id: moduleId },
+        const installation = await tx.moduleInstallation.findUnique({
+          where: { moduleId_organizationId: { moduleId, organizationId } },
+          include: { module: true },
         });
-        this.assertConfiguration(module.configurationSchema, configuration);
+        if (!installation)
+          throw new NotFoundException({
+            code: "KERNEL_NOT_FOUND",
+            message: "El módulo no está instalado en esta organización.",
+          });
+        if (installation.status === "DISABLED")
+          throw new ConflictException({
+            code: "KERNEL_MODULE_DISABLED",
+            message:
+              "El módulo está desinstalado: volvé a instalarlo para configurarlo.",
+          });
+        const value = this.assertModuleConfiguration(
+          installation.module,
+          configuration,
+        );
         const updated = await tx.moduleInstallation.update({
           where: { moduleId_organizationId: { moduleId, organizationId } },
-          data: { configuration },
+          data: { configuration: value as Json },
         });
         await this.bumpCacheVersion(
           `kernel:module-version:${organizationId}:${moduleId}:v1`,
@@ -2271,7 +2637,50 @@ export class KernelService {
     return this.prisma.moduleInstallation.findMany({
       where: { organizationId },
       include: { module: true },
+      orderBy: { moduleId: "asc" },
     });
+  }
+  /**
+   * District view: installations in an organization and (by default) every
+   * organization below it, with the organization's name.
+   */
+  async listInstallationsInTree(organizationId: string, query: any = {}) {
+    const includeDescendants =
+      query.includeDescendants === undefined ||
+      query.includeDescendants === true ||
+      query.includeDescendants === "true";
+    const organizationIds = [organizationId];
+    if (includeDescendants) {
+      let frontier = [organizationId];
+      while (frontier.length) {
+        const children = await this.prisma.organization.findMany({
+          where: { parentId: { in: frontier } },
+          select: { id: true },
+        });
+        frontier = children
+          .map((child) => child.id)
+          .filter((id) => !organizationIds.includes(id));
+        organizationIds.push(...frontier);
+      }
+    }
+    const installations = await this.prisma.moduleInstallation.findMany({
+      where: {
+        organizationId: { in: organizationIds },
+        moduleId: query.moduleId || undefined,
+        status: query.status || undefined,
+      },
+      include: {
+        organization: {
+          select: { id: true, name: true, type: true, status: true },
+        },
+      },
+      orderBy: [{ moduleId: "asc" }, { organizationId: "asc" }],
+    });
+    return installations.map(({ organization, ...installation }) => ({
+      ...installation,
+      organizationName: organization.name,
+      organizationType: organization.type,
+    }));
   }
   async capabilities(organizationId: string) {
     const installations = await this.prisma.moduleInstallation.findMany({
@@ -2280,29 +2689,16 @@ export class KernelService {
     });
     return {
       organizationId,
+      modules: installations.map((item) => ({
+        moduleId: item.moduleId,
+        status: item.status,
+      })),
       capabilities: installations.flatMap((item) =>
         ((item.module.manifest as any)?.capabilities ?? []).map(
           (capability: any) => ({ moduleId: item.moduleId, capability }),
         ),
       ),
     };
-  }
-  private assertManifest(manifest: any): void {
-    if (!manifest || typeof manifest !== "object" || Array.isArray(manifest))
-      throw new BadRequestException("Module manifest must be an object");
-  }
-  private assertConfiguration(schema: any, value: any): void {
-    if (!schema) return;
-    if (
-      schema.type === "object" &&
-      (!value || typeof value !== "object" || Array.isArray(value))
-    )
-      throw new BadRequestException("Module configuration must be an object");
-    for (const key of schema.required ?? [])
-      if (!(key in value))
-        throw new BadRequestException(
-          `Missing module configuration field: ${key}`,
-        );
   }
 
   // Service SDK read model
@@ -2323,7 +2719,20 @@ export class KernelService {
                 OR: [{ validUntil: null }, { validUntil: { gt: now } }],
                 organizationId: { not: null },
               },
-              include: { organization: true, roleDefinition: true },
+              include: {
+                organization: true,
+                roleDefinition: {
+                  include: {
+                    // E8: module permissions travel in the user context.
+                    permissions: {
+                      where: {
+                        permissionDefinition: { moduleId: { not: null } },
+                      },
+                      include: { permissionDefinition: true },
+                    },
+                  },
+                },
+              },
             },
           },
         },
@@ -2388,6 +2797,35 @@ export class KernelService {
           addWorkspace(club, "ROLE_ASSIGNMENT", roleCode);
       }
     }
+    // E8 (docs/15-modules.md): per workspace, the module permissions the
+    // person holds there (only modules turned on in that organization; the
+    // same decision POST /authorization/check would give).
+    const moduleCodesByRole = new Map<string, string[]>();
+    for (const assignment of account.person.roleAssignments)
+      moduleCodesByRole.set(
+        assignment.roleDefinition.code,
+        assignment.roleDefinition.permissions.map(
+          (link) => link.permissionDefinition.code,
+        ),
+      );
+    const modulePermissions = new Map<string, string[]>();
+    for (const workspace of workspaceMap.values()) {
+      const candidates = new Set(
+        [...workspace.roleCodes].flatMap(
+          (roleCode) => moduleCodesByRole.get(roleCode) ?? [],
+        ),
+      );
+      const granted: string[] = [];
+      for (const code of candidates) {
+        const decision = await this.authorization.check({
+          personId: account.personId,
+          permissionCode: code,
+          organizationId: workspace.organizationId,
+        });
+        if (decision.allowed) granted.push(code);
+      }
+      modulePermissions.set(workspace.organizationId, granted.sort());
+    }
     return {
       accountId: account.id,
       personId: account.personId,
@@ -2407,6 +2845,8 @@ export class KernelService {
           ...workspace,
           sources: [...workspace.sources],
           roleCodes: [...workspace.roleCodes],
+          modulePermissions:
+            modulePermissions.get(workspace.organizationId) ?? [],
         }))
         .sort(
           (left, right) =>

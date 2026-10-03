@@ -53,7 +53,10 @@ export async function main(argv = process.argv.slice(2), io = process) {
       error && error.code === "ENOENT"
         ? `No encontré ${file}.`
         : `No pude leer ${file}: ${error instanceof Error ? error.message : String(error)}`;
-    if (json) io.stdout.write(`${JSON.stringify({ ok: false, errors: [{ path: "", message, keyword: "read" }] })}\n`);
+    if (json)
+      io.stdout.write(
+        `${JSON.stringify({ ok: false, errors: [{ path: "", message, keyword: "read" }] })}\n`,
+      );
     else io.stderr.write(`${message}\n`);
     return 2;
   }
@@ -64,7 +67,10 @@ export async function main(argv = process.argv.slice(2), io = process) {
       knownEventTypes = await loadCatalog(eventsSource);
     } catch (error) {
       const message = `No pude leer el catálogo de eventos (${eventsSource}): ${error instanceof Error ? error.message : String(error)}`;
-      if (json) io.stdout.write(`${JSON.stringify({ ok: false, errors: [{ path: "", message, keyword: "read" }] })}\n`);
+      if (json)
+        io.stdout.write(
+          `${JSON.stringify({ ok: false, errors: [{ path: "", message, keyword: "read" }] })}\n`,
+        );
       else io.stderr.write(`${message}\n`);
       return 2;
     }
@@ -72,7 +78,9 @@ export async function main(argv = process.argv.slice(2), io = process) {
 
   const result = validateManifest(manifest, { knownEventTypes });
   if (json) {
-    io.stdout.write(`${JSON.stringify({ ok: result.ok, errors: result.errors })}\n`);
+    io.stdout.write(
+      `${JSON.stringify({ ok: result.ok, errors: result.errors })}\n`,
+    );
   } else if (result.ok) {
     io.stdout.write(
       `✔ ${file}: manifiesto válido (${manifest.id}@${manifest.version}, ${manifest.permissions.length} permisos).\n`,
@@ -100,7 +108,9 @@ if (invokedDirectly) {
   main().then(
     (code) => process.exit(code),
     (error) => {
-      process.stderr.write(`${error instanceof Error ? error.stack : String(error)}\n`);
+      process.stderr.write(
+        `${error instanceof Error ? error.stack : String(error)}\n`,
+      );
       process.exit(2);
     },
   );

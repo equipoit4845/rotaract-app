@@ -36,6 +36,68 @@ export class AuthorizationService {
     private readonly cache: OptionalRedisCacheService,
   ) {}
   async check(input: AuthorizationInput): Promise<AuthorizationDecision> {
+    const decision = await this.evaluate(input);
+    if (!decision.allowed) return decision;
+    const blocked = await this.moduleGate(
+      input.permissionCode,
+      input.organizationId,
+    );
+    return blocked
+      ? { ...decision, allowed: false, reasonCodes: [blocked] }
+      : decision;
+  }
+  /**
+   * E8 (docs/15-modules.md): a module's permission only takes effect where
+   * the module is turned on. The most specific installation decides: the
+   * organization's own, else its parent's, and so on up the tree (a module
+   * installed for the district works in its clubs unless a club has its own
+   * installation that is not ACTIVE). Without an organization, the module
+   * only has to be available (not DISABLED). Returns the reason code when
+   * the permission must be denied.
+   */
+  private async moduleGate(
+    permissionCode: string,
+    organizationId?: string,
+  ): Promise<string | null> {
+    if (!permissionCode || permissionCode.startsWith("kernel.")) return null;
+    const permission = await this.prisma.permissionDefinition.findUnique({
+      where: { code: permissionCode },
+      select: { moduleId: true },
+    });
+    if (!permission?.moduleId) return null;
+    const module = await this.prisma.moduleDefinition.findUnique({
+      where: { id: permission.moduleId },
+      select: { status: true },
+    });
+    if (!module || module.status === "DISABLED") return "MODULE_DISABLED";
+    if (!organizationId) return null;
+    let current: string | null = organizationId;
+    const visited = new Set<string>();
+    while (current && !visited.has(current)) {
+      visited.add(current);
+      const installation = await this.prisma.moduleInstallation.findUnique({
+        where: {
+          moduleId_organizationId: {
+            moduleId: permission.moduleId,
+            organizationId: current,
+          },
+        },
+        select: { status: true },
+      });
+      if (installation && installation.status !== "DISABLED")
+        return installation.status === "ACTIVE" ? null : "MODULE_NOT_ACTIVE";
+      const organization: { parentId: string | null } | null =
+        await this.prisma.organization.findUnique({
+          where: { id: current },
+          select: { parentId: true },
+        });
+      current = organization?.parentId ?? null;
+    }
+    return "MODULE_NOT_INSTALLED";
+  }
+  private async evaluate(
+    input: AuthorizationInput,
+  ): Promise<AuthorizationDecision> {
     const at = input.at ?? new Date();
     const cacheVersion = input.at
       ? 1

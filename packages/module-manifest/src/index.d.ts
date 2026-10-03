@@ -87,7 +87,10 @@ export declare function compileConfigurationSchema(
 /** `"reuniones.meeting.manage"` → `"reuniones"`. */
 export declare function permissionNamespace(code: string): string;
 /** True si `code` es `<moduleId>.<algo>`. */
-export declare function isModulePermission(moduleId: string, code: string): boolean;
+export declare function isModulePermission(
+  moduleId: string,
+  code: string,
+): boolean;
 
 export declare function pointerToPath(pointer: string): string;
 export declare function describeAjvErrors(

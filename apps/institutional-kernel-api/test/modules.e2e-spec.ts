@@ -19,7 +19,19 @@ describe("Modules E2E", () => {
   const moduleId = `e2e-fixture-${tag}`;
   let superAdminToken: string;
   let superAdminAccountId: string;
+  let superAdminPersonId: string;
   let orgId: string;
+  let appId: string;
+  /** A minimal v1 manifest (E8: modules are registered from a manifest). */
+  const fixtureManifest = (id: string, name: string) => ({
+    id,
+    name,
+    version: "1.0.0",
+    contractVersion: 1,
+    permissions: [],
+    events: { subscribes: [], emits: [] },
+    capabilities: [],
+  });
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -33,6 +45,7 @@ describe("Modules E2E", () => {
       .send({ email, password, firstName: "E2E", lastName: "ModulesAdmin" })
       .expect(201);
     superAdminAccountId = registered.body.id;
+    superAdminPersonId = registered.body.personId;
     await prisma.userAccount.update({
       where: { id: superAdminAccountId },
       data: {
@@ -59,11 +72,25 @@ describe("Modules E2E", () => {
       })
       .expect(201);
     orgId = org.body.id;
+    const developerApp = await prisma.developerApp.create({
+      data: {
+        clientId: `mra_${tag}`,
+        name: "E2E fixture app",
+        type: "CONFIDENTIAL",
+        organizationId: orgId,
+        ownerPersonId: superAdminPersonId,
+        grantTypes: ["client_credentials"],
+        scopes: [],
+        redirectUris: [],
+      },
+    });
+    appId = developerApp.id;
   });
 
   afterAll(async () => {
     await prisma.moduleInstallation.deleteMany({ where: { moduleId } });
     await prisma.moduleDefinition.deleteMany({ where: { id: moduleId } });
+    await prisma.developerApp.deleteMany({ where: { id: appId } });
     await prisma.kernelAuditLog.deleteMany({
       where: { organizationId: orgId },
     });
@@ -82,14 +109,8 @@ describe("Modules E2E", () => {
       .set("authorization", `Bearer ${superAdminToken}`)
       .set("idempotency-key", randomUUID())
       .send({
-        id: moduleId,
-        name: "E2E Fixture Module",
-        version: "1.0.0",
-        manifest: {
-          permissions: [],
-          events: { publishes: [], subscribes: [] },
-          capabilities: [],
-        },
+        appId,
+        manifest: fixtureManifest(moduleId, "E2E Fixture Module"),
       })
       .expect(201);
 
@@ -105,7 +126,7 @@ describe("Modules E2E", () => {
       )
       .set("authorization", `Bearer ${superAdminToken}`)
       .set("idempotency-key", randomUUID())
-      .expect(201);
+      .expect(200);
     expect(activated.body.status).toBe("ACTIVE");
 
     const outboxTypes = await prisma.outboxMessage.findMany({
@@ -121,27 +142,21 @@ describe("Modules E2E", () => {
   });
 
   it("refuses to install a deprecated module (invariant 6.10.3)", async () => {
-    const deprecatedId = `${moduleId}-deprecated`;
+    const deprecatedId = `${moduleId}-dep`; // ids are at most 40 chars
     await request(http)
       .post("/api/kernel/v1/modules")
       .set("authorization", `Bearer ${superAdminToken}`)
       .set("idempotency-key", randomUUID())
       .send({
-        id: deprecatedId,
-        name: "Deprecated Fixture Module",
-        version: "1.0.0",
-        manifest: {
-          permissions: [],
-          events: { publishes: [], subscribes: [] },
-          capabilities: [],
-        },
+        appId,
+        manifest: fixtureManifest(deprecatedId, "Deprecated Fixture Module"),
       })
       .expect(201);
     await request(http)
       .post(`/api/kernel/v1/modules/${deprecatedId}/deprecate`)
       .set("authorization", `Bearer ${superAdminToken}`)
       .set("idempotency-key", randomUUID())
-      .expect(201);
+      .expect(200);
 
     await request(http)
       .post(

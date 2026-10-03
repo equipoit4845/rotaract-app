@@ -25,7 +25,10 @@ function capture() {
 test("check exits 0 on a valid manifest", async () => {
   const { out, io } = capture();
   assert.equal(await main(["check", example], io), 0);
-  assert.match(out.stdout, /manifiesto válido \(reuniones@1\.0\.0, 6 permisos\)/);
+  assert.match(
+    out.stdout,
+    /manifiesto válido \(reuniones@1\.0\.0, 6 permisos\)/,
+  );
 });
 
 test("check --json prints { ok, errors } and exits 1 on errors", async () => {
@@ -38,7 +41,9 @@ test("check --json prints { ok, errors } and exits 1 on errors", async () => {
       name: "Reuniones",
       version: "1.0.0",
       contractVersion: 1,
-      permissions: [{ code: "kernel.person.manage", name: "Gestionar personas" }],
+      permissions: [
+        { code: "kernel.person.manage", name: "Gestionar personas" },
+      ],
     }),
   );
   const { out, io } = capture();
@@ -50,15 +55,24 @@ test("check --json prints { ok, errors } and exits 1 on errors", async () => {
 
 test("check exits 2 when the file is missing", async () => {
   const { out, io } = capture();
-  assert.equal(await main(["check", "/nonexistent/mirotaract.module.json"], io), 2);
+  assert.equal(
+    await main(["check", "/nonexistent/mirotaract.module.json"], io),
+    2,
+  );
   assert.match(out.stderr, /No encontré/);
 });
 
 test("check --events verifies subscriptions against a catalog file", async () => {
   const dir = mkdtempSync(join(tmpdir(), "mr-catalog-"));
   const catalog = join(dir, "catalog.json");
-  writeFileSync(catalog, JSON.stringify({ events: [{ type: "membership.activated.v1" }] }));
+  writeFileSync(
+    catalog,
+    JSON.stringify({ events: [{ type: "membership.activated.v1" }] }),
+  );
   const { out, io } = capture();
   assert.equal(await main(["check", example, "--events", catalog], io), 1);
-  assert.match(out.stderr, /appointment\.activated\.v1» no existe en el catálogo/);
+  assert.match(
+    out.stderr,
+    /appointment\.activated\.v1» no existe en el catálogo/,
+  );
 });

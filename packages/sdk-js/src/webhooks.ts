@@ -104,6 +104,34 @@ export type PeriodCreatedEvent = MiRotaractEvent<
   "period.created.v1",
   { period: PeriodView }
 >;
+/** E8: your module's installation in a club (or the district). */
+export type ModuleInstallationView = {
+  moduleId: string;
+  organizationId: string;
+  status: "PENDING" | "ACTIVE" | "SUSPENDED" | "DISABLED";
+  /** The club's configuration, already validated against your configurationSchema. */
+  configuration: Record<string, unknown> | null;
+  installedAt: string;
+  activatedAt?: string | null;
+  disabledAt?: string | null;
+};
+/** Module events only reach the app that owns the module. */
+export type ModuleInstalledEvent = MiRotaractEvent<
+  "module.installed.v1",
+  { installation: ModuleInstallationView }
+>;
+export type ModuleEnabledEvent = MiRotaractEvent<
+  "module.enabled.v1",
+  { installation: ModuleInstallationView }
+>;
+export type ModuleDisabledEvent = MiRotaractEvent<
+  "module.disabled.v1",
+  { installation: ModuleInstallationView; reason: "SUSPENDED" | "DISABLED" }
+>;
+export type ModuleConfiguredEvent = MiRotaractEvent<
+  "module.configured.v1",
+  { installation: ModuleInstallationView }
+>;
 export type PingEvent = MiRotaractEvent<
   "ping.v1",
   { message: string; appId: string; endpointId: string }
@@ -120,6 +148,10 @@ export type MiRotaractWebhookEvent =
   | OrganizationArchivedEvent
   | PersonUpdatedEvent
   | PeriodCreatedEvent
+  | ModuleInstalledEvent
+  | ModuleEnabledEvent
+  | ModuleDisabledEvent
+  | ModuleConfiguredEvent
   | PingEvent;
 
 export type WebhookEventType = MiRotaractWebhookEvent["type"];

@@ -297,40 +297,7 @@ describe("KernelService — membership application invariants (6.8)", () => {
   });
 });
 
-describe("KernelService — module invariants (6.10)", () => {
-  it("rejects installing a deprecated module (6.10.3)", async () => {
-    const { kernel } = buildKernel({
-      moduleDefinition: {
-        findUniqueOrThrow: jest
-          .fn()
-          .mockResolvedValue({ id: "mod-1", status: "DEPRECATED" }),
-      },
-    });
-
-    await expect(kernel.installModule("org-1", "mod-1")).rejects.toBeInstanceOf(
-      ConflictException,
-    );
-  });
-
-  it("validates the configuration schema when activating an installation (6.10.4)", async () => {
-    const { kernel } = buildKernel({
-      moduleInstallation: {
-        findUniqueOrThrow: jest
-          .fn()
-          .mockResolvedValue({ status: "PENDING", configuration: null }),
-      },
-      moduleDefinition: {
-        findUniqueOrThrow: jest.fn().mockResolvedValue({
-          configurationSchema: { type: "object", required: ["apiKey"] },
-        }),
-      },
-    });
-
-    await expect(
-      kernel.transitionInstallation("org-1", "mod-1", "ACTIVE" as any),
-    ).rejects.toBeInstanceOf(BadRequestException);
-  });
-});
+// Module invariants (6.10) and E8 behaviour: src/application/modules/modules.spec.ts
 
 describe("KernelService — permission and role invariants (6.7)", () => {
   it("rejects a permission code that is not <namespace>.<resource>.<action> (6.7.1)", async () => {

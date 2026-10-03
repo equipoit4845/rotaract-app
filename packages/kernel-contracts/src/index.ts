@@ -43,6 +43,8 @@ export type UserContext = {
     organizationType: "DISTRICT" | "CLUB" | "OTHER";
     sources: Array<"MEMBERSHIP" | "ROLE_ASSIGNMENT">;
     roleCodes: string[];
+    /** E8: module permissions held here (only modules active in this organization). */
+    modulePermissions?: string[];
   }>;
   contextVersion: number;
 };

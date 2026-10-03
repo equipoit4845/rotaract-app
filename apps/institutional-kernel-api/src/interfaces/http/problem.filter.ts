@@ -45,6 +45,15 @@ export class ProblemFilter implements ExceptionFilter {
           : prismaCode === "P2025"
             ? "KERNEL_NOT_FOUND"
             : `KERNEL_HTTP_${status}`;
+    // Field-level validation errors (e.g. a module configuration checked
+    // against its JSON Schema): [{ path, message }], already in Spanish.
+    const errors =
+      typeof body === "object" &&
+      body &&
+      Array.isArray((body as { errors?: unknown }).errors) &&
+      (body as { errors: unknown[] }).errors.length
+        ? (body as { errors: unknown[] }).errors
+        : undefined;
     const traceId =
       request.header("traceparent") ??
       request.header("x-correlation-id") ??
@@ -60,6 +69,7 @@ export class ProblemFilter implements ExceptionFilter {
         detail,
         instance: request.originalUrl,
         traceId,
+        ...(errors ? { errors } : {}),
       });
   }
 }

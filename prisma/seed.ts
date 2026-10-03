@@ -141,6 +141,8 @@ const rolePermissions: Record<string, string[]> = {
     "kernel.role.assign",
     "kernel.role.revoke",
     "kernel.module.read",
+    // E8: the RDR registers the district's modules from their manifest.
+    "kernel.module.register",
     "kernel.module.install",
     "kernel.module.configure",
     "kernel.module.disable",
@@ -302,21 +304,9 @@ async function main(): Promise<void> {
       });
     }
   }
-  await prisma.moduleDefinition.upsert({
-    where: { id: "meetings" },
-    update: {},
-    create: {
-      id: "meetings",
-      name: "Reuniones",
-      version: "1.0.0",
-      status: "ACTIVE",
-      manifest: {
-        permissions: [],
-        events: { publishes: [], subscribes: [] },
-        capabilities: [],
-      },
-    },
-  });
+  // Modules are registered from their manifest (docs/15-modules.md), never
+  // seeded: the old "meetings" placeholder is retired by migration
+  // 20261004100000_modules_e8.
   const email = process.env.KERNEL_SUPERADMIN_EMAIL?.trim().toLowerCase();
   const password = process.env.KERNEL_SUPERADMIN_PASSWORD;
   if (email && password) {

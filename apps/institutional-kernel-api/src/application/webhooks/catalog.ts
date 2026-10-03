@@ -234,6 +234,67 @@ const exampleOrganization = (status: string) => ({
   updatedAt,
 });
 
+// --- E8: module installations (docs/15-modules.md) ----------------------
+const INSTALLATION_STATUS = ["PENDING", "ACTIVE", "SUSPENDED", "DISABLED"];
+
+export const INSTALLATION_VIEW_SCHEMA: JsonSchema = {
+  type: "object",
+  description:
+    "La instalación de tu módulo en una organización, con su configuración actual.",
+  required: [
+    "moduleId",
+    "organizationId",
+    "status",
+    "configuration",
+    "installedAt",
+  ],
+  properties: {
+    moduleId: { type: "string" },
+    organizationId: { type: "string" },
+    status: { type: "string", enum: INSTALLATION_STATUS },
+    configuration: {
+      type: ["object", "null"],
+      description:
+        "Configuración del club, ya validada contra el configurationSchema del módulo.",
+    },
+    installedAt: { type: "string", format: "date-time" },
+    activatedAt: nullableDateTime,
+    disabledAt: nullableDateTime,
+  },
+};
+
+const exampleInstallation = (
+  status: string,
+  extra: Record<string, unknown> = {},
+) => ({
+  moduleId: "reuniones",
+  organizationId: ORG,
+  status,
+  configuration: {
+    emailContacto: "rc.sanlorenzo@example.org",
+    votosPorClub: 1,
+    avisarPorEmail: true,
+    idioma: "es",
+  },
+  installedAt: "2026-10-02T21:10:00.000Z",
+  activatedAt: null,
+  disabledAt: null,
+  ...extra,
+});
+
+const installationSchema = (
+  extra: Record<string, unknown> = {},
+  required: string[] = [],
+): JsonSchema => ({
+  type: "object",
+  required: ["installation", ...required],
+  properties: { installation: INSTALLATION_VIEW_SCHEMA, ...extra },
+});
+
+const MODULE_EVENT_NOTE =
+  " Solo llega a la app dueña del módulo (la que lo registró).";
+// --- end E8
+
 const membershipSchema = (
   extra: Record<string, unknown> = {},
   required: string[] = [],
@@ -408,6 +469,71 @@ export const EVENT_CATALOG: readonly EventDefinition[] = [
         startDate: "2027-07-01T00:00:00.000Z",
         endDate: "2028-06-30T00:00:00.000Z",
       },
+    },
+  },
+  // --- E8: module installations, only for the module's own app.
+  {
+    type: "module.installed.v1",
+    name: "module.installed",
+    version: 1,
+    title: "Módulo instalado",
+    description:
+      "Un club (o el distrito) instaló tu módulo. Todavía está pendiente: se usa recién cuando llega module.enabled.v1." +
+      MODULE_EVENT_NOTE,
+    scope: null,
+    schema: installationSchema(),
+    example: { installation: exampleInstallation("PENDING") },
+  },
+  {
+    type: "module.enabled.v1",
+    name: "module.enabled",
+    version: 1,
+    title: "Módulo activado",
+    description:
+      "Tu módulo quedó activo en un club (o en el distrito): desde ahora sus permisos valen ahí." +
+      MODULE_EVENT_NOTE,
+    scope: null,
+    schema: installationSchema(),
+    example: {
+      installation: exampleInstallation("ACTIVE", {
+        activatedAt: "2026-10-02T21:15:04.000Z",
+      }),
+    },
+  },
+  {
+    type: "module.disabled.v1",
+    name: "module.disabled",
+    version: 1,
+    title: "Módulo desactivado",
+    description:
+      "Un club desactivó (SUSPENDED, se puede volver a activar) o desinstaló (DISABLED) tu módulo. Sus permisos dejan de valer ahí; los datos que guarda tu app no se borran." +
+      MODULE_EVENT_NOTE,
+    scope: null,
+    schema: installationSchema(
+      { reason: { type: "string", enum: ["SUSPENDED", "DISABLED"] } },
+      ["reason"],
+    ),
+    example: {
+      installation: exampleInstallation("SUSPENDED", {
+        activatedAt: "2026-10-02T21:15:04.000Z",
+      }),
+      reason: "SUSPENDED",
+    },
+  },
+  {
+    type: "module.configured.v1",
+    name: "module.configured",
+    version: 1,
+    title: "Configuración del módulo actualizada",
+    description:
+      "Un club cambió la configuración de tu módulo. `installation.configuration` trae la configuración nueva completa." +
+      MODULE_EVENT_NOTE,
+    scope: null,
+    schema: installationSchema(),
+    example: {
+      installation: exampleInstallation("ACTIVE", {
+        activatedAt: "2026-10-02T21:15:04.000Z",
+      }),
     },
   },
   {

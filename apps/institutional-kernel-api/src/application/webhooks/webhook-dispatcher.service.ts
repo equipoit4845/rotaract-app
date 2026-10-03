@@ -176,6 +176,7 @@ export class WebhookDispatcherService implements OnModuleInit, OnModuleDestroy {
             if (!event) continue;
             for (const endpoint of interested) {
               const rendered = renderForApp(event, {
+                appId: endpoint.app.id,
                 scopes: endpoint.app.scopes,
                 organizationIds: await tree(endpoint.app.organizationId),
               });

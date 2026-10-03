@@ -30,6 +30,10 @@ nacimiento) solo aparecen si la app tiene
 | [`organization.archived.v1`](#organizationarchivedv1--club-archivado) | Club archivado | `kernel.service.organizations.read` |
 | [`person.updated.v1`](#personupdatedv1--datos-de-una-persona-actualizados) | Datos de una persona actualizados | `kernel.service.persons.read` |
 | [`period.created.v1`](#periodcreatedv1--período-creado) | Período creado | `kernel.service.periods.read` |
+| [`module.installed.v1`](#moduleinstalledv1--módulo-instalado) | Módulo instalado | — |
+| [`module.enabled.v1`](#moduleenabledv1--módulo-activado) | Módulo activado | — |
+| [`module.disabled.v1`](#moduledisabledv1--módulo-desactivado) | Módulo desactivado | — |
+| [`module.configured.v1`](#moduleconfiguredv1--configuración-del-módulo-actualizada) | Configuración del módulo actualizada | — |
 | [`ping.v1`](#pingv1--prueba) | Prueba | — |
 
 Todos los cuerpos tienen la misma forma: `id` (`evt_...`, el mismo en
@@ -534,6 +538,196 @@ Ejemplo del cuerpo que recibís:
       "status": "DRAFT",
       "startDate": "2027-07-01T00:00:00.000Z",
       "endDate": "2028-06-30T00:00:00.000Z"
+    }
+  }
+}
+```
+
+### `module.installed.v1` — Módulo instalado
+
+Un club (o el distrito) instaló tu módulo. Todavía está pendiente: se usa recién cuando llega module.enabled.v1. Solo llega a la app dueña del módulo (la que lo registró).
+
+- **Permiso que necesita la app:** ninguno
+- **Versión:** 1
+
+Campos de `data`:
+
+| Campo | Tipo | Siempre presente | Notas |
+|---|---|---|---|
+| `installation` | objeto | sí | La instalación de tu módulo en una organización, con su configuración actual. |
+| `installation.moduleId` | string | sí |  |
+| `installation.organizationId` | string | sí |  |
+| `installation.status` | string: `PENDING`, `ACTIVE`, `SUSPENDED`, `DISABLED` | sí |  |
+| `installation.configuration` | object (o null) | sí | Configuración del club, ya validada contra el configurationSchema del módulo. |
+| `installation.installedAt` | string (date-time) | sí |  |
+| `installation.activatedAt` | string (o null) (date-time) | no |  |
+| `installation.disabledAt` | string (o null) (date-time) | no |  |
+
+Ejemplo del cuerpo que recibís:
+
+```json
+{
+  "id": "evt_cm1exampleevent000000000",
+  "type": "module.installed.v1",
+  "createdAt": "2026-10-02T21:15:04.000Z",
+  "organizationId": "cm1clubsanlorenzo0000000",
+  "data": {
+    "installation": {
+      "moduleId": "reuniones",
+      "organizationId": "cm1clubsanlorenzo0000000",
+      "status": "PENDING",
+      "configuration": {
+        "emailContacto": "rc.sanlorenzo@example.org",
+        "votosPorClub": 1,
+        "avisarPorEmail": true,
+        "idioma": "es"
+      },
+      "installedAt": "2026-10-02T21:10:00.000Z",
+      "activatedAt": null,
+      "disabledAt": null
+    }
+  }
+}
+```
+
+### `module.enabled.v1` — Módulo activado
+
+Tu módulo quedó activo en un club (o en el distrito): desde ahora sus permisos valen ahí. Solo llega a la app dueña del módulo (la que lo registró).
+
+- **Permiso que necesita la app:** ninguno
+- **Versión:** 1
+
+Campos de `data`:
+
+| Campo | Tipo | Siempre presente | Notas |
+|---|---|---|---|
+| `installation` | objeto | sí | La instalación de tu módulo en una organización, con su configuración actual. |
+| `installation.moduleId` | string | sí |  |
+| `installation.organizationId` | string | sí |  |
+| `installation.status` | string: `PENDING`, `ACTIVE`, `SUSPENDED`, `DISABLED` | sí |  |
+| `installation.configuration` | object (o null) | sí | Configuración del club, ya validada contra el configurationSchema del módulo. |
+| `installation.installedAt` | string (date-time) | sí |  |
+| `installation.activatedAt` | string (o null) (date-time) | no |  |
+| `installation.disabledAt` | string (o null) (date-time) | no |  |
+
+Ejemplo del cuerpo que recibís:
+
+```json
+{
+  "id": "evt_cm1exampleevent000000000",
+  "type": "module.enabled.v1",
+  "createdAt": "2026-10-02T21:15:04.000Z",
+  "organizationId": "cm1clubsanlorenzo0000000",
+  "data": {
+    "installation": {
+      "moduleId": "reuniones",
+      "organizationId": "cm1clubsanlorenzo0000000",
+      "status": "ACTIVE",
+      "configuration": {
+        "emailContacto": "rc.sanlorenzo@example.org",
+        "votosPorClub": 1,
+        "avisarPorEmail": true,
+        "idioma": "es"
+      },
+      "installedAt": "2026-10-02T21:10:00.000Z",
+      "activatedAt": "2026-10-02T21:15:04.000Z",
+      "disabledAt": null
+    }
+  }
+}
+```
+
+### `module.disabled.v1` — Módulo desactivado
+
+Un club desactivó (SUSPENDED, se puede volver a activar) o desinstaló (DISABLED) tu módulo. Sus permisos dejan de valer ahí; los datos que guarda tu app no se borran. Solo llega a la app dueña del módulo (la que lo registró).
+
+- **Permiso que necesita la app:** ninguno
+- **Versión:** 1
+
+Campos de `data`:
+
+| Campo | Tipo | Siempre presente | Notas |
+|---|---|---|---|
+| `installation` | objeto | sí | La instalación de tu módulo en una organización, con su configuración actual. |
+| `installation.moduleId` | string | sí |  |
+| `installation.organizationId` | string | sí |  |
+| `installation.status` | string: `PENDING`, `ACTIVE`, `SUSPENDED`, `DISABLED` | sí |  |
+| `installation.configuration` | object (o null) | sí | Configuración del club, ya validada contra el configurationSchema del módulo. |
+| `installation.installedAt` | string (date-time) | sí |  |
+| `installation.activatedAt` | string (o null) (date-time) | no |  |
+| `installation.disabledAt` | string (o null) (date-time) | no |  |
+| `reason` | string: `SUSPENDED`, `DISABLED` | sí |  |
+
+Ejemplo del cuerpo que recibís:
+
+```json
+{
+  "id": "evt_cm1exampleevent000000000",
+  "type": "module.disabled.v1",
+  "createdAt": "2026-10-02T21:15:04.000Z",
+  "organizationId": "cm1clubsanlorenzo0000000",
+  "data": {
+    "installation": {
+      "moduleId": "reuniones",
+      "organizationId": "cm1clubsanlorenzo0000000",
+      "status": "SUSPENDED",
+      "configuration": {
+        "emailContacto": "rc.sanlorenzo@example.org",
+        "votosPorClub": 1,
+        "avisarPorEmail": true,
+        "idioma": "es"
+      },
+      "installedAt": "2026-10-02T21:10:00.000Z",
+      "activatedAt": "2026-10-02T21:15:04.000Z",
+      "disabledAt": null
+    },
+    "reason": "SUSPENDED"
+  }
+}
+```
+
+### `module.configured.v1` — Configuración del módulo actualizada
+
+Un club cambió la configuración de tu módulo. `installation.configuration` trae la configuración nueva completa. Solo llega a la app dueña del módulo (la que lo registró).
+
+- **Permiso que necesita la app:** ninguno
+- **Versión:** 1
+
+Campos de `data`:
+
+| Campo | Tipo | Siempre presente | Notas |
+|---|---|---|---|
+| `installation` | objeto | sí | La instalación de tu módulo en una organización, con su configuración actual. |
+| `installation.moduleId` | string | sí |  |
+| `installation.organizationId` | string | sí |  |
+| `installation.status` | string: `PENDING`, `ACTIVE`, `SUSPENDED`, `DISABLED` | sí |  |
+| `installation.configuration` | object (o null) | sí | Configuración del club, ya validada contra el configurationSchema del módulo. |
+| `installation.installedAt` | string (date-time) | sí |  |
+| `installation.activatedAt` | string (o null) (date-time) | no |  |
+| `installation.disabledAt` | string (o null) (date-time) | no |  |
+
+Ejemplo del cuerpo que recibís:
+
+```json
+{
+  "id": "evt_cm1exampleevent000000000",
+  "type": "module.configured.v1",
+  "createdAt": "2026-10-02T21:15:04.000Z",
+  "organizationId": "cm1clubsanlorenzo0000000",
+  "data": {
+    "installation": {
+      "moduleId": "reuniones",
+      "organizationId": "cm1clubsanlorenzo0000000",
+      "status": "ACTIVE",
+      "configuration": {
+        "emailContacto": "rc.sanlorenzo@example.org",
+        "votosPorClub": 1,
+        "avisarPorEmail": true,
+        "idioma": "es"
+      },
+      "installedAt": "2026-10-02T21:10:00.000Z",
+      "activatedAt": "2026-10-02T21:15:04.000Z",
+      "disabledAt": null
     }
   }
 }

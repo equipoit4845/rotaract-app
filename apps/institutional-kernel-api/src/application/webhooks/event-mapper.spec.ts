@@ -94,7 +94,13 @@ describe("event mapping (internal outbox → public catalog)", () => {
 
   it("only maps to types in the catalog, and the prefilter covers them all", () => {
     for (const internal of MAPPED_INTERNAL_TYPES) {
-      const plan = planPublicEvent(message(internal, { toStatus: "INACTIVE" }));
+      const plan = planPublicEvent(
+        message(internal, {
+          toStatus: "INACTIVE",
+          moduleId: "reuniones",
+          organizationId: "club_a",
+        }),
+      );
       expect(plan).not.toBeNull();
       expect(EVENT_TYPES).toContain(plan!.type);
     }
@@ -323,5 +329,100 @@ describe("per-app rendering (scope, organization tree, PII)", () => {
     );
     expect(JSON.parse(rendered!.body).data.changedFields).toEqual(["name"]);
     expect(rendered!.body).not.toContain("club@example.test");
+  });
+});
+
+describe("module installation events (E8)", () => {
+  const installation = {
+    moduleId: "reuniones",
+    organizationId: "club_a",
+    status: "SUSPENDED",
+    configuration: { emailContacto: "club@example.org" },
+    installedAt: at,
+    activatedAt: at,
+    disabledAt: null,
+    module: { developerAppId: "app_owner" },
+  };
+  const moduleMessage = (eventType: string): OutboxLike => ({
+    id: "cm1outbox",
+    eventType,
+    payload: { moduleId: "reuniones", organizationId: "club_a" },
+    occurredAt: at,
+    aggregateId: "reuniones:club_a",
+  });
+  const tree = new Set(["district", "club_a"]);
+
+  it.each([
+    ["kernel.module-installed.v1", "module.installed.v1", undefined],
+    ["kernel.module-activated.v1", "module.enabled.v1", undefined],
+    ["kernel.module-suspended.v1", "module.disabled.v1", "SUSPENDED"],
+    ["kernel.module-disabled.v1", "module.disabled.v1", "DISABLED"],
+    [
+      "kernel.module-configuration-updated.v1",
+      "module.configured.v1",
+      undefined,
+    ],
+  ])("%s → %s", (internal, type, reason) => {
+    expect(planPublicEvent(moduleMessage(internal))).toEqual({
+      kind: "module",
+      type,
+      moduleId: "reuniones",
+      organizationId: "club_a",
+      reason,
+    });
+    expect(MAPPED_INTERNAL_TYPES).toContain(internal);
+  });
+
+  it("goes only to the module's own app, with the current configuration", async () => {
+    const event = await resolvePublicEvent(
+      db({ moduleInstallation: { findUnique: async () => installation } }),
+      moduleMessage("kernel.module-suspended.v1"),
+    );
+    expect(event).not.toBeNull();
+    const owner = renderForApp(event!, {
+      appId: "app_owner",
+      scopes: [],
+      organizationIds: tree,
+    });
+    expect(owner?.envelope).toMatchObject({
+      type: "module.disabled.v1",
+      organizationId: "club_a",
+      data: {
+        reason: "SUSPENDED",
+        installation: {
+          moduleId: "reuniones",
+          status: "SUSPENDED",
+          configuration: { emailContacto: "club@example.org" },
+          activatedAt: at.toISOString(),
+          disabledAt: null,
+        },
+      },
+    });
+    expect(
+      renderForApp(event!, {
+        appId: "another_app",
+        scopes: [],
+        organizationIds: tree,
+      }),
+    ).toBeNull();
+    // Callers that don't say which app they render for get nothing.
+    expect(
+      renderForApp(event!, { scopes: [], organizationIds: tree }),
+    ).toBeNull();
+  });
+
+  it("is not published for modules without an owner app (pre-E8)", async () => {
+    const event = await resolvePublicEvent(
+      db({
+        moduleInstallation: {
+          findUnique: async () => ({
+            ...installation,
+            module: { developerAppId: null },
+          }),
+        },
+      }),
+      moduleMessage("kernel.module-installed.v1"),
+    );
+    expect(event).toBeNull();
   });
 });

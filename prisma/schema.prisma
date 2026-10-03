@@ -583,10 +583,18 @@ model ModuleDefinition {
   configurationSchema Json?
   registeredAt        DateTime     @default(now())
   updatedAt           DateTime     @updatedAt
+  // --- E8 (docs/15-modules.md): the developer app that owns the module and
+  // the organization it is governed from (copied from the app). Plain
+  // columns, no Prisma relation, so DeveloperApp/Organization stay as is.
+  developerAppId      String?
+  ownerOrganizationId String?
+  // --- end E8
 
   installations ModuleInstallation[]
 
   @@index([status])
+  @@index([developerAppId])
+  @@index([ownerOrganizationId])
 }
 
 model ModuleInstallation {

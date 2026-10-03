@@ -275,6 +275,9 @@ const permissionByHandler: Record<string, string> = {
   disable: "kernel.module.disable",
   installations: "kernel.module.read",
   capabilities: "kernel.module.read",
+  // --- E8 (docs/15-modules.md)
+  installationsInTree: "kernel.module.read",
+  // --- end E8
 };
 
 // Handlers whose route only carries the entity's own id (not its
@@ -555,7 +558,42 @@ async function developerAppOrganization(
   return app ? [app.organizationId] : undefined;
 }
 
+// --- E8 (docs/15-modules.md) ----------------------------------------------
+// A module is registered for the organization of the developer app that
+// owns it (body.appId), and later governed from that same organization —
+// never from an organizationId the caller sends along. Modules registered
+// before E8 have no owner: only PLATFORM grants (SUPERADMIN) manage them.
+async function moduleRegistrationOrganization(
+  prisma: PrismaService,
+  request: AuthenticatedRequest & Request,
+): Promise<Array<string | undefined> | undefined> {
+  const appId = request.body?.appId;
+  if (!appId) return [undefined];
+  const app = await prisma.developerApp.findUnique({
+    where: { id: String(appId) },
+    select: { organizationId: true },
+  });
+  return app ? [app.organizationId] : [undefined];
+}
+
+async function moduleOwnerOrganization(
+  prisma: PrismaService,
+  request: AuthenticatedRequest & Request,
+): Promise<Array<string | undefined> | undefined> {
+  const module = await prisma.moduleDefinition.findUnique({
+    where: { id: String(request.params.moduleId) },
+    select: { ownerOrganizationId: true },
+  });
+  return [module?.ownerOrganizationId ?? undefined];
+}
+// --- end E8
+
 const organizationResolverByHandler: Record<string, OrganizationResolver> = {
+  // --- E8
+  createModule: moduleRegistrationOrganization,
+  manifest: moduleOwnerOrganization,
+  deprecate: moduleOwnerOrganization,
+  // --- end E8
   getDeveloperApp: developerAppOrganization,
   updateDeveloperApp: developerAppOrganization,
   rotateDeveloperAppSecret: developerAppOrganization,

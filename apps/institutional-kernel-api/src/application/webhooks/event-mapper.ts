@@ -53,7 +53,14 @@ export type EventPlan =
       changedFields: string[];
     }
   | { kind: "person"; type: string; personId: string; changedFields: string[] }
-  | { kind: "period"; type: string; periodId: string };
+  | { kind: "period"; type: string; periodId: string }
+  | {
+      kind: "module";
+      type: string;
+      moduleId: string;
+      organizationId: string;
+      reason?: string;
+    };
 
 const ENDED_STATUSES = ["INACTIVE", "GRADUATED"];
 
@@ -171,6 +178,27 @@ export function planPublicEvent(message: OutboxLike): EventPlan | null {
         type: "period.created.v1",
         periodId: id("periodId"),
       };
+    // E8: module installations (aggregateId is "<moduleId>:<organizationId>").
+    case "kernel.module-installed.v1":
+    case "kernel.module-activated.v1":
+    case "kernel.module-suspended.v1":
+    case "kernel.module-disabled.v1":
+    case "kernel.module-configuration-updated.v1": {
+      const [aggregateModule, aggregateOrganization] =
+        message.aggregateId.split(":");
+      const moduleId = str(data.moduleId) ?? aggregateModule;
+      const organizationId = str(data.organizationId) ?? aggregateOrganization;
+      if (!moduleId || !organizationId) return null;
+      const types: Record<string, [string, string?]> = {
+        "kernel.module-installed.v1": ["module.installed.v1"],
+        "kernel.module-activated.v1": ["module.enabled.v1"],
+        "kernel.module-suspended.v1": ["module.disabled.v1", "SUSPENDED"],
+        "kernel.module-disabled.v1": ["module.disabled.v1", "DISABLED"],
+        "kernel.module-configuration-updated.v1": ["module.configured.v1"],
+      };
+      const [type, reason] = types[message.eventType];
+      return { kind: "module", type, moduleId, organizationId, reason };
+    }
     default:
       return null;
   }
@@ -192,6 +220,11 @@ export const MAPPED_INTERNAL_TYPES = [
   "kernel.organization.archived.v1",
   "kernel.person.updated.v1",
   "kernel.period.created.v1",
+  "kernel.module-installed.v1",
+  "kernel.module-activated.v1",
+  "kernel.module-suspended.v1",
+  "kernel.module-disabled.v1",
+  "kernel.module-configuration-updated.v1",
 ];
 
 /** What the Data API's OrganizationView publishes (other columns never leave). */
@@ -230,6 +263,8 @@ export type ResolvedEvent = {
   scope: string | null;
   /** Organizations the event concerns, most specific first. */
   organizationIds: string[];
+  /** E8: only this app may receive it (module events go to the module's app). */
+  appId?: string;
   /** `data` for an app; null when nothing in it is visible to that app. */
   data: (options: { contact: boolean }) => Record<string, unknown> | null;
 };
@@ -245,6 +280,7 @@ type Reader = Pick<
   | "organization"
   | "person"
   | "institutionalPeriod"
+  | "moduleInstallation"
 >;
 
 /** Loads what a plan needs. Null when the aggregate is gone or not publishable. */
@@ -389,10 +425,45 @@ export async function resolvePublicEvent(
         data: () => ({ period: toPeriodView(period) }),
       };
     }
+    case "module": {
+      const installation = await db.moduleInstallation.findUnique({
+        where: {
+          moduleId_organizationId: {
+            moduleId: plan.moduleId,
+            organizationId: plan.organizationId,
+          },
+        },
+        include: { module: { select: { developerAppId: true } } },
+      });
+      // Modules registered before E8 have no owner app: nobody receives it.
+      if (!installation?.module.developerAppId) return null;
+      return {
+        ...base,
+        organizationIds: [installation.organizationId],
+        appId: installation.module.developerAppId,
+        data: () => {
+          const data: Record<string, unknown> = {
+            installation: {
+              moduleId: installation.moduleId,
+              organizationId: installation.organizationId,
+              status: installation.status,
+              configuration: installation.configuration ?? null,
+              installedAt: installation.installedAt.toISOString(),
+              activatedAt: installation.activatedAt?.toISOString() ?? null,
+              disabledAt: installation.disabledAt?.toISOString() ?? null,
+            },
+          };
+          if (plan.reason) data.reason = plan.reason;
+          return data;
+        },
+      };
+    }
   }
 }
 
 export type AppAudience = {
+  /** E8: the app's id, for events addressed to a single app. */
+  appId?: string;
   scopes: readonly string[];
   /** The app's organization and all its descendants. */
   organizationIds: ReadonlySet<string>;
@@ -410,6 +481,7 @@ export function renderForApp(
   app: AppAudience,
 ): RenderedEvent | null {
   if (event.scope && !app.scopes.includes(event.scope)) return null;
+  if (event.appId && event.appId !== app.appId) return null;
   const organizationId = event.organizationIds.find((id) =>
     app.organizationIds.has(id),
   );

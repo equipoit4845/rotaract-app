@@ -1,3 +1,13 @@
+/* Port of packages/module-manifest/src/errors-es.js — keep both in sync
+ * (manifest.spec.ts runs the same fixtures against the kernel copy). */
+import type { ErrorObject } from "ajv";
+
+export type ValidationError = {
+  path: string;
+  message: string;
+  keyword: string;
+};
+
 /**
  * Ajv errors → short Spanish sentences a club president (or a committee
  * developer) can act on. Field names come from the schema's `title` when it
@@ -9,7 +19,7 @@
  * both on the same fixtures).
  */
 
-const TYPE_NAMES = {
+const TYPE_NAMES: Record<string, string> = {
   string: "un texto",
   number: "un número",
   integer: "un número entero",
@@ -19,7 +29,7 @@ const TYPE_NAMES = {
   null: "vacío",
 };
 
-const FORMAT_NAMES = {
+const FORMAT_NAMES: Record<string, string> = {
   email: "un email válido",
   uri: "una dirección web válida (https://...)",
   url: "una dirección web válida (https://...)",
@@ -34,12 +44,12 @@ const FORMAT_NAMES = {
   regex: "una expresión regular válida",
 };
 
-function decodePointer(segment) {
+function decodePointer(segment: string): string {
   return segment.replace(/~1/g, "/").replace(/~0/g, "~");
 }
 
 /** "/permissions/0/code" → "permissions[0].code"; "" → "". */
-export function pointerToPath(pointer) {
+export function pointerToPath(pointer: string): string {
   if (!pointer) return "";
   return pointer
     .split("/")
@@ -56,11 +66,11 @@ export function pointerToPath(pointer) {
     );
 }
 
-function plural(count, one, many) {
+function plural(count: number, one: string, many: string): string {
   return count === 1 ? `${count} ${one}` : `${count} ${many}`;
 }
 
-function quote(label) {
+function quote(label: string): string {
   return `«${label}»`;
 }
 
@@ -68,21 +78,20 @@ function quote(label) {
  * Label of the field an error is about: the `title` of its schema when
  * present, otherwise its path, otherwise `rootLabel`.
  */
-function fieldLabel(error, rootLabel) {
+function fieldLabel(error: ErrorObject, rootLabel: string): string {
   const title =
     error.parentSchema && typeof error.parentSchema.title === "string"
-      ? error.parentSchema.title
+      ? (error.parentSchema.title as string)
       : undefined;
   if (title && error.instancePath) return quote(title);
   const path = pointerToPath(error.instancePath);
   return path ? quote(path) : rootLabel;
 }
 
-function childLabel(error, property) {
-  const schema =
-    error.parentSchema &&
-    error.parentSchema.properties &&
-    error.parentSchema.properties[property];
+function childLabel(error: ErrorObject, property: string): string {
+  const schema = (
+    error.parentSchema?.properties as Record<string, any> | undefined
+  )?.[property];
   const title = schema && typeof schema.title === "string" ? schema.title : "";
   if (title) return quote(title);
   const base = pointerToPath(error.instancePath);
@@ -93,11 +102,14 @@ function childLabel(error, property) {
  * One Ajv error (compiled with `verbose: true` so `parentSchema` is there)
  * → `{ path, message, keyword }`.
  */
-export function describeAjvError(error, rootLabel = "El valor") {
+export function describeAjvError(
+  error: ErrorObject,
+  rootLabel = "El valor",
+): ValidationError {
   const field = fieldLabel(error, rootLabel);
-  const params = error.params || {};
+  const params = (error.params || {}) as Record<string, any>;
   const path = pointerToPath(error.instancePath);
-  const out = (message, extraPath) => ({
+  const out = (message: string, extraPath?: string): ValidationError => ({
     path: extraPath ?? path,
     message,
     keyword: error.keyword,
@@ -119,11 +131,11 @@ export function describeAjvError(error, rootLabel = "El valor") {
     case "type": {
       const types = String(params.type || "")
         .split(",")
-        .map((type) => TYPE_NAMES[type] || type);
+        .map((type: string) => TYPE_NAMES[type] || type);
       return out(`${field} tiene que ser ${types.join(" o ")}.`);
     }
     case "enum": {
-      const allowed = (params.allowedValues || []).map((value) =>
+      const allowed = (params.allowedValues || []).map((value: unknown) =>
         JSON.stringify(value),
       );
       return out(
@@ -205,15 +217,18 @@ export function describeAjvError(error, rootLabel = "El valor") {
  * Ajv errors → Spanish errors, without the noise Ajv adds around composite
  * keywords (an `anyOf` failure also reports every branch).
  */
-export function describeAjvErrors(errors, rootLabel) {
+export function describeAjvErrors(
+  errors: ErrorObject[] | null | undefined,
+  rootLabel: string,
+): ValidationError[] {
   const list = Array.isArray(errors) ? errors : [];
   const composite = new Set(
     list
       .filter((error) => error.keyword === "anyOf" || error.keyword === "oneOf")
       .map((error) => error.instancePath),
   );
-  const seen = new Set();
-  const out = [];
+  const seen = new Set<string>();
+  const out: ValidationError[] = [];
   for (const error of list) {
     // Branch errors of an anyOf/oneOf at the same location are summarised
     // by the anyOf/oneOf error itself.
@@ -236,6 +251,6 @@ export function describeAjvErrors(errors, rootLabel) {
 }
 
 /** "Falta completar «Nombre». «cupo» tiene que ser 1 o más." */
-export function summarizeErrors(errors) {
+export function summarizeErrors(errors: ValidationError[]): string {
   return errors.map((error) => error.message).join(" ");
 }

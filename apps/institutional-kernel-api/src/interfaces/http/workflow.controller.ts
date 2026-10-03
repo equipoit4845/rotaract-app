@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   Param,
   Patch,
   Post,
@@ -163,8 +164,8 @@ export class WorkflowController {
       this.contexts.from(request, "registerModule"),
     );
   }
-  @Get("modules") modules() {
-    return this.kernel.listModules();
+  @Get("modules") modules(@Query() query: any) {
+    return this.kernel.listModules(query);
   }
   @Get("modules/:moduleId") module(@Param("moduleId") id: string) {
     return this.kernel.getModule(id);
@@ -180,10 +181,10 @@ export class WorkflowController {
       this.contexts.from(request, "updateModuleManifest"),
     );
   }
-  @Post("modules/:moduleId/deprecate") deprecate(
-    @Param("moduleId") id: string,
-    @Req() request: Request,
-  ) {
+  // E8: transitions answer 200, as documented.
+  @HttpCode(200)
+  @Post("modules/:moduleId/deprecate")
+  deprecate(@Param("moduleId") id: string, @Req() request: Request) {
     return this.kernel.deprecateModule(
       id,
       this.contexts.from(request, "deprecateModule"),
@@ -192,14 +193,18 @@ export class WorkflowController {
   @Post("organizations/:organizationId/modules/:moduleId/install") install(
     @Param("organizationId") organizationId: string,
     @Param("moduleId") moduleId: string,
+    @Body() body: any,
     @Req() request: Request,
   ) {
     return this.kernel.installModule(
       organizationId,
       moduleId,
+      body ?? {},
       this.contexts.from(request, "installModule"),
     );
   }
+  // E8: transitions answer 200, as documented.
+  @HttpCode(200)
   @Post("organizations/:organizationId/modules/:moduleId/activate")
   activateInstall(
     @Param("organizationId") organizationId: string,
@@ -227,7 +232,10 @@ export class WorkflowController {
       this.contexts.from(request, "updateModuleConfiguration"),
     );
   }
-  @Post("organizations/:organizationId/modules/:moduleId/suspend") suspend(
+  // E8: transitions answer 200, as documented.
+  @HttpCode(200)
+  @Post("organizations/:organizationId/modules/:moduleId/suspend")
+  suspend(
     @Param("organizationId") organizationId: string,
     @Param("moduleId") moduleId: string,
     @Req() request: Request,
@@ -239,7 +247,10 @@ export class WorkflowController {
       this.contexts.from(request, "suspendModuleInstallation"),
     );
   }
-  @Post("organizations/:organizationId/modules/:moduleId/disable") disable(
+  // E8: transitions answer 200, as documented.
+  @HttpCode(200)
+  @Post("organizations/:organizationId/modules/:moduleId/disable")
+  disable(
     @Param("organizationId") organizationId: string,
     @Param("moduleId") moduleId: string,
     @Req() request: Request,
@@ -255,6 +266,13 @@ export class WorkflowController {
     @Param("organizationId") organizationId: string,
   ) {
     return this.kernel.listInstallations(organizationId);
+  }
+  @Get("organizations/:organizationId/module-installations")
+  installationsInTree(
+    @Param("organizationId") organizationId: string,
+    @Query() query: any,
+  ) {
+    return this.kernel.listInstallationsInTree(organizationId, query);
   }
   @Get("organizations/:organizationId/capabilities") capabilities(
     @Param("organizationId") organizationId: string,

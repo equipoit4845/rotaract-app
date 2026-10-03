@@ -59,6 +59,11 @@ export {
   type OrganizationArchivedEvent,
   type PersonUpdatedEvent,
   type PeriodCreatedEvent,
+  type ModuleInstallationView,
+  type ModuleInstalledEvent,
+  type ModuleEnabledEvent,
+  type ModuleDisabledEvent,
+  type ModuleConfiguredEvent,
   type PingEvent,
 } from "./webhooks.ts";
 export { SDK_VERSION, type FetchLike, type HttpOptions } from "./http.ts";

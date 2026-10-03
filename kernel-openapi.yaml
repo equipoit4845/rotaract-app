@@ -1525,7 +1525,13 @@ paths:
       operationId: listPermissions
       tags: [Authorization]
       summary: Listar definiciones de permiso
+      description: >
+        Incluye los permisos de los módulos registrados (`moduleId` no nulo).
+        `organizationId` indica desde qué organización se consulta (E8: el RDR
+        la usa para la pantalla de permisos de cargos del distrito).
       x-required-permission: kernel.role.read
+      parameters:
+        - $ref: "#/components/parameters/scopeOrganizationId"
       responses:
         "200":
           description: OK
@@ -2092,36 +2098,60 @@ paths:
   # 9.11 Módulos
   # ---------------------------------------------------------------------
 
+  # --- E8: módulos desde un manifiesto (docs/15-modules.md) --------------
+
   /modules:
     post:
       operationId: registerModule
       tags: [Modules]
-      summary: Registrar un módulo
+      summary: Registrar un módulo desde su manifiesto
       description: >
-        Un módulo se registra sin migrar tablas del kernel (CA-MOD-01). El
-        registro administra metadatos; no ejecuta código externo (decisión
-        final #10).
+        Registra un módulo a partir de su manifiesto (`mirotaract.module.json`,
+        contrato v1, ver `packages/module-manifest`), vinculado a la app de
+        desarrollador que lo publica. Quién: el RDR (o la plataforma), con
+        `kernel.module.register` en la organización de esa app. El módulo queda
+        `ACTIVE` y gobernado desde esa organización. Cada permiso del
+        manifiesto se crea como `PermissionDefinition` en el espacio de nombres
+        del módulo (`<id>.*`), listo para asignarse a cargos. No ejecuta código
+        externo (decisión final #10) ni migra tablas (CA-MOD-01). Errores de
+        validación: 422 con `errors[]` en español.
       x-required-permission: kernel.module.register
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/CreateModuleRequest" }
+            schema: { $ref: "#/components/schemas/RegisterModuleRequest" }
       responses:
         "201":
-          description: Creado.
+          description: Registrado.
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ModuleDefinition" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: Ya existe un módulo con ese id, la app no está activa o un código de permiso ya pertenece a otro.
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "422":
+          description: Manifiesto inválido (`KERNEL_MODULE_MANIFEST_INVALID`) u `oauth.clientId` de otra app (`KERNEL_MODULE_APP_MISMATCH`).
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Error" }
     get:
       operationId: listModules
       tags: [Modules]
-      summary: Listar módulos registrados
+      summary: Listar módulos registrados (catálogo)
+      description: >
+        Incluye los permisos de cada módulo. `organizationId` indica desde qué
+        organización se consulta (el permiso se evalúa ahí): sin él sólo
+        responde a permisos de alcance plataforma.
       x-required-permission: kernel.module.read
       parameters:
         - name: status
           in: query
           schema: { $ref: "#/components/schemas/ModuleStatus" }
+        - $ref: "#/components/parameters/scopeOrganizationId"
       responses:
         "200":
           description: OK
@@ -2135,10 +2165,11 @@ paths:
     get:
       operationId: getModule
       tags: [Modules]
-      summary: Obtener un módulo
+      summary: Obtener un módulo (con sus permisos)
       x-required-permission: kernel.module.read
       parameters:
         - $ref: "#/components/parameters/moduleId"
+        - $ref: "#/components/parameters/scopeOrganizationId"
       responses:
         "200":
           description: OK
@@ -2151,7 +2182,13 @@ paths:
     put:
       operationId: updateModuleManifest
       tags: [Modules]
-      summary: Reemplazar el manifiesto de un módulo
+      summary: Publicar una versión nueva del manifiesto
+      description: >
+        Reemplaza el manifiesto. El `id` no cambia y la versión no puede ser
+        anterior a la publicada. Los permisos se sincronizan: se crean los
+        nuevos, se actualizan nombre y descripción de los existentes y se
+        borran los que ya no están (también de los cargos que los tenían). Se
+        autoriza contra la organización dueña del módulo.
       x-required-permission: kernel.module.register
       parameters:
         - $ref: "#/components/parameters/moduleId"
@@ -2163,21 +2200,34 @@ paths:
               type: object
               required: [manifest]
               properties:
-                manifest: { type: object }
-                configurationSchema: { type: object, nullable: true }
+                manifest: { $ref: "#/components/schemas/ModuleManifest" }
       responses:
         "200":
           description: OK
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ModuleDefinition" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: Un código de permiso nuevo ya pertenece a otro.
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "422":
+          description: Manifiesto inválido, de otro módulo, versión anterior u `oauth.clientId` de otra app.
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Error" }
 
   /modules/{moduleId}/deprecate:
     post:
       operationId: deprecateModule
       tags: [Modules]
       summary: Marcar un módulo como DEPRECATED
-      description: Un módulo `DEPRECATED` no admite instalaciones nuevas (invariante 6.10.3).
+      description: >
+        Un módulo `DEPRECATED` no admite instalaciones nuevas (invariante
+        6.10.3); las existentes siguen funcionando. Se autoriza contra la
+        organización dueña del módulo.
       x-required-permission: kernel.module.register
       parameters:
         - $ref: "#/components/parameters/moduleId"
@@ -2193,7 +2243,13 @@ paths:
       operationId: installModule
       tags: [Modules]
       summary: Instalar un módulo en una organización (PENDING)
-      description: Una organización tiene como máximo una instalación por módulo (invariante 6.10.2).
+      description: >
+        Una organización tiene como máximo una instalación por módulo
+        (invariante 6.10.2). Si la instalación anterior está `DISABLED`, se
+        reinstala (vuelve a `PENDING`). Si se manda `configuration`, se valida
+        contra el `configurationSchema` del módulo y se guarda con sus valores
+        por defecto. Quién: la presidencia del club (`kernel.module.install`
+        en ese club) o un cargo de distrito para el distrito y sus clubes.
       x-required-permission: kernel.module.install
       parameters:
         - $ref: "#/components/parameters/organizationId"
@@ -2211,8 +2267,14 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ModuleInstallation" }
+        "404": { $ref: "#/components/responses/NotFound" }
         "409":
-          description: Ya existe una instalación para ese módulo/organización.
+          description: Ya está instalado, o el módulo no admite instalaciones (`DEPRECATED`/`DISABLED`).
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "422":
+          description: Configuración inválida contra `configurationSchema` (`KERNEL_MODULE_CONFIGURATION_INVALID`).
           content:
             application/problem+json:
               schema: { $ref: "#/components/schemas/Error" }
@@ -2222,7 +2284,11 @@ paths:
       operationId: activateModuleInstallation
       tags: [Modules]
       summary: Activar una instalación (PENDING/SUSPENDED → ACTIVE)
-      description: Valida `configurationSchema` (invariante 6.10.4, CA-MOD-02). Emite evento (CA-MOD-03).
+      description: >
+        Valida la configuración guardada contra `configurationSchema`
+        (invariante 6.10.4, CA-MOD-02) y le aplica los valores por defecto.
+        Emite `kernel.module-activated.v1` (CA-MOD-03). Desde que está activa,
+        los permisos del módulo valen en esta organización.
       x-required-permission: kernel.module.install
       parameters:
         - $ref: "#/components/parameters/organizationId"
@@ -2233,6 +2299,8 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ModuleInstallation" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
         "422":
           description: Configuración inválida contra `configurationSchema` (CA-MOD-02).
           content:
@@ -2244,6 +2312,9 @@ paths:
       operationId: updateModuleConfiguration
       tags: [Modules]
       summary: Actualizar la configuración de una instalación
+      description: >
+        Reemplaza la configuración entera. Se valida contra
+        `configurationSchema` y se guarda con los valores por defecto.
       x-required-permission: kernel.module.configure
       parameters:
         - $ref: "#/components/parameters/organizationId"
@@ -2263,6 +2334,12 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ModuleInstallation" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: La instalación está `DISABLED`.
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Error" }
         "422":
           description: Configuración inválida contra `configurationSchema`.
           content:
@@ -2273,24 +2350,8 @@ paths:
     post:
       operationId: suspendModuleInstallation
       tags: [Modules]
-      summary: Suspender una instalación (ACTIVE → SUSPENDED)
-      x-required-permission: kernel.module.configure
-      parameters:
-        - $ref: "#/components/parameters/organizationId"
-        - $ref: "#/components/parameters/moduleId"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/ModuleInstallation" }
-
-  /organizations/{organizationId}/modules/{moduleId}/disable:
-    post:
-      operationId: disableModuleInstallation
-      tags: [Modules]
-      summary: Deshabilitar una instalación
-      description: No elimina datos del servicio consumidor (invariante 6.10.5, CA-MOD-04).
+      summary: Desactivar una instalación (ACTIVE → SUSPENDED)
+      description: Reversible con `activate`. Mientras tanto, los permisos del módulo no valen en esta organización.
       x-required-permission: kernel.module.disable
       parameters:
         - $ref: "#/components/parameters/organizationId"
@@ -2301,6 +2362,27 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ModuleInstallation" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  /organizations/{organizationId}/modules/{moduleId}/disable:
+    post:
+      operationId: disableModuleInstallation
+      tags: [Modules]
+      summary: Desinstalar (DISABLED)
+      description: >
+        No elimina datos del servicio consumidor (invariante 6.10.5, CA-MOD-04).
+        Para volver a usarlo, se instala de nuevo.
+      x-required-permission: kernel.module.disable
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+        - $ref: "#/components/parameters/moduleId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ModuleInstallation" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
 
   /organizations/{organizationId}/modules:
     get:
@@ -2319,11 +2401,41 @@ paths:
                 type: array
                 items: { $ref: "#/components/schemas/ModuleInstallation" }
 
+  /organizations/{organizationId}/module-installations:
+    get:
+      operationId: listModuleInstallationsInTree
+      tags: [Modules]
+      summary: Instalaciones de una organización y de las que dependen de ella
+      description: >
+        Vista de distrito: las instalaciones del distrito y de todos sus
+        clubes, con el nombre de cada organización.
+      x-required-permission: kernel.module.read
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+        - name: includeDescendants
+          in: query
+          schema: { type: boolean, default: true }
+        - name: moduleId
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/InstallationStatus" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  { $ref: "#/components/schemas/ModuleInstallationInTree" }
+
   /organizations/{organizationId}/capabilities:
     get:
       operationId: getOrganizationCapabilities
       tags: [Modules]
-      summary: Obtener capacidades habilitadas (módulos activos + permisos)
+      summary: Obtener capacidades habilitadas (módulos activos)
       description: Refleja instalación y permisos (CA-MOD-05).
       x-required-permission: kernel.module.read
       parameters:
@@ -2335,16 +2447,28 @@ paths:
             application/json:
               schema:
                 type: object
+                required: [organizationId, modules, capabilities]
                 properties:
                   organizationId: { type: string }
                   modules:
                     type: array
                     items:
                       type: object
+                      required: [moduleId, status]
                       properties:
                         moduleId: { type: string }
                         status:
                           { $ref: "#/components/schemas/InstallationStatus" }
+                  capabilities:
+                    type: array
+                    items:
+                      type: object
+                      required: [moduleId, capability]
+                      properties:
+                        moduleId: { type: string }
+                        capability: { type: string }
+
+  # --- end E8 modules -----------------------------------------------------
 
   # ---------------------------------------------------------------------
   # 9.12 APIs para servicios
@@ -3484,6 +3608,12 @@ components:
       in: path
       required: true
       schema: { type: string }
+    scopeOrganizationId:
+      name: organizationId
+      in: query
+      required: false
+      description: Organización desde la que se consulta; el permiso requerido se evalúa en ella.
+      schema: { type: string }
     moduleId:
       name: moduleId
       in: path
@@ -3594,6 +3724,19 @@ components:
         detail: { type: string }
         instance: { type: string }
         traceId: { type: string }
+        errors:
+          type: array
+          description: >
+            Errores por campo (p. ej. un manifiesto o una configuración de
+            módulo). `path` es la ruta del campo (`permissions[0].code`, ""
+            para la raíz) y `message` está en español, listo para mostrar.
+          items:
+            type: object
+            required: [path, message]
+            properties:
+              path: { type: string }
+              message: { type: string }
+              keyword: { type: string }
       example:
         type: https://api.rotaract4845.com/errors/invalid-transition
         title: Invalid state transition
@@ -4245,6 +4388,11 @@ components:
           items: { type: string }
         reasonCodes:
           type: array
+          description: >
+            `ROLE_ALLOWED`, `SUPERADMIN_BYPASS`, `EXPLICIT_DENY`, `NO_GRANT`; para
+            permisos de módulos (E8) además `MODULE_NOT_INSTALLED`,
+            `MODULE_NOT_ACTIVE` (instalación pendiente o desactivada en esa
+            organización) y `MODULE_DISABLED`.
           items: { type: string }
           example: ["ROLE_ALLOWED"]
         evaluatedAt: { type: string, format: date-time }
@@ -4362,7 +4510,7 @@ components:
       properties:
         id:
           type: string
-          description: Identificador estable, p. ej. `meetings` (invariante 6.10.1).
+          description: Identificador estable, p. ej. `reuniones` (invariante 6.10.1). Es el prefijo de sus permisos.
         name: { type: string }
         description: { type: string, nullable: true }
         version: { type: string }
@@ -4370,21 +4518,58 @@ components:
         status: { $ref: "#/components/schemas/ModuleStatus" }
         manifest:
           type: object
-          description: Declara permisos, eventos publicados/suscritos y capacidades (§19.3).
+          description: Manifiesto tal como se publicó (ver ModuleManifest).
         configurationSchema: { type: object, nullable: true }
+        developerAppId:
+          type: string
+          nullable: true
+          description: App de desarrollador dueña del módulo (E8). Nulo en módulos anteriores a E8.
+        ownerOrganizationId:
+          type: string
+          nullable: true
+          description: Organización desde la que se gobierna (la de la app).
+        permissions:
+          type: array
+          description: Permisos del módulo (en `GET /modules`, `GET /modules/{id}` y al registrar o actualizar).
+          items: { $ref: "#/components/schemas/PermissionDefinition" }
         registeredAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
 
-    CreateModuleRequest:
+    ModuleManifest:
       type: object
-      required: [id, name, version, manifest]
+      description: >
+        `mirotaract.module.json`, contrato v1. Esquema completo (JSON Schema
+        draft-07):
+        https://developers.rotaract4845.com/schemas/module-manifest.v1.json
+        (fuente: `packages/module-manifest/schema/module-manifest.v1.json`).
+        El kernel lo valida entero y responde 422 con `errors[]` en español;
+        acá se declara abierto para que esos errores lleguen tal cual.
+      example:
+        id: reuniones
+        name: Reuniones distritales
+        version: 1.0.0
+        contractVersion: 1
+        permissions:
+          - code: reuniones.vote.cast
+            name: Votar en nombre del club
+            scopeType: ORGANIZATION
+        events: { subscribes: [appointment.activated.v1], emits: [] }
+        configurationSchema:
+          type: object
+          required: [emailContacto]
+          properties:
+            emailContacto:
+              { type: string, format: email, title: Email de contacto del club }
+        ui: { entryUrl: "https://reuniones.rotaract4845.com", navLabel: Reuniones, icon: calendar-check }
+
+    RegisterModuleRequest:
+      type: object
+      required: [appId, manifest]
       properties:
-        id: { type: string }
-        name: { type: string }
-        description: { type: string, nullable: true }
-        version: { type: string }
-        manifest: { type: object }
-        configurationSchema: { type: object, nullable: true }
+        appId:
+          type: string
+          description: App de desarrollador dueña del módulo. Tiene que estar activa.
+        manifest: { $ref: "#/components/schemas/ModuleManifest" }
 
     ModuleInstallation:
       type: object
@@ -4400,6 +4585,18 @@ components:
         activatedAt: { type: string, format: date-time, nullable: true }
         disabledAt: { type: string, format: date-time, nullable: true }
         updatedAt: { type: string, format: date-time }
+        module:
+          description: El módulo (sólo en `GET /organizations/{id}/modules`), sin `permissions`.
+          allOf: [{ $ref: "#/components/schemas/ModuleDefinition" }]
+
+    ModuleInstallationInTree:
+      allOf:
+        - { $ref: "#/components/schemas/ModuleInstallation" }
+        - type: object
+          required: [organizationName, organizationType]
+          properties:
+            organizationName: { type: string }
+            organizationType: { $ref: "#/components/schemas/OrganizationType" }
 
     # --- Contratos para consumidores (§12) ------------------------------
 
@@ -4455,6 +4652,14 @@ components:
               roleCodes:
                 type: array
                 items: { type: string }
+              modulePermissions:
+                type: array
+                description: >
+                  E8: permisos de módulos que la persona tiene en esta
+                  organización, sólo de módulos activos ahí (la misma
+                  decisión que daría `/authorization/check`).
+                items: { type: string }
+                example: [reuniones.vote.cast]
         contextVersion: { type: integer }
 
     MembershipSnapshot:

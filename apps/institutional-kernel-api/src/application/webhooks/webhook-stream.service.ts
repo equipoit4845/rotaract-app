@@ -169,6 +169,7 @@ export class WebhookStreamService {
           const event = await resolvePublicEvent(this.prisma, row, plan);
           if (!event) continue;
           const rendered = renderForApp(event, {
+            appId: app.id,
             scopes: app.scopes,
             organizationIds: tree,
           });

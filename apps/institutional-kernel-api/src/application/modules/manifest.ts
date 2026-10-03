@@ -1,31 +1,41 @@
-import Ajv from "ajv";
+/*
+ * Port of packages/module-manifest/src/index.js (validateManifest and
+ * validateConfiguration). The kernel image cannot import workspace
+ * packages, so this file and module-manifest.schema.ts are kept in sync by
+ * manifest.spec.ts, which runs the package's fixtures against both.
+ */
+import Ajv, { type ValidateFunction } from "ajv";
 import addFormats from "ajv-formats";
-import { createRequire } from "node:module";
 
-import {
-  describeAjvErrors,
-  pointerToPath,
-  summarizeErrors,
-} from "./errors-es.js";
+import { describeAjvErrors, type ValidationError } from "./errors-es";
+import { MODULE_MANIFEST_SCHEMA } from "./module-manifest.schema";
 
-const require = createRequire(import.meta.url);
+export type { ValidationError } from "./errors-es";
+export { summarizeErrors } from "./errors-es";
 
-/** JSON Schema (draft-07) of mirotaract.module.json, v1. */
-export const manifestSchema = require("../schema/module-manifest.v1.json");
+export type ModulePermissionScope = "ORGANIZATION" | "ORGANIZATION_TREE";
+export type ModulePermission = {
+  code: string;
+  name: string;
+  description?: string;
+  scopeType?: ModulePermissionScope;
+};
+export type ModuleManifest = {
+  $schema?: string;
+  id: string;
+  name: string;
+  description?: string;
+  version: string;
+  contractVersion: 1;
+  permissions: ModulePermission[];
+  events?: { subscribes?: string[]; emits?: string[] };
+  configurationSchema?: Record<string, unknown>;
+  ui?: { entryUrl: string; navLabel?: string; icon?: string };
+  oauth?: { clientId?: string; scopes?: string[] };
+  capabilities?: string[];
+};
 
-export const MANIFEST_SCHEMA_URL = manifestSchema.$id;
-export const MANIFEST_FILE_NAME = "mirotaract.module.json";
-export const CONTRACT_VERSION = 1;
-
-/** Namespaces no module may use (they belong to the platform). */
-export const RESERVED_MODULE_IDS = Object.freeze([
-  ...manifestSchema.properties.id.not.enum,
-]);
-
-export { describeAjvErrors, pointerToPath, summarizeErrors };
-
-function createAjv(extra = {}) {
-  // verbose: parentSchema (title) for the Spanish messages.
+function createAjv(extra: Record<string, unknown> = {}): Ajv {
   const ajv = new Ajv({
     allErrors: true,
     strict: false,
@@ -36,18 +46,18 @@ function createAjv(extra = {}) {
   return ajv;
 }
 
-const manifestAjv = createAjv();
-const validateShape = manifestAjv.compile(manifestSchema);
-
-/** Ajv instance used to compile configuration schemas (shared cache). */
+const validateShape = createAjv().compile(MODULE_MANIFEST_SCHEMA);
 const configurationAjv = createAjv({ useDefaults: true });
-const compiledConfigurations = new WeakMap();
+// Schemas come from the database (a new object per read), so cache by
+// their JSON text instead of by identity.
+const compiledConfigurations = new Map<string, ValidateFunction>();
+const MAX_COMPILED = 200;
 
-function isPlainObject(value) {
+function isPlainObject(value: unknown): value is Record<string, any> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-function isLocalhost(url) {
+function isLocalhost(url: string): boolean {
   try {
     const { hostname } = new URL(url);
     return (
@@ -61,13 +71,13 @@ function isLocalhost(url) {
   }
 }
 
-/** "reuniones.meeting.manage" → "reuniones". */
-export function permissionNamespace(code) {
+/** `reuniones.meeting.manage` → `reuniones`. */
+export function permissionNamespace(code: string): string {
   return String(code).split(".")[0];
 }
 
-/** True when `code` belongs to the module `moduleId` (`<moduleId>.<...>`). */
-export function isModulePermission(moduleId, code) {
+/** True when `code` is `<moduleId>.<something>`. */
+export function isModulePermission(moduleId: string, code: string): boolean {
   return (
     typeof code === "string" &&
     typeof moduleId === "string" &&
@@ -77,45 +87,48 @@ export function isModulePermission(moduleId, code) {
   );
 }
 
-/**
- * Compiles a configuration schema. Returns the validate function, or the
- * Spanish reason it can't be used.
- */
-export function compileConfigurationSchema(schema) {
+export function compileConfigurationSchema(
+  schema: unknown,
+): { ok: true; validate: ValidateFunction } | { ok: false; error: string } {
   if (!isPlainObject(schema))
     return {
       ok: false,
       error: "El esquema de configuración tiene que ser un objeto JSON Schema.",
     };
-  const cached = compiledConfigurations.get(schema);
-  if (cached) return { ok: true, validate: cached };
   if (schema.type !== undefined && schema.type !== "object")
     return {
       ok: false,
       error:
         'La raíz del esquema de configuración tiene que ser de tipo "object".',
     };
+  const key = JSON.stringify(schema);
+  const cached = compiledConfigurations.get(key);
+  if (cached) return { ok: true, validate: cached };
   try {
     const validate = configurationAjv.compile(schema);
-    compiledConfigurations.set(schema, validate);
+    if (compiledConfigurations.size >= MAX_COMPILED)
+      compiledConfigurations.clear();
+    compiledConfigurations.set(key, validate);
     return { ok: true, validate };
   } catch (error) {
     return {
       ok: false,
-      error: `El esquema de configuración no es un JSON Schema válido: ${error instanceof Error ? error.message : String(error)}`,
+      error: `El esquema de configuración no es un JSON Schema válido: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
     };
   }
 }
 
-/**
- * Validates a manifest. Never throws.
- *
- * @param {unknown} manifest
- * @param {{ knownEventTypes?: readonly string[] }} [options]
- *   knownEventTypes: public event types that exist (for `events.subscribes`).
- * @returns {{ ok: boolean, errors: Array<{ path: string, message: string, keyword: string }>, manifest?: object }}
- */
-export function validateManifest(manifest, options = {}) {
+export type ManifestValidation =
+  | { ok: true; errors: []; manifest: ModuleManifest }
+  | { ok: false; errors: ValidationError[] };
+
+/** Same rules as `validateManifest` of @mirotaract/module-manifest. */
+export function validateManifest(
+  manifest: unknown,
+  options: { knownEventTypes?: readonly string[] } = {},
+): ManifestValidation {
   if (!isPlainObject(manifest))
     return {
       ok: false,
@@ -127,15 +140,15 @@ export function validateManifest(manifest, options = {}) {
         },
       ],
     };
-  const errors = [];
+  const errors: ValidationError[] = [];
   if (!validateShape(manifest))
     errors.push(...describeAjvErrors(validateShape.errors, "El manifiesto"));
 
   const id = typeof manifest.id === "string" ? manifest.id : "";
-  const permissions = Array.isArray(manifest.permissions)
+  const permissions: unknown[] = Array.isArray(manifest.permissions)
     ? manifest.permissions
     : [];
-  const seen = new Map();
+  const seen = new Map<string, number>();
   permissions.forEach((permission, index) => {
     const code = isPlainObject(permission) ? permission.code : undefined;
     if (typeof code !== "string") return;
@@ -156,7 +169,7 @@ export function validateManifest(manifest, options = {}) {
 
   const events = isPlainObject(manifest.events) ? manifest.events : {};
   if (Array.isArray(events.emits))
-    events.emits.forEach((type, index) => {
+    events.emits.forEach((type: unknown, index: number) => {
       if (typeof type === "string" && id && !type.startsWith(`${id}.`))
         errors.push({
           path: `events.emits[${index}]`,
@@ -166,7 +179,7 @@ export function validateManifest(manifest, options = {}) {
     });
   if (Array.isArray(events.subscribes) && options.knownEventTypes) {
     const known = new Set(options.knownEventTypes);
-    events.subscribes.forEach((type, index) => {
+    events.subscribes.forEach((type: unknown, index: number) => {
       if (typeof type === "string" && !known.has(type))
         errors.push({
           path: `events.subscribes[${index}]`,
@@ -203,19 +216,25 @@ export function validateManifest(manifest, options = {}) {
 
   return errors.length
     ? { ok: false, errors }
-    : { ok: true, errors: [], manifest };
+    : { ok: true, errors: [], manifest: manifest as ModuleManifest };
 }
 
-/**
- * Validates a club's configuration against a module's
- * `configurationSchema`. Applies the schema's defaults to a copy.
- *
- * @returns {{ ok: boolean, errors: Array<{ path: string, message: string, keyword: string }>, value?: object }}
- */
-export function validateConfiguration(schema, value) {
+export type ConfigurationValidation =
+  | { ok: true; errors: []; value: Record<string, unknown> }
+  | { ok: false; errors: ValidationError[] };
+
+/** Validates a club's configuration; the returned value has the defaults applied. */
+export function validateConfiguration(
+  schema: unknown,
+  value: unknown,
+): ConfigurationValidation {
   if (schema === undefined || schema === null)
     return isPlainObject(value) || value === undefined || value === null
-      ? { ok: true, errors: [], value: value ?? {} }
+      ? {
+          ok: true,
+          errors: [],
+          value: (value ?? {}) as Record<string, unknown>,
+        }
       : {
           ok: false,
           errors: [
@@ -236,9 +255,31 @@ export function validateConfiguration(schema, value) {
     };
   const copy =
     value === undefined || value === null ? {} : structuredClone(value);
-  if (compiled.validate(copy)) return { ok: true, errors: [], value: copy };
+  if (compiled.validate(copy))
+    return { ok: true, errors: [], value: copy as Record<string, unknown> };
   return {
     ok: false,
     errors: describeAjvErrors(compiled.validate.errors, "La configuración"),
   };
+}
+
+/** -1, 0 or 1. Pre-release versions sort before their release. */
+export function compareSemver(left: string, right: string): number {
+  const parse = (version: string) => {
+    const [core, pre] = version.split("+")[0].split(/-(.*)/s);
+    return {
+      parts: core.split(".").map((part) => Number(part) || 0),
+      pre: pre ?? "",
+    };
+  };
+  const a = parse(left);
+  const b = parse(right);
+  for (let i = 0; i < 3; i++) {
+    if ((a.parts[i] ?? 0) !== (b.parts[i] ?? 0))
+      return (a.parts[i] ?? 0) > (b.parts[i] ?? 0) ? 1 : -1;
+  }
+  if (a.pre === b.pre) return 0;
+  if (!a.pre) return 1;
+  if (!b.pre) return -1;
+  return a.pre > b.pre ? 1 : -1;
 }
