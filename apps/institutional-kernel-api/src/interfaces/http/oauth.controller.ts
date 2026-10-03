@@ -24,6 +24,10 @@ import { OidcService } from "../../application/oauth/oidc.service";
 import { OAuthError } from "../../application/oauth/oauth-error";
 import { markDeveloperAppRequest } from "../../application/request-logs/request-log.context";
 import { setProblemMark } from "./request-log.middleware";
+// E11 (docs/18-data-governance.md): quotas, access history, audit.
+import { AppQuotaService } from "../../application/governance/app-quota.service";
+import { AccessHistoryWriter } from "../../application/governance/access-history.writer";
+import { HttpCommandContextFactory } from "./command-context.factory";
 
 type TokenParams = {
   grant_type?: string;
@@ -85,6 +89,9 @@ export class OAuthController {
     private readonly clients: ClientAuthenticator,
     private readonly clientCredentials: ClientCredentialsGrant,
     private readonly oidc: OidcService,
+    private readonly quotas: AppQuotaService,
+    private readonly history: AccessHistoryWriter,
+    private readonly contexts: HttpCommandContextFactory,
   ) {}
 
   @Get("apps/:clientId") getPublicDeveloperApp(
@@ -151,6 +158,8 @@ export class OAuthController {
       );
       // E9.3: from here on the request is the app's (request logs).
       markDeveloperAppRequest(request, app);
+      // E11.3: and it counts against the app's quota.
+      await this.quotas.consume(app, response);
       if (!app.grantTypes.includes(grantType))
         throw new OAuthError(
           "unauthorized_client",
@@ -184,6 +193,7 @@ export class OAuthController {
       );
       // E9.3: from here on the request is the app's (request logs).
       markDeveloperAppRequest(request, app);
+      await this.quotas.consume(app, response);
       if (body?.token) await this.oidc.revoke(app, body.token);
       return {};
     });
@@ -192,6 +202,13 @@ export class OAuthController {
   @Get("userinfo")
   @UseGuards(OidcAccessGuard)
   getOAuthUserInfo(@Req() request: OidcAccessRequest) {
+    // E11.2: the person's access history.
+    this.history.record({
+      personId: request.oidc.personId,
+      appId: request.oidc.appId,
+      kind: "USERINFO",
+      details: request.oidc.scopes,
+    });
     return this.oidc.userInfo({
       personId: request.oidc.personId,
       scopes: request.oidc.scopes,
@@ -209,6 +226,10 @@ export class OAuthController {
     @Param("appId") appId: string,
     @Req() request: AuthenticatedRequest,
   ) {
-    await this.oidc.revokeConsent(request.user.personId, appId);
+    await this.oidc.revokeConsent(
+      request.user.personId,
+      appId,
+      this.contexts.from(request, "revokeOAuthConsent"),
+    );
   }
 }

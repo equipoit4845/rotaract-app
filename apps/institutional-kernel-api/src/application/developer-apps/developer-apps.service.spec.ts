@@ -200,6 +200,11 @@ function service(state: { app?: any; secrets?: any[]; org?: any } = {}) {
     },
     oAuthRefreshToken: { updateMany: jest.fn() },
     oAuthConsent: { updateMany: jest.fn() },
+    // E11
+    developerAppListing: {
+      updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+    },
+    developerAppReview: { create: jest.fn() },
   };
   const commands = {
     execute: jest.fn(
@@ -232,6 +237,10 @@ const storedApp = (overrides: object = {}) => ({
   scopes: ["kernel.service.organizations.read"],
   redirectUris: [],
   secrets: [],
+  reviewStatus: "APPROVED",
+  approvedScopes: ["kernel.service.organizations.read"],
+  approvedAt: new Date("2026-10-01T00:00:00Z"),
+  testAccountEmails: [],
   ...overrides,
 });
 

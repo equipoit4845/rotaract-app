@@ -70,6 +70,13 @@ tags:
     description: >
       Registros de los requests de una app (E9.3): para diagnosticar
       errores por código y por traceId. Mismos permisos que la app.
+  # --- E11
+  - name: Governance
+    description: >
+      Gobierno de datos (E11): revisión de apps por el RDR con lista de
+      control, límites por app, historial de accesos de cada persona y
+      catálogo de apps del distrito en el panel de los socios.
+  # --- end E11
   - name: OAuth
     description: >
       "Ingresar con Mi Rotaract" (E3): proveedor OAuth 2.0 / OpenID Connect,
@@ -2491,6 +2498,7 @@ paths:
           required: true
           schema: { type: string }
       responses:
+        "429": { $ref: "#/components/responses/RateLimited" }
         "200":
           description: OK
           content:
@@ -2519,6 +2527,7 @@ paths:
         - $ref: "#/components/parameters/limit"
         - $ref: "#/components/parameters/ifNoneMatch"
       responses:
+        "429": { $ref: "#/components/responses/RateLimited" }
         "200":
           description: OK
           headers:
@@ -2547,6 +2556,7 @@ paths:
         - $ref: "#/components/parameters/limit"
         - $ref: "#/components/parameters/ifNoneMatch"
       responses:
+        "429": { $ref: "#/components/responses/RateLimited" }
         "200":
           description: OK
           headers:
@@ -2574,6 +2584,7 @@ paths:
           schema: { type: boolean, default: false }
           description: Incluye las autoridades de las organizaciones hijas (por ejemplo, todos los clubes de un distrito).
       responses:
+        "429": { $ref: "#/components/responses/RateLimited" }
         "200":
           description: OK
           headers:
@@ -2600,6 +2611,7 @@ paths:
         - $ref: "#/components/parameters/organizationId"
         - { name: status, in: query, schema: { $ref: "#/components/schemas/PeriodStatus" } }
       responses:
+        "429": { $ref: "#/components/responses/RateLimited" }
         "200":
           description: OK
           headers:
@@ -2638,6 +2650,7 @@ paths:
                   maxItems: 100
                   items: { type: string }
       responses:
+        "429": { $ref: "#/components/responses/RateLimited" }
         "200":
           description: OK
           content:
@@ -2660,6 +2673,7 @@ paths:
         - $ref: "#/components/parameters/ifNoneMatch"
         - $ref: "#/components/parameters/personId"
       responses:
+        "429": { $ref: "#/components/responses/RateLimited" }
         "200":
           description: OK
           headers:
@@ -2684,6 +2698,7 @@ paths:
         - $ref: "#/components/parameters/ifNoneMatch"
         - $ref: "#/components/parameters/personId"
       responses:
+        "429": { $ref: "#/components/responses/RateLimited" }
         "200":
           description: OK
           headers:
@@ -2705,6 +2720,7 @@ paths:
         - $ref: "#/components/parameters/ifNoneMatch"
         - $ref: "#/components/parameters/organizationId"
       responses:
+        "429": { $ref: "#/components/responses/RateLimited" }
         "200":
           description: OK
           headers:
@@ -2733,6 +2749,7 @@ paths:
           in: query
           schema: { type: string, format: date-time }
       responses:
+        "429": { $ref: "#/components/responses/RateLimited" }
         "200":
           description: OK
           content:
@@ -2755,6 +2772,7 @@ paths:
           in: query
           schema: { type: string, format: date-time }
       responses:
+        "429": { $ref: "#/components/responses/RateLimited" }
         "200":
           description: OK
           content:
@@ -2774,6 +2792,7 @@ paths:
           in: query
           schema: { type: string, format: date-time }
       responses:
+        "429": { $ref: "#/components/responses/RateLimited" }
         "200":
           description: OK
           content:
@@ -2793,6 +2812,7 @@ paths:
           application/json:
             schema: { $ref: "#/components/schemas/AuthorizationCheckRequest" }
       responses:
+        "429": { $ref: "#/components/responses/RateLimited" }
         "200":
           description: OK
           content:
@@ -2820,6 +2840,7 @@ paths:
                   items:
                     { $ref: "#/components/schemas/AuthorizationCheckRequest" }
       responses:
+        "429": { $ref: "#/components/responses/RateLimited" }
         "200":
           description: OK
           content:
@@ -2839,6 +2860,7 @@ paths:
         - $ref: "#/components/parameters/moduleId"
         - $ref: "#/components/parameters/organizationId"
       responses:
+        "429": { $ref: "#/components/responses/RateLimited" }
         "200":
           description: OK
           content:
@@ -3377,6 +3399,281 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
 
+  # --- E11 — gobierno de datos (docs/18-data-governance.md) ---------------
+
+  /developer/app-reviews:
+    get:
+      operationId: listDeveloperAppReviews
+      tags: [Governance]
+      summary: Cola de revisión de apps del distrito (RDR)
+      description: >
+        Apps de la organización y sus descendientes en un estado de revisión
+        (por defecto `IN_REVIEW`), de la más vieja a la más nueva, con lo que
+        la lista de control necesita: propósito, datos pedidos (y cuáles no
+        están aprobados todavía), responsable, política de privacidad y
+        contacto.
+      x-required-permission: kernel.app.review
+      parameters:
+        - name: organizationId
+          in: query
+          required: true
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/DeveloperAppReviewStatus" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/DeveloperAppReviewItem" }
+        "400": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /developer/apps/{appId}/reviews:
+    get:
+      operationId: listDeveloperAppReviewHistory
+      tags: [Governance]
+      summary: Historial de revisión de una app
+      description: Envíos, aprobaciones, rechazos (con su motivo) y reaperturas, del más reciente al más viejo.
+      x-required-permission: kernel.app.read
+      parameters:
+        - $ref: "#/components/parameters/appId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/DeveloperAppReviewEntry" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /developer/apps/{appId}/review:
+    post:
+      operationId: reviewDeveloperApp
+      tags: [Governance]
+      summary: Aprobar o rechazar una app en revisión (RDR)
+      description: >
+        Aprobar exige marcar los cinco puntos de la lista de control y que la
+        app haya cargado propósito, política de privacidad y contacto; los
+        datos que pide quedan aprobados. Rechazar exige un motivo (10 a 1000
+        caracteres) que ve el equipo de la app. 409 si la app no está
+        esperando revisión.
+      x-required-permission: kernel.app.review
+      parameters:
+        - $ref: "#/components/parameters/appId"
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReviewDeveloperAppRequest" }
+      responses:
+        "200":
+          description: Decisión registrada.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DeveloperAppReviewEntry" }
+        "400": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  /developer/apps/{appId}/review-request:
+    post:
+      operationId: requestDeveloperAppReview
+      tags: [Governance]
+      summary: Volver a pedir la revisión (después de un rechazo)
+      x-required-permission: kernel.app.manage
+      parameters:
+        - $ref: "#/components/parameters/appId"
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: La app vuelve a la cola de revisión.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [appId, reviewStatus]
+                properties:
+                  appId: { type: string }
+                  reviewStatus: { $ref: "#/components/schemas/DeveloperAppReviewStatus" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  /developer/apps/{appId}/quota:
+    get:
+      operationId: getDeveloperAppQuota
+      tags: [Governance]
+      summary: Límites de la app y cuánto usó
+      description: >
+        Ventanas fijas por minuto y por día (UTC), por `client_id`. `source`
+        dice de dónde salen los límites: `default` (los del distrito),
+        `review` (los más bajos de una app que todavía no se aprobó) o
+        `custom` (los que fijó el RDR).
+      x-required-permission: kernel.app.read
+      parameters:
+        - $ref: "#/components/parameters/appId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DeveloperAppQuota" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      operationId: updateDeveloperAppQuota
+      tags: [Governance]
+      summary: Fijar los límites de una app (RDR)
+      description: "`null` vuelve al valor por defecto."
+      x-required-permission: kernel.app.review
+      parameters:
+        - $ref: "#/components/parameters/appId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateDeveloperAppQuotaRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DeveloperAppQuota" }
+        "400": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /developer/app-catalog:
+    get:
+      operationId: listAppCatalog
+      tags: [Governance]
+      summary: Apps del distrito que se pueden mostrar a los socios (RDR)
+      description: >
+        Apps aprobadas y activas de la organización y sus descendientes, con
+        cómo se muestran en el panel de Mi Rotaract. Si todavía no se guardó
+        nada (`saved: false`), `listing` trae una sugerencia armada con la
+        app y su módulo (E8): nombre, ícono y enlace.
+      x-required-permission: kernel.app.review
+      parameters:
+        - name: organizationId
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/AppCatalogItem" }
+        "400": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /developer/apps/{appId}/listing:
+    put:
+      operationId: updateDeveloperAppListing
+      tags: [Governance]
+      summary: Publicar una app en el panel de los socios y elegir a quién (RDR)
+      description: >
+        Solo una app aprobada y activa se puede publicar. Pausar o revocar la
+        app la despublica sola. El público se evalúa contra las membresías y
+        cargos ACTIVE de cada persona dentro del árbol de la organización de
+        la app; si la app tiene un módulo (E8) instalado pero no activo en un
+        club, los socios de ese club no la ven.
+      x-required-permission: kernel.app.review
+      parameters:
+        - $ref: "#/components/parameters/appId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateAppListingRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AppListing" }
+        "400": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/InvalidTransition" }
+
+  /me/apps:
+    get:
+      operationId: listMyApps
+      tags: [Governance]
+      summary: Apps del distrito para la persona autenticada
+      description: >
+        Solo las apps publicadas cuyo público incluye a la persona, y nada
+        más que lo necesario para mostrarlas y abrirlas.
+      x-required-permission: null
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/MyApp" }
+
+  /me/app-access:
+    get:
+      operationId: listMyAppAccess
+      tags: [Governance]
+      summary: Apps que accedieron a mis datos
+      description: >
+        Las apps a las que la persona dio acceso con "Ingresar con Mi
+        Rotaract" (`connected`, se puede quitar con `DELETE
+        /oauth/consents/{appId}`) y las que leyeron sus datos desde su
+        servidor (por ejemplo, la app de su club), con la cantidad de
+        accesos y el último, en los últimos 12 meses.
+      x-required-permission: null
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/MyAppAccess" }
+
+  /me/app-access/{appId}:
+    get:
+      operationId: listMyAppAccessEvents
+      tags: [Governance]
+      summary: Historial de accesos de una app a mis datos
+      description: >
+        Del más reciente al más viejo. Solo los accesos a los datos de la
+        persona autenticada; los accesos repetidos del mismo tipo dentro de
+        15 minutos se agrupan. Sin cuerpos ni datos: solo qué tipo de dato.
+      x-required-permission: null
+      parameters:
+        - $ref: "#/components/parameters/appId"
+        - $ref: "#/components/parameters/cursor"
+        - $ref: "#/components/parameters/limit"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MyAppAccessEventPage" }
+        "400": { $ref: "#/components/responses/Error" }
+
+  # --- end E11 -------------------------------------------------------------
+
   /events/catalog:
     get:
       operationId: getEventCatalog
@@ -3488,6 +3785,7 @@ paths:
           application/json:
             schema: { $ref: "#/components/schemas/TokenRequest" }
       responses:
+        "429": { $ref: "#/components/responses/RateLimited" }
         "200":
           description: OK
           content:
@@ -3520,6 +3818,7 @@ paths:
           application/json:
             schema: { $ref: "#/components/schemas/RevokeTokenRequest" }
       responses:
+        "429": { $ref: "#/components/responses/RateLimited" }
         "200": { description: Revocado o inexistente. }
         "401":
           description: Cliente no autenticado.
@@ -3536,6 +3835,7 @@ paths:
         - oidcAccessToken: []
       x-required-permission: null
       responses:
+        "429": { $ref: "#/components/responses/RateLimited" }
         "200":
           description: OK
           content:
@@ -3752,7 +4052,37 @@ components:
         existir (`x-sunset`, al menos 6 meses después de `x-deprecated-at`).
       schema: { type: string, example: "Sun, 04 Apr 2027 00:00:00 GMT" }
 
+    # --- E11.3: límites por app (docs/developers/limites.md)
+    Retry-After:
+      description: Segundos a esperar antes de reintentar (RFC 9110 §10.2.3).
+      schema: { type: integer, example: 21 }
+    RateLimit-Policy:
+      description: >
+        draft-ietf-httpapi-ratelimit-headers: los límites de la app, uno por
+        ventana (`q` pedidos cada `w` segundos).
+      schema: { type: string, example: '"minute";q=100;w=60, "day";q=20000;w=86400' }
+    RateLimit:
+      description: >
+        draft-ietf-httpapi-ratelimit-headers: pedidos que quedan (`r`) y
+        segundos hasta que se renueva cada ventana (`t`).
+      schema: { type: string, example: '"minute";r=37;t=21, "day";r=19500;t=40210' }
+    # --- end E11
+
   responses:
+    # --- E11.3
+    RateLimited:
+      description: >
+        La app superó su límite por minuto o por día (`code`:
+        `KERNEL_RATE_LIMITED`). Reintentar después de `Retry-After`. El
+        límite por IP del kernel también puede responder 429.
+      headers:
+        Retry-After: { $ref: "#/components/headers/Retry-After" }
+        RateLimit-Policy: { $ref: "#/components/headers/RateLimit-Policy" }
+        RateLimit: { $ref: "#/components/headers/RateLimit" }
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Error" }
+    # --- end E11
     Error:
       description: Pedido inválido.
       content:
@@ -4849,6 +5179,24 @@ components:
         updatedAt: { type: string, format: date-time }
         suspendedAt: { type: string, format: date-time, nullable: true }
         revokedAt: { type: string, format: date-time, nullable: true }
+        # --- E11
+        reviewStatus: { $ref: "#/components/schemas/DeveloperAppReviewStatus" }
+        approvedScopes:
+          type: array
+          description: Scopes aprobados por el distrito; los únicos que sirven para cualquier persona.
+          items: { type: string }
+        approvedAt: { type: string, format: date-time, nullable: true }
+        reviewedAt: { type: string, format: date-time, nullable: true }
+        purpose: { type: string, nullable: true }
+        privacyPolicyUrl: { type: string, nullable: true }
+        contactEmail: { type: string, nullable: true }
+        testAccountEmails:
+          type: array
+          description: Cuentas (además del responsable) que pueden ingresar mientras la app está en revisión.
+          items: { type: string }
+        quotaPerMinute: { type: integer, nullable: true, description: Límite fijado por el RDR; null = el del distrito. }
+        quotaPerDay: { type: integer, nullable: true }
+        # --- end E11
     CreateDeveloperAppRequest:
       type: object
       required: [name, type, organizationId, grantTypes, scopes]
@@ -4868,6 +5216,15 @@ components:
           type: array
           items: { type: string }
           description: Obligatorio con authorization_code. https, o http solo para localhost.
+        # --- E11.1: lo que revisa el RDR
+        purpose: { type: string, nullable: true, maxLength: 1000, description: Para qué es la app y quién la usa. }
+        privacyPolicyUrl: { type: string, nullable: true, description: URL https de la política de privacidad. }
+        contactEmail: { type: string, nullable: true, description: Correo de contacto del equipo. }
+        testAccountEmails:
+          type: array
+          maxItems: 20
+          items: { type: string }
+        # --- end E11
     UpdateDeveloperAppRequest:
       type: object
       properties:
@@ -4875,6 +5232,15 @@ components:
         description: { type: string, nullable: true, maxLength: 500 }
         scopes: { type: array, minItems: 1, items: { type: string } }
         redirectUris: { type: array, items: { type: string } }
+        # --- E11.1: lo que revisa el RDR
+        purpose: { type: string, nullable: true, maxLength: 1000, description: Para qué es la app y quién la usa. }
+        privacyPolicyUrl: { type: string, nullable: true, description: URL https de la política de privacidad. }
+        contactEmail: { type: string, nullable: true, description: Correo de contacto del equipo. }
+        testAccountEmails:
+          type: array
+          maxItems: 20
+          items: { type: string }
+        # --- end E11
     DeveloperAppSecretCreated:
       type: object
       required: [secretId, secret, hint, createdAt]
@@ -5311,3 +5677,216 @@ components:
       properties:
         items: { type: array, items: { $ref: "#/components/schemas/RequestLog" } }
         pageInfo: { $ref: "#/components/schemas/PageInfo" }
+
+    # --- E11 — gobierno de datos (docs/18-data-governance.md) -------------
+
+    DeveloperAppReviewStatus:
+      type: string
+      enum: [IN_REVIEW, APPROVED, REJECTED]
+      description: >
+        `IN_REVIEW`: esperando al RDR (lo que no está aprobado solo sirve para
+        el responsable y las cuentas de prueba). `APPROVED`: lo que pide está
+        aprobado. `REJECTED`: el RDR pidió cambios; la app conserva lo que ya
+        tenía aprobado, si tenía algo.
+    ReviewChecklist:
+      type: object
+      description: Lista de control del RDR (E11.1).
+      required: [purpose, data, owner, privacyPolicy, contact]
+      properties:
+        purpose: { type: boolean, description: El propósito está claro y es del distrito. }
+        data: { type: boolean, description: Los datos que pide son los necesarios para ese propósito. }
+        owner: { type: boolean, description: Hay una persona responsable identificada. }
+        privacyPolicy: { type: boolean, description: Tiene una política de privacidad publicada. }
+        contact: { type: boolean, description: Tiene un contacto que responde. }
+    ReviewDeveloperAppRequest:
+      type: object
+      required: [decision, checklist]
+      properties:
+        decision: { type: string, enum: [approve, reject] }
+        checklist: { $ref: "#/components/schemas/ReviewChecklist" }
+        reason:
+          type: string
+          nullable: true
+          maxLength: 1000
+          description: Obligatorio para rechazar (al menos 10 caracteres).
+    DeveloperAppReviewEntry:
+      type: object
+      required: [id, kind, scopes, createdAt]
+      properties:
+        id: { type: string }
+        kind:
+          type: string
+          enum: [SUBMITTED, APPROVED, REJECTED, REOPENED, AUTO_APPROVED]
+          description: >
+            `REOPENED`: la app pidió datos que no estaban aprobados.
+            `AUTO_APPROVED`: ya existía cuando empezó la revisión (E11).
+        checklist:
+          type: object
+          nullable: true
+          additionalProperties: { type: boolean }
+        reason: { type: string, nullable: true }
+        actorPersonId: { type: string, nullable: true }
+        actorName: { type: string, nullable: true }
+        scopes: { type: array, items: { type: string } }
+        createdAt: { type: string, format: date-time }
+    DeveloperAppReviewItem:
+      type: object
+      required: [appId, name, type, status, reviewStatus, organizationId, organizationName, ownerPersonId, ownerName, scopes, pendingScopes, submittedAt]
+      properties:
+        appId: { type: string }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        type: { $ref: "#/components/schemas/DeveloperAppType" }
+        status: { $ref: "#/components/schemas/DeveloperAppStatus" }
+        reviewStatus: { $ref: "#/components/schemas/DeveloperAppReviewStatus" }
+        organizationId: { type: string }
+        organizationName: { type: string }
+        ownerPersonId: { type: string }
+        ownerName: { type: string }
+        purpose: { type: string, nullable: true }
+        privacyPolicyUrl: { type: string, nullable: true }
+        contactEmail: { type: string, nullable: true }
+        scopes:
+          type: array
+          items: { $ref: "#/components/schemas/ScopeDescription" }
+        pendingScopes:
+          type: array
+          description: Los que todavía no están aprobados.
+          items: { $ref: "#/components/schemas/ScopeDescription" }
+        submittedAt: { type: string, format: date-time }
+        approvedAt: { type: string, format: date-time, nullable: true }
+    QuotaWindow:
+      type: object
+      required: [limit, used, remaining, resetsInSeconds]
+      properties:
+        limit: { type: integer }
+        used: { type: integer }
+        remaining: { type: integer }
+        resetsInSeconds: { type: integer }
+    DeveloperAppQuota:
+      type: object
+      required: [enabled, source, perMinute, perDay, defaults]
+      properties:
+        enabled: { type: boolean }
+        source: { type: string, enum: [default, review, custom] }
+        perMinute: { $ref: "#/components/schemas/QuotaWindow" }
+        perDay: { $ref: "#/components/schemas/QuotaWindow" }
+        defaults:
+          type: object
+          required: [perMinute, perDay]
+          properties:
+            perMinute: { type: integer }
+            perDay: { type: integer }
+    UpdateDeveloperAppQuotaRequest:
+      type: object
+      properties:
+        perMinute: { type: integer, nullable: true, minimum: 1, maximum: 100000 }
+        perDay: { type: integer, nullable: true, minimum: 1, maximum: 10000000 }
+    AppAudience:
+      type: string
+      enum: [DISTRICT_MEMBERS, CLUB_PRESIDENTS, CLUB_AUTHORITIES, DISTRICT_AUTHORITIES, POSITIONS]
+      description: >
+        `DISTRICT_MEMBERS`: toda persona con una membresía o un cargo activo
+        en el árbol de la app. `CLUB_PRESIDENTS`: presidencia de club
+        (`CLUB_PRESIDENT`). `CLUB_AUTHORITIES`: cualquier cargo activo de
+        club. `DISTRICT_AUTHORITIES`: cualquier cargo activo del distrito.
+        `POSITIONS`: los cargos de `positionCodes`. Se combinan (unión).
+    AppListing:
+      type: object
+      required: [published, displayName, audiences, positionCodes, displayOrder]
+      properties:
+        published: { type: boolean }
+        displayName: { type: string }
+        shortDescription: { type: string, nullable: true }
+        icon:
+          type: string
+          nullable: true
+          description: Nombre de un ícono de lucide (`calendar-days`) o URL https de una imagen.
+        launchUrl: { type: string, nullable: true }
+        audiences:
+          type: array
+          items: { $ref: "#/components/schemas/AppAudience" }
+        positionCodes: { type: array, items: { type: string } }
+        displayOrder: { type: integer }
+        publishedAt: { type: string, format: date-time, nullable: true }
+        updatedAt: { type: string, format: date-time, nullable: true }
+    UpdateAppListingRequest:
+      type: object
+      properties:
+        published: { type: boolean }
+        displayName: { type: string, minLength: 2, maxLength: 60 }
+        shortDescription: { type: string, nullable: true, maxLength: 160 }
+        icon: { type: string, nullable: true }
+        launchUrl: { type: string, description: "https (o http solo para localhost)." }
+        audiences:
+          type: array
+          items: { $ref: "#/components/schemas/AppAudience" }
+        positionCodes: { type: array, items: { type: string } }
+        displayOrder: { type: integer, minimum: 0, maximum: 1000 }
+    AppCatalogItem:
+      type: object
+      required: [appId, appName, organizationId, organizationName, reviewStatus, saved, listing]
+      properties:
+        appId: { type: string }
+        appName: { type: string }
+        organizationId: { type: string }
+        organizationName: { type: string }
+        reviewStatus: { $ref: "#/components/schemas/DeveloperAppReviewStatus" }
+        saved: { type: boolean, description: false = `listing` es una sugerencia, todavía no se guardó. }
+        module:
+          type: object
+          nullable: true
+          required: [moduleId]
+          properties:
+            moduleId: { type: string }
+            entryUrl: { type: string }
+            navLabel: { type: string }
+            icon: { type: string }
+        listing: { $ref: "#/components/schemas/AppListing" }
+    MyApp:
+      type: object
+      required: [appId, name, launchUrl]
+      properties:
+        appId: { type: string }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        icon: { type: string, nullable: true }
+        launchUrl: { type: string }
+    MyAppAccess:
+      type: object
+      required: [appId, appName, organizationName, appStatus, connected, scopes, accessCount]
+      properties:
+        appId: { type: string }
+        appName: { type: string }
+        organizationName: { type: string }
+        appStatus: { $ref: "#/components/schemas/DeveloperAppStatus" }
+        connected:
+          type: boolean
+          description: La persona le dio acceso con "Ingresar con Mi Rotaract" y se lo puede quitar.
+        grantedAt: { type: string, format: date-time, nullable: true }
+        scopes:
+          type: array
+          items: { $ref: "#/components/schemas/ScopeDescription" }
+        lastAccessAt: { type: string, format: date-time, nullable: true }
+        accessCount: { type: integer, description: Accesos registrados en los últimos 12 meses. }
+    MyAppAccessEvent:
+      type: object
+      required: [id, kind, details, description, occurredAt]
+      properties:
+        id: { type: string }
+        kind:
+          type: string
+          enum: [CONSENT_GRANTED, SIGN_IN, TOKEN_REFRESH, USERINFO, DATA_READ, CONSENT_REVOKED]
+        details:
+          type: array
+          description: Qué tipo de dato (`profile`, `email`, `person`, `contact`, `person-memberships`, ...).
+          items: { type: string }
+        description: { type: string, description: Frase lista para mostrar, en español. }
+        occurredAt: { type: string, format: date-time }
+    MyAppAccessEventPage:
+      type: object
+      required: [items, pageInfo]
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/MyAppAccessEvent" } }
+        pageInfo: { $ref: "#/components/schemas/PageInfo" }
+    # --- end E11

@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import type { DeveloperApp } from "@prisma/client";
 
 import { SigningKeyService } from "../../infrastructure/crypto/signing-key.service";
+import { effectiveServiceScopes } from "../governance/review-policy";
 import { OAuthError } from "./oauth-error";
 import {
   isServiceScope,
@@ -41,13 +42,30 @@ export class ClientCredentialsGrant {
     app: DeveloperApp,
     requestedScope: string | undefined,
   ): Promise<TokenResponse> {
-    const granted: string[] = app.scopes.filter(isServiceScope);
+    const all: string[] = app.scopes.filter(isServiceScope);
+    // E11.1: until the district approves them, scopes with personal data
+    // are not issued (docs/18-data-governance.md §"Mientras está en revisión").
+    const granted = effectiveServiceScopes({
+      scopes: all,
+      approvedScopes: app.approvedScopes ?? all,
+    });
     const requested = parseScope(requestedScope);
-    const missing = requested.filter((scope) => !granted.includes(scope));
+    const missing = requested.filter((scope) => !all.includes(scope));
     if (missing.length)
       throw new OAuthError(
         "invalid_scope",
         `This app is not allowed to request: ${missing.join(" ")}`,
+      );
+    const inReview = requested.filter((scope) => !granted.includes(scope));
+    if (inReview.length)
+      throw new OAuthError(
+        "invalid_scope",
+        `Pending the district's review (app in review): ${inReview.join(" ")}`,
+      );
+    if (granted.length === 0)
+      throw new OAuthError(
+        "invalid_scope",
+        "The app is in review: none of its service scopes is approved yet",
       );
     const scope = (requested.length ? requested : granted).join(" ");
     const claims: ServiceTokenClaims = {

@@ -66,6 +66,11 @@ const accountOperations = new Set([
   "authorizeOAuthRequest",
   "listOAuthConsents",
   "revokeOAuthConsent",
+  // --- E11: the person's own apps and access history (keyed by session).
+  "listMyApps",
+  "listMyAppAccess",
+  "listMyAppAccessEvents",
+  // --- end E11
   "logout",
   "logoutAll",
   "me",
@@ -84,6 +89,10 @@ const idempotentMutations = new Set([
   "createWebhookEndpoint",
   "updateWebhookEndpoint",
   "rotateWebhookSecret",
+  // --- E11
+  "reviewDeveloperApp",
+  "requestDeveloperAppReview",
+  // --- end E11
   "createPerson",
   "updatePerson",
   "archivePerson",
@@ -224,6 +233,18 @@ const permissionByHandler: Record<string, string> = {
   redeliverWebhook: "kernel.app.manage",
   // E9.3 request logs: same permission as reading the app.
   listRequestLogs: "kernel.app.read",
+  // --- E11 (docs/18-data-governance.md): reviewing, limiting and
+  // publishing apps is the RDR's (kernel.app.review); the team that builds
+  // the app reads its review and quota and asks for a new review.
+  listDeveloperAppReviews: "kernel.app.review",
+  reviewDeveloperApp: "kernel.app.review",
+  updateDeveloperAppQuota: "kernel.app.review",
+  listAppCatalog: "kernel.app.review",
+  updateDeveloperAppListing: "kernel.app.review",
+  listDeveloperAppReviewHistory: "kernel.app.read",
+  getDeveloperAppQuota: "kernel.app.read",
+  requestDeveloperAppReview: "kernel.app.manage",
+  // --- end E11
   // Fallback defaults only: canActivate() overrides these with the
   // position's own editPermissionCode when the position can be resolved —
   // see the positionHandlers special-case.
@@ -614,6 +635,14 @@ const organizationResolverByHandler: Record<string, OrganizationResolver> = {
   redeliverWebhook: developerAppOrganization,
   // E9.3
   listRequestLogs: developerAppOrganization,
+  // --- E11
+  reviewDeveloperApp: developerAppOrganization,
+  requestDeveloperAppReview: developerAppOrganization,
+  listDeveloperAppReviewHistory: developerAppOrganization,
+  getDeveloperAppQuota: developerAppOrganization,
+  updateDeveloperAppQuota: developerAppOrganization,
+  updateDeveloperAppListing: developerAppOrganization,
+  // --- end E11
   createPosition: positionOwnerOrganization,
   listPositionPermissions: existingPositionOwnerOrganization,
   updateMembership: membershipOrganization,

@@ -16,7 +16,11 @@ import {
   ServiceApiGuard,
   type ServiceRequest,
 } from "../../application/auth/service-api.guard";
-import { DataApiService } from "../../application/data-api/data-api.service";
+import {
+  DataApiService,
+  hasContactScope,
+} from "../../application/data-api/data-api.service";
+import { AccessHistoryWriter } from "../../application/governance/access-history.writer";
 import { weakEtag } from "../../application/data-api/etag";
 import { KernelService } from "../../application/kernel/kernel.service";
 
@@ -35,12 +39,35 @@ function withEtag<T>(response: Response, body: T): T {
   return body;
 }
 
+/**
+ * E11.2: reads that concern one identifiable person go to that person's
+ * access history (docs/18-data-governance.md). Lists of a whole club are
+ * not attributed person by person; they stay in the app's request logs.
+ */
+function recordRead(
+  history: AccessHistoryWriter,
+  request: ServiceRequest,
+  personIds: string[],
+  details: string[],
+): void {
+  const clientId = request.service.clientId;
+  if (!clientId) return;
+  for (const personId of personIds)
+    history.record({ personId, clientId, kind: "DATA_READ", details });
+}
+
+/** "person", plus "contact" when the token may read contact fields. */
+function personDetails(request: ServiceRequest): string[] {
+  return hasContactScope(request.service) ? ["person", "contact"] : ["person"];
+}
+
 @Controller("service")
 @UseGuards(ServiceApiGuard)
 export class ServiceController {
   constructor(
     private readonly kernel: KernelService,
     private readonly data: DataApiService,
+    private readonly history: AccessHistoryWriter,
   ) {}
   /**
    * The person is in the app's scope (checked by ServiceApiGuard), but their
@@ -52,6 +79,7 @@ export class ServiceController {
     @Req() request: ServiceRequest,
   ) {
     const context = await this.kernel.userContext(accountId);
+    recordRead(this.history, request, [context.personId], ["account-context"]);
     const allowed = request.service.allowedOrganizationIds;
     if (!allowed) return context;
     const visible = new Set(allowed);
@@ -114,18 +142,30 @@ export class ServiceController {
   // Declared before persons/:personId so "batch" is never read as an id.
   @Post("persons/batch")
   @HttpCode(200)
-  serviceBatchPersons(@Req() request: ServiceRequest, @Body() body: unknown) {
-    return this.data.batchPersons(request.service, body);
+  async serviceBatchPersons(
+    @Req() request: ServiceRequest,
+    @Body() body: unknown,
+  ) {
+    const persons = await this.data.batchPersons(request.service, body);
+    recordRead(
+      this.history,
+      request,
+      persons.map((person) => person.id),
+      personDetails(request),
+    );
+    return persons;
   }
   @Get("persons/:personId/memberships") async servicePersonMemberships(
     @Req() request: ServiceRequest,
     @Param("personId") personId: string,
     @Res({ passthrough: true }) response: Response,
   ) {
-    return withEtag(
-      response,
-      await this.data.personMemberships(request.service, personId),
+    const memberships = await this.data.personMemberships(
+      request.service,
+      personId,
     );
+    recordRead(this.history, request, [personId], ["person-memberships"]);
+    return withEtag(response, memberships);
   }
 
   // serviceGetPerson / serviceGetOrganization: PersonView / OrganizationView.
@@ -134,7 +174,9 @@ export class ServiceController {
     @Param("personId") id: string,
     @Res({ passthrough: true }) response: Response,
   ) {
-    return withEtag(response, await this.data.getPerson(request.service, id));
+    const person = await this.data.getPerson(request.service, id);
+    recordRead(this.history, request, [id], personDetails(request));
+    return withEtag(response, person);
   }
   @Get("organizations/:organizationId") async organization(
     @Param("organizationId") id: string,

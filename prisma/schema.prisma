@@ -736,6 +736,21 @@ model DeveloperApp {
   updatedAt      DateTime           @updatedAt
   suspendedAt    DateTime?
   revokedAt      DateTime?
+  // --- E11 (docs/18-data-governance.md): review, checklist data, quotas.
+  reviewStatus      DeveloperAppReviewStatus @default(IN_REVIEW)
+  /// Scopes the district approved: the only ones that work for everybody.
+  approvedScopes    String[]                 @default([])
+  approvedAt        DateTime?
+  reviewedAt        DateTime?
+  purpose           String?
+  privacyPolicyUrl  String?
+  contactEmail      String?
+  /// Accounts (besides the owner) that may sign in while the app is in review.
+  testAccountEmails String[]                 @default([])
+  /// Per-app overrides set by the RDR; null = the environment default.
+  quotaPerMinute    Int?
+  quotaPerDay       Int?
+  // --- end E11
 
   organization  Organization             @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   owner         Person                   @relation("DeveloperAppOwner", fields: [ownerPersonId], references: [id], onDelete: Restrict)
@@ -744,9 +759,14 @@ model DeveloperApp {
   codes         OAuthAuthorizationCode[]
   refreshTokens OAuthRefreshToken[]
   webhooks      WebhookEndpoint[]
+  // --- E11
+  reviews       DeveloperAppReview[]
+  listing       DeveloperAppListing?
+  // --- end E11
 
   @@index([organizationId])
   @@index([status])
+  @@index([reviewStatus])
 }
 
 /// Up to two secrets are valid at once so a rotation never cuts service.
@@ -954,4 +974,76 @@ model DeveloperAppRequestLog {
   @@index([appId, createdAt])
   @@index([appId, traceId])
   @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// E11 — data governance (docs/18-data-governance.md): app review by the RDR,
+// per-person access history, the district's app catalog. Quotas live in
+// columns of DeveloperApp (counters are in Redis).
+// ---------------------------------------------------------------------------
+
+enum DeveloperAppReviewStatus {
+  IN_REVIEW
+  APPROVED
+  REJECTED
+}
+
+/// One step of an app's review: submitted, approved, rejected, reopened
+/// (new data requested) or approved automatically by the E11 migration.
+model DeveloperAppReview {
+  id            String   @id @default(cuid())
+  appId         String
+  /// "SUBMITTED" | "APPROVED" | "REJECTED" | "REOPENED" | "AUTO_APPROVED"
+  kind          String
+  /// { purpose, data, owner, privacyPolicy, contact }: booleans.
+  checklist     Json?
+  reason        String?
+  actorPersonId String?
+  /// Scopes the app had at that moment.
+  scopes        String[]
+  createdAt     DateTime @default(now())
+
+  app DeveloperApp @relation(fields: [appId], references: [id], onDelete: Cascade)
+
+  @@index([appId, createdAt])
+}
+
+/// What an app did with one person's data. No foreign keys on purpose: rows
+/// are written in async batches and expire on their own (12 months).
+model PersonAppAccess {
+  id        String   @id @default(cuid())
+  personId  String
+  appId     String
+  /// "CONSENT_GRANTED" | "SIGN_IN" | "TOKEN_REFRESH" | "USERINFO" | "DATA_READ" | "CONSENT_REVOKED"
+  kind      String
+  /// What was read, as stable codes ("profile", "contact", "memberships", ...).
+  details   String[] @default([])
+  createdAt DateTime @default(now())
+
+  @@index([personId, appId, createdAt])
+  @@index([createdAt])
+}
+
+/// E11.4 — how an approved app shows up in the members' panel.
+model DeveloperAppListing {
+  appId            String    @id
+  published        Boolean   @default(false)
+  displayName      String
+  shortDescription String?
+  /// A lucide icon name ("calendar-days") or an https image URL.
+  icon             String?
+  launchUrl        String
+  /// "DISTRICT_MEMBERS" | "CLUB_PRESIDENTS" | "CLUB_AUTHORITIES" | "DISTRICT_AUTHORITIES" | "POSITIONS"
+  audiences        String[]  @default([])
+  /// With "POSITIONS": position codes (CLUB_SECRETARY, ...).
+  positionCodes    String[]  @default([])
+  displayOrder     Int       @default(100)
+  publishedAt      DateTime?
+  updatedById      String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  app DeveloperApp @relation(fields: [appId], references: [id], onDelete: Cascade)
+
+  @@index([published, displayOrder])
 }

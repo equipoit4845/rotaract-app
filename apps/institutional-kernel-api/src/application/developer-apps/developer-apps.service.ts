@@ -24,6 +24,11 @@ import {
 } from "../oauth/scopes";
 import { CommandExecutorService } from "../shared/command-executor.service";
 import { allowInput } from "../shared/input-allowlist";
+// E11 (docs/18-data-governance.md): review checklist data and scope review.
+import {
+  reviewAfterScopeChange,
+  validateGovernanceFields,
+} from "../governance/review-policy";
 import { hashClientSecret, newClientId, newClientSecret } from "./credentials";
 
 export type DeveloperAppView = DeveloperApp & {
@@ -224,6 +229,7 @@ export class DeveloperAppsService {
     if (typeof request.organizationId !== "string" || !request.organizationId)
       bad("organizationId es obligatorio");
     const organizationId = request.organizationId;
+    const governance = validateGovernanceFields(request);
 
     // Generated (and hashed) outside the transaction: argon2 is slow and the
     // serializable transaction may be retried. The plaintext never reaches
@@ -251,12 +257,21 @@ export class DeveloperAppsService {
         const created = await tx.developerApp.create({
           data: {
             ...settings,
+            ...governance,
             clientId: newClientId(),
             organizationId,
             ownerPersonId,
             secrets: secret
               ? { create: { secretHash, hint: secret.hint } }
               : undefined,
+            // E11.1: every new app starts in review (the column default).
+            reviews: {
+              create: {
+                kind: "SUBMITTED",
+                actorPersonId: ownerPersonId,
+                scopes: settings.scopes,
+              },
+            },
           },
           include: withSecrets,
         });
@@ -281,7 +296,8 @@ export class DeveloperAppsService {
       "updateDeveloperApp",
       input as Record<string, unknown>,
     );
-    this.actor(context);
+    const actor = this.actor(context);
+    const governance = validateGovernanceFields(request);
     return this.commands.execute(
       "updateDeveloperApp",
       context,
@@ -299,6 +315,9 @@ export class DeveloperAppsService {
           scopes: request.scopes ?? app.scopes,
           redirectUris: request.redirectUris ?? app.redirectUris,
         });
+        // E11.1: asking for data the district has not approved reopens
+        // the review; approved data the app dropped is no longer approved.
+        const review = reviewAfterScopeChange(app, settings.scopes);
         const updated = await tx.developerApp.update({
           where: { id: appId },
           data: {
@@ -306,9 +325,25 @@ export class DeveloperAppsService {
             description: settings.description,
             scopes: settings.scopes,
             redirectUris: settings.redirectUris,
+            ...governance,
+            ...(review
+              ? {
+                  approvedScopes: review.approvedScopes,
+                  reviewStatus: review.reviewStatus,
+                }
+              : {}),
           },
           include: withSecrets,
         });
+        if (review?.reopened)
+          await tx.developerAppReview.create({
+            data: {
+              appId,
+              kind: "REOPENED",
+              actorPersonId: actor,
+              scopes: settings.scopes,
+            },
+          });
         await this.record(tx, context, "updateDeveloperApp", updated);
         return updated;
       },
@@ -466,6 +501,15 @@ export class DeveloperAppsService {
           include: withSecrets,
         });
         await this.record(tx, context, operation, updated);
+        // E11.4: a paused or revoked app leaves the members' panel.
+        if (target !== "ACTIVE") {
+          const unpublished = await tx.developerAppListing.updateMany({
+            where: { appId, published: true },
+            data: { published: false, publishedAt: null },
+          });
+          if (unpublished.count > 0)
+            await this.record(tx, context, "unpublishDeveloperApp", updated);
+        }
         return updated;
       },
     );
