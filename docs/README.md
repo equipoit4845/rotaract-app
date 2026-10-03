@@ -29,6 +29,12 @@ contratos públicos son [`kernel-openapi.yaml`](../kernel-openapi.yaml),
   `dev`, `gen types` y `webhooks listen`; distrito sintético
   (`prisma/seed-synthetic.ts`) y compose `mirotaract-dev`. Guía para
   desarrolladores: [developers/cli.md](developers/cli.md).
+- [Módulos y kit de UI](15-modules.md): manifiesto de módulos
+  (`packages/module-manifest`), registro desde el manifiesto, permisos de
+  módulos en cargos, instalación y configuración por club, y el registro
+  shadcn (`packages/registry`). Guías:
+  [developers/modulos.md](developers/modulos.md) y
+  [developers/kit-de-ui.md](developers/kit-de-ui.md).
 - [Validación v1 del Design System](design-system-v1-validation.md):
   veredicto por área con comandos y resultados reales — no afirmaciones sin
   evidencia.

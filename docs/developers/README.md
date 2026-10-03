@@ -103,6 +103,8 @@ tipos (`mirotaract gen types`) y reenvía webhooks a tu servidor local
 | [api-de-datos.md](api-de-datos.md) | Referencia de los endpoints `/service/*`: paginación, sincronización incremental, ETag. |
 | [webhooks.md](webhooks.md) | Recibir avisos firmados cuando cambia algo (altas, bajas, cargos): verificar la firma en JS/Python, reintentos, idempotencia. |
 | [catalogo-de-eventos.md](catalogo-de-eventos.md) | Todos los tipos de evento, con sus campos y un ejemplo (generado del contrato). |
+| [modulos.md](modulos.md) | Publicar tu app como módulo: manifiesto, permisos propios que el RDR asigna a cargos, instalación y configuración por club. |
+| [kit-de-ui.md](kit-de-ui.md) | Kit de UI: los componentes de Mi Rotaract con `npx shadcn add` (tema, shell, tablas, badges de estado, diálogo de confirmación). |
 | [errores.md](errores.md) | Formatos de error, códigos y qué hacer con cada uno; reintentos. |
 | [seguridad.md](seguridad.md) | Checklist obligatoria antes de pedir producción. |
 | [faq.md](faq.md) | Preguntas frecuentes. |

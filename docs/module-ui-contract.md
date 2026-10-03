@@ -1,5 +1,12 @@
 # Contrato de UI para módulos externos
 
+> **Reemplazado (E8).** Los módulos ya no instalan los paquetes
+> `@equipoit4845/*`: usan el registro shadcn de Mi Rotaract
+> (`npx shadcn add https://developers.rotaract4845.com/r/<ítem>.json`). Ver
+> [developers/kit-de-ui.md](developers/kit-de-ui.md) y
+> [15-modules.md](15-modules.md). Este documento queda como referencia
+> histórica.
+
 Este documento es para quien construye un **módulo externo** (una app o
 repo separado que se embebe en, o navega desde, la Web Shell de Mi
 Rotaract) y necesita que su interfaz se vea consistente sin importar código
