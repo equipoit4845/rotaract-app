@@ -35,11 +35,25 @@ export type MiRotaractRequestUser = {
   accessToken?: string;
 };
 
+// No index signature: Express's `Request` is an interface without one, so a
+// handler typed with it would not be assignable to `app.get(...)` under
+// strictFunctionTypes (caught by the quickstarts' CI check, E9.1).
 type RequestLike = {
   headers: Record<string, string | string[] | undefined>;
   miRotaract?: MiRotaractRequestUser;
-  [key: string]: unknown;
 };
+
+// With @types/express installed, `req.miRotaract` / `req.miRotaractEvent`
+// are typed on Express's Request after these middlewares run.
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace Express {
+    interface Request {
+      miRotaract?: MiRotaractRequestUser;
+      miRotaractEvent?: MiRotaractEvent;
+    }
+  }
+}
 
 type ResponseLike = {
   status(code: number): ResponseLike;
@@ -61,8 +75,10 @@ export type RequireUserOptions =
     }
   | {
       source: "session";
+      /** Receives your framework's request (e.g. `req.session` of express-session). */
       getUser: (
-        req: RequestLike,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        req: any,
       ) => UserInfo | null | undefined | Promise<UserInfo | null | undefined>;
       authorize?: (user: UserInfo) => boolean | Promise<boolean>;
     };

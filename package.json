@@ -18,6 +18,7 @@
     "contracts:design-system-boundaries": "node scripts/validate-design-system-boundaries.mjs",
     "contracts:events-catalog": "tsx apps/institutional-kernel-api/scripts/generate-events-catalog.ts --check",
     "contracts:validate": "pnpm contracts:openapi && pnpm contracts:events && pnpm contracts:events-catalog && pnpm contracts:http && pnpm contracts:design-system-boundaries",
+    "quickstarts:check": "pnpm --filter @mirotaract/sdk build && node scripts/check-quickstarts.mjs",
     "docs:events": "tsx apps/institutional-kernel-api/scripts/generate-events-catalog.ts",
     "changeset": "changeset",
     "version-packages": "changeset version",
