@@ -142,7 +142,91 @@ services:
       NEXT_PUBLIC_SITE_URL: ${DEVELOPERS_PORTAL_SITE_URL:-}
     ports: ["127.0.0.1:3004:3004"]
 
+  # --- Reuniones distritales (apps/meetings-api) ----------------------------
+  # Own database "meetings" on the shared postgres. Created (idempotently) by
+  # this one-off service before meetings-api starts; it can also be run by
+  # hand: `docker compose run --rm meetings-db-init`. Migrations are applied
+  # by meetings-api itself on start (prisma migrate deploy).
+  meetings-db-init:
+    image: postgres:16-alpine
+    restart: "no"
+    environment:
+      PGHOST: postgres
+      PGUSER: ${POSTGRES_USER:-kernel}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
+      MEETINGS_DB_NAME: ${MEETINGS_DB_NAME:-meetings}
+    command:
+      - sh
+      - -c
+      - >-
+        psql -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname = '$$MEETINGS_DB_NAME'" | grep -q 1
+        || psql -d postgres -c "CREATE DATABASE \"$$MEETINGS_DB_NAME\""
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  meetings-api:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: infra/docker/meetings-api.Dockerfile
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3003
+      # e.g. postgresql://kernel:<POSTGRES_PASSWORD>@postgres:5432/meetings
+      MEETINGS_DATABASE_URL: ${MEETINGS_DATABASE_URL:-}
+      # Shared with meetings-web (HS256, >= 32 chars).
+      MEETINGS_TOKEN_SECRET: ${MEETINGS_TOKEN_SECRET:-}
+      MEETINGS_UPLOAD_DIR: /data/uploads
+      MEETINGS_CORS_ORIGIN: ${MEETINGS_CORS_ORIGIN:-https://reuniones.rotaract4845.com}
+      # Kernel directory sync (client_credentials, /service/* Data API).
+      KERNEL_API_URL: ${MEETINGS_KERNEL_API_URL:-http://api:3001/api/kernel/v1}
+      KERNEL_CLIENT_ID: ${MEETINGS_KERNEL_CLIENT_ID:-}
+      KERNEL_CLIENT_SECRET: ${MEETINGS_KERNEL_CLIENT_SECRET:-}
+      MEETINGS_DIRECTORY_SYNC_INTERVAL_MS: ${MEETINGS_DIRECTORY_SYNC_INTERVAL_MS:-300000}
+      # Acta AI (Gemini preferred, else OpenAI) and Whisper transcription.
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    ports: ["127.0.0.1:3003:3003"]
+    volumes: [meetings-uploads:/data/uploads]
+    depends_on:
+      postgres: { condition: service_healthy }
+      meetings-db-init: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3003/meetings-api/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+
+  # Reuniones distritales (https://reuniones.rotaract4845.com). cloudflared
+  # routes "/" here and "/meetings-api/*" + "/socket.io/*" to meetings-api.
+  meetings-web:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: infra/docker/meetings-web.Dockerfile
+      args:
+        NEXT_PUBLIC_MEETINGS_API_URL: ${NEXT_PUBLIC_MEETINGS_API_URL:-}
+        NEXT_PUBLIC_MEETINGS_SOCKET_URL: ${NEXT_PUBLIC_MEETINGS_SOCKET_URL:-}
+        NEXT_PUBLIC_MIROTARACT_URL: ${NEXT_PUBLIC_MIROTARACT_URL:-https://app.rotaract4845.com}
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+      HOSTNAME: 0.0.0.0
+      # Defaults are empty on purpose: a `:?` here would make every
+      # `docker compose` command fail until these exist in .env. The app
+      # refuses to log anyone in without them.
+      # "Ingresar con Mi Rotaract" (CONFIDENTIAL kernel app).
+      MIROTARACT_ISSUER: ${MIROTARACT_ISSUER:-https://api.rotaract4845.com/api/kernel/v1}
+      MIROTARACT_CLIENT_ID: ${MIROTARACT_CLIENT_ID:-}
+      MIROTARACT_CLIENT_SECRET: ${MIROTARACT_CLIENT_SECRET:-}
+      MIROTARACT_REDIRECT_URI: ${MIROTARACT_REDIRECT_URI:-https://reuniones.rotaract4845.com/auth/callback}
+      SESSION_SECRET: ${SESSION_SECRET:-}
+      # Shared with meetings-api: signs the 15-minute meetings token.
+      MEETINGS_TOKEN_SECRET: ${MEETINGS_TOKEN_SECRET:-}
+    ports: ["127.0.0.1:3002:3002"]
+
 volumes:
   postgres-data:
   redis-data:
   nats-data:
+  meetings-uploads:
