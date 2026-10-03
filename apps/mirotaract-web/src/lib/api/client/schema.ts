@@ -2340,6 +2340,207 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/developer/app-reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Cola de revisión de apps del distrito (RDR)
+         * @description Apps de la organización y sus descendientes en un estado de revisión (por defecto `IN_REVIEW`), de la más vieja a la más nueva, con lo que la lista de control necesita: propósito, datos pedidos (y cuáles no están aprobados todavía), responsable, política de privacidad y contacto.
+         */
+        get: operations["listDeveloperAppReviews"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/developer/apps/{appId}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Historial de revisión de una app
+         * @description Envíos, aprobaciones, rechazos (con su motivo) y reaperturas, del más reciente al más viejo.
+         */
+        get: operations["listDeveloperAppReviewHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/developer/apps/{appId}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Aprobar o rechazar una app en revisión (RDR)
+         * @description Aprobar exige marcar los cinco puntos de la lista de control y que la app haya cargado propósito, política de privacidad y contacto; los datos que pide quedan aprobados. Rechazar exige un motivo (10 a 1000 caracteres) que ve el equipo de la app. 409 si la app no está esperando revisión.
+         */
+        post: operations["reviewDeveloperApp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/developer/apps/{appId}/review-request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Volver a pedir la revisión (después de un rechazo) */
+        post: operations["requestDeveloperAppReview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/developer/apps/{appId}/quota": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Límites de la app y cuánto usó
+         * @description Ventanas fijas por minuto y por día (UTC), por `client_id`. `source` dice de dónde salen los límites: `default` (los del distrito), `review` (los más bajos de una app que todavía no se aprobó) o `custom` (los que fijó el RDR).
+         */
+        get: operations["getDeveloperAppQuota"];
+        /**
+         * Fijar los límites de una app (RDR)
+         * @description `null` vuelve al valor por defecto.
+         */
+        put: operations["updateDeveloperAppQuota"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/developer/app-catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Apps del distrito que se pueden mostrar a los socios (RDR)
+         * @description Apps aprobadas y activas de la organización y sus descendientes, con cómo se muestran en el panel de Mi Rotaract. Si todavía no se guardó nada (`saved: false`), `listing` trae una sugerencia armada con la app y su módulo (E8): nombre, ícono y enlace.
+         */
+        get: operations["listAppCatalog"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/developer/apps/{appId}/listing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Publicar una app en el panel de los socios y elegir a quién (RDR)
+         * @description Solo una app aprobada y activa se puede publicar. Pausar o revocar la app la despublica sola. El público se evalúa contra las membresías y cargos ACTIVE de cada persona dentro del árbol de la organización de la app; si la app tiene un módulo (E8) instalado pero no activo en un club, los socios de ese club no la ven.
+         */
+        put: operations["updateDeveloperAppListing"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/apps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Apps del distrito para la persona autenticada
+         * @description Solo las apps publicadas cuyo público incluye a la persona, y nada más que lo necesario para mostrarlas y abrirlas.
+         */
+        get: operations["listMyApps"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/app-access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Apps que accedieron a mis datos
+         * @description Las apps a las que la persona dio acceso con "Ingresar con Mi Rotaract" (`connected`, se puede quitar con `DELETE /oauth/consents/{appId}`) y las que leyeron sus datos desde su servidor (por ejemplo, la app de su club), con la cantidad de accesos y el último, en los últimos 12 meses.
+         */
+        get: operations["listMyAppAccess"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/app-access/{appId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Historial de accesos de una app a mis datos
+         * @description Del más reciente al más viejo. Solo los accesos a los datos de la persona autenticada; los accesos repetidos del mismo tipo dentro de 15 minutos se agrupan. Sin cuerpos ni datos: solo qué tipo de dato.
+         */
+        get: operations["listMyAppAccessEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/events/catalog": {
         parameters: {
             query?: never;
@@ -3347,6 +3548,21 @@ export interface components {
             suspendedAt?: string | null;
             /** Format: date-time */
             revokedAt?: string | null;
+            reviewStatus?: components["schemas"]["DeveloperAppReviewStatus"];
+            /** @description Scopes aprobados por el distrito; los únicos que sirven para cualquier persona. */
+            approvedScopes?: string[];
+            /** Format: date-time */
+            approvedAt?: string | null;
+            /** Format: date-time */
+            reviewedAt?: string | null;
+            purpose?: string | null;
+            privacyPolicyUrl?: string | null;
+            contactEmail?: string | null;
+            /** @description Cuentas (además del responsable) que pueden ingresar mientras la app está en revisión. */
+            testAccountEmails?: string[];
+            /** @description Límite fijado por el RDR; null = el del distrito. */
+            quotaPerMinute?: number | null;
+            quotaPerDay?: number | null;
         };
         CreateDeveloperAppRequest: {
             name: string;
@@ -3358,12 +3574,26 @@ export interface components {
             scopes: string[];
             /** @description Obligatorio con authorization_code. https, o http solo para localhost. */
             redirectUris?: string[];
+            /** @description Para qué es la app y quién la usa. */
+            purpose?: string | null;
+            /** @description URL https de la política de privacidad. */
+            privacyPolicyUrl?: string | null;
+            /** @description Correo de contacto del equipo. */
+            contactEmail?: string | null;
+            testAccountEmails?: string[];
         };
         UpdateDeveloperAppRequest: {
             name?: string;
             description?: string | null;
             scopes?: string[];
             redirectUris?: string[];
+            /** @description Para qué es la app y quién la usa. */
+            purpose?: string | null;
+            /** @description URL https de la política de privacidad. */
+            privacyPolicyUrl?: string | null;
+            /** @description Correo de contacto del equipo. */
+            contactEmail?: string | null;
+            testAccountEmails?: string[];
         };
         DeveloperAppSecretCreated: {
             secretId: string;
@@ -3729,8 +3959,189 @@ export interface components {
             items: components["schemas"]["RequestLog"][];
             pageInfo: components["schemas"]["PageInfo"];
         };
+        /**
+         * @description `IN_REVIEW`: esperando al RDR (lo que no está aprobado solo sirve para el responsable y las cuentas de prueba). `APPROVED`: lo que pide está aprobado. `REJECTED`: el RDR pidió cambios; la app conserva lo que ya tenía aprobado, si tenía algo.
+         * @enum {string}
+         */
+        DeveloperAppReviewStatus: "IN_REVIEW" | "APPROVED" | "REJECTED";
+        /** @description Lista de control del RDR (E11.1). Un punto que falta cuenta como no revisado. */
+        ReviewChecklist: {
+            /** @description El propósito está claro y es del distrito. */
+            purpose?: boolean;
+            /** @description Los datos que pide son los necesarios para ese propósito. */
+            data?: boolean;
+            /** @description Hay una persona responsable identificada. */
+            owner?: boolean;
+            /** @description Tiene una política de privacidad publicada. */
+            privacyPolicy?: boolean;
+            /** @description Tiene un contacto que responde. */
+            contact?: boolean;
+        };
+        ReviewDeveloperAppRequest: {
+            /** @enum {string} */
+            decision: "approve" | "reject";
+            checklist: components["schemas"]["ReviewChecklist"];
+            /** @description Obligatorio para rechazar (al menos 10 caracteres). */
+            reason?: string | null;
+        };
+        DeveloperAppReviewEntry: {
+            id: string;
+            /**
+             * @description `REOPENED`: la app pidió datos que no estaban aprobados. `AUTO_APPROVED`: ya existía cuando empezó la revisión (E11).
+             * @enum {string}
+             */
+            kind: "SUBMITTED" | "APPROVED" | "REJECTED" | "REOPENED" | "AUTO_APPROVED";
+            checklist?: {
+                [key: string]: boolean;
+            } | null;
+            reason?: string | null;
+            actorPersonId?: string | null;
+            actorName?: string | null;
+            scopes: string[];
+            /** Format: date-time */
+            createdAt: string;
+        };
+        DeveloperAppReviewItem: {
+            appId: string;
+            name: string;
+            description?: string | null;
+            type: components["schemas"]["DeveloperAppType"];
+            status: components["schemas"]["DeveloperAppStatus"];
+            reviewStatus: components["schemas"]["DeveloperAppReviewStatus"];
+            organizationId: string;
+            organizationName: string;
+            ownerPersonId: string;
+            ownerName: string;
+            purpose?: string | null;
+            privacyPolicyUrl?: string | null;
+            contactEmail?: string | null;
+            scopes: components["schemas"]["ScopeDescription"][];
+            /** @description Los que todavía no están aprobados. */
+            pendingScopes: components["schemas"]["ScopeDescription"][];
+            /** Format: date-time */
+            submittedAt: string;
+            /** Format: date-time */
+            approvedAt?: string | null;
+        };
+        QuotaWindow: {
+            limit: number;
+            used: number;
+            remaining: number;
+            resetsInSeconds: number;
+        };
+        DeveloperAppQuota: {
+            enabled: boolean;
+            /** @enum {string} */
+            source: "default" | "review" | "custom";
+            perMinute: components["schemas"]["QuotaWindow"];
+            perDay: components["schemas"]["QuotaWindow"];
+            defaults: {
+                perMinute: number;
+                perDay: number;
+            };
+        };
+        UpdateDeveloperAppQuotaRequest: {
+            perMinute?: number | null;
+            perDay?: number | null;
+        };
+        /**
+         * @description `DISTRICT_MEMBERS`: toda persona con una membresía o un cargo activo en el árbol de la app. `CLUB_PRESIDENTS`: presidencia de club (`CLUB_PRESIDENT`). `CLUB_AUTHORITIES`: cualquier cargo activo de club. `DISTRICT_AUTHORITIES`: cualquier cargo activo del distrito. `POSITIONS`: los cargos de `positionCodes`. Se combinan (unión).
+         * @enum {string}
+         */
+        AppAudience: "DISTRICT_MEMBERS" | "CLUB_PRESIDENTS" | "CLUB_AUTHORITIES" | "DISTRICT_AUTHORITIES" | "POSITIONS";
+        AppListing: {
+            published: boolean;
+            displayName: string;
+            shortDescription?: string | null;
+            /** @description Nombre de un ícono de lucide (`calendar-days`) o URL https de una imagen. */
+            icon?: string | null;
+            launchUrl?: string | null;
+            audiences: components["schemas"]["AppAudience"][];
+            positionCodes: string[];
+            displayOrder: number;
+            /** Format: date-time */
+            publishedAt?: string | null;
+            /** Format: date-time */
+            updatedAt?: string | null;
+        };
+        UpdateAppListingRequest: {
+            published?: boolean;
+            displayName?: string;
+            shortDescription?: string | null;
+            icon?: string | null;
+            /** @description https (o http solo para localhost). */
+            launchUrl?: string;
+            audiences?: components["schemas"]["AppAudience"][];
+            positionCodes?: string[];
+            displayOrder?: number;
+        };
+        AppCatalogItem: {
+            appId: string;
+            appName: string;
+            organizationId: string;
+            organizationName: string;
+            reviewStatus: components["schemas"]["DeveloperAppReviewStatus"];
+            /** @description false = `listing` es una sugerencia */
+            saved: boolean;
+            module?: {
+                moduleId: string;
+                entryUrl?: string;
+                navLabel?: string;
+                icon?: string;
+            } | null;
+            listing: components["schemas"]["AppListing"];
+        };
+        MyApp: {
+            appId: string;
+            name: string;
+            description?: string | null;
+            icon?: string | null;
+            launchUrl: string;
+        };
+        MyAppAccess: {
+            appId: string;
+            appName: string;
+            organizationName: string;
+            appStatus: components["schemas"]["DeveloperAppStatus"];
+            /** @description La persona le dio acceso con "Ingresar con Mi Rotaract" y se lo puede quitar. */
+            connected: boolean;
+            /** Format: date-time */
+            grantedAt?: string | null;
+            scopes: components["schemas"]["ScopeDescription"][];
+            /** Format: date-time */
+            lastAccessAt?: string | null;
+            /** @description Accesos registrados en los últimos 12 meses. */
+            accessCount: number;
+        };
+        MyAppAccessEvent: {
+            id: string;
+            /** @enum {string} */
+            kind: "CONSENT_GRANTED" | "SIGN_IN" | "TOKEN_REFRESH" | "USERINFO" | "DATA_READ" | "CONSENT_REVOKED";
+            /** @description Qué tipo de dato (`profile`, `email`, `person`, `contact`, `person-memberships`, ...). */
+            details: string[];
+            /** @description Frase lista para mostrar */
+            description: string;
+            /** Format: date-time */
+            occurredAt: string;
+        };
+        MyAppAccessEventPage: {
+            items: components["schemas"]["MyAppAccessEvent"][];
+            pageInfo: components["schemas"]["PageInfo"];
+        };
     };
     responses: {
+        /** @description La app superó su límite por minuto o por día (`code`: `KERNEL_RATE_LIMITED`). Reintentar después de `Retry-After`. El límite por IP del kernel también puede responder 429. */
+        RateLimited: {
+            headers: {
+                "Retry-After": components["headers"]["Retry-After"];
+                "RateLimit-Policy": components["headers"]["RateLimit-Policy"];
+                RateLimit: components["headers"]["RateLimit"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Error"];
+            };
+        };
         /** @description Pedido inválido. */
         Error: {
             headers: {
@@ -3812,6 +4223,12 @@ export interface components {
         Deprecation: string;
         /** @description RFC 8594. Fecha HTTP a partir de la cual la operación puede dejar de existir (`x-sunset`, al menos 6 meses después de `x-deprecated-at`). */
         Sunset: string;
+        /** @description Segundos a esperar antes de reintentar (RFC 9110 §10.2.3). */
+        "Retry-After": number;
+        /** @description draft-ietf-httpapi-ratelimit-headers: los límites de la app, uno por ventana (`q` pedidos cada `w` segundos). */
+        "RateLimit-Policy": string;
+        /** @description draft-ietf-httpapi-ratelimit-headers: pedidos que quedan (`r`) y segundos hasta que se renueva cada ventana (`t`). */
+        RateLimit: string;
     };
     pathItems: never;
 }
@@ -6748,6 +7165,7 @@ export interface operations {
                     "application/json": components["schemas"]["UserContext"];
                 };
             };
+            429: components["responses"]["RateLimited"];
         };
     };
     serviceListOrganizations: {
@@ -6789,6 +7207,7 @@ export interface operations {
                 };
                 content?: never;
             };
+            429: components["responses"]["RateLimited"];
         };
     };
     serviceListMembers: {
@@ -6832,6 +7251,7 @@ export interface operations {
             };
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
         };
     };
     serviceListAuthorities: {
@@ -6870,6 +7290,7 @@ export interface operations {
             };
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
         };
     };
     serviceListPeriods: {
@@ -6907,6 +7328,7 @@ export interface operations {
             };
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
         };
     };
     serviceBatchPersons: {
@@ -6935,6 +7357,7 @@ export interface operations {
             };
             400: components["responses"]["Error"];
             403: components["responses"]["Forbidden"];
+            429: components["responses"]["RateLimited"];
         };
     };
     servicePersonMemberships: {
@@ -6970,6 +7393,7 @@ export interface operations {
             };
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
         };
     };
     serviceGetPerson: {
@@ -7004,6 +7428,7 @@ export interface operations {
                 content?: never;
             };
             404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
         };
     };
     serviceGetOrganization: {
@@ -7038,6 +7463,7 @@ export interface operations {
                 content?: never;
             };
             404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
         };
     };
     serviceGetMembershipSnapshot: {
@@ -7063,6 +7489,7 @@ export interface operations {
                     "application/json": components["schemas"]["MembershipSnapshot"];
                 };
             };
+            429: components["responses"]["RateLimited"];
         };
     };
     serviceGetAuthoritySnapshot: {
@@ -7088,6 +7515,7 @@ export interface operations {
                     "application/json": components["schemas"]["AuthoritySnapshot"];
                 };
             };
+            429: components["responses"]["RateLimited"];
         };
     };
     serviceGetPeriodSnapshot: {
@@ -7112,6 +7540,7 @@ export interface operations {
                     "application/json": components["schemas"]["PeriodSnapshot"];
                 };
             };
+            429: components["responses"]["RateLimited"];
         };
     };
     serviceCheckAuthorization: {
@@ -7136,6 +7565,7 @@ export interface operations {
                     "application/json": components["schemas"]["AuthorizationDecision"];
                 };
             };
+            429: components["responses"]["RateLimited"];
         };
     };
     serviceBatchCheckAuthorization: {
@@ -7162,6 +7592,7 @@ export interface operations {
                     "application/json": components["schemas"]["AuthorizationDecision"][];
                 };
             };
+            429: components["responses"]["RateLimited"];
         };
     };
     serviceGetModuleInstallation: {
@@ -7186,6 +7617,7 @@ export interface operations {
                 };
             };
             404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
         };
     };
     getOpenIdConfiguration: {
@@ -7787,6 +8219,289 @@ export interface operations {
             404: components["responses"]["NotFound"];
         };
     };
+    listDeveloperAppReviews: {
+        parameters: {
+            query: {
+                organizationId: string;
+                status?: components["schemas"]["DeveloperAppReviewStatus"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeveloperAppReviewItem"][];
+                };
+            };
+            400: components["responses"]["Error"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    listDeveloperAppReviewHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                appId: components["parameters"]["appId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeveloperAppReviewEntry"][];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    reviewDeveloperApp: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                appId: components["parameters"]["appId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewDeveloperAppRequest"];
+            };
+        };
+        responses: {
+            /** @description Decisión registrada. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeveloperAppReviewEntry"];
+                };
+            };
+            400: components["responses"]["Error"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["InvalidTransition"];
+        };
+    };
+    requestDeveloperAppReview: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                appId: components["parameters"]["appId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description La app vuelve a la cola de revisión. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        appId: string;
+                        reviewStatus: components["schemas"]["DeveloperAppReviewStatus"];
+                    };
+                };
+            };
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["InvalidTransition"];
+        };
+    };
+    getDeveloperAppQuota: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                appId: components["parameters"]["appId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeveloperAppQuota"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    updateDeveloperAppQuota: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                appId: components["parameters"]["appId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateDeveloperAppQuotaRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeveloperAppQuota"];
+                };
+            };
+            400: components["responses"]["Error"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    listAppCatalog: {
+        parameters: {
+            query: {
+                organizationId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppCatalogItem"][];
+                };
+            };
+            400: components["responses"]["Error"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    updateDeveloperAppListing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                appId: components["parameters"]["appId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAppListingRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppListing"];
+                };
+            };
+            400: components["responses"]["Error"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["InvalidTransition"];
+        };
+    };
+    listMyApps: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyApp"][];
+                };
+            };
+        };
+    };
+    listMyAppAccess: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyAppAccess"][];
+                };
+            };
+        };
+    };
+    listMyAppAccessEvents: {
+        parameters: {
+            query?: {
+                /** @description Cursor de paginación opaco devuelto por la página anterior. */
+                cursor?: components["parameters"]["cursor"];
+                /** @description Tamaño de página. Por defecto 25, máximo 100 (§18). */
+                limit?: components["parameters"]["limit"];
+            };
+            header?: never;
+            path: {
+                appId: components["parameters"]["appId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyAppAccessEventPage"];
+                };
+            };
+            400: components["responses"]["Error"];
+        };
+    };
     getEventCatalog: {
         parameters: {
             query?: never;
@@ -7924,6 +8639,7 @@ export interface operations {
                     "application/json": components["schemas"]["OAuthError"];
                 };
             };
+            429: components["responses"]["RateLimited"];
         };
     };
     revokeOAuthToken: {
@@ -7956,6 +8672,7 @@ export interface operations {
                     "application/json": components["schemas"]["OAuthError"];
                 };
             };
+            429: components["responses"]["RateLimited"];
         };
     };
     getOAuthUserInfo: {
@@ -7985,6 +8702,7 @@ export interface operations {
                     "application/json": components["schemas"]["OAuthError"];
                 };
             };
+            429: components["responses"]["RateLimited"];
         };
     };
     listOAuthConsents: {
