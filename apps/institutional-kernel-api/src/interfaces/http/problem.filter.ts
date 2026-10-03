@@ -7,6 +7,8 @@ import {
 import type { Request, Response } from "express";
 import { DomainError } from "../../domain/shared/domain.error";
 import { OAuthError } from "../../application/oauth/oauth-error";
+import { resolveTraceId } from "../../application/request-logs/request-log.context";
+import { setProblemMark, type TracedRequest } from "./request-log.middleware";
 
 @Catch()
 export class ProblemFilter implements ExceptionFilter {
@@ -22,6 +24,7 @@ export class ProblemFilter implements ExceptionFilter {
         response.setHeader("WWW-Authenticate", 'Bearer error="invalid_token"');
       else if (error.status === 401)
         response.setHeader("WWW-Authenticate", 'Basic realm="mirotaract"');
+      setProblemMark(response, { code: error.error, type: "oauth" });
       response.status(error.status).json(error.toJSON());
       return;
     }
@@ -45,15 +48,18 @@ export class ProblemFilter implements ExceptionFilter {
           : prismaCode === "P2025"
             ? "KERNEL_NOT_FOUND"
             : `KERNEL_HTTP_${status}`;
+    // E9: always present; the same id as `X-Trace-Id` and the app's
+    // request logs (RequestLogMiddleware resolves it once per request).
     const traceId =
-      request.header("traceparent") ??
-      request.header("x-correlation-id") ??
-      undefined;
+      (request as TracedRequest).traceId ??
+      resolveTraceId((name) => request.header?.(name));
+    const type = `https://api.rotaract4845.com/errors/${code.toLowerCase()}`;
+    setProblemMark(response, { code, type });
     response
       .status(status)
       .type("application/problem+json")
       .send({
-        type: `https://api.rotaract4845.com/errors/${code.toLowerCase()}`,
+        type,
         title: status >= 500 ? "Internal Server Error" : "Request failed",
         status,
         code,

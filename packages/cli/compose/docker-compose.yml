@@ -80,7 +80,7 @@ services:
       KERNEL_SIGNING_KEY_SECRET: ${MIROTARACT_DEV_SIGNING_KEY_SECRET:?}
       KERNEL_ISSUER_URL: http://localhost:${MIROTARACT_DEV_API_PORT:-54321}/api/kernel/v1
       KERNEL_PUBLIC_WEB_URL: http://localhost:${MIROTARACT_DEV_WEB_PORT:-54322}
-      KERNEL_CORS_ORIGINS: http://localhost:${MIROTARACT_DEV_WEB_PORT:-54322},${MIROTARACT_DEV_APP_ORIGINS:-http://localhost:3000}
+      KERNEL_CORS_ORIGINS: http://localhost:${MIROTARACT_DEV_WEB_PORT:-54322},${MIROTARACT_DEV_APP_ORIGINS:-http://localhost:3000},${MIROTARACT_DEV_PORTAL_ORIGINS:-http://localhost:3004,https://developers.rotaract4845.com}
       # Un solo proceso hace de API y de worker (outbox, vencimientos, entregas).
       KERNEL_JOBS_ENABLED: "true"
       KERNEL_JOBS_INTERVAL_MS: "5000"

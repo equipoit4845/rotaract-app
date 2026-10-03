@@ -27,8 +27,17 @@ async function bootstrap(): Promise<void> {
       "Content-Type",
       "Idempotency-Key",
       "X-Correlation-Id",
+      "traceparent",
     ],
-    exposedHeaders: ["X-Correlation-Id"],
+    // E9: the trace id and deprecation notices must be readable from
+    // browser clients too (e.g. the developer portal's "Probar" panel).
+    exposedHeaders: [
+      "X-Correlation-Id",
+      "X-Trace-Id",
+      "Deprecation",
+      "Sunset",
+      "Link",
+    ],
   });
   registerPublicApiDocumentation(app);
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));

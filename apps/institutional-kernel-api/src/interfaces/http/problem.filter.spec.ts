@@ -52,4 +52,48 @@ describe("ProblemFilter", () => {
 
     expect(response.status).toHaveBeenCalledWith(404);
   });
+
+  it("always includes a traceId (E9), generated when no header came", () => {
+    const filter = new ProblemFilter();
+    const { host, response } = buildHost();
+
+    filter.catch(new NotFoundException("gone"), host);
+
+    expect(response.send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        traceId: expect.stringMatching(/^[0-9a-f]{32}$/),
+      }),
+    );
+  });
+
+  it("reuses the request's trace id and leaves the problem for the log", () => {
+    const filter = new ProblemFilter();
+    const response = {
+      status: jest.fn().mockReturnThis(),
+      type: jest.fn().mockReturnThis(),
+      send: jest.fn(),
+      locals: {} as Record<string, unknown>,
+    };
+    const request = {
+      header: jest.fn().mockReturnValue(undefined),
+      originalUrl: "/api/kernel/v1/service/x",
+      traceId: "trace-from-middleware",
+    };
+    const host = {
+      switchToHttp: () => ({
+        getResponse: () => response,
+        getRequest: () => request,
+      }),
+    } as unknown as ArgumentsHost;
+
+    filter.catch(new NotFoundException("gone"), host);
+
+    expect(response.send).toHaveBeenCalledWith(
+      expect.objectContaining({ traceId: "trace-from-middleware" }),
+    );
+    expect(response.locals.requestLogProblem).toEqual({
+      code: "KERNEL_HTTP_404",
+      type: "https://api.rotaract4845.com/errors/kernel_http_404",
+    });
+  });
 });
