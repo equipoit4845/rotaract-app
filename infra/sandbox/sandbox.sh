@@ -82,7 +82,7 @@ up() {
   # shellcheck disable=SC2086
   compose $web up -d api ${web:+web}
   wait_api
-  log "sandbox up: API on 127.0.0.1:$(grep -E '^SANDBOX_API_PORT=' "$ENV_FILE" | cut -d= -f2 || echo 3011)"
+  log "sandbox up: API on 127.0.0.1:$(grep -E "^SANDBOX_API_PORT=" "$ENV_FILE" | tail -1 | cut -d= -f2)"
 }
 
 snapshot() {
