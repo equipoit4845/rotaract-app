@@ -572,6 +572,12 @@ async function ensureApp(input: {
     redirectUris: [
       ...new Set([...(existing?.redirectUris ?? []), ...input.redirectUris]),
     ],
+    // E11: the local kernel's sample app comes approved, so the template
+    // works with every scope (new apps start IN_REVIEW).
+    reviewStatus: "APPROVED" as const,
+    approvedScopes: input.scopes,
+    approvedAt: existing?.approvedAt ?? new Date(),
+    reviewedAt: new Date(),
   };
   const app = existing
     ? await prisma.developerApp.update({ where: { id: existing.id }, data })
