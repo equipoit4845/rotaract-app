@@ -7,7 +7,10 @@ export type SearchEntry = {
 };
 
 export function normalize(text: string): string {
-  return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
 }
 
 /** Every term must appear (accent-insensitive); matches in the title weigh more. */
