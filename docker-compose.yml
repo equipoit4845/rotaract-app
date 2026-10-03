@@ -80,6 +80,11 @@ services:
     build:
       context: .
       dockerfile: infra/docker/api.Dockerfile
+    # The worker never migrates (the api / migrate service do): run node
+    # directly, without pnpm resident next to it, with tini as PID 1.
+    init: true
+    working_dir: /workspace/apps/institutional-kernel-api
+    command: ["node", "dist/main"]
     environment:
       NODE_ENV: ${NODE_ENV:-production}
       KERNEL_WORKER_ONLY: "true"
@@ -174,6 +179,7 @@ services:
 
   meetings-api:
     restart: unless-stopped
+    init: true
     build:
       context: .
       dockerfile: infra/docker/meetings-api.Dockerfile

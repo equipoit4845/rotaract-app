@@ -15,4 +15,6 @@ ARG NEXT_PUBLIC_KERNEL_API_URL
 ENV NEXT_PUBLIC_KERNEL_API_URL=$NEXT_PUBLIC_KERNEL_API_URL
 RUN pnpm turbo run build --filter=@mirotaract/mirotaract-web
 EXPOSE 3000
-CMD ["pnpm", "--filter", "@mirotaract/mirotaract-web", "start"]
+WORKDIR /workspace/apps/mirotaract-web
+# next directly: pnpm would stay resident next to it (~90 MB).
+CMD ["node_modules/.bin/next", "start"]

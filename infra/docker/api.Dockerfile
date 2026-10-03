@@ -10,4 +10,6 @@ COPY . .
 RUN pnpm --filter @mirotaract/institutional-kernel-api prisma:generate
 RUN pnpm --filter @mirotaract/institutional-kernel-api build
 EXPOSE 3001
-CMD ["sh", "-c", "pnpm --filter @mirotaract/institutional-kernel-api prisma:deploy && pnpm --filter @mirotaract/institutional-kernel-api start"]
+# pnpm only for the one-off migration; `exec node` so pnpm does not stay
+# resident next to the app (~90 MB) and node receives SIGTERM directly.
+CMD ["sh", "-c", "pnpm --filter @mirotaract/institutional-kernel-api prisma:deploy && cd apps/institutional-kernel-api && exec node dist/main"]

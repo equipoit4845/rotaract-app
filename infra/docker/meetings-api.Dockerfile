@@ -12,4 +12,6 @@ ENV MEETINGS_UPLOAD_DIR=/data/uploads
 RUN mkdir -p /data/uploads
 EXPOSE 3003
 # Migrations are applied on start, like the kernel api.
-CMD ["sh", "-c", "pnpm --filter @mirotaract/meetings-api prisma:deploy && pnpm --filter @mirotaract/meetings-api start"]
+# pnpm only for the one-off migration; `exec node` so pnpm does not stay
+# resident next to the app (~90 MB) and node receives SIGTERM directly.
+CMD ["sh", "-c", "pnpm --filter @mirotaract/meetings-api prisma:deploy && cd apps/meetings-api && exec node dist/main"]
