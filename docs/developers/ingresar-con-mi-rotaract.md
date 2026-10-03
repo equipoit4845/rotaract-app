@@ -684,9 +684,7 @@ def finish_login(session: dict, params: dict) -> dict:
 
 ### Python con `mirotaract`
 
-> **SDK todavía no publicado en PyPI.** `mirotaract` está en el monorepo
-> (`sdks/python`) y requiere Python ≥ 3.10. Mientras tanto, instalalo desde
-> el repositorio (ver [README.md](README.md#sdks-oficiales)).
+> **Instalación:** `pip install mirotaract` (Python ≥ 3.10; para FastAPI, `pip install 'mirotaract[fastapi]'`).
 
 ```python
 import os

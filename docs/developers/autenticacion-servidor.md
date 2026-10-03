@@ -218,8 +218,7 @@ cacheado, pedí uno nuevo y reintentá **una sola vez**.
 ## Con los SDKs oficiales
 
 > **Instalación.** JavaScript/TypeScript (Node 20+): `npm install @mirotaract/sdk`.
-> Python (≥ 3.10): todavía no está en PyPI; instalalo desde el repositorio (ver
-> [README.md](README.md#sdks-oficiales)).
+> Python (≥ 3.10): `pip install mirotaract`.
 
 Los SDKs piden el token con `client_credentials`, lo cachean y lo renuevan
 60 s antes del vencimiento (si hay pedidos concurrentes, comparten una sola

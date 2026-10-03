@@ -17,7 +17,7 @@ las personas responsables de cada app activa reciben el aviso por email.
 > `kernel-openapi.yaml` (versión en `info.version`).
 
 <!-- entry: npm-publish -->
-## 2026-10-03 · SDKs y herramientas publicados en npm (MIT)
+## 2026-10-03 · SDKs y herramientas publicados en npm y PyPI (MIT)
 
 **Tipo:** nuevo · **Rompe compatibilidad:** no
 
@@ -26,8 +26,9 @@ las personas responsables de cada app activa reciben el aviso por email.
   `npm install @mirotaract/sdk`, `npx @mirotaract/cli init`, `npx -y @mirotaract/mcp`.
 - La CLI renombró `--env-file` a `--env-path` (Node 20.6+ intercepta
   `--env-file` en cualquier posición de la línea de comandos).
-- Pendientes: el SDK de Python en PyPI y `@mirotaract/ai-skills` (se publica
-  cuando supere las evaluaciones).
+- El SDK de Python `mirotaract` 0.1.0 está en PyPI (MIT): `pip install mirotaract`
+  o `pip install 'mirotaract[fastapi]'`.
+- Pendiente: `@mirotaract/ai-skills` (se publica cuando supere las evaluaciones).
 
 <!-- entry: e9-portal -->
 ## 2026-10-04 · Portal de desarrolladores, registros de requests y avisos de deprecación (E9)

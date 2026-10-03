@@ -148,10 +148,11 @@ del `id_token`: hay dos SDKs oficiales con la misma superficie.
 > npm install @mirotaract/sdk
 > ```
 >
-> El SDK de Python todavía no está en PyPI. Mientras tanto, instalalo desde
-> una copia del repositorio: `pip install /ruta/al/repo/sdks/python` (o
-> `"/ruta/al/repo/sdks/python[fastapi]"`). Cuando se publique va a alcanzar con
-> `pip install mirotaract`; el código de los ejemplos no cambia.
+> El SDK de Python está en PyPI, también con licencia MIT:
+>
+> ```bash
+> pip install mirotaract            # o 'mirotaract[fastapi]'
+> ```
 
 Superficie de la API de datos (cliente `MiRotaract`, solo servidor: usa el
 secreto):
