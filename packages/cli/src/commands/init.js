@@ -4,6 +4,8 @@ import { basename, join, relative, resolve } from "node:path";
 import { TEMPLATES } from "../lib/args.js";
 import { CliError } from "../lib/errors.js";
 import { renderTemplate } from "../lib/templates.js";
+import { parseSkillTargets } from "../lib/skills-bundle.js";
+import { installAiSkills } from "./ai.js";
 import { resolveKernelRepo } from "./dev.js";
 
 export function slug(value) {
@@ -17,6 +19,9 @@ export function slug(value) {
   );
 }
 
+export const PY_SDK_FROM_GIT =
+  "mirotaract[fastapi] @ git+https://github.com/equipoit4845/rotaract-app.git#subdirectory=sdks/python";
+
 /** Values for the {{PLACEHOLDERS}} of every template. */
 export function templateVars({ name, kernelRepo }) {
   const projectSlug = slug(name);
@@ -28,9 +33,10 @@ export function templateVars({ name, kernelRepo }) {
     SDK_JS_DEPENDENCY: kernelRepo
       ? `file:${join(kernelRepo, "packages/sdk-js")}`
       : "^0.1.0",
+    // The Python SDK is not on PyPI yet: install it from the public repo.
     SDK_PY_REQUIREMENT: kernelRepo
       ? `mirotaract[fastapi] @ file://${join(kernelRepo, "sdks/python")}`
-      : "mirotaract[fastapi]>=0.1.0",
+      : PY_SDK_FROM_GIT,
   };
 }
 
@@ -60,29 +66,6 @@ const NEXT_STEPS = {
   ],
 };
 
-/**
- * `--ai claude,cursor,…`: drops the @mirotaract/ai-skills files into the new
- * app (the template's AGENTS.md keeps its content; the skills go in a
- * managed block).
- */
-export async function installAiSkills(targetsValue, dir) {
-  let skills;
-  try {
-    skills = await import("@mirotaract/ai-skills");
-  } catch {
-    throw new CliError("No encontré @mirotaract/ai-skills.", {
-      hint: "Instalalo (`npm install -g @mirotaract/ai-skills`) o corré `npx @mirotaract/ai-skills install --target <destino>` en la carpeta de la app.",
-    });
-  }
-  try {
-    const targets = skills.parseTargets(targetsValue);
-    return { targets, results: skills.install({ targets, dir }) };
-  } catch (error) {
-    if (error instanceof skills.SkillError) throw new CliError(error.message);
-    throw error;
-  }
-}
-
 export async function initCommand(values, positionals, ctx) {
   const template = (values.template ?? "next").toLowerCase();
   if (!TEMPLATES.includes(template))
@@ -98,6 +81,8 @@ export async function initCommand(values, positionals, ctx) {
     throw new CliError(`La carpeta ${target} no está vacía.`, {
       hint: "Elegí otra carpeta o usá --force para escribir igual (pisa archivos con el mismo nombre).",
     });
+  // A typo in --ai fails before anything is written.
+  if (values.ai) parseSkillTargets(values.ai);
   const kernelRepo = resolveKernelRepo(values, ctx.env);
   const name = values.name ?? basename(target);
   const files = renderTemplate(
@@ -105,19 +90,50 @@ export async function initCommand(values, positionals, ctx) {
     target,
     templateVars({ name, kernelRepo }),
   );
-  const ai = values.ai ? await installAiSkills(values.ai, target) : null;
   const dir = relative(ctx.cwd, target) || ".";
+  let ai = null;
+  let aiWarning = null;
+  if (values.ai)
+    try {
+      ai = await installAiSkills(values.ai, target, { values, ctx });
+    } catch (error) {
+      if (!(error instanceof CliError)) throw error;
+      // The app is already there: don't fail the whole init for the skills.
+      aiWarning = [
+        `Aviso: la app se creó, pero no pude instalar las skills de IA: ${error.message}`,
+        ...(error.hint ? [error.hint] : []),
+        `Reintentalo con: mirotaract ai install --target ${values.ai} ${dir}`,
+      ];
+    }
+  const sdkLine = kernelRepo
+    ? `El SDK se instala desde ${kernelRepo}.`
+    : template === "fastapi"
+      ? "El SDK de Python se instala desde el repositorio público (todavía no está en PyPI)."
+      : template === "next"
+        ? "El SDK (@mirotaract/sdk) se instala desde npm."
+        : null;
   ctx.out.write(
     [
       `Listo: plantilla "${template}" en ${target} (${files.length} archivos).`,
-      kernelRepo
-        ? `El SDK se instala desde ${kernelRepo} (todavía no está publicado).`
-        : "Ojo: el SDK todavía no está publicado; pasá --kernel-repo para instalarlo desde el repositorio (ver README).",
+      ...(sdkLine ? [sdkLine] : []),
       ...(ai
         ? [
-            `Skills de IA (${ai.targets.join(", ")}): ${ai.results.map((r) => r.path).join(", ")}.`,
+            `Skills de IA (${ai.targets.join(", ")}): ${ai.results
+              .map(
+                (r) =>
+                  `${r.path}${r.action === "skipped" ? " (omitido: ya existía)" : ""}`,
+              )
+              .join(", ")}.`,
+            `Origen: ${ai.source}.`,
+            ...(ai.preliminary
+              ? [
+                  ai.note ??
+                    "Versión preliminar: todavía no pasaron las evaluaciones automáticas.",
+                ]
+              : []),
           ]
         : []),
+      ...(aiWarning ?? []),
       "",
       "Siguientes pasos:",
       ...NEXT_STEPS[template](dir, kernelRepo).map((line) => `  ${line}`),

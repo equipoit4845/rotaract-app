@@ -28,10 +28,10 @@ Entrá con una cuenta de prueba (`mirotaract dev status` las lista; la
 contraseña es `sandbox-9999`), por ejemplo `socio.norte@example.org`, aceptá
 los permisos y abrí **Ver el padrón de mi club**.
 
-> El SDK todavía no está en npm: `package.json` lo toma de
-> `{{SDK_JS_DEPENDENCY}}`. Compilalo una vez en el repo del kernel con
-> `npx pnpm@10.13.1 install && npx pnpm@10.13.1 --filter @mirotaract/sdk build`.
-> Cuando se publique, cambiá la dependencia a `"@mirotaract/sdk": "^0.1.0"`.
+> El SDK es `@mirotaract/sdk` (`{{SDK_JS_DEPENDENCY}}` en `package.json`). Si
+> apunta a un `file:` del repo del kernel, compilalo una vez ahí con
+> `npx pnpm@10.13.1 install && npx pnpm@10.13.1 --filter @mirotaract/sdk build`,
+> o cambiá la dependencia a `"@mirotaract/sdk": "^0.1.0"` (publicado en npm).
 
 ¿Tu app corre en otro puerto? `mirotaract dev up --app-url http://localhost:3100`
 registra `http://localhost:3100/auth/callback` y lo escribe en `APP_URL`.
