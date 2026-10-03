@@ -6,7 +6,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-kernel}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
       POSTGRES_DB: ${POSTGRES_DB:-institutional_kernel}
-    ports: ["127.0.0.1:5432:5432"]
+    ports: ["127.0.0.1:${POSTGRES_HOST_PORT:-5432}:5432"]
     volumes: [postgres-data:/var/lib/postgresql/data]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
@@ -17,7 +17,7 @@ services:
   redis:
     restart: unless-stopped
     image: redis:7-alpine
-    ports: ["127.0.0.1:6379:6379"]
+    ports: ["127.0.0.1:${REDIS_HOST_PORT:-6379}:6379"]
     volumes: [redis-data:/data]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -29,7 +29,7 @@ services:
     restart: unless-stopped
     image: nats:2.10-alpine
     command: ["-js", "-sd", "/data", "-m", "8222"]
-    ports: ["127.0.0.1:4222:4222", "127.0.0.1:8222:8222"]
+    ports: ["127.0.0.1:${NATS_HOST_PORT:-4222}:4222", "127.0.0.1:${NATS_MONITOR_HOST_PORT:-8222}:8222"]
     volumes: [nats-data:/data]
     healthcheck:
       test: ["CMD", "wget", "--spider", "http://localhost:8222/healthz"]
@@ -64,7 +64,7 @@ services:
       CLICKMAIL_BASE_URL: ${CLICKMAIL_BASE_URL:-http://localhost:3000}
       CLICKMAIL_FROM_ADDRESS: ${CLICKMAIL_FROM_ADDRESS:-Mi Rotaract <no-reply@mirotaract.org>}
       KERNEL_PUBLIC_WEB_URL: ${KERNEL_PUBLIC_WEB_URL:-http://localhost:3000}
-    ports: ["127.0.0.1:3001:3001"]
+    ports: ["127.0.0.1:${API_HOST_PORT:-3001}:3001"]
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -93,6 +93,11 @@ services:
       KERNEL_JOBS_ENABLED: "true"
       # E7: the worker delivers webhooks (outbound HTTPS to third parties).
       KERNEL_WEBHOOKS_ALLOW_INSECURE: ${KERNEL_WEBHOOKS_ALLOW_INSECURE:-false}
+      # E12.1 (docs/19-operations-e12.md): status probes, once a minute. The
+      # defaults reach web/api/meetings/portal by their in-network names; the
+      # sandbox is probed only once its URL is set here.
+      KERNEL_STATUS_PROBES_ENABLED: ${KERNEL_STATUS_PROBES_ENABLED:-true}
+      KERNEL_STATUS_PROBE_SANDBOX_URLS: ${KERNEL_STATUS_PROBE_SANDBOX_URLS:-}
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -125,7 +130,7 @@ services:
         NEXT_PUBLIC_KERNEL_API_URL: ${NEXT_PUBLIC_KERNEL_API_URL:-http://localhost:3001/api/kernel/v1}
     environment:
       NEXT_PUBLIC_KERNEL_API_URL: ${NEXT_PUBLIC_KERNEL_API_URL:-http://localhost:3001/api/kernel/v1}
-    ports: ["127.0.0.1:3000:3000"]
+    ports: ["127.0.0.1:${WEB_HOST_PORT:-3000}:3000"]
     depends_on:
       api: { condition: service_healthy }
 
@@ -140,7 +145,10 @@ services:
         NEXT_PUBLIC_SITE_URL: ${DEVELOPERS_PORTAL_SITE_URL:-}
     environment:
       NEXT_PUBLIC_SITE_URL: ${DEVELOPERS_PORTAL_SITE_URL:-}
-    ports: ["127.0.0.1:3004:3004"]
+      # E12.1: /estado and /status.json read the kernel's public status
+      # inside the compose network (no round trip through Cloudflare).
+      PORTAL_STATUS_API_URL: ${PORTAL_STATUS_API_URL:-http://api:3001/api/kernel/v1}
+    ports: ["127.0.0.1:${PORTAL_HOST_PORT:-3004}:3004"]
 
   # --- Reuniones distritales (apps/meetings-api) ----------------------------
   # Own database "meetings" on the shared postgres. Created (idempotently) by
@@ -186,7 +194,7 @@ services:
       # Acta AI (Gemini preferred, else OpenAI) and Whisper transcription.
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-    ports: ["127.0.0.1:3003:3003"]
+    ports: ["127.0.0.1:${MEETINGS_API_HOST_PORT:-3003}:3003"]
     volumes: [meetings-uploads:/data/uploads]
     depends_on:
       postgres: { condition: service_healthy }
@@ -223,7 +231,7 @@ services:
       SESSION_SECRET: ${SESSION_SECRET:-}
       # Shared with meetings-api: signs the 15-minute meetings token.
       MEETINGS_TOKEN_SECRET: ${MEETINGS_TOKEN_SECRET:-}
-    ports: ["127.0.0.1:3002:3002"]
+    ports: ["127.0.0.1:${MEETINGS_WEB_HOST_PORT:-3002}:3002"]
 
 volumes:
   postgres-data:
