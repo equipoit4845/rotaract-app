@@ -1,0 +1,62 @@
+{
+  "id": "padron-club",
+  "title": "Mostrá el padrón del club",
+  "language": "python",
+  "skills": [
+    "mirotaract-padron",
+    "mirotaract-permisos"
+  ],
+  "fixture": "fixture",
+  "prompt": "En esta app FastAPI agregá /padron: el padrón del club de quien ingresó (el login ya está hecho: current_user(request) en app/auth.py devuelve los claims verificados o None). Solo lo ve quien es socia o socio ACTIVE u ON_LEAVE del club; mostrá los socios activos y de licencia con nombre, número de socio y estado. No muestres datos de contacto. Los clubes pueden tener más de 100 socios.",
+  "graders": [
+    {
+      "id": "minimal-scopes",
+      "options": {
+        "required": [
+          "kernel.service.memberships.read"
+        ],
+        "allowed": [
+          "openid",
+          "profile",
+          "memberships",
+          "kernel.service.memberships.read",
+          "kernel.service.organizations.read",
+          "kernel.service.persons.read"
+        ],
+        "requireExplicitServiceScope": true
+      }
+    },
+    {
+      "id": "pagination"
+    },
+    {
+      "id": "no-pii-logs"
+    },
+    {
+      "id": "no-web-storage-tokens"
+    },
+    {
+      "id": "no-client-secrets"
+    },
+    {
+      "id": "jwks-verification"
+    },
+    {
+      "id": "kernel-scopes"
+    }
+  ],
+  "references": {
+    "good": {
+      "expect": "pass"
+    },
+    "bad": {
+      "expect": "fail",
+      "mustFail": [
+        "minimal-scopes",
+        "pagination",
+        "no-pii-logs",
+        "no-web-storage-tokens"
+      ]
+    }
+  }
+}

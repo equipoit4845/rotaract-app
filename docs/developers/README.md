@@ -111,6 +111,7 @@ tipos (`mirotaract gen types`) y reenvía webhooks a tu servidor local
 | [kit-de-ui.md](kit-de-ui.md) | Kit de UI: los componentes de Mi Rotaract con `npx shadcn add` (tema, shell, tablas, badges de estado, diálogo de confirmación). |
 | [errores.md](errores.md) | Formatos de error, códigos y qué hacer con cada uno; reintentos. |
 | [seguridad.md](seguridad.md) | Checklist obligatoria antes de pedir producción. |
+| [ia.md](ia.md) | Programar con asistentes de IA: skills para Claude Code, Cursor, Copilot y AGENTS.md, servidor MCP, llms.txt, plantillas de prompt y evals. |
 | [faq.md](faq.md) | Preguntas frecuentes. |
 | [changelog.md](changelog.md) | Cambios de la API, los SDKs y la CLI, con su impacto en compatibilidad. |
 | [deprecaciones.md](deprecaciones.md) | Política de deprecación: 6 meses de aviso, cabeceras `Deprecation`/`Sunset` y emails. |

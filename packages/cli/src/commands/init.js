@@ -60,7 +60,30 @@ const NEXT_STEPS = {
   ],
 };
 
-export function initCommand(values, positionals, ctx) {
+/**
+ * `--ai claude,cursor,…`: drops the @mirotaract/ai-skills files into the new
+ * app (the template's AGENTS.md keeps its content; the skills go in a
+ * managed block).
+ */
+export async function installAiSkills(targetsValue, dir) {
+  let skills;
+  try {
+    skills = await import("@mirotaract/ai-skills");
+  } catch {
+    throw new CliError("No encontré @mirotaract/ai-skills.", {
+      hint: "Instalalo (`npm install -g @mirotaract/ai-skills`) o corré `npx @mirotaract/ai-skills install --target <destino>` en la carpeta de la app.",
+    });
+  }
+  try {
+    const targets = skills.parseTargets(targetsValue);
+    return { targets, results: skills.install({ targets, dir }) };
+  } catch (error) {
+    if (error instanceof skills.SkillError) throw new CliError(error.message);
+    throw error;
+  }
+}
+
+export async function initCommand(values, positionals, ctx) {
   const template = (values.template ?? "next").toLowerCase();
   if (!TEMPLATES.includes(template))
     throw new CliError(`No conozco la plantilla "${values.template}".`, {
@@ -82,6 +105,7 @@ export function initCommand(values, positionals, ctx) {
     target,
     templateVars({ name, kernelRepo }),
   );
+  const ai = values.ai ? await installAiSkills(values.ai, target) : null;
   const dir = relative(ctx.cwd, target) || ".";
   ctx.out.write(
     [
@@ -89,6 +113,11 @@ export function initCommand(values, positionals, ctx) {
       kernelRepo
         ? `El SDK se instala desde ${kernelRepo} (todavía no está publicado).`
         : "Ojo: el SDK todavía no está publicado; pasá --kernel-repo para instalarlo desde el repositorio (ver README).",
+      ...(ai
+        ? [
+            `Skills de IA (${ai.targets.join(", ")}): ${ai.results.map((r) => r.path).join(", ")}.`,
+          ]
+        : []),
       "",
       "Siguientes pasos:",
       ...NEXT_STEPS[template](dir, kernelRepo).map((line) => `  ${line}`),

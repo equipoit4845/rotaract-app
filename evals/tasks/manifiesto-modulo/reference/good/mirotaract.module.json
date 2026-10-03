@@ -1,0 +1,55 @@
+{
+  "$schema": "https://developers.rotaract4845.com/schemas/module-manifest.v1.json",
+  "id": "reuniones",
+  "name": "Reuniones",
+  "description": "Asistencia y votaciones de las reuniones del club.",
+  "version": "1.0.0",
+  "contractVersion": 1,
+  "permissions": [
+    {
+      "code": "reuniones.meeting.manage",
+      "name": "Gestionar reuniones",
+      "description": "Crear reuniones y tomar asistencia.",
+      "scopeType": "ORGANIZATION"
+    },
+    {
+      "code": "reuniones.meeting.vote",
+      "name": "Votar en reuniones",
+      "description": "Votar las mociones de una reunión.",
+      "scopeType": "ORGANIZATION"
+    }
+  ],
+  "events": {
+    "subscribes": [
+      "membership.activated.v1",
+      "membership.ended.v1"
+    ],
+    "emits": []
+  },
+  "configurationSchema": {
+    "type": "object",
+    "properties": {
+      "quorumPercent": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 100,
+        "default": 50,
+        "description": "Porcentaje de socios presentes para tener quórum."
+      }
+    },
+    "additionalProperties": false
+  },
+  "ui": {
+    "entryUrl": "https://reuniones.rotaract4845.com",
+    "navLabel": "Reuniones",
+    "icon": "calendar"
+  },
+  "oauth": {
+    "scopes": [
+      "openid",
+      "profile",
+      "kernel.service.memberships.read",
+      "kernel.service.authorization.check"
+    ]
+  }
+}

@@ -32,7 +32,12 @@
     "db:seed:legacy:dry-run": "tsx prisma/seed-legacy.ts",
     "db:seed:legacy": "tsx prisma/seed-legacy.ts --apply",
     "db:seed:current-presidents:dry-run": "tsx prisma/seed-current-presidents.ts",
-    "db:seed:current-presidents": "tsx prisma/seed-current-presidents.ts --apply"
+    "db:seed:current-presidents": "tsx prisma/seed-current-presidents.ts --apply",
+    "llms": "node scripts/build-llms-txt.mjs",
+    "test:llms": "node --test scripts/test/*.test.mjs",
+    "skills:build": "pnpm --filter @mirotaract/ai-skills build",
+    "evals": "node evals/bin/evals.js",
+    "evals:gate": "node evals/bin/evals.js gate"
   },
   "devDependencies": {
     "@apidevtools/swagger-parser": "^10.1.1",
@@ -43,6 +48,7 @@
     "prisma": "^6.10.1",
     "tsx": "^4.19.4",
     "turbo": "^2.5.4",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "yaml": "^2.9.0"
   }
 }

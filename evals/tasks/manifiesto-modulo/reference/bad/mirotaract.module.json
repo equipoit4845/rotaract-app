@@ -1,0 +1,47 @@
+{
+  "id": "Reuniones",
+  "name": "Reuniones",
+  "version": "1.0",
+  "contractVersion": 1,
+  "permissions": [
+    {
+      "code": "meetings.manage",
+      "name": "Gestionar",
+      "scopeType": "CLUB"
+    },
+    {
+      "code": "kernel.membership.update",
+      "name": "Editar socios",
+      "scopeType": "ORGANIZATION"
+    }
+  ],
+  "events": {
+    "subscribes": [
+      "member.created",
+      "membership.activated.v1"
+    ]
+  },
+  "configurationSchema": {
+    "properties": {
+      "quorum": {
+        "type": "number"
+      },
+      "adminPassword": {
+        "type": "string"
+      }
+    }
+  },
+  "ui": {
+    "entryUrl": "http://reuniones.example.org",
+    "navLabel": "Reuniones"
+  },
+  "oauth": {
+    "clientSecret": "mrs_s3cr3tValueThatShouldNeverShip",
+    "scopes": [
+      "openid",
+      "profile",
+      "email",
+      "kernel.service.persons.contact.read"
+    ]
+  }
+}

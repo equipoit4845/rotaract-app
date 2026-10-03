@@ -1,0 +1,59 @@
+{
+  "id": "webhooks-altas",
+  "title": "Recibí webhooks de altas de socios",
+  "language": "ts",
+  "skills": [
+    "mirotaract-webhooks"
+  ],
+  "fixture": "fixture",
+  "prompt": "Recibí los webhooks de Mi Rotaract de altas de socios (membership.activated.v1) en POST /api/webhooks/mirotaract (archivo src/app/api/webhooks/mirotaract/route.ts, Next.js App Router). Por cada alta llamá a encolarBienvenida(personId) de src/lib/bienvenidas.ts, que también tiene yaProcesado(id) y marcarProcesado(id). El secreto de firma está en MIROTARACT_WEBHOOK_SECRET.",
+  "graders": [
+    {
+      "id": "webhook-signature"
+    },
+    {
+      "id": "webhook-idempotency"
+    },
+    {
+      "id": "webhook-runtime",
+      "options": {
+        "entries": [
+          "src/app/api/webhooks/mirotaract/route.ts",
+          "src/app/api/webhooks/route.ts"
+        ]
+      }
+    },
+    {
+      "id": "no-client-secrets"
+    },
+    {
+      "id": "no-pii-logs"
+    }
+  ],
+  "references": {
+    "good": {
+      "expect": "pass",
+      "mustRun": [
+        "webhook-runtime"
+      ]
+    },
+    "good-manual": {
+      "expect": "pass",
+      "mustRun": [
+        "webhook-runtime"
+      ]
+    },
+    "bad": {
+      "expect": "fail",
+      "mustRun": [
+        "webhook-runtime"
+      ],
+      "mustFail": [
+        "webhook-signature",
+        "webhook-idempotency",
+        "webhook-runtime",
+        "no-pii-logs"
+      ]
+    }
+  }
+}

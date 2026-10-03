@@ -1,0 +1,51 @@
+{
+  "id": "manifiesto-modulo",
+  "title": "Creá el manifiesto de un módulo",
+  "language": "json",
+  "skills": [
+    "mirotaract-modulo",
+    "mirotaract-permisos"
+  ],
+  "fixture": "fixture",
+  "prompt": "Creá el manifiesto del módulo \"reuniones\" de este proyecto (mirotaract.module.json en la raíz): un permiso para gestionar reuniones (reuniones.meeting.manage) y otro para votar (reuniones.meeting.vote), ambos dentro del club donde se instala; se suscribe a las altas y bajas de socios; la configuración por club es el porcentaje de quórum (entero de 1 a 100, por defecto 50); entrada https://reuniones.rotaract4845.com con la etiqueta \"Reuniones\". La app lee el padrón, chequea permisos con el kernel y las personas ingresan con su nombre.",
+  "graders": [
+    {
+      "id": "manifest-valid",
+      "options": {
+        "id": "reuniones",
+        "subscribes": [
+          "membership.activated.v1",
+          "membership.ended.v1"
+        ],
+        "permissions": [
+          "reuniones.meeting.manage",
+          "reuniones.meeting.vote"
+        ],
+        "allowedScopes": [
+          "openid",
+          "profile",
+          "memberships",
+          "kernel.service.memberships.read",
+          "kernel.service.authorization.check",
+          "kernel.service.modules.read",
+          "kernel.service.organizations.read"
+        ]
+      }
+    },
+    {
+      "id": "no-client-secrets"
+    }
+  ],
+  "references": {
+    "good": {
+      "expect": "pass"
+    },
+    "bad": {
+      "expect": "fail",
+      "mustFail": [
+        "manifest-valid",
+        "no-client-secrets"
+      ]
+    }
+  }
+}
