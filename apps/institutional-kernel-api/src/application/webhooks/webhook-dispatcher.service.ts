@@ -13,6 +13,7 @@ import {
 
 import { PrismaService } from "../../infrastructure/prisma/prisma.service";
 import { AuditService } from "../audit/audit.service";
+import { effectiveServiceScopes } from "../governance/review-policy";
 import { CommandExecutorService } from "../shared/command-executor.service";
 import {
   MAPPED_INTERNAL_TYPES,
@@ -142,7 +143,14 @@ export class WebhookDispatcherService implements OnModuleInit, OnModuleDestroy {
             app: { status: DeveloperAppStatus.ACTIVE },
           },
           include: {
-            app: { select: { id: true, organizationId: true, scopes: true } },
+            app: {
+              select: {
+                id: true,
+                organizationId: true,
+                scopes: true,
+                approvedScopes: true,
+              },
+            },
           },
         });
         const deliveries: Prisma.WebhookDeliveryCreateManyInput[] = [];
@@ -177,7 +185,8 @@ export class WebhookDispatcherService implements OnModuleInit, OnModuleDestroy {
             for (const endpoint of interested) {
               const rendered = renderForApp(event, {
                 appId: endpoint.app.id,
-                scopes: endpoint.app.scopes,
+                // E11.1: events with personal data wait for the review.
+                scopes: effectiveServiceScopes(endpoint.app),
                 organizationIds: await tree(endpoint.app.organizationId),
               });
               if (!rendered) continue;

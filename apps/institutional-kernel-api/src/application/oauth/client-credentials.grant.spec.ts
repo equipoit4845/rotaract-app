@@ -68,3 +68,53 @@ describe("ClientCredentialsGrant", () => {
     expect(keys.sign).not.toHaveBeenCalled();
   });
 });
+
+describe("ClientCredentialsGrant — app in review (E11.1)", () => {
+  const inReview = { ...app, approvedScopes: [], approvedAt: null };
+
+  it("issues only the scopes without personal data", async () => {
+    const { grant: subject } = grant();
+    const response = await subject.issue(inReview, undefined);
+    expect(response.scope).toBe("kernel.service.organizations.read");
+  });
+
+  it("refuses a personal-data scope until the district approves it", async () => {
+    const { grant: subject } = grant();
+    const error = await subject
+      .issue(inReview, "kernel.service.persons.read")
+      .catch((e) => e);
+    expect(error).toBeInstanceOf(OAuthError);
+    expect(error.error).toBe("invalid_scope");
+    expect(error.description).toMatch(/review/);
+  });
+
+  it("refuses when nothing can be issued yet", async () => {
+    const { grant: subject } = grant();
+    const error = await subject
+      .issue(
+        {
+          ...inReview,
+          scopes: ["kernel.service.persons.read"],
+        },
+        undefined,
+      )
+      .catch((e) => e);
+    expect(error.error).toBe("invalid_scope");
+  });
+
+  it("issues approved scopes after a re-review is opened for new ones", async () => {
+    const { grant: subject } = grant();
+    const response = await subject.issue(
+      {
+        ...app,
+        scopes: [...app.scopes, "kernel.service.persons.contact.read"],
+        approvedScopes: app.scopes,
+        approvedAt: new Date(),
+      },
+      undefined,
+    );
+    expect(response.scope).toBe(
+      "kernel.service.organizations.read kernel.service.persons.read",
+    );
+  });
+});

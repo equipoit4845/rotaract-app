@@ -134,13 +134,14 @@ class MiRotaract(_ClientCore):
         token_refresh_skew: float = 60,
         http_client: httpx.Client | None = None,
         max_retries: int = 2,
+        max_retry_delay: float = 30.0,
         timeout: float = 30.0,
         sleep: Any = None,
     ):
         super().__init__(
             base_url, client_id, client_secret, scope, client_auth_method, token_endpoint, token_refresh_skew
         )
-        self._http = SyncHttp(HttpConfig(max_retries=max_retries, timeout=timeout), http_client, sleep)
+        self._http = SyncHttp(HttpConfig(max_retries=max_retries, max_retry_delay=max_retry_delay, timeout=timeout), http_client, sleep)
         self._lock = threading.Lock()
         self.clubs = Clubs(self)
         self.organizations = self.clubs
@@ -174,7 +175,7 @@ class MiRotaract(_ClientCore):
                 return token
             endpoint = self._token_endpoint or self.discovery()["token_endpoint"]
             form, headers = self._token_form()
-            self._token = token_set(self._http.request("POST", endpoint, form=form, headers=headers).data)
+            self._token = token_set(self._http.request("POST", endpoint, form=form, headers=headers, retry_on_rate_limit=True).data)
             return self._token.access_token
 
     def request(self, method: str, path: str, **kwargs: Any) -> Response:
@@ -341,13 +342,14 @@ class AsyncMiRotaract(_ClientCore):
         token_refresh_skew: float = 60,
         http_client: httpx.AsyncClient | None = None,
         max_retries: int = 2,
+        max_retry_delay: float = 30.0,
         timeout: float = 30.0,
         sleep: Any = None,
     ):
         super().__init__(
             base_url, client_id, client_secret, scope, client_auth_method, token_endpoint, token_refresh_skew
         )
-        self._http = AsyncHttp(HttpConfig(max_retries=max_retries, timeout=timeout), http_client, sleep)
+        self._http = AsyncHttp(HttpConfig(max_retries=max_retries, max_retry_delay=max_retry_delay, timeout=timeout), http_client, sleep)
         self._lock: asyncio.Lock | None = None
         self.clubs = AsyncClubs(self)
         self.organizations = self.clubs
@@ -382,7 +384,7 @@ class AsyncMiRotaract(_ClientCore):
                 return token
             endpoint = self._token_endpoint or (await self.discovery())["token_endpoint"]
             form, headers = self._token_form()
-            response = await self._http.request("POST", endpoint, form=form, headers=headers)
+            response = await self._http.request("POST", endpoint, form=form, headers=headers, retry_on_rate_limit=True)
             self._token = token_set(response.data)
             return self._token.access_token
 

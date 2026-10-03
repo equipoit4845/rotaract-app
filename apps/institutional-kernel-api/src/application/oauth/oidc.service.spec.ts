@@ -22,6 +22,12 @@ const app = {
   scopes: ["openid", "profile", "email", "kernel.service.persons.read"],
   redirectUris: [REDIRECT],
   organization: { name: "Club Centro" },
+  // E11: approved by the district (see the review tests below).
+  ownerPersonId: "person_owner",
+  reviewStatus: "APPROVED",
+  approvedScopes: ["openid", "profile", "email", "kernel.service.persons.read"],
+  approvedAt: new Date("2026-10-01T00:00:00Z"),
+  testAccountEmails: [],
 } as any;
 
 function setup(overrides: Record<string, any> = {}) {
@@ -417,6 +423,114 @@ describe("OidcService — code exchange", () => {
     await expect(
       oidc.exchangeCode(app, { code: "mrc_x" }),
     ).rejects.toMatchObject({ error: "invalid_request" });
+  });
+});
+
+describe("OidcService — app in review (E11.1)", () => {
+  const inReview = {
+    ...app,
+    reviewStatus: "IN_REVIEW",
+    approvedScopes: [],
+    approvedAt: null,
+    testAccountEmails: ["tester@example.test"],
+  };
+
+  it("keeps people who are not testers out, with a plain message", async () => {
+    const { oidc, prisma } = setup();
+    prisma.developerApp.findUnique.mockResolvedValue(inReview);
+    const error = await rejection(
+      oidc.authorizationContext("person_1", request),
+    );
+    expect(error).toBeInstanceOf(BadRequestException);
+    expect((error as Error).message).toMatch(/revisión del distrito/);
+    const denied = await rejection(
+      oidc.authorize(
+        { personId: "person_1", accountId: "acc_1" },
+        { ...request, decision: "approve" },
+      ),
+    );
+    expect(denied).toBeInstanceOf(BadRequestException);
+    expect(prisma.oAuthAuthorizationCode.create).not.toHaveBeenCalled();
+  });
+
+  it("lets the owner and the test accounts in", async () => {
+    const { oidc, prisma } = setup();
+    prisma.developerApp.findUnique.mockResolvedValue(inReview);
+    await expect(
+      oidc.authorizationContext("person_owner", request),
+    ).resolves.toMatchObject({ alreadyGranted: false });
+    prisma.userAccount.findUnique.mockResolvedValue({
+      status: "ACTIVE",
+      personId: "person_1",
+      email: "Tester@Example.test",
+    });
+    await expect(
+      oidc.authorizationContext("person_1", request),
+    ).resolves.toMatchObject({ alreadyGranted: false });
+  });
+
+  it("stops refreshing the session of someone who is no longer a tester", async () => {
+    const { oidc, prisma } = setup();
+    prisma.oAuthRefreshToken.findUnique.mockResolvedValue({
+      id: "rt_1",
+      appId: "app_1",
+      personId: "person_1",
+      accountId: "acc_1",
+      scopes: ["openid", "profile"],
+      authTime: new Date(),
+      expiresAt: new Date(Date.now() + 60_000),
+      revokedAt: null,
+      replacedById: null,
+    });
+    prisma.oAuthConsent.findUnique.mockResolvedValue({ revokedAt: null });
+    const error = await rejection(
+      oidc.refresh(inReview, { refreshToken: "mrr_old" }),
+    );
+    expect(error).toBeInstanceOf(OAuthError);
+    expect((error as OAuthError).error).toBe("invalid_grant");
+  });
+});
+
+describe("OidcService — access history (E11.2)", () => {
+  it("records consent, sign-in and revocation for the person", async () => {
+    const { oidc, prisma } = setup();
+    const history = { record: jest.fn() };
+    const audit = { record: jest.fn() };
+    Object.assign(oidc, { history, audit });
+    prisma.oAuthConsent.findUnique.mockResolvedValue({
+      scopes: ["openid"],
+      revokedAt: null,
+    });
+    await oidc.authorize(
+      { personId: "person_1", accountId: "acc_1" },
+      { ...request, decision: "approve" },
+    );
+    expect(history.record).toHaveBeenCalledWith({
+      personId: "person_1",
+      appId: "app_1",
+      kind: "CONSENT_GRANTED",
+      details: ["profile"],
+    });
+
+    prisma.developerApp.findUnique.mockResolvedValue({
+      organizationId: "club_1",
+    });
+    await oidc.revokeConsent("person_1", "app_1", {
+      actor: { type: "USER", id: "person_1" },
+    } as any);
+    expect(history.record).toHaveBeenLastCalledWith({
+      personId: "person_1",
+      appId: "app_1",
+      kind: "CONSENT_REVOKED",
+    });
+    expect(audit.record).toHaveBeenCalledWith(
+      prisma,
+      expect.anything(),
+      "revokeOAuthConsent",
+      "DeveloperApp",
+      "app_1",
+      "club_1",
+    );
   });
 });
 

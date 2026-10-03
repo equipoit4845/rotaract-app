@@ -43,6 +43,12 @@ contratos públicos son [`kernel-openapi.yaml`](../kernel-openapi.yaml),
   por tarea para Claude Code, Cursor, Copilot y AGENTS.md, `@mirotaract/mcp`,
   `dist/llms/`, evals con graders y gate de publicación. Guía para
   desarrolladores: [developers/ia.md](developers/ia.md).
+- [Gobierno y protección de datos](18-data-governance.md): revisión de
+  apps por el RDR con lista de control, historial de accesos de cada socio
+  y quitar el acceso, límites por app (429 + `Retry-After` + `RateLimit`) y
+  catálogo de apps del distrito en el panel. Guías:
+  [developers/revision-de-apps.md](developers/revision-de-apps.md) y
+  [developers/limites.md](developers/limites.md).
 - [Validación v1 del Design System](design-system-v1-validation.md):
   veredicto por área con comandos y resultados reales — no afirmaciones sin
   evidencia.

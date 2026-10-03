@@ -26,6 +26,7 @@ export {
   MiRotaractApiError,
   MiRotaractOAuthError,
   MiRotaractConfigError,
+  MiRotaractRateLimitError,
   type ProblemDetails,
 } from "./errors.ts";
 export {

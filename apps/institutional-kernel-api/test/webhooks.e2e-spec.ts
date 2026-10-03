@@ -12,6 +12,7 @@ import { WebhookDispatcherService } from "../src/application/webhooks/webhook-di
 import { verifyWebhookSignature } from "../src/application/webhooks/signing";
 import {
   activateForTests,
+  approveForTests,
   createTestApp,
   e2eTag,
   grantRoleForTests,
@@ -299,6 +300,8 @@ describe("Webhooks E2E (E7)", () => {
     appId = created.body.app.id;
     clientId = created.body.app.clientId;
     clientSecret = created.body.clientSecret;
+    // E11: approved by the district, so events with personal data flow.
+    await approveForTests(prisma, appId);
   });
 
   afterAll(async () => {

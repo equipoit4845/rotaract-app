@@ -67,6 +67,9 @@ const permissionCodes = [
   // govern the apps committees build on top of the Kernel.
   "kernel.app.read",
   "kernel.app.manage",
+  // E11 (docs/18-data-governance.md): review apps before production, set
+  // their quotas and publish them in the members' panel.
+  "kernel.app.review",
 ];
 const roles = [
   "PLATFORM_USER",
@@ -149,6 +152,7 @@ const rolePermissions: Record<string, string[]> = {
     "kernel.audit.read",
     "kernel.app.read",
     "kernel.app.manage",
+    "kernel.app.review",
   ],
   DISTRICT_SECRETARY: [
     ...selfServicePermissions,

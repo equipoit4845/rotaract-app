@@ -2,6 +2,7 @@ import type {
   AccountInvitation,
   ApplicationStatus,
   AppointmentStatus,
+  DeveloperAppReviewStatus,
   DeveloperAppStatus,
   InstallationStatus,
   MembershipStatus,
@@ -88,6 +89,12 @@ const catalog = {
     SUSPENDED: { label: "Pausada", tone: "warning" },
     REVOKED: { label: "Revocada", tone: "danger" },
   } satisfies Record<DeveloperAppStatus, StatusEntry>,
+  // E11: the district's review of an app before production.
+  developerAppReview: {
+    IN_REVIEW: { label: "En revisión", tone: "info" },
+    APPROVED: { label: "Aprobada", tone: "success" },
+    REJECTED: { label: "Con cambios pedidos", tone: "danger" },
+  } satisfies Record<DeveloperAppReviewStatus, StatusEntry>,
   // E8: a module in a club. "Desactivado" is reversible; "Desinstalado" too
   // (it can be installed again), so neither reads as a negative outcome.
   moduleInstallation: {

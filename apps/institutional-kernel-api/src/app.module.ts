@@ -54,6 +54,15 @@ import { RequestLogsService } from "./application/request-logs/request-logs.serv
 import { RequestLogsController } from "./interfaces/http/request-logs.controller";
 import { RequestLogMiddleware } from "./interfaces/http/request-log.middleware";
 import { DeprecationMiddleware } from "./interfaces/http/deprecation.middleware";
+// --- E11 — data governance (docs/18-data-governance.md)
+import { AppReviewService } from "./application/governance/app-review.service";
+import { AppQuotaService } from "./application/governance/app-quota.service";
+import { AccessHistoryWriter } from "./application/governance/access-history.writer";
+import { AccessHistoryService } from "./application/governance/access-history.service";
+import { AppCatalogService } from "./application/governance/app-catalog.service";
+import { AppGovernanceController } from "./interfaces/http/app-governance.controller";
+import { MeController } from "./interfaces/http/me.controller";
+// --- end E11
 
 @Module({
   imports: [
@@ -88,6 +97,10 @@ import { DeprecationMiddleware } from "./interfaces/http/deprecation.middleware"
     EventsController,
     // E9
     RequestLogsController,
+    // --- E11
+    AppGovernanceController,
+    MeController,
+    // --- end E11
   ],
   providers: [
     HealthService,
@@ -118,6 +131,13 @@ import { DeprecationMiddleware } from "./interfaces/http/deprecation.middleware"
     // E9
     RequestLogWriter,
     RequestLogsService,
+    // --- E11
+    AppReviewService,
+    AppQuotaService,
+    AccessHistoryWriter,
+    AccessHistoryService,
+    AppCatalogService,
+    // --- end E11
     { provide: APP_INTERCEPTOR, useClass: OpenApiValidationInterceptor },
     // Order matters: rate limiting runs before authentication, so floods are
     // rejected before any token verification or database work.

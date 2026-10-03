@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  Optional,
 } from "@nestjs/common";
 import {
   AccountStatus,
@@ -10,6 +11,7 @@ import {
   type Organization,
 } from "@prisma/client";
 
+import type { CommandContext } from "../../domain/shared/command-context";
 import { SigningKeyService } from "../../infrastructure/crypto/signing-key.service";
 import { PrismaService } from "../../infrastructure/prisma/prisma.service";
 import {
@@ -17,6 +19,13 @@ import {
   pkceS256,
   sha256,
 } from "../developer-apps/credentials";
+import { AuditService } from "../audit/audit.service";
+// E11 (docs/18-data-governance.md): review limits and access history.
+import { AccessHistoryWriter } from "../governance/access-history.writer";
+import {
+  IN_REVIEW_SIGN_IN_MESSAGE,
+  maySignIn,
+} from "../governance/review-policy";
 import { buildClaims } from "./claims";
 import type { TokenResponse } from "./client-credentials.grant";
 import { OAuthError } from "./oauth-error";
@@ -71,6 +80,8 @@ export class OidcService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly keys: SigningKeyService,
+    @Optional() private readonly history?: AccessHistoryWriter,
+    @Optional() private readonly audit?: AuditService,
   ) {}
 
   async authorizationContext(
@@ -90,6 +101,7 @@ export class OidcService {
     const { app, scopes } = await this.validate(request, {
       checkResponseType: true,
     });
+    await this.assertMaySignIn(app, personId, scopes);
     const consent = await this.prisma.oAuthConsent.findUnique({
       where: { personId_appId: { personId, appId: app.id } },
     });
@@ -114,6 +126,7 @@ export class OidcService {
     const { app, scopes } = await this.validate(request, {
       checkResponseType: false,
     });
+    await this.assertMaySignIn(app, user.personId, scopes);
     const redirect = new URL(request.redirectUri);
     const withState = () => {
       if (request.state) redirect.searchParams.set("state", request.state);
@@ -127,6 +140,7 @@ export class OidcService {
 
     const now = new Date();
     const { token: code, hash } = newOpaqueToken("mrc_", 32);
+    let newlyGranted: string[] = [];
     await this.prisma.$transaction(async (tx) => {
       const existing = await tx.oAuthConsent.findUnique({
         where: { personId_appId: { personId: user.personId, appId: app.id } },
@@ -135,6 +149,7 @@ export class OidcService {
       // back scopes the person took away.
       const previous = existing && !existing.revokedAt ? existing.scopes : [];
       const union = [...new Set([...previous, ...scopes])];
+      newlyGranted = union.filter((scope) => !previous.includes(scope));
       await tx.oAuthConsent.upsert({
         where: { personId_appId: { personId: user.personId, appId: app.id } },
         create: { personId: user.personId, appId: app.id, scopes: union },
@@ -162,6 +177,14 @@ export class OidcService {
         },
       });
     });
+    // E11.2: the person's history shows when they let the app in.
+    if (newlyGranted.length)
+      this.history?.record({
+        personId: user.personId,
+        appId: app.id,
+        kind: "CONSENT_GRANTED",
+        details: newlyGranted,
+      });
     redirect.searchParams.set("code", code);
     return withState();
   }
@@ -202,13 +225,20 @@ export class OidcService {
 
     await this.assertAccountActive(code.accountId, code.personId);
     await this.assertConsent(code.personId, app.id);
-    return this.issueTokens(app, {
+    const tokens = await this.issueTokens(app, {
       personId: code.personId,
       accountId: code.accountId,
       scopes: code.scopes,
       authTime: code.authTime,
       nonce: code.nonce,
     });
+    this.history?.record({
+      personId: code.personId,
+      appId: app.id,
+      kind: "SIGN_IN",
+      details: code.scopes,
+    });
+    return tokens;
   }
 
   /** grant_type=refresh_token, with rotation and reuse detection. */
@@ -243,6 +273,10 @@ export class OidcService {
       );
     await this.assertConsent(current.personId, app.id);
     await this.assertAccountActive(current.accountId, current.personId);
+    // E11.1: while scopes are in review, only the owner and the test
+    // accounts keep a session (e.g. a tester removed from the list).
+    if (!(await this.personMaySignIn(app, current.personId, requested)))
+      throw new OAuthError("invalid_grant", "The app is in review");
 
     const now = new Date();
     const next = newOpaqueToken("mrr_", 48);
@@ -272,7 +306,7 @@ export class OidcService {
       throw invalid();
     }
 
-    return this.issueTokens(
+    const tokens = await this.issueTokens(
       app,
       {
         personId: current.personId,
@@ -282,6 +316,13 @@ export class OidcService {
       },
       next.token,
     );
+    this.history?.record({
+      personId: current.personId,
+      appId: app.id,
+      kind: "TOKEN_REFRESH",
+      details: requested,
+    });
+    return tokens;
   }
 
   /** RFC 7009: silently succeeds for unknown tokens. */
@@ -351,7 +392,11 @@ export class OidcService {
     }));
   }
 
-  async revokeConsent(personId: string, appId: string): Promise<void> {
+  async revokeConsent(
+    personId: string,
+    appId: string,
+    context?: CommandContext,
+  ): Promise<void> {
     const now = new Date();
     await this.prisma.$transaction(async (tx) => {
       const revoked = await tx.oAuthConsent.updateMany({
@@ -364,7 +409,24 @@ export class OidcService {
         where: { personId, appId, revokedAt: null },
         data: { revokedAt: now },
       });
+      // E11.2: who took access away from which app, in the audit log
+      // (the person's own history gets a row too).
+      if (context && this.audit) {
+        const app = await tx.developerApp.findUnique({
+          where: { id: appId },
+          select: { organizationId: true },
+        });
+        await this.audit.record(
+          tx,
+          context,
+          "revokeOAuthConsent",
+          "DeveloperApp",
+          appId,
+          app?.organizationId,
+        );
+      }
     });
+    this.history?.record({ personId, appId, kind: "CONSENT_REVOKED" });
   }
 
   /**
@@ -504,6 +566,38 @@ export class OidcService {
     });
     if (!consent || consent.revokedAt)
       throw new OAuthError("invalid_grant", "Access was revoked");
+  }
+
+  /** E11.1 — see review-policy.ts `maySignIn`. */
+  private async personMaySignIn(
+    app: DeveloperApp,
+    personId: string,
+    scopes: string[],
+  ): Promise<boolean> {
+    if (scopes.every((scope) => (app.approvedScopes ?? []).includes(scope)))
+      return true;
+    const account = await this.prisma.userAccount.findUnique({
+      where: { personId },
+      select: { email: true },
+    });
+    return maySignIn(
+      {
+        ...app,
+        approvedScopes: app.approvedScopes ?? [],
+        testAccountEmails: app.testAccountEmails ?? [],
+      },
+      { personId, email: account?.email },
+      scopes,
+    );
+  }
+
+  private async assertMaySignIn(
+    app: DeveloperApp,
+    personId: string,
+    scopes: string[],
+  ): Promise<void> {
+    if (!(await this.personMaySignIn(app, personId, scopes)))
+      throw new BadRequestException(IN_REVIEW_SIGN_IN_MESSAGE);
   }
 
   private async revokeRefreshTokens(

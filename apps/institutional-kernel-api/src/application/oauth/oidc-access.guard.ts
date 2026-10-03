@@ -1,9 +1,18 @@
-import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  Optional,
+} from "@nestjs/common";
 import { AccountStatus, DeveloperAppStatus } from "@prisma/client";
 import type { Request } from "express";
 
 import { SigningKeyService } from "../../infrastructure/crypto/signing-key.service";
 import { PrismaService } from "../../infrastructure/prisma/prisma.service";
+import {
+  AppQuotaService,
+  type QuotaApp,
+} from "../governance/app-quota.service";
 import { OAuthError } from "./oauth-error";
 import { KERNEL_AUDIENCE, isOidcScope, parseScope } from "./scopes";
 
@@ -29,6 +38,7 @@ export class OidcAccessGuard implements CanActivate {
   constructor(
     private readonly keys: SigningKeyService,
     private readonly prisma: PrismaService,
+    @Optional() private readonly quotas?: AppQuotaService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -36,13 +46,16 @@ export class OidcAccessGuard implements CanActivate {
     const access = await this.resolve(request);
     // ProblemFilter renders OAuthError as RFC 6750 (401 + WWW-Authenticate).
     if (!access) throw new OAuthError("invalid_token");
-    request.oidc = access;
+    const { quotaApp, ...oidc } = access;
+    request.oidc = oidc;
+    // E11.3: userinfo calls count against the app's quota.
+    await this.quotas?.consume(quotaApp, context.switchToHttp().getResponse());
     return true;
   }
 
   private async resolve(
     request: Request,
-  ): Promise<OidcAccessRequest["oidc"] | undefined> {
+  ): Promise<(OidcAccessRequest["oidc"] & { quotaApp: QuotaApp }) | undefined> {
     const token = request.headers.authorization?.match(/^Bearer\s+(.+)$/i)?.[1];
     if (!token) return undefined;
     let payload: UserAccessToken;
@@ -62,7 +75,13 @@ export class OidcAccessGuard implements CanActivate {
 
     const app = await this.prisma.developerApp.findUnique({
       where: { clientId: payload.client_id },
-      select: { id: true, status: true },
+      select: {
+        id: true,
+        status: true,
+        quotaPerMinute: true,
+        quotaPerDay: true,
+        approvedAt: true,
+      },
     });
     if (!app || app.status !== DeveloperAppStatus.ACTIVE) return undefined;
     const [consent, account] = await Promise.all([
@@ -88,6 +107,12 @@ export class OidcAccessGuard implements CanActivate {
       appId: app.id,
       clientId: payload.client_id,
       scopes,
+      quotaApp: {
+        clientId: payload.client_id,
+        quotaPerMinute: app.quotaPerMinute,
+        quotaPerDay: app.quotaPerDay,
+        approvedAt: app.approvedAt,
+      },
     };
   }
 }

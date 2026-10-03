@@ -188,6 +188,23 @@ async function main() {
   const confidentialId = newClientId();
   const secret = `mrs_${randomBytes(32).toString("base64url")}`;
   const oidcScopes = ["openid", "profile", "email", "memberships", "positions"];
+  // E11: apps registered here stand for apps the district already approved
+  // (new apps start IN_REVIEW).
+  const approved = (scopes) => ({
+    reviewStatus: "APPROVED",
+    approvedScopes: scopes,
+    approvedAt: new Date(),
+    reviewedAt: new Date(),
+  });
+  const confidentialScopes = [
+    ...oidcScopes,
+    "kernel.service.persons.read",
+    "kernel.service.organizations.read",
+    "kernel.service.memberships.read",
+    "kernel.service.authorities.read",
+    "kernel.service.periods.read",
+    "kernel.service.authorization.check",
+  ];
   const confidential = await prisma.developerApp.create({
     data: {
       clientId: confidentialId,
@@ -196,16 +213,9 @@ async function main() {
       organizationId: clubA,
       ownerPersonId: superadmin.personId,
       grantTypes: ["client_credentials", "authorization_code", "refresh_token"],
-      scopes: [
-        ...oidcScopes,
-        "kernel.service.persons.read",
-        "kernel.service.organizations.read",
-        "kernel.service.memberships.read",
-        "kernel.service.authorities.read",
-        "kernel.service.periods.read",
-        "kernel.service.authorization.check",
-      ],
+      scopes: confidentialScopes,
       redirectUris: [REDIRECT],
+      ...approved(confidentialScopes),
     },
   });
   await prisma.developerAppSecret.create({
@@ -226,8 +236,47 @@ async function main() {
       grantTypes: ["authorization_code", "refresh_token"],
       scopes: oidcScopes,
       redirectUris: [REDIRECT],
+      ...approved(oidcScopes),
     },
   });
+
+  // E11: a server app with a tiny quota (quota.*) and one still in review
+  // (review.*), each with its own secret.
+  const serverApp = async (name, scopes, extra) => {
+    const clientId = newClientId();
+    const appSecret = `mrs_${randomBytes(32).toString("base64url")}`;
+    const created = await prisma.developerApp.create({
+      data: {
+        clientId,
+        name: `${name} ${tag}`,
+        type: "CONFIDENTIAL",
+        organizationId: clubA,
+        ownerPersonId: superadmin.personId,
+        grantTypes: ["client_credentials"],
+        scopes,
+        redirectUris: [],
+        ...extra,
+      },
+    });
+    await prisma.developerAppSecret.create({
+      data: {
+        appId: created.id,
+        secretHash: await argon2.hash(appSecret, { type: argon2.argon2id }),
+        hint: appSecret.slice(-4),
+      },
+    });
+    return { clientId, secret: appSecret };
+  };
+  const quotaScopes = ["kernel.service.organizations.read"];
+  const quotaApp = await serverApp("Conformance quota", quotaScopes, {
+    ...approved(quotaScopes),
+    quotaPerMinute: 3,
+  });
+  const reviewApp = await serverApp(
+    "Conformance review",
+    ["kernel.service.organizations.read", "kernel.service.persons.read"],
+    {},
+  );
 
   const env = {
     MR_BASE_URL: BASE,
@@ -240,6 +289,10 @@ async function main() {
     MR_OUTSIDER_PERSON_ID: outsider.id,
     MR_PUBLIC_CLIENT_ID: publicId,
     MR_REDIRECT_URI: REDIRECT,
+    MR_QUOTA_CLIENT_ID: quotaApp.clientId,
+    MR_QUOTA_CLIENT_SECRET: quotaApp.secret,
+    MR_REVIEW_CLIENT_ID: reviewApp.clientId,
+    MR_REVIEW_CLIENT_SECRET: reviewApp.secret,
     // Platform session token (10 min): drives /oauth/authorize like the Web.
     MR_USER_ACCESS_TOKEN: await member.login(),
     MR_USER_EMAIL: member.email,

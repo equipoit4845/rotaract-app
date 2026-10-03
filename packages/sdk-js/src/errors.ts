@@ -61,6 +61,36 @@ export class MiRotaractApiError extends MiRotaractError {
   }
 }
 
+/**
+ * 429: the app used up its quota (`code` `KERNEL_RATE_LIMITED`) or the
+ * Kernel's per-IP limit. The SDK already retried what it safely could,
+ * honoring `Retry-After`; this is what is left.
+ */
+export class MiRotaractRateLimitError extends MiRotaractApiError {
+  /** Seconds the Kernel asked to wait (`Retry-After`), when it said. */
+  readonly retryAfter: number | undefined;
+  /** Raw `RateLimit-Policy` header, e.g. `"minute";q=100;w=60, "day";q=20000;w=86400`. */
+  readonly rateLimitPolicy: string | undefined;
+  /** Raw `RateLimit` header, e.g. `"minute";r=0;t=21, "day";r=19500;t=40210`. */
+  readonly rateLimit: string | undefined;
+
+  constructor(
+    problem: ProblemDetails | undefined,
+    body: unknown,
+    info: {
+      retryAfter?: number;
+      rateLimitPolicy?: string;
+      rateLimit?: string;
+    } = {},
+  ) {
+    super(429, { code: "KERNEL_RATE_LIMITED", ...problem }, body);
+    this.name = "MiRotaractRateLimitError";
+    this.retryAfter = info.retryAfter;
+    this.rateLimitPolicy = info.rateLimitPolicy;
+    this.rateLimit = info.rateLimit;
+  }
+}
+
 export class MiRotaractOAuthError extends MiRotaractError {
   /** RFC 6749 error code, e.g. `invalid_client`, `invalid_grant`, `invalid_token`. */
   readonly error: string;

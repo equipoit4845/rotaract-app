@@ -38,6 +38,9 @@ import {
   formatDate,
 } from "../utils/app-catalog";
 import { AppNavigationContext } from "../utils/app-navigation";
+// E11: the district's review and the app's quota.
+import { AppReviewCard } from "@/features/governance/components/app-review-card";
+import { QuotaPanel } from "@/features/governance/components/quota-panel";
 import { useMemo, useState } from "react";
 
 function PlainList({ items }: { items: string[] }) {
@@ -77,6 +80,12 @@ export function DeveloperAppDetailContainer({ appId }: { appId: string }) {
       ? { scopeType: "ORGANIZATION", scopeId: app.organizationId }
       : undefined,
   );
+  const canReview = useCan(
+    "kernel.app.review",
+    app
+      ? { scopeType: "ORGANIZATION", scopeId: app.organizationId }
+      : undefined,
+  );
 
   if (query.isLoading) {
     return (
@@ -102,7 +111,17 @@ export function DeveloperAppDetailContainer({ appId }: { appId: string }) {
           { label: "Apps", href: "/developer/apps" },
           { label: app.name },
         ]}
-        badges={<StatusBadge kind="developerApp" status={app.status} />}
+        badges={
+          <>
+            <StatusBadge kind="developerApp" status={app.status} />
+            {app.reviewStatus ? (
+              <StatusBadge
+                kind="developerAppReview"
+                status={app.reviewStatus}
+              />
+            ) : null}
+          </>
+        }
         actions={canManage ? <AppStatusActions app={app} /> : undefined}
       />
 
@@ -112,7 +131,11 @@ export function DeveloperAppDetailContainer({ appId }: { appId: string }) {
             <TabsTrigger value="summary">Resumen</TabsTrigger>
             <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
             <TabsTrigger value="logs">Registros</TabsTrigger>
+            <TabsTrigger value="quota">Límites</TabsTrigger>
           </TabsList>
+          <TabsContent value="quota" className="mt-4">
+            <QuotaPanel app={app} canReview={canReview} />
+          </TabsContent>
           <TabsContent value="webhooks" className="mt-4">
             <WebhooksPanel app={app} canManage={canManage} />
           </TabsContent>
@@ -184,6 +207,12 @@ export function DeveloperAppDetailContainer({ appId }: { appId: string }) {
                   </DetailGrid>
                 </CardContent>
               </Card>
+
+              <AppReviewCard
+                app={app}
+                canManage={canManage}
+                canReview={canReview}
+              />
 
               {app.type === "CONFIDENTIAL" ? (
                 <AppSecretsCard app={app} canManage={canManage} />

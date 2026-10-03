@@ -59,8 +59,14 @@ RDR:
 6. **Direcciones de regreso** (redirect URIs), si las personas van a
    ingresar con Mi Rotaract.
 
+7. **Propósito, política de privacidad y contacto**: el RDR los revisa
+   antes de habilitar la app para todo el distrito
+   ([revision-de-apps.md](revision-de-apps.md)).
+
 El RDR te entrega el `client_id` y, si la app es de servidor, el secreto. El
 paso a paso de la consola está en [registrar-una-app.md](registrar-una-app.md).
+Una app nueva arranca **en revisión**: la podés probar con tu cuenta y con
+cuentas de prueba hasta que el RDR la apruebe.
 
 ### Tu primera llamada
 
@@ -102,6 +108,8 @@ tipos (`mirotaract gen types`) y reenvía webhooks a tu servidor local
 | [cli.md](cli.md) | CLI `mirotaract`: plantillas (Next.js, FastAPI, Flutter), kernel local con datos sintéticos, tipos y webhooks en local. |
 | [conceptos.md](conceptos.md) | Organizaciones, personas, membresías, períodos, cargos; apps, tipos, alcance, scopes y consentimiento. |
 | [registrar-una-app.md](registrar-una-app.md) | Para el RDR: alta de una app en la consola, secretos, rotación, pausa y revocación. |
+| [revision-de-apps.md](revision-de-apps.md) | La revisión del distrito antes de producción: lista de control, qué se limita mientras tanto, cuentas de prueba, y publicar tu app en el panel de Mi Rotaract. |
+| [limites.md](limites.md) | Límites de uso por app (por minuto y por día), cabeceras `RateLimit`, 429 con `Retry-After` y cómo reintentan los SDKs. |
 | [autenticacion-servidor.md](autenticacion-servidor.md) | `client_credentials`: pedir, verificar y cachear el token de servicio. |
 | [ingresar-con-mi-rotaract.md](ingresar-con-mi-rotaract.md) | Inicio de sesión con OIDC + PKCE, `id_token`, userinfo, refresh y revocación. |
 | [api-de-datos.md](api-de-datos.md) | Referencia de los endpoints `/service/*`: paginación, sincronización incremental, ETag. |
@@ -130,6 +138,7 @@ tipos (`mirotaract gen types`) y reenvía webhooks a tu servidor local
 | Contrato OpenAPI | `kernel-openapi.yaml`, tags `OAuth`, `DeveloperApps`, `Service`, `Webhooks` y `Events` |
 | Portal para desarrolladores (guías, referencia, "Probar") | `https://developers.rotaract4845.com` ([diseño](../16-developer-portal.md)) |
 | Registros de requests de tu app | Consola de apps → tu app → **Registros** (30 días; `GET /developer/apps/{appId}/request-logs`) |
+| Revisión y límites de tu app | Consola de apps → tu app → **Resumen** y **Límites** ([revision-de-apps.md](revision-de-apps.md), [limites.md](limites.md)) |
 
 ## SDKs oficiales
 

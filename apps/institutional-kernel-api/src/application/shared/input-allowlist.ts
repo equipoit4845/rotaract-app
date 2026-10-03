@@ -108,9 +108,24 @@ export const INPUT_FIELDS = {
     "organizationId",
     "grantTypes",
     "scopes",
+    // E11.1
+    "purpose",
+    "privacyPolicyUrl",
+    "contactEmail",
+    "testAccountEmails",
     "redirectUris",
   ],
-  updateDeveloperApp: ["name", "description", "scopes", "redirectUris"],
+  updateDeveloperApp: [
+    "name",
+    "description",
+    "scopes",
+    "redirectUris",
+    // E11.1: what the RDR checks before approving
+    "purpose",
+    "privacyPolicyUrl",
+    "contactEmail",
+    "testAccountEmails",
+  ],
   createWebhookEndpoint: ["url", "eventTypes", "description"],
   updateWebhookEndpoint: ["url", "eventTypes", "description", "status"],
 } as const;

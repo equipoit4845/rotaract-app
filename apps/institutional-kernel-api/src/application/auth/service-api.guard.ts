@@ -3,6 +3,7 @@ import {
   ExecutionContext,
   ForbiddenException,
   Injectable,
+  Optional,
   UnauthorizedException,
 } from "@nestjs/common";
 import { DeveloperAppStatus } from "@prisma/client";
@@ -11,6 +12,10 @@ import type { Request } from "express";
 import { SigningKeyService } from "../../infrastructure/crypto/signing-key.service";
 import { PrismaService } from "../../infrastructure/prisma/prisma.service";
 import { KERNEL_AUDIENCE } from "../oauth/scopes";
+import {
+  AppQuotaService,
+  type QuotaApp,
+} from "../governance/app-quota.service";
 
 /**
  * Who is calling /service/* and what it may see. `organizationId` /
@@ -26,7 +31,11 @@ export type ServiceIdentity = {
   allowedOrganizationIds?: string[];
 };
 
-export type ServiceRequest = Request & { service: ServiceIdentity };
+export type ServiceRequest = Request & {
+  service: ServiceIdentity;
+  /** E11.3: the app behind the token, for its quota. */
+  serviceQuotaApp?: QuotaApp;
+};
 
 // §14.3/§9.12: every /service/* route requires a technical scope on top of
 // the aud:institutional-kernel identity check. "*" (granted to the
@@ -74,13 +83,27 @@ export class ServiceApiGuard implements CanActivate {
   constructor(
     private readonly prisma: PrismaService,
     private readonly keys: SigningKeyService,
+    @Optional() private readonly quotas?: AppQuotaService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<ServiceRequest>();
     const token = request.headers.authorization?.match(/^Bearer\s+(.+)$/i)?.[1];
-    if (token) request.service = await this.fromToken(token);
-    else {
+    if (token) {
+      const { identity, quotaApp } = await this.fromToken(token);
+      request.service = identity;
+      // E11.3: every request of the app counts against its quota (429 +
+      // Retry-After when it runs out), before any data is read. This guard
+      // runs twice on /service/* (global KernelAccessGuard + @UseGuards):
+      // count once.
+      if (!request.serviceQuotaApp) {
+        request.serviceQuotaApp = quotaApp;
+        await this.quotas?.consume(
+          quotaApp,
+          context.switchToHttp().getResponse(),
+        );
+      }
+    } else {
       // Development-only compatibility for local compose. Never honored in
       // production, regardless of whether the env var happens to be set,
       // so it can't become a silent bypass in a misconfigured deployment.
@@ -113,7 +136,9 @@ export class ServiceApiGuard implements CanActivate {
     return true;
   }
 
-  private async fromToken(token: string): Promise<ServiceIdentity> {
+  private async fromToken(
+    token: string,
+  ): Promise<{ identity: ServiceIdentity; quotaApp: QuotaApp }> {
     let payload: ServiceTokenPayload;
     try {
       payload = await this.keys.verify<ServiceTokenPayload>(token, {
@@ -133,7 +158,13 @@ export class ServiceApiGuard implements CanActivate {
     // tokens immediately, not when they expire.
     const app = await this.prisma.developerApp.findUnique({
       where: { clientId: payload.client_id },
-      select: { status: true, organizationId: true },
+      select: {
+        status: true,
+        organizationId: true,
+        quotaPerMinute: true,
+        quotaPerDay: true,
+        approvedAt: true,
+      },
     });
     if (
       !app ||
@@ -142,11 +173,20 @@ export class ServiceApiGuard implements CanActivate {
     )
       throw new UnauthorizedException("Service app is not active");
     return {
-      id: payload.sub,
-      clientId: payload.client_id,
-      scopes: typeof payload.scope === "string" ? payload.scope.split(" ") : [],
-      organizationId: payload.org,
-      allowedOrganizationIds: await this.organizationTree(payload.org),
+      identity: {
+        id: payload.sub,
+        clientId: payload.client_id,
+        scopes:
+          typeof payload.scope === "string" ? payload.scope.split(" ") : [],
+        organizationId: payload.org,
+        allowedOrganizationIds: await this.organizationTree(payload.org),
+      },
+      quotaApp: {
+        clientId: payload.client_id,
+        quotaPerMinute: app.quotaPerMinute,
+        quotaPerDay: app.quotaPerDay,
+        approvedAt: app.approvedAt,
+      },
     };
   }
 

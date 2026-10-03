@@ -16,6 +16,42 @@ las personas responsables de cada app activa reciben el aviso por email.
 > código tiene que ignorar los campos que no conoce. El contrato es
 > `kernel-openapi.yaml` (versión en `info.version`).
 
+<!-- entry: e11-gobierno -->
+## 2026-10-05 · Revisión de apps, historial de accesos, límites por app y apps en el panel (E11)
+
+**Tipo:** nuevo · **Compatibilidad:** sin cambios que rompan para las apps existentes
+
+- **Revisión del distrito.** Toda app nueva arranca **en revisión**
+  (`reviewStatus: IN_REVIEW`): solo su responsable y sus cuentas de prueba
+  (`testAccountEmails`) pueden ingresar con Mi Rotaract, y su token de
+  servicio solo trae datos que no son personales. El RDR la aprueba con una
+  lista de control (propósito, datos, responsable, política de privacidad,
+  contacto) o la rechaza con un motivo. Las apps que ya existían quedaron
+  aprobadas. Campos nuevos en `DeveloperApp`: `reviewStatus`,
+  `approvedScopes`, `approvedAt`, `reviewedAt`, `purpose`,
+  `privacyPolicyUrl`, `contactEmail`, `testAccountEmails`, `quotaPerMinute`,
+  `quotaPerDay`. Endpoints: `GET /developer/app-reviews`,
+  `POST /developer/apps/{appId}/review`, `POST .../review-request`,
+  `GET .../reviews`. Guía: [revision-de-apps.md](revision-de-apps.md).
+- **Pedir un dato nuevo reabre la revisión** solo para ese dato: lo ya
+  aprobado sigue funcionando.
+- **Límites por app** por minuto y por día (100/20 000 aprobadas, 20/1 000
+  en revisión). Toda respuesta trae `RateLimit-Policy` y `RateLimit`; al
+  pasarse, **429** con `code: KERNEL_RATE_LIMITED` y `Retry-After`.
+  `GET/PUT /developer/apps/{appId}/quota`. Guía: [limites.md](limites.md).
+- **SDKs:** `MiRotaractRateLimitError` (JS y Python, subclase de
+  `MiRotaractApiError`) con `retryAfter`/`retry_after` y las cabeceras
+  `RateLimit`; el pedido del token reintenta ante 429; Python suma
+  `max_retry_delay`.
+- **Historial de accesos para cada socio:** `GET /me/app-access` y
+  `GET /me/app-access/{appId}` (12 meses). En Mi Rotaract, **Apps
+  conectadas** muestra el historial y permite quitar el acceso.
+- **Apps del distrito en el panel:** el RDR publica apps aprobadas para
+  todo el distrito, presidencias, autoridades o cargos puntuales
+  (`PUT /developer/apps/{appId}/listing`, `GET /developer/app-catalog`);
+  cada persona ve las suyas en `GET /me/apps` y en las tarjetas
+  **Aplicaciones** de su inicio.
+
 <!-- entry: npm-publish -->
 ## 2026-10-03 · SDKs y herramientas publicados en npm y PyPI (MIT)
 

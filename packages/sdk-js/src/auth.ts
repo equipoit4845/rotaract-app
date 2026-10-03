@@ -115,6 +115,9 @@ export async function requestToken(
     url: tokenEndpoint,
     headers,
     form,
+    // The Kernel counts the app's quota before handling the grant, so a
+    // 429 never consumed a code or rotated a refresh token.
+    retryOnRateLimit: true,
   });
   return toTokenSet(data);
 }

@@ -47,6 +47,9 @@ class _Prepared:
     headers: dict[str, str] = field(default_factory=dict)
     content: bytes | None = None
     retryable: bool = False
+    # Non-idempotent request that may be retried on 429 only (the token
+    # endpoint: the Kernel counts the quota before handling the grant).
+    retry_on_rate_limit: bool = False
 
 
 def _query_value(value: Any) -> str:
@@ -89,6 +92,7 @@ def prepare(
     json: Any = None,
     form: Mapping[str, str | None] | None = None,
     idempotency_key: str | None = None,
+    retry_on_rate_limit: bool = False,
     user_agent: str,
 ) -> _Prepared:
     import json as _json
@@ -107,6 +111,7 @@ def prepare(
     if idempotency_key:
         prepared.headers["idempotency-key"] = idempotency_key
     prepared.retryable = prepared.method in SAFE_METHODS or bool(idempotency_key)
+    prepared.retry_on_rate_limit = retry_on_rate_limit
     return prepared
 
 
@@ -116,7 +121,9 @@ def _backoff(config: HttpConfig, attempt: int) -> float:
 
 
 def _retry_wait(config: HttpConfig, prepared: _Prepared, attempt: int, response: httpx.Response) -> float | None:
-    if response.status_code not in RETRYABLE_STATUS or not prepared.retryable or attempt >= config.max_retries:
+    if response.status_code not in RETRYABLE_STATUS or attempt >= config.max_retries:
+        return None
+    if not prepared.retryable and not (response.status_code == 429 and prepared.retry_on_rate_limit):
         return None
     retry_after = parse_retry_after(response.headers.get("retry-after"))
     wait = retry_after if retry_after is not None else _backoff(config, attempt)
@@ -134,7 +141,7 @@ def finish(response: httpx.Response) -> Response:
         except ValueError:
             data = response.text
     if response.status_code >= 400:
-        raise error_from_response(response.status_code, data)
+        raise error_from_response(response.status_code, data, response.headers)
     return Response(response.status_code, response.headers, data, etag, False)
 
 

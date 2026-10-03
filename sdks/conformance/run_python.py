@@ -24,6 +24,7 @@ from mirotaract import (
     MiRotaractApiError,
     MiRotaractAuth,
     MiRotaractOAuthError,
+    MiRotaractRateLimitError,
     MiRotaractWebhookError,
     verify_webhook,
 )
@@ -365,6 +366,49 @@ class Runner:
             and isinstance(example["data"], dict),
             "ejemplo incompleto",
         )
+
+    # --- E11 --------------------------------------------------------------------
+
+    def review_limited_until_approved(self) -> None:
+        need("MR_REVIEW_CLIENT_ID", "MR_REVIEW_CLIENT_SECRET", "MR_PERSON_ID")
+        client_id = env("MR_REVIEW_CLIENT_ID") or ""
+        secret = env("MR_REVIEW_CLIENT_SECRET") or ""
+        scoped = MiRotaract(self.base, client_id, secret, scope="kernel.service.persons.read")
+        expect_error(lambda: scoped.clubs.get(env("MR_ORG_ID")), is_oauth("invalid_scope"), "invalid_scope")
+        limited = MiRotaract(self.base, client_id, secret)
+        check(limited.clubs.get(env("MR_ORG_ID"))["id"] == env("MR_ORG_ID"), "clubs.get")
+        expect_error(lambda: limited.persons.get(env("MR_PERSON_ID")), is_api(403), "403 (dato personal sin aprobar)")
+
+    def quota_retry_after_then_typed_error(self) -> None:
+        need("MR_QUOTA_CLIENT_ID", "MR_QUOTA_CLIENT_SECRET")
+        waits: list[float] = []
+        limited = MiRotaract(
+            self.base,
+            env("MR_QUOTA_CLIENT_ID") or "",
+            env("MR_QUOTA_CLIENT_SECRET") or "",
+            max_retries=2,
+            max_retry_delay=61,
+            sleep=waits.append,
+        )
+        error: Exception | None = None
+        for _ in range(10):
+            try:
+                limited.clubs.get(env("MR_ORG_ID"))
+            except Exception as caught:  # noqa: BLE001
+                error = caught
+                break
+        check(error is not None, "nunca llegó un 429 (¿cuota de 3 por minuto?)")
+        check(
+            isinstance(error, MiRotaractRateLimitError) and isinstance(error, MiRotaractApiError),
+            f"se esperaba MiRotaractRateLimitError, llegó {type(error).__name__}: {error}",
+        )
+        assert isinstance(error, MiRotaractRateLimitError)
+        check(error.status == 429 and error.code == "KERNEL_RATE_LIMITED", f"{error.status} {error.code}")
+        check(error.retry_after is not None and 1 <= error.retry_after <= 60, f"retry_after {error.retry_after}")
+        check("q=3" in (error.rate_limit_policy or ""), f"policy {error.rate_limit_policy}")
+        check(len(waits) == 2, f"reintentos: {len(waits)}")
+        for wait in waits:
+            check(float(wait).is_integer() and 1 <= wait <= 60, f"espera {wait} s (debería ser Retry-After)")
 
 
 def main() -> int:

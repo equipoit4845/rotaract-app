@@ -72,3 +72,8 @@ export type * from "./request-logs/request-logs.types";
 export * from "./oauth/oauth.hooks";
 export * from "./oauth/oauth.keys";
 export type * from "./oauth/oauth.types";
+
+// E11 — data governance
+export * from "./governance/governance.hooks";
+export * from "./governance/governance.keys";
+export type * from "./governance/governance.types";

@@ -289,6 +289,28 @@ describe("Developer apps E2E (E2)", () => {
       secretId: created.body.app.secrets[0].id,
     };
     clubSecret = created.body.clientSecret;
+    // E11: a new app starts in review; the RDR fills in the checklist data
+    // and approves it, as in production.
+    expect(created.body.app.reviewStatus).toBe("IN_REVIEW");
+    await as(rdr)
+      .patch(`/developer/apps/${clubApp.id}`, {
+        purpose: "Asistencia a las reuniones del club",
+        privacyPolicyUrl: "https://club.example/privacidad",
+        contactEmail: "club@example.test",
+      })
+      .expect(200);
+    await as(rdr)
+      .post(`/developer/apps/${clubApp.id}/review`, {
+        decision: "approve",
+        checklist: {
+          purpose: true,
+          data: true,
+          owner: true,
+          privacyPolicy: true,
+          contact: true,
+        },
+      })
+      .expect(200);
 
     const fetched = await as(rdr)
       .get(`/developer/apps/${clubApp.id}`)
