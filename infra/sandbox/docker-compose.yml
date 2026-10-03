@@ -108,7 +108,8 @@ services:
       postgres: { condition: service_healthy }
       nats: { condition: service_healthy }
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3001/health/ready"]
+      test:
+        ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3001/health/ready"]
       interval: 10s
       timeout: 3s
       retries: 12

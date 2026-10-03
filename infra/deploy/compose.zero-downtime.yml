@@ -62,7 +62,11 @@ services:
     working_dir: /workspace/apps/mirotaract-web
     command: ["node_modules/.bin/next", "start"]
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:3000/login || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://127.0.0.1:3000/login || exit 1",
+        ]
       interval: 10s
       timeout: 5s
       retries: 12
@@ -85,7 +89,15 @@ services:
       default:
         aliases: [api, web]
     healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/edge-health"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "-q",
+          "-O",
+          "/dev/null",
+          "http://127.0.0.1:8080/edge-health",
+        ]
       interval: 10s
       timeout: 3s
       retries: 6
