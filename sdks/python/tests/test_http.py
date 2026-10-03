@@ -7,7 +7,12 @@ import httpx
 import pytest
 
 from mirotaract._http import AsyncHttp, HttpConfig, SyncHttp, parse_retry_after
-from mirotaract.errors import MiRotaractApiError, MiRotaractError, MiRotaractOAuthError
+from mirotaract.errors import (
+    MiRotaractApiError,
+    MiRotaractError,
+    MiRotaractOAuthError,
+    MiRotaractRateLimitError,
+)
 
 
 def scripted(steps):
@@ -44,6 +49,64 @@ def test_retry_after_too_long_fails_fast():
     http, calls, _ = scripted([(429, {"status": 429, "code": "RATE"}, {"retry-after": "120"})])
     with pytest.raises(MiRotaractApiError):
         http.request("GET", "https://x.test/a")
+    assert len(calls) == 1
+
+
+# --- E11.3: per-app quotas (docs/developers/limites.md) ------------------
+
+RATE_LIMITED = (
+    429,
+    {
+        "status": 429,
+        "code": "KERNEL_RATE_LIMITED",
+        "title": "Request failed",
+        "detail": "La app superó su límite de 2 pedidos por minuto.",
+        "traceId": "abc",
+    },
+    {
+        "retry-after": "3",
+        "ratelimit-policy": '"minute";q=2;w=60, "day";q=1000;w=86400',
+        "ratelimit": '"minute";r=0;t=3, "day";r=990;t=40000',
+    },
+)
+
+
+def test_429_after_retries_is_a_typed_rate_limit_error():
+    http, calls, waits = scripted([RATE_LIMITED])
+    with pytest.raises(MiRotaractRateLimitError) as caught:
+        http.request("GET", "https://x.test/a")
+    error = caught.value
+    assert isinstance(error, MiRotaractApiError)
+    assert error.status == 429 and error.code == "KERNEL_RATE_LIMITED"
+    assert error.retry_after == 3.0
+    assert error.trace_id == "abc"
+    assert '"minute";q=2;w=60' in (error.rate_limit_policy or "")
+    assert "r=0" in (error.rate_limit or "")
+    assert waits == [3.0, 3.0] and len(calls) == 3
+
+
+def test_429_over_the_cap_fails_fast_with_the_typed_error():
+    status, body, headers = RATE_LIMITED
+    http, calls, waits = scripted([(status, body, {**headers, "retry-after": "3600"})])
+    with pytest.raises(MiRotaractRateLimitError) as caught:
+        http.request("GET", "https://x.test/a")
+    assert caught.value.retry_after == 3600.0
+    assert len(calls) == 1 and waits == []
+
+
+def test_post_is_retried_on_429_only_when_it_opts_in():
+    http, calls, _ = scripted([RATE_LIMITED, (200, {})])
+    with pytest.raises(MiRotaractRateLimitError):
+        http.request("POST", "https://x.test/a")
+    assert len(calls) == 1
+
+    http, calls, waits = scripted([RATE_LIMITED, (200, {"ok": True})])
+    assert http.request("POST", "https://x.test/token", retry_on_rate_limit=True).data == {"ok": True}
+    assert waits == [3.0]
+
+    http, calls, _ = scripted([(503, {"status": 503, "code": "KERNEL_HTTP_503"}), (200, {})])
+    with pytest.raises(MiRotaractApiError):
+        http.request("POST", "https://x.test/token", retry_on_rate_limit=True)
     assert len(calls) == 1
 
 

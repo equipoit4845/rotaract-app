@@ -14,6 +14,7 @@ import {
 import { SigningKeyService } from "../src/infrastructure/crypto/signing-key.service";
 import {
   activateForTests,
+  approveForTests,
   createTestApp,
   e2eTag,
   testPrisma,
@@ -165,6 +166,7 @@ describe("OIDC provider E2E", () => {
       },
     });
     appIds.push(created.id);
+    await approveForTests(prisma, created.id);
     if (type === "PUBLIC") return { id: created.id, clientId, secret: "" };
     const { secret, hint } = newClientSecret();
     await prisma.developerAppSecret.create({

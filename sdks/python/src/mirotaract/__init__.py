@@ -22,6 +22,7 @@ from .errors import (
     MiRotaractConfigError,
     MiRotaractError,
     MiRotaractOAuthError,
+    MiRotaractRateLimitError,
 )
 from .webhooks import (
     MiRotaractWebhookError,
@@ -53,6 +54,7 @@ __all__ = [
     "MiRotaractError",
     "MiRotaractApiError",
     "MiRotaractOAuthError",
+    "MiRotaractRateLimitError",
     "MiRotaractConfigError",
     "MiRotaractWebhookError",
     "verify_webhook",

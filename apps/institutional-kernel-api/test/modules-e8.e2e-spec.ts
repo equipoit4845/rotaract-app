@@ -7,6 +7,7 @@ import request from "supertest";
 
 import {
   activateForTests,
+  approveForTests,
   createTestApp,
   e2eTag,
   grantRoleForTests,
@@ -92,7 +93,9 @@ describe("Modules from a manifest (E8)", () => {
 
   const as = (token: string) => ({
     get: (url: string) =>
-      request(http).get(`${base}${url}`).set("authorization", `Bearer ${token}`),
+      request(http)
+        .get(`${base}${url}`)
+        .set("authorization", `Bearer ${token}`),
     post: (url: string, body?: object) => {
       const call = request(http)
         .post(`${base}${url}`)
@@ -295,6 +298,8 @@ describe("Modules from a manifest (E8)", () => {
     appId = created.body.app.id;
     clientId = created.body.app.clientId;
     clientSecret = created.body.clientSecret;
+    // E11: approved by the district, so its service token carries every scope.
+    await approveForTests(prisma, appId);
 
     // A club president can't publish modules.
     await as(president)
@@ -311,7 +316,9 @@ describe("Modules from a manifest (E8)", () => {
     expect(rejected.body.errors).toEqual([
       expect.objectContaining({ path: "permissions[0].code" }),
     ]);
-    expect(rejected.body.detail).toContain(`tiene que empezar con «${moduleId}.»`);
+    expect(rejected.body.detail).toContain(
+      `tiene que empezar con «${moduleId}.»`,
+    );
 
     const registered = await as(rdr)
       .post("/modules", { appId, manifest: manifest() })
@@ -330,9 +337,7 @@ describe("Modules from a manifest (E8)", () => {
         .sort(),
     );
 
-    await as(rdr)
-      .post("/modules", { appId, manifest: manifest() })
-      .expect(409);
+    await as(rdr).post("/modules", { appId, manifest: manifest() }).expect(409);
 
     // The permissions are part of the catalog the RDR assigns from.
     const catalog = await as(rdr)

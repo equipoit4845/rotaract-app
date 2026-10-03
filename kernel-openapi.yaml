@@ -5690,8 +5690,7 @@ components:
         tenía aprobado, si tenía algo.
     ReviewChecklist:
       type: object
-      description: Lista de control del RDR (E11.1).
-      required: [purpose, data, owner, privacyPolicy, contact]
+      description: Lista de control del RDR (E11.1). Un punto que falta cuenta como no revisado.
       properties:
         purpose: { type: boolean, description: El propósito está claro y es del distrito. }
         data: { type: boolean, description: Los datos que pide son los necesarios para ese propósito. }

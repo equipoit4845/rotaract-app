@@ -8,7 +8,12 @@ import {
   newClientId,
   newClientSecret,
 } from "../src/application/developer-apps/credentials";
-import { createTestApp, e2eTag, testPrisma } from "./support/test-app";
+import {
+  approveForTests,
+  createTestApp,
+  e2eTag,
+  testPrisma,
+} from "./support/test-app";
 
 describe("Kernel SDK live contract", () => {
   let app: INestApplication;
@@ -106,6 +111,7 @@ describe("Kernel SDK live contract", () => {
       },
     });
     developerAppId = developerApp.id;
+    await approveForTests(prisma, developerApp.id);
   });
 
   afterAll(async () => {

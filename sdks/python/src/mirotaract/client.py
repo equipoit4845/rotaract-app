@@ -174,7 +174,7 @@ class MiRotaract(_ClientCore):
                 return token
             endpoint = self._token_endpoint or self.discovery()["token_endpoint"]
             form, headers = self._token_form()
-            self._token = token_set(self._http.request("POST", endpoint, form=form, headers=headers).data)
+            self._token = token_set(self._http.request("POST", endpoint, form=form, headers=headers, retry_on_rate_limit=True).data)
             return self._token.access_token
 
     def request(self, method: str, path: str, **kwargs: Any) -> Response:
@@ -382,7 +382,7 @@ class AsyncMiRotaract(_ClientCore):
                 return token
             endpoint = self._token_endpoint or (await self.discovery())["token_endpoint"]
             form, headers = self._token_form()
-            response = await self._http.request("POST", endpoint, form=form, headers=headers)
+            response = await self._http.request("POST", endpoint, form=form, headers=headers, retry_on_rate_limit=True)
             self._token = token_set(response.data)
             return self._token.access_token
 

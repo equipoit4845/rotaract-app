@@ -310,7 +310,7 @@ class MiRotaractAuth(_AuthCore):
 
     def _token(self, params: dict[str, str | None]) -> TokenSet:
         form, headers = self._token_form(params)
-        response = self._http.request("POST", self.discovery()["token_endpoint"], form=form, headers=headers)
+        response = self._http.request("POST", self.discovery()["token_endpoint"], form=form, headers=headers, retry_on_rate_limit=True)
         return token_set(response.data)
 
     def exchange_code(
@@ -436,7 +436,7 @@ class AsyncMiRotaractAuth(_AuthCore):
     async def _token(self, params: dict[str, str | None]) -> TokenSet:
         form, headers = self._token_form(params)
         config = await self.discovery()
-        response = await self._http.request("POST", config["token_endpoint"], form=form, headers=headers)
+        response = await self._http.request("POST", config["token_endpoint"], form=form, headers=headers, retry_on_rate_limit=True)
         return token_set(response.data)
 
     async def exchange_code(

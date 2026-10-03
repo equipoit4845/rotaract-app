@@ -2,6 +2,7 @@ import {
   MiRotaractApiError,
   MiRotaractError,
   MiRotaractOAuthError,
+  MiRotaractRateLimitError,
   type ProblemDetails,
 } from "./errors.ts";
 
@@ -38,6 +39,11 @@ export type HttpRequest = {
   form?: Record<string, string | undefined>;
   /** Makes a POST retryable; sent as `Idempotency-Key`. */
   idempotencyKey?: string;
+  /**
+   * Retry this (non-idempotent) request on 429 only. For endpoints that
+   * count the quota before doing anything, like `/oauth/token`.
+   */
+  retryOnRateLimit?: boolean;
   signal?: AbortSignal;
 };
 
@@ -105,7 +111,28 @@ async function readBody(response: Response): Promise<unknown> {
   }
 }
 
-export function toError(status: number, body: unknown): MiRotaractError {
+export function toError(
+  status: number,
+  body: unknown,
+  headers?: Headers,
+): MiRotaractError {
+  if (status === 429) {
+    const record =
+      body && typeof body === "object"
+        ? (body as ProblemDetails)
+        : {
+            status,
+            detail:
+              typeof body === "string" && body ? body.slice(0, 500) : undefined,
+          };
+    const retryAfterMs = parseRetryAfter(headers?.get("retry-after") ?? null);
+    return new MiRotaractRateLimitError(record, body, {
+      retryAfter:
+        retryAfterMs === undefined ? undefined : Math.ceil(retryAfterMs / 1000),
+      rateLimitPolicy: headers?.get("ratelimit-policy") ?? undefined,
+      rateLimit: headers?.get("ratelimit") ?? undefined,
+    });
+  }
   if (body && typeof body === "object") {
     const record = body as Record<string, unknown>;
     // RFC 6749 §5.2 / RFC 6750 §3.1 shape: { error, error_description }.
@@ -202,7 +229,7 @@ export class HttpClient {
 
       if (
         RETRYABLE_STATUS.has(response.status) &&
-        retryable &&
+        (retryable || (response.status === 429 && req.retryOnRateLimit)) &&
         attempt < this.maxRetries
       ) {
         const retryAfter = parseRetryAfter(response.headers.get("retry-after"));
@@ -223,7 +250,7 @@ export class HttpClient {
           etag: response.headers.get("etag") ?? undefined,
           notModified: true,
         };
-      if (!response.ok) throw toError(response.status, data);
+      if (!response.ok) throw toError(response.status, data, response.headers);
       return {
         status: response.status,
         headers: response.headers,

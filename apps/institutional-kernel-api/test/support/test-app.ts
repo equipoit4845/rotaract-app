@@ -74,6 +74,17 @@ export async function activateForTests(
   });
 }
 
+/**
+ * E11 test shortcut for "the RDR approved this app as it is" (apps created
+ * straight through Prisma start IN_REVIEW, like any new app).
+ */
+export async function approveForTests(
+  prisma: PrismaClient,
+  appId: string,
+): Promise<void> {
+  await prisma.$executeRaw`UPDATE "DeveloperApp" SET "reviewStatus" = 'APPROVED', "approvedScopes" = "scopes", "approvedAt" = now(), "reviewedAt" = now() WHERE "id" = ${appId}`;
+}
+
 export async function grantRoleForTests(
   prisma: PrismaClient,
   personId: string,

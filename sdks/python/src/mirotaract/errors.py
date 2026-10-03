@@ -5,6 +5,8 @@
 - ``MiRotaractOAuthError``: an ``/oauth/*`` endpoint answered with an RFC 6749
   error (``invalid_client``, ``invalid_grant``...), a token failed local
   verification (``invalid_token``) or the callback carried ``error=...``.
+- ``MiRotaractRateLimitError``: 429, the app used up its quota
+  (``KERNEL_RATE_LIMITED``) after the SDK retried what it safely could.
 - ``MiRotaractConfigError``: invalid configuration.
 """
 
@@ -32,6 +34,26 @@ class MiRotaractApiError(MiRotaractError):
         super().__init__(f"{status} {self.code}{suffix}")
 
 
+class MiRotaractRateLimitError(MiRotaractApiError):
+    """429: ``retry_after`` (seconds, from ``Retry-After``) and the raw
+    ``RateLimit-Policy`` / ``RateLimit`` headers."""
+
+    def __init__(
+        self,
+        problem: Mapping[str, Any] | None = None,
+        body: Any = None,
+        *,
+        retry_after: float | None = None,
+        rate_limit_policy: str | None = None,
+        rate_limit: str | None = None,
+    ):
+        merged = {"code": "KERNEL_RATE_LIMITED", **dict(problem or {})}
+        super().__init__(429, merged, body if body is not None else problem)
+        self.retry_after: float | None = retry_after
+        self.rate_limit_policy: str | None = rate_limit_policy
+        self.rate_limit: str | None = rate_limit
+
+
 class MiRotaractOAuthError(MiRotaractError):
     def __init__(self, error: str, error_description: str | None = None, status: int | None = None):
         self.error: str = error
@@ -44,7 +66,25 @@ class MiRotaractConfigError(MiRotaractError):
     pass
 
 
-def error_from_response(status: int, body: Any) -> MiRotaractError:
+def error_from_response(
+    status: int, body: Any, headers: Mapping[str, str] | None = None
+) -> MiRotaractError:
+    if status == 429:
+        from ._http import parse_retry_after
+
+        headers = headers or {}
+        problem = body if isinstance(body, Mapping) else {
+            "status": 429,
+            "detail": body[:500] if isinstance(body, str) and body else None,
+        }
+        retry_after = parse_retry_after(headers.get("retry-after"))
+        return MiRotaractRateLimitError(
+            problem,
+            body,
+            retry_after=None if retry_after is None else float(int(retry_after + 0.999)),
+            rate_limit_policy=headers.get("ratelimit-policy"),
+            rate_limit=headers.get("ratelimit"),
+        )
     if isinstance(body, Mapping):
         if isinstance(body.get("error"), str) and not isinstance(body.get("code"), str):
             description = body.get("error_description")

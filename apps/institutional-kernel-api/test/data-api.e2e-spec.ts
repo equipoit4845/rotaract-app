@@ -7,7 +7,12 @@ import {
   newClientId,
   newClientSecret,
 } from "../src/application/developer-apps/credentials";
-import { createTestApp, e2eTag, testPrisma } from "./support/test-app";
+import {
+  approveForTests,
+  createTestApp,
+  e2eTag,
+  testPrisma,
+} from "./support/test-app";
 
 /**
  * E4 · Data API v1 against the real stack (docs/12-data-api-and-sdks.md):
@@ -70,6 +75,7 @@ describe("Data API v1 E2E (E4)", () => {
       },
     });
     appIds.push(created.id);
+    await approveForTests(prisma, created.id);
     const token = await request(http)
       .post(`${base}/oauth/token`)
       .type("form")
