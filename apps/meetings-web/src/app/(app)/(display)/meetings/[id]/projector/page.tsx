@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import { useMeetingRoom } from "@/hooks/useMeetingRoom";
 import { TimerDisplay } from "@/components/TimerDisplay";
+import { Logo } from "@/components/layout/Logo";
 import { Button } from "@/components/ui/button";
 import { Volume2, VolumeX } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -102,6 +103,8 @@ export default function ProjectorPage() {
       {/* Top bar: status + quorum */}
       <header className="flex items-center justify-between border-b border-border px-6 py-3">
         <div className="flex items-center gap-4">
+          {/* Dark projector: the reversed (white) logo. */}
+          <Logo size={40} tone="current" className="shrink-0 text-white" />
           {snapshot && (
             <>
               <span

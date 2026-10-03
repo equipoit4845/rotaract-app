@@ -5,7 +5,6 @@ import {
   Calendar,
   CalendarDays,
   ChevronRight,
-  Gem,
   History,
   LogOut,
   Menu,
@@ -18,6 +17,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 
+import { Logo } from "@/components/layout/Logo";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import {
@@ -99,12 +99,14 @@ export function AppShell({
             <Link
               href="/meetings"
               onClick={closeMobile}
-              className="flex items-center gap-2 font-semibold text-sidebar-foreground transition-colors hover:text-primary"
+              className="flex items-center gap-2 text-sm font-semibold text-sidebar-foreground transition-colors hover:text-primary"
             >
-              <span className="grid size-7 place-items-center rounded-lg bg-primary text-primary-foreground">
-                <Gem aria-label="Mi Rotaract" size={16} strokeWidth={1.8} />
-              </span>
-              <span>Mi Rotaract</span>
+              <Logo size={28} />
+              <span
+                aria-hidden
+                className="hidden h-5 w-px bg-sidebar-border md:block"
+              />
+              <span className="hidden md:inline">Reuniones</span>
             </Link>
             <Button
               variant="ghost"
@@ -147,6 +149,13 @@ export function AppShell({
         <header className="sticky top-0 z-10 h-14 border-b border-border bg-background/95 px-4 pl-14 backdrop-blur md:pl-6">
           <div className="flex h-full items-center justify-between gap-4">
             <div className="flex min-w-0 flex-1 items-center gap-3">
+              <Link
+                href="/meetings"
+                aria-label="Reuniones"
+                className="flex shrink-0 md:hidden"
+              >
+                <Logo variant="mark" size={26} aria-hidden />
+              </Link>
               {backHref ? (
                 <>
                   <Link

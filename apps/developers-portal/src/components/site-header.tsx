@@ -1,6 +1,6 @@
-import { Gem } from "lucide-react";
 import Link from "next/link";
 
+import { Logo } from "./logo";
 import { SearchBox } from "./search-box";
 import { ThemeToggle } from "./theme-toggle";
 
@@ -20,11 +20,11 @@ export function SiteHeader() {
       <nav className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 md:px-6">
         <Link
           href="/"
-          className="flex shrink-0 items-center gap-2 font-semibold text-foreground"
+          aria-label="Mi Rotaract para desarrolladores"
+          className="flex shrink-0 items-center gap-2.5 font-semibold text-foreground"
         >
-          <span className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground">
-            <Gem aria-hidden size={18} strokeWidth={1.8} />
-          </span>
+          <Logo size={34} aria-hidden />
+          <span aria-hidden className="hidden h-6 w-px bg-border sm:block" />
           <span className="hidden sm:inline">Mi Rotaract</span>
           <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary">
             Developers
@@ -64,11 +64,14 @@ export function SiteHeader() {
 export function SiteFooter({ contractVersion }: { contractVersion: string }) {
   return (
     <footer className="mt-20 border-t border-border">
-      <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-8 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between md:px-6">
-        <p>
-          Mi Rotaract para desarrolladores · Distrito Rotaract 4845 · Contrato
-          de la API v{contractVersion}
-        </p>
+      <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-8 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between md:px-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <Logo size={32} className="shrink-0" />
+          <p>
+            Mi Rotaract para desarrolladores · Contrato de la API v
+            {contractVersion}
+          </p>
+        </div>
         <div className="flex flex-wrap gap-4">
           <Link href="/docs/seguridad" className="hover:text-foreground">
             Seguridad

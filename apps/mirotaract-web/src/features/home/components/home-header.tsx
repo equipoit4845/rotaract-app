@@ -14,12 +14,11 @@ export function HomeHeader() {
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 md:px-6">
         <Link
           href="/"
-          className="flex items-center gap-2 font-semibold text-foreground"
+          className="flex shrink-0 items-center gap-3 font-semibold text-foreground"
         >
-          <span className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground">
-            <Logo size={18} />
-          </span>
-          Mi Rotaract
+          <Logo size={36} />
+          <span aria-hidden className="hidden h-6 w-px bg-border sm:block" />
+          <span className="hidden sm:inline">Mi Rotaract</span>
         </Link>
         <div className="flex items-center gap-1 sm:gap-2">
           {SECTIONS.map((section) => (

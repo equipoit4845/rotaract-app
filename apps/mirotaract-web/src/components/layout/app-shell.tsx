@@ -21,7 +21,10 @@ export type AdminNavItem = {
 };
 
 type AppShellProps = {
+  /** Sidebar header (the full logo). */
   brand?: ReactNode;
+  /** Compact brand (the logo's mark) for the top bar on small screens. */
+  mark?: ReactNode;
   navItems: AdminNavItem[];
   /** Section title shown in the top bar (usually the active nav label). */
   title?: ReactNode;
@@ -42,6 +45,7 @@ type AppShellProps = {
  */
 export function AppShell({
   brand,
+  mark,
   navItems,
   title,
   backHref,
@@ -110,6 +114,7 @@ export function AppShell({
         <header className="sticky top-0 z-10 h-14 border-b border-border bg-background/95 px-4 pl-14 backdrop-blur md:pl-6">
           <div className="flex h-full items-center justify-between gap-4">
             <div className="flex min-w-0 flex-1 items-center gap-3">
+              {mark ? <div className="shrink-0 md:hidden">{mark}</div> : null}
               {backHref ? (
                 <>
                   <Link

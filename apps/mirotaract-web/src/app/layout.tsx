@@ -13,7 +13,9 @@ const publicSans = Public_Sans({
 
 export const metadata: Metadata = {
   title: "Mi Rotaract",
-  description: "Institutional platform",
+  description:
+    "Gestión institucional de los clubes y el Distrito 4845 de Rotaract.",
+  applicationName: "Mi Rotaract",
 };
 
 export default function RootLayout({

@@ -7,9 +7,10 @@ export function HomeFooter() {
   return (
     <footer className="border-t border-border bg-muted/40">
       <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-10 text-sm text-muted-foreground md:flex-row md:px-6">
-        <span className="flex items-center gap-2 font-medium text-foreground">
-          <Logo size={16} />
-          Mi Rotaract — Rotaract Distrito 4845
+        <span className="flex items-center gap-3 font-medium text-foreground">
+          <Logo size={32} />
+          <span aria-hidden className="h-5 w-px bg-border" />
+          Mi Rotaract
         </span>
         <div className="flex items-center gap-6">
           <Link

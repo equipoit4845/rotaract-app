@@ -36,14 +36,8 @@ export function AuthShell({
           aria-hidden
           className="pointer-events-none absolute -bottom-32 -left-16 size-96 rounded-full bg-black/10 blur-2xl"
         />
-        <Link
-          href="/"
-          className="relative flex items-center gap-2 text-lg font-semibold"
-        >
-          <span className="grid size-9 place-items-center rounded-lg bg-white/15">
-            <Logo size={20} />
-          </span>
-          Mi Rotaract
+        <Link href="/" aria-label="Mi Rotaract" className="relative w-fit">
+          <Logo size={56} tone="current" aria-hidden />
         </Link>
         <div className="relative max-w-md">
           <p className="text-3xl font-semibold leading-tight tracking-tight text-balance">
@@ -54,8 +48,8 @@ export function AuthShell({
             Distrito 4845 en un solo lugar.
           </p>
         </div>
-        <p className="relative text-sm text-primary-foreground/70">
-          Rotaract Distrito 4845
+        <p className="relative text-sm font-medium text-primary-foreground/80">
+          Mi Rotaract
         </p>
       </aside>
 
@@ -63,12 +57,10 @@ export function AuthShell({
         <div className="flex items-center justify-between p-4 lg:justify-end">
           <Link
             href="/"
-            className="flex items-center gap-2 font-semibold text-foreground lg:hidden"
+            aria-label="Mi Rotaract"
+            className="flex items-center lg:hidden"
           >
-            <span className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground">
-              <Logo size={18} />
-            </span>
-            Mi Rotaract
+            <Logo size={32} aria-hidden />
           </Link>
           <ThemeToggle />
         </div>

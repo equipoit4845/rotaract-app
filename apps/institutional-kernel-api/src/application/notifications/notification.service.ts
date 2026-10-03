@@ -1,5 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 
+import { emailLayout } from "./email-layout";
+
 export type EmailMessage = {
   to: string;
   subject: string;
@@ -15,6 +17,9 @@ export type EmailMessage = {
  * invitation token remains valid and usable even if the email that
  * carries it could not be sent, matching kernel-spec.md's decision to
  * keep token issuance decoupled from delivery.
+ *
+ * Every message goes out inside the shared layout (`emailLayout`: the
+ * Rotaract Distrito 4845 logo on top); callers pass only the body.
  */
 @Injectable()
 export class NotificationService {
@@ -48,7 +53,7 @@ export class NotificationService {
           from: this.fromAddress,
           to: [message.to],
           subject: message.subject,
-          html: message.html,
+          html: emailLayout(message.html),
           text: message.text,
         }),
       });

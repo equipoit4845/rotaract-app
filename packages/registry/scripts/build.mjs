@@ -283,13 +283,14 @@ export async function buildItems(baseUrl = DEFAULT_BASE_URL) {
       type: "registry:component",
       title: "Marco de la app (shell)",
       description:
-        "El marco de Mi Rotaract: barra lateral con grupos plegables, barra superior fija, menú en el celular y contenido centrado.",
+        "El marco de Mi Rotaract: barra lateral con grupos plegables, barra superior fija, menú en el celular y contenido centrado. Incluye el logo oficial de Rotaract Distrito 4845 (<Logo /> completo para la barra lateral, variant=\"mark\" —la rueda— para la barra del celular).",
       registryDependencies: [url("mirotaract-ui")],
       files: [
         file(
           "app-shell.tsx",
           await productFile("components/layout/app-shell.tsx"),
         ),
+        file("brand.tsx", await productFile("components/brand.tsx")),
       ],
     },
   ];

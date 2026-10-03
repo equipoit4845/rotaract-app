@@ -81,12 +81,19 @@ function DashboardShellContent({
         brand={
           <Link
             href="/dashboard"
-            className="flex items-center gap-2 font-semibold text-sidebar-foreground transition-colors hover:text-primary"
+            className="flex items-center gap-2 text-sm font-semibold text-sidebar-foreground transition-colors hover:text-primary"
           >
-            <span className="grid size-7 place-items-center rounded-lg bg-primary text-primary-foreground">
-              <Logo size={16} />
-            </span>
-            <span>Mi Rotaract</span>
+            <Logo size={28} />
+            <span
+              aria-hidden
+              className="hidden h-5 w-px bg-sidebar-border md:block"
+            />
+            <span className="hidden md:inline">Mi Rotaract</span>
+          </Link>
+        }
+        mark={
+          <Link href="/dashboard" aria-label="Mi Rotaract" className="flex">
+            <Logo variant="mark" size={26} aria-hidden />
           </Link>
         }
         navItems={navItems}

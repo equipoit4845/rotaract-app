@@ -1,7 +1,7 @@
-import { Gem } from "lucide-react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { Logo } from "@/components/layout/Logo";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { Card, CardContent } from "@/components/ui/card";
 import { MIROTARACT_URL } from "@/lib/config";
@@ -50,12 +50,10 @@ export default async function Home({
         />
         <a
           href={MIROTARACT_URL}
-          className="relative flex items-center gap-2 text-lg font-semibold"
+          aria-label="Mi Rotaract"
+          className="relative w-fit"
         >
-          <span className="grid size-9 place-items-center rounded-lg bg-white/15">
-            <Gem size={20} strokeWidth={1.8} aria-hidden />
-          </span>
-          Mi Rotaract
+          <Logo size={56} tone="current" aria-hidden />
         </a>
         <div className="relative max-w-md">
           <p className="text-3xl font-semibold leading-tight tracking-tight text-balance">
@@ -66,18 +64,15 @@ export default async function Home({
             votaciones y actas del Distrito 4845.
           </p>
         </div>
-        <p className="relative text-sm text-primary-foreground/70">
-          Rotaract Distrito 4845
+        <p className="relative text-sm font-medium text-primary-foreground/80">
+          Reuniones · Mi Rotaract
         </p>
       </aside>
 
       <main className="flex flex-col">
         <div className="flex items-center justify-between p-4 lg:justify-end">
-          <span className="flex items-center gap-2 font-semibold text-foreground lg:hidden">
-            <span className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground">
-              <Gem size={18} strokeWidth={1.8} aria-hidden />
-            </span>
-            Mi Rotaract
+          <span className="flex items-center lg:hidden">
+            <Logo size={32} />
           </span>
           <ThemeToggle />
         </div>
@@ -103,7 +98,7 @@ export default async function Home({
                   href="/auth/login?returnTo=%2Fmeetings"
                   className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                 >
-                  <Gem size={16} strokeWidth={1.8} aria-hidden />
+                  <Logo variant="mark" size={18} tone="current" aria-hidden />
                   Ingresar con Mi Rotaract
                 </a>
               </CardContent>

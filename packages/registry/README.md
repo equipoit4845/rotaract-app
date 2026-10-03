@@ -13,7 +13,7 @@ npx shadcn@latest add https://developers.rotaract4845.com/r/data-table.json
 | --- | --- |
 | `mirotaract-theme` | Variables CSS (claro/oscuro), radios, `success`/`warning`, tipografía. |
 | `mirotaract-ui` | Componentes base del producto en `components/mirotaract/ui.tsx` (+ `link.tsx`). |
-| `app-shell` | Barra lateral con grupos, barra superior, menú en el celular. |
+| `app-shell` | Barra lateral con grupos, barra superior, menú en el celular y el logo oficial (`brand.tsx`). |
 | `page-header` | `PageHeader`, `Breadcrumbs`, `SectionHeader`. |
 | `data-table` | Tabla con barra de herramientas, carga, vacío/error y paginación por cursor. |
 | `status-badge` | `StatusBadge` con el catálogo de estados del kernel. |

@@ -40,7 +40,7 @@ Todo se instala en `components/mirotaract/`, así que no pisa tus
 |---|---|---|
 | `mirotaract-theme` | `globals.css` | Variables del tema (primario arándano, neutros, `success`, `warning`), modo oscuro con la clase `dark`. |
 | `mirotaract-ui` | `ui.tsx`, `link.tsx` | Los componentes base del producto: `Button`, `Badge`, `Card`, `Dialog`, `Table`, `Input`, `Select`, `Tabs`, `Switch`, `Checkbox`, `Alert`, `Skeleton`... |
-| `app-shell` | `app-shell.tsx` | `AppShell`: barra lateral con grupos plegables, barra superior, menú en el celular. |
+| `app-shell` | `app-shell.tsx`, `brand.tsx` | `AppShell`: barra lateral con grupos plegables, barra superior, menú en el celular. `Logo`: el logo oficial de Rotaract Distrito 4845 (`variant="mark"` es la rueda sola; `tone="current"` lo pinta con el color del texto; en oscuro usa `--brand-logo`, blanco con el tema). |
 | `page-header` | `page-header.tsx` | `PageHeader`, `Breadcrumbs`, `SectionHeader`. |
 | `data-table` | `data-table.tsx` | `DataTable`: tabla, barra de herramientas, carga, vacío/error, paginación. |
 | `status-badge` | `status-badge.tsx` | `StatusBadge` con los estados del kernel. |
@@ -73,6 +73,7 @@ Sin eso, el tema usa la fuente del sistema.
 "use client";
 import { Home, Users } from "lucide-react";
 import { AppShell } from "@/components/mirotaract/app-shell";
+import { Logo } from "@/components/mirotaract/brand";
 import { PageHeader } from "@/components/mirotaract/page-header";
 import { DataTable } from "@/components/mirotaract/data-table";
 import { StatusBadge } from "@/components/mirotaract/status-badge";
@@ -80,7 +81,12 @@ import { StatusBadge } from "@/components/mirotaract/status-badge";
 export default function Socios({ socios }: { socios: Member[] }) {
   return (
     <AppShell
-      brand={<span className="font-semibold">Reuniones</span>}
+      brand={
+        <span className="flex items-center gap-2 text-sm font-semibold">
+          <Logo size={28} /> Reuniones
+        </span>
+      }
+      mark={<Logo variant="mark" size={26} />}
       title="Socios"
       navItems={[
         { label: "Inicio", href: "/", icon: <Home /> },
