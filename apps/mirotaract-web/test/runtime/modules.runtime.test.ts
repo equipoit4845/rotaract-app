@@ -160,7 +160,8 @@ function backendWith(
   return backend;
 }
 
-function renderModules(organization: typeof CLUB) {
+type Organization = Omit<typeof CLUB, "parentId"> & { parentId: string | null };
+function renderModules(organization: Organization) {
   return renderWithClient(
     React.createElement(ActiveOrganizationProvider, {
       value: {
