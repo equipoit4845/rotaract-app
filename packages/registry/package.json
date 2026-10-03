@@ -1,0 +1,20 @@
+{
+  "name": "@mirotaract/registry",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Registro shadcn de Mi Rotaract: tema, componentes base, shell, tablas, badges de estado y diálogo de confirmación del producto, para `npx shadcn add`.",
+  "license": "UNLICENSED",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "dist/r",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "lint": "prettier --check src scripts test",
+    "test": "node --test --test-force-exit test/*.test.mjs"
+  }
+}
