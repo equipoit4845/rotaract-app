@@ -9,6 +9,7 @@
   },
   "exports": {
     ".": "./src/index.js",
+    "./master-prompt": "./src/master-prompt.js",
     "./package.json": "./package.json"
   },
   "engines": {
