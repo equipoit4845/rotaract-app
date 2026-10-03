@@ -33,6 +33,11 @@ services:
     build: !reset null
     ports: !reset []
     profiles: !reset []
+    # Migrations already ran as a one-off step (deploy.sh): start node
+    # directly, without pnpm and the Prisma CLI. Faster, ~150 MB less RAM
+    # while two slots overlap, and no migration race between slots.
+    working_dir: /workspace/apps/institutional-kernel-api
+    command: ["node", "dist/main"]
   api-green:
     <<: *api-slot
     image: ${DEPLOY_IMAGE_PREFIX:-mirotaract}-api:green
@@ -47,6 +52,9 @@ services:
     ports: !reset []
     profiles: !reset []
     depends_on: !reset {}
+    # Same as the image's `pnpm --filter … start`, without pnpm in between.
+    working_dir: /workspace/apps/mirotaract-web
+    command: ["node_modules/.bin/next", "start"]
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:3000/login || exit 1"]
       interval: 10s
