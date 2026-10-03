@@ -5,6 +5,7 @@ import { useActiveOrganization } from "@/lib/api/organizations/use-active-organi
 import type { AdminNavItem } from "@/components/layout";
 import {
   AppWindow,
+  Activity,
   ArrowLeftRight,
   ClipboardCheck,
   LayoutGrid,
@@ -64,6 +65,7 @@ export function useShellNavItems(
   // district published for them.
   const canReviewApps = useCan("kernel.app.review", scope);
   const myApps = useMyApps();
+  const canManageStatus = useCan("kernel.status.manage", scope); // E12
   const isDistrictAdminView = superadminMode === "ADMIN";
 
   const district: NavEntry[] = [];
@@ -93,6 +95,15 @@ export function useShellNavItems(
       icon: LayoutGrid,
     });
   }
+  // --- E12.1: incidents and maintenances of the public status page.
+  if (canManageStatus) {
+    district.push({
+      label: "Estado",
+      href: "/developer/estado",
+      icon: Activity,
+    });
+  }
+  // --- end E12
 
   const club: NavEntry[] = [];
   if (canReadMemberships) {

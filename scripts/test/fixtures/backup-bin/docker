@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Fake `docker` for scripts/test/backup.test.mjs (never talks to Docker).
+echo "docker $*" >>"${FAKE_LOG:-/dev/null}"
+case "$1" in
+  exec)
+    shift
+    [ "$1" = "-i" ] && shift
+    shift # container
+    case "$1" in
+      pg_dump)
+        db=""
+        while [ $# -gt 0 ]; do [ "$1" = "-d" ] && db="$2"; shift; done
+        [ "$db" = "${FAKE_FAIL_DB:-}" ] && { echo "pg_dump: connection failed" >&2; exit 1; }
+        printf 'PGDMP fake dump of %s\n' "$db"
+        ;;
+      pg_restore)
+        cat >/dev/null
+        [ -n "${FAKE_BAD_DUMP:-}" ] && exit 1
+        exit 0
+        ;;
+    esac
+    ;;
+  volume)
+    [ -n "${FAKE_NO_VOLUME:-}" ] && exit 1
+    exit 0
+    ;;
+  run)
+    tar czf - -C "${FAKE_VOLUME_DIR:?}" .
+    ;;
+  *) exit 0 ;;
+esac

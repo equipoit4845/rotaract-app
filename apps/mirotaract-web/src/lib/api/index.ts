@@ -69,6 +69,12 @@ export * from "./request-logs/request-logs.hooks";
 export * from "./request-logs/request-logs.keys";
 export type * from "./request-logs/request-logs.types";
 
+// --- E12.1 status page
+export * from "./status/status.hooks";
+export * from "./status/status.keys";
+export type * from "./status/status.types";
+// --- end E12
+
 export * from "./oauth/oauth.hooks";
 export * from "./oauth/oauth.keys";
 export type * from "./oauth/oauth.types";

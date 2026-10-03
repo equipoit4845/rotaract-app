@@ -2561,6 +2561,107 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/status": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Estado actual del kernel y sus servicios
+     * @description Público, sin autenticación y cacheable (`Cache-Control: public, max-age=30`). Estado de cada componente según las sondas que el worker corre cada minuto, el uptime de los últimos 90 días, los incidentes abiertos, los mantenimientos en curso y los anunciados. Un componente sin mediciones de los últimos 5 minutos figura como `UNKNOWN`. No contiene datos personales.
+     */
+    get: operations["getStatus"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/status/history": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Historial de disponibilidad (hasta 90 días)
+     * @description Público y cacheable (`max-age=300`). Uptime por componente y por día (UTC), con los minutos caídos, degradados y en mantenimiento, y los incidentes y mantenimientos de la ventana con sus actualizaciones. Los minutos de un mantenimiento anunciado no cuentan para el uptime.
+     */
+    get: operations["getStatusHistory"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/status/incidents": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Incidentes y mantenimientos (administración) */
+    get: operations["listStatusIncidents"];
+    put?: never;
+    /**
+     * Abrir un incidente o anunciar un mantenimiento
+     * @description Un incidente (`INCIDENT`) se abre cuando algo ya falla y empieza en `INVESTIGATING`. Un mantenimiento (`MAINTENANCE`) se anuncia con anticipación: su ventana empieza al menos 24 horas después (`KERNEL_STATUS_MAINTENANCE_NOTICE_HOURS`) y dura hasta 72 horas. El mensaje inicial queda como primera actualización pública.
+     */
+    post: operations["createStatusIncident"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/status/incidents/{incidentId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Corregir título, componentes, impacto o ventana
+     * @description Cerrado (`RESOLVED`, `COMPLETED`, `CANCELLED`) sólo admite corregir el título. La ventana de un mantenimiento sólo cambia antes de que empiece; adelantarlo exige la misma anticipación que anunciarlo.
+     */
+    patch: operations["updateStatusIncident"];
+    trace?: never;
+  };
+  "/status/incidents/{incidentId}/updates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Publicar una actualización (y cambiar de estado)
+     * @description Incidente: `INVESTIGATING`, `IDENTIFIED` y `MONITORING` se alternan libremente y terminan en `RESOLVED`, que es final. Mantenimiento: `SCHEDULED` → `IN_PROGRESS` → `COMPLETED`, o `SCHEDULED` → `CANCELLED`. El worker lo inicia y lo completa solo cuando se abre y se cierra la ventana.
+     */
+    post: operations["addStatusIncidentUpdate"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/oauth/apps/{clientId}": {
     parameters: {
       query?: never;
@@ -4174,6 +4275,158 @@ export interface components {
     MyAppAccessEventPage: {
       items: components["schemas"]["MyAppAccessEvent"][];
       pageInfo: components["schemas"]["PageInfo"];
+    };
+    /** @enum {string} */
+    StatusComponentKey:
+      "web" | "api" | "oidc" | "webhooks" | "meetings" | "portal" | "sandbox";
+    /**
+     * @description `UNKNOWN` = sin mediciones recientes. En el uptime los minutos `DEGRADED` cuentan como disponibles y los de mantenimiento no cuentan.
+     * @enum {string}
+     */
+    StatusLevel:
+      | "OPERATIONAL"
+      | "DEGRADED"
+      | "PARTIAL_OUTAGE"
+      | "MAJOR_OUTAGE"
+      | "MAINTENANCE"
+      | "UNKNOWN";
+    /** @enum {string} */
+    StatusIncidentKind: "INCIDENT" | "MAINTENANCE";
+    /**
+     * @description MINOR = lentitud, MAJOR = interrupción parcial, CRITICAL = interrupción total.
+     * @enum {string}
+     */
+    StatusIncidentImpact: "MINOR" | "MAJOR" | "CRITICAL" | "MAINTENANCE";
+    /** @enum {string} */
+    StatusIncidentState:
+      | "INVESTIGATING"
+      | "IDENTIFIED"
+      | "MONITORING"
+      | "RESOLVED"
+      | "SCHEDULED"
+      | "IN_PROGRESS"
+      | "COMPLETED"
+      | "CANCELLED";
+    StatusIncidentUpdate: {
+      id: string;
+      state: components["schemas"]["StatusIncidentState"];
+      message: string;
+      /** Format: date-time */
+      createdAt: string;
+    };
+    /** @description Sin autor ni ningún dato personal. */
+    StatusIncident: {
+      id: string;
+      kind: components["schemas"]["StatusIncidentKind"];
+      title: string;
+      impact: components["schemas"]["StatusIncidentImpact"];
+      state: components["schemas"]["StatusIncidentState"];
+      components: components["schemas"]["StatusComponentKey"][];
+      /** Format: date-time */
+      scheduledStart: string | null;
+      /** Format: date-time */
+      scheduledEnd: string | null;
+      /** Format: date-time */
+      startedAt: string | null;
+      /** Format: date-time */
+      resolvedAt: string | null;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+      /** @description De la más reciente a la más vieja. */
+      updates: components["schemas"]["StatusIncidentUpdate"][];
+    };
+    StatusComponent: {
+      key: components["schemas"]["StatusComponentKey"];
+      /** @example API del kernel */
+      name: string;
+      description: string;
+      status: components["schemas"]["StatusLevel"];
+      /**
+       * @description Porcentaje con dos decimales, redondeado hacia abajo. Null sin mediciones.
+       * @example 99.95
+       */
+      uptime90d: number | null;
+      latencyMs: number | null;
+      /** Format: date-time */
+      lastCheckedAt: string | null;
+    };
+    StatusSummary: {
+      /** Format: date-time */
+      generatedAt: string;
+      status: components["schemas"]["StatusLevel"];
+      /** @example Todos los sistemas funcionan con normalidad */
+      description: string;
+      components: components["schemas"]["StatusComponent"][];
+      /** @description Incidentes abiertos y mantenimientos en curso. */
+      incidents: components["schemas"]["StatusIncident"][];
+      /** @description Mantenimientos anunciados que todavía no empezaron, del más próximo al más lejano. */
+      scheduledMaintenances: components["schemas"]["StatusIncident"][];
+    };
+    StatusHistoryDay: {
+      /** Format: date */
+      date: string;
+      status: components["schemas"]["StatusLevel"];
+      uptime: number | null;
+      checks: number;
+      downMinutes: number;
+      degradedMinutes: number;
+      maintenanceMinutes: number;
+    };
+    StatusHistoryComponent: {
+      key: components["schemas"]["StatusComponentKey"];
+      name: string;
+      /** @description Uptime de toda la ventana pedida. */
+      uptime: number | null;
+      uptime7d: number | null;
+      uptime30d: number | null;
+      averageLatencyMs: number | null;
+      /** @description Un elemento por día UTC, del más viejo a hoy. */
+      days: components["schemas"]["StatusHistoryDay"][];
+    };
+    StatusHistory: {
+      /** Format: date-time */
+      generatedAt: string;
+      /** Format: date */
+      from: string;
+      /** Format: date */
+      to: string;
+      days: number;
+      components: components["schemas"]["StatusHistoryComponent"][];
+      incidents: components["schemas"]["StatusIncident"][];
+    };
+    CreateStatusIncidentRequest: {
+      kind: components["schemas"]["StatusIncidentKind"];
+      title: string;
+      components: components["schemas"]["StatusComponentKey"][];
+      /** @description Primera actualización pública. */
+      message: string;
+      impact?: components["schemas"]["StatusIncidentImpact"];
+      state?: components["schemas"]["StatusIncidentState"];
+      /**
+       * Format: date-time
+       * @description Sólo mantenimientos (obligatorio).
+       */
+      scheduledStart?: string;
+      /**
+       * Format: date-time
+       * @description Sólo mantenimientos (obligatorio).
+       */
+      scheduledEnd?: string;
+    };
+    UpdateStatusIncidentRequest: {
+      title?: string;
+      components?: components["schemas"]["StatusComponentKey"][];
+      impact?: components["schemas"]["StatusIncidentImpact"];
+      /** Format: date-time */
+      scheduledStart?: string;
+      /** Format: date-time */
+      scheduledEnd?: string;
+    };
+    AddStatusIncidentUpdateRequest: {
+      state?: components["schemas"]["StatusIncidentState"];
+      message: string;
     };
   };
   responses: {
@@ -8567,6 +8820,158 @@ export interface operations {
           "application/json": components["schemas"]["EventCatalog"];
         };
       };
+    };
+  };
+  getStatus: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["StatusSummary"];
+        };
+      };
+    };
+  };
+  getStatusHistory: {
+    parameters: {
+      query?: {
+        /** @description Días hacia atrás, incluido hoy (1 a 90; 90 por defecto). */
+        days?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["StatusHistory"];
+        };
+      };
+      400: components["responses"]["Error"];
+    };
+  };
+  listStatusIncidents: {
+    parameters: {
+      query?: {
+        state?: "open" | "closed" | "all";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["StatusIncident"][];
+        };
+      };
+      400: components["responses"]["Error"];
+      403: components["responses"]["Forbidden"];
+    };
+  };
+  createStatusIncident: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateStatusIncidentRequest"];
+      };
+    };
+    responses: {
+      /** @description Creado */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["StatusIncident"];
+        };
+      };
+      400: components["responses"]["Error"];
+      403: components["responses"]["Forbidden"];
+    };
+  };
+  updateStatusIncident: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        incidentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateStatusIncidentRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["StatusIncident"];
+        };
+      };
+      400: components["responses"]["Error"];
+      403: components["responses"]["Forbidden"];
+      404: components["responses"]["NotFound"];
+    };
+  };
+  addStatusIncidentUpdate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        incidentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AddStatusIncidentUpdateRequest"];
+      };
+    };
+    responses: {
+      /** @description Publicada */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["StatusIncident"];
+        };
+      };
+      400: components["responses"]["Error"];
+      403: components["responses"]["Forbidden"];
+      404: components["responses"]["NotFound"];
     };
   };
   getPublicDeveloperApp: {

@@ -79,4 +79,7 @@ export const permissionNames: Record<string, string> = {
   "kernel.app.manage": "Registrar y administrar apps",
   // E11: approve apps, set their limits and publish them to members.
   "kernel.app.review": "Revisar, aprobar y publicar apps",
+  // --- E12 (docs/19-operations-e12.md)
+  "kernel.status.manage": "Publicar incidentes y mantenimientos",
+  // --- end E12
 };

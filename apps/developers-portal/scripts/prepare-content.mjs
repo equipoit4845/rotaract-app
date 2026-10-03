@@ -74,6 +74,12 @@ export const GROUPS = [
     title: "Producción",
     slugs: ["seguridad", "deprecaciones", "changelog", "faq"],
   },
+  // --- E12 (docs/19-operations-e12.md)
+  {
+    title: "Operación",
+    slugs: ["estado", "sandbox"],
+  },
+  // --- end E12
 ];
 const OTHER_GROUP = "Más guías";
 

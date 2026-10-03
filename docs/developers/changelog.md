@@ -17,7 +17,7 @@ las personas responsables de cada app activa reciben el aviso por email.
 > `kernel-openapi.yaml` (versión en `info.version`).
 
 <!-- entry: e11-gobierno -->
-## 2026-10-05 · Revisión de apps, historial de accesos, límites por app y apps en el panel (E11)
+## 2026-10-03 · Revisión de apps, historial de accesos, límites por app y apps en el panel (E11)
 
 **Tipo:** nuevo · **Compatibilidad:** sin cambios que rompan para las apps existentes
 
@@ -51,6 +51,23 @@ las personas responsables de cada app activa reciben el aviso por email.
   (`PUT /developer/apps/{appId}/listing`, `GET /developer/app-catalog`);
   cada persona ve las suyas en `GET /me/apps` y en las tarjetas
   **Aplicaciones** de su inicio.
+
+<!-- entry: e12-status -->
+
+## 2026-10-03 · Página de estado, incidentes y mantenimientos (E12)
+
+**Tipo:** nuevo · **Compatibilidad:** sin cambios que rompan
+
+- `GET /status` y `GET /status/history`: públicos, sin token y cacheables.
+  Estado de la web, la API, el inicio de sesión (OIDC), los webhooks,
+  Reuniones, el portal y (cuando esté activo) el sandbox, medido cada minuto,
+  con uptime de 90 días e incidentes. Ver [estado.md](estado.md).
+- Página pública [/estado](/estado) en el portal y `/status.json`, que sigue
+  respondiendo aunque la API esté caída.
+- Los mantenimientos se anuncian con al menos 24 horas de anticipación y no
+  descuentan uptime.
+- El sandbox con el Distrito 9999 está listo para publicarse (ver
+  [sandbox.md](sandbox.md)); se avisará aquí cuando esté en línea.
 
 <!-- entry: crear-con-ia -->
 ## 2026-10-03 · "Implementar con IA" y CLI 0.2.0
@@ -87,9 +104,9 @@ las personas responsables de cada app activa reciben el aviso por email.
 - El SDK de Python `mirotaract` 0.1.0 está en PyPI (MIT): `pip install mirotaract`
   o `pip install 'mirotaract[fastapi]'`.
 - Pendiente: `@mirotaract/ai-skills` (se publica cuando supere las evaluaciones).
-
 <!-- entry: e9-portal -->
-## 2026-10-04 · Portal de desarrolladores, registros de requests y avisos de deprecación (E9)
+
+## 2026-10-03 · Portal de desarrolladores, registros de requests y avisos de deprecación (E9)
 
 **Tipo:** nuevo · **Compatibilidad:** sin cambios que rompan
 
@@ -109,6 +126,7 @@ las personas responsables de cada app activa reciben el aviso por email.
   `Link: rel="deprecation"`.
 
 <!-- entry: e7-webhooks -->
+
 ## 2026-10-02 · Webhooks firmados y catálogo público de eventos (E7)
 
 **Tipo:** nuevo · **Compatibilidad:** sin cambios que rompan
@@ -130,6 +148,7 @@ las personas responsables de cada app activa reciben el aviso por email.
   `organizationId` en el cuerpo o en la URL ya no la reemplaza.
 
 <!-- entry: e6-cli -->
+
 ## 2026-10-02 · CLI `mirotaract` y kernel local con un distrito sintético (E6)
 
 **Tipo:** nuevo · **Compatibilidad:** sin cambios que rompan
@@ -140,9 +159,10 @@ las personas responsables de cada app activa reciben el aviso por email.
 - `mirotaract dev up`: kernel local en Docker (puertos 54321 y 54322) con el
   "Distrito 9999 (sandbox)", sin datos reales, y `.env.local` listo.
 - `mirotaract gen types` (TypeScript o Python) y `mirotaract webhooks
-  listen` para recibir webhooks en `localhost`.
+listen` para recibir webhooks en `localhost`.
 
 <!-- entry: e5-sdks -->
+
 ## 2026-10-02 · SDKs oficiales para JavaScript/TypeScript y Python (E5)
 
 **Tipo:** nuevo · **Compatibilidad:** sin cambios que rompan
@@ -158,6 +178,7 @@ las personas responsables de cada app activa reciben el aviso por email.
   [README.md](README.md#sdks-oficiales)).
 
 <!-- entry: e4-data-api -->
+
 ## 2026-10-02 · API de datos v1 (E4)
 
 **Tipo:** nuevo · **Compatibilidad:** sin cambios que rompan
@@ -175,6 +196,7 @@ las personas responsables de cada app activa reciben el aviso por email.
   `304` también para clientes basados en `fetch`.
 
 <!-- entry: e3-oidc -->
+
 ## 2026-10-02 · "Ingresar con Mi Rotaract" (E3)
 
 **Tipo:** nuevo · **Compatibilidad:** sin cambios que rompan
@@ -187,6 +209,7 @@ las personas responsables de cada app activa reciben el aviso por email.
   persona vea y quite el acceso de una app.
 
 <!-- entry: e2-apps -->
+
 ## 2026-10-02 · Registro de apps y token de servicio (E2)
 
 **Tipo:** nuevo · **Compatibilidad:** rompe compatibilidad (solo `/service/*`)

@@ -1,0 +1,138 @@
+# E12.3 — hosted sandbox kernel (docs/19-operations-e12.md).
+#
+# A kernel separate from production, with the synthetic "Distrito 9999
+# (sandbox)" of E6 (prisma/seed-synthetic.ts), reset every night. Meant for
+# sandbox.rotaract4845.com (web) and api.sandbox.rotaract4845.com (API).
+# NOT started in production yet: the VPS is small; see the runbook.
+#
+# Everything is separate from production: its own project name, database,
+# volumes, network, JWT secret and ES256 signing-key secret (so tokens of one
+# are never valid in the other), its own ports. Drive it with
+# infra/sandbox/sandbox.sh (init-env, up, reset, down).
+#
+# Differences from production on purpose:
+#   - KERNEL_WEBHOOK_STREAM_ENABLED=true: `mirotaract webhooks listen` works.
+#   - KERNEL_WEBHOOKS_ALLOW_INSECURE=false: webhooks only to public https,
+#     never to this VPS's private network (it is a public sandbox).
+#   - one process is API + worker (KERNEL_JOBS_ENABLED=true), no Redis.
+#   - no e-mail (CLICKMAIL_API_KEY empty).
+name: ${SANDBOX_PROJECT:-mirotaract-sandbox}
+
+x-kernel-env: &kernel-env
+  KERNEL_DATABASE_URL: postgresql://kernel:${SANDBOX_DB_PASSWORD:?run sandbox.sh init-env}@postgres:5432/kernel?schema=public
+  KERNEL_DIRECT_URL: postgresql://kernel:${SANDBOX_DB_PASSWORD:?}@postgres:5432/kernel?schema=public
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: kernel
+      POSTGRES_PASSWORD: ${SANDBOX_DB_PASSWORD:?}
+      POSTGRES_DB: kernel
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Golden snapshot taken right after seeding; the nightly reset
+      # restores it (stable ids, so developer apps survive the reset).
+      - snapshots:/snapshots
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kernel -d kernel"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  nats:
+    image: nats:2.10-alpine
+    restart: unless-stopped
+    command: ["-js", "-m", "8222"]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8222/healthz"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  # One-off: migrations (+ seeds with SANDBOX_SETUP=seed). sandbox.sh runs it.
+  setup:
+    image: ${SANDBOX_API_IMAGE:-mirotaract-sandbox/kernel-api:latest}
+    build:
+      context: ../..
+      dockerfile: infra/docker/api.Dockerfile
+    profiles: ["setup"]
+    working_dir: /workspace/apps/institutional-kernel-api
+    environment:
+      <<: *kernel-env
+      # seed-synthetic refuses NODE_ENV=production by design.
+      NODE_ENV: development
+      MIROTARACT_SANDBOX_PASSWORD: ${SANDBOX_TEST_PASSWORD:-sandbox-9999}
+      MIROTARACT_SANDBOX_ADMIN_PASSWORD: ${SANDBOX_ADMIN_PASSWORD:?}
+      MIROTARACT_SANDBOX_REDIRECT_URIS: ${SANDBOX_REDIRECT_URIS:-}
+      SANDBOX_SETUP: ${SANDBOX_SETUP:-migrate}
+    command:
+      - sh
+      - -c
+      - >-
+        set -e;
+        ../../node_modules/.bin/prisma migrate deploy --schema ../../prisma/schema.prisma;
+        if [ "$$SANDBOX_SETUP" = seed ]; then
+        ../../node_modules/.bin/tsx ../../prisma/seed.ts;
+        ../../node_modules/.bin/tsx ../../prisma/seed-synthetic.ts;
+        fi
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  api:
+    image: ${SANDBOX_API_IMAGE:-mirotaract-sandbox/kernel-api:latest}
+    restart: unless-stopped
+    init: true
+    working_dir: /workspace/apps/institutional-kernel-api
+    # Migrations are applied by `setup`, never on start.
+    command: ["node", "dist/main"]
+    environment:
+      <<: *kernel-env
+      NODE_ENV: production
+      PORT: 3001
+      NATS_URL: nats://nats:4222
+      JWT_SECRET: ${SANDBOX_JWT_SECRET:?}
+      KERNEL_SIGNING_KEY_SECRET: ${SANDBOX_SIGNING_KEY_SECRET:?}
+      KERNEL_ISSUER_URL: ${SANDBOX_ISSUER_URL:-https://api.sandbox.rotaract4845.com/api/kernel/v1}
+      KERNEL_PUBLIC_WEB_URL: ${SANDBOX_WEB_URL:-https://sandbox.rotaract4845.com}
+      KERNEL_CORS_ORIGINS: ${SANDBOX_CORS_ORIGINS:-https://sandbox.rotaract4845.com,https://developers.rotaract4845.com,http://localhost:3000}
+      KERNEL_JOBS_ENABLED: "true"
+      KERNEL_WEBHOOK_STREAM_ENABLED: "true"
+      KERNEL_WEBHOOKS_ALLOW_INSECURE: "false"
+      # The sandbox does not probe anyone; production's worker probes it.
+      KERNEL_STATUS_PROBES_ENABLED: "false"
+      CLICKMAIL_API_KEY: ""
+    ports: ["127.0.0.1:${SANDBOX_API_PORT:-3011}:3001"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      nats: { condition: service_healthy }
+    healthcheck:
+      test:
+        ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3001/health/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+
+  # Mi Rotaract web against the sandbox API (the API URL is baked in at
+  # build time). Optional: `sandbox.sh up --web`.
+  web:
+    image: ${SANDBOX_WEB_IMAGE:-mirotaract-sandbox/kernel-web:latest}
+    build:
+      context: ../..
+      dockerfile: infra/docker/web.Dockerfile
+      args:
+        NEXT_PUBLIC_KERNEL_API_URL: ${SANDBOX_ISSUER_URL:-https://api.sandbox.rotaract4845.com/api/kernel/v1}
+    profiles: ["web"]
+    restart: unless-stopped
+    init: true
+    working_dir: /workspace/apps/mirotaract-web
+    command: ["node_modules/.bin/next", "start"]
+    ports: ["127.0.0.1:${SANDBOX_WEB_PORT:-3010}:3000"]
+    depends_on:
+      api: { condition: service_healthy }
+
+volumes:
+  pgdata:
+  snapshots:

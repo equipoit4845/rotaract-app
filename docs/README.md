@@ -49,6 +49,13 @@ contratos públicos son [`kernel-openapi.yaml`](../kernel-openapi.yaml),
   catálogo de apps del distrito en el panel. Guías:
   [developers/revision-de-apps.md](developers/revision-de-apps.md) y
   [developers/limites.md](developers/limites.md).
+- [Operación y confiabilidad (E12)](19-operations-e12.md): página de estado
+  con sondas, uptime de 90 días, incidentes y mantenimientos; despliegues sin
+  corte (`scripts/deploy.sh`); backups cifrados fuera del VPS y prueba de
+  restauración; sandbox con el Distrito 9999. Pasos manuales:
+  [runbooks/e12-lead.md](runbooks/e12-lead.md). Guías:
+  [developers/estado.md](developers/estado.md),
+  [developers/sandbox.md](developers/sandbox.md).
 - [Validación v1 del Design System](design-system-v1-validation.md):
   veredicto por área con comandos y resultados reales — no afirmaciones sin
   evidencia.

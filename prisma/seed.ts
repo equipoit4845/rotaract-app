@@ -70,6 +70,10 @@ const permissionCodes = [
   // E11 (docs/18-data-governance.md): review apps before production, set
   // their quotas and publish them in the members' panel.
   "kernel.app.review",
+  // --- E12 (docs/19-operations-e12.md): announce incidents and maintenances
+  // on the public status page.
+  "kernel.status.manage",
+  // --- end E12
 ];
 const roles = [
   "PLATFORM_USER",
@@ -153,6 +157,9 @@ const rolePermissions: Record<string, string[]> = {
     "kernel.app.read",
     "kernel.app.manage",
     "kernel.app.review",
+    // --- E12
+    "kernel.status.manage",
+    // --- end E12
   ],
   DISTRICT_SECRETARY: [
     ...selfServicePermissions,

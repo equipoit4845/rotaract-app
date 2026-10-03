@@ -63,6 +63,11 @@ import { AppCatalogService } from "./application/governance/app-catalog.service"
 import { AppGovernanceController } from "./interfaces/http/app-governance.controller";
 import { MeController } from "./interfaces/http/me.controller";
 // --- end E11
+// --- E12 — status page (docs/19-operations-e12.md)
+import { StatusProbeService } from "./application/status/status-probe.service";
+import { StatusService } from "./application/status/status.service";
+import { StatusController } from "./interfaces/http/status.controller";
+// --- end E12
 
 @Module({
   imports: [
@@ -101,6 +106,9 @@ import { MeController } from "./interfaces/http/me.controller";
     AppGovernanceController,
     MeController,
     // --- end E11
+    // --- E12
+    StatusController,
+    // --- end E12
   ],
   providers: [
     HealthService,
@@ -138,6 +146,10 @@ import { MeController } from "./interfaces/http/me.controller";
     AccessHistoryService,
     AppCatalogService,
     // --- end E11
+    // --- E12
+    StatusService,
+    StatusProbeService,
+    // --- end E12
     { provide: APP_INTERCEPTOR, useClass: OpenApiValidationInterceptor },
     // Order matters: rate limiting runs before authentication, so floods are
     // rejected before any token verification or database work.
