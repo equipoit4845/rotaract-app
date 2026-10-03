@@ -142,30 +142,16 @@ del `id_token`: hay dos SDKs oficiales con la misma superficie.
 | `@mirotaract/sdk` | JavaScript/TypeScript (ESM y CommonJS, tipos incluidos) | Node 20+ (también runtimes edge y navegador, solo para el login con apps `PUBLIC`) | `MiRotaract` (API de datos), `MiRotaractAuth` (login), `requireMiRotaractUser` para Express (`@mirotaract/sdk/express`), `createMiRotaractNext` para Next.js App Router (`@mirotaract/sdk/next`) | [packages/sdk-js/README.md](../../packages/sdk-js/README.md) |
 | `mirotaract` | Python | Python ≥ 3.10 (`httpx`, `PyJWT[crypto]`) | `MiRotaract` / `AsyncMiRotaract` (API de datos), `MiRotaractAuth` / `AsyncMiRotaractAuth` (login), `require_user` para FastAPI (`mirotaract.fastapi`) | [sdks/python/README.md](../../sdks/python/README.md) |
 
-> **Todavía no están publicados en npm ni en PyPI.** Los paquetes existen en
-> este monorepo (`packages/sdk-js` y `sdks/python`) y pasan la suite de
-> conformidad contra un kernel real, pero `npm install @mirotaract/sdk` y
-> `pip install mirotaract` todavía no funcionan. Mientras tanto, instalalos
-> desde una copia del repositorio:
+> **Instalación.** El SDK de JavaScript está publicado en npm con licencia MIT:
 >
 > ```bash
-> # JavaScript/TypeScript (Node 20+): primero compilá el paquete
-> cd /ruta/al/repo
-> npx pnpm@10.13.1 install                      # si todavía no instalaste dependencias
-> npx pnpm@10.13.1 --filter @mirotaract/sdk build
-> cd /ruta/a/tu-app
-> npm install /ruta/al/repo/packages/sdk-js     # enlaza la carpeta
-> # o, para copiarlo a otra máquina:
-> #   (cd /ruta/al/repo/packages/sdk-js && npm pack)   → mirotaract-sdk-0.1.0.tgz
-> #   npm install ./mirotaract-sdk-0.1.0.tgz
->
-> # Python (≥ 3.10)
-> pip install /ruta/al/repo/sdks/python             # o "/ruta/al/repo/sdks/python[fastapi]"
+> npm install @mirotaract/sdk
 > ```
 >
-> Si ya tenés `pnpm` instalado, `pnpm --filter @mirotaract/sdk build` es lo
-> mismo. Cuando se publiquen, va a alcanzar con `npm install @mirotaract/sdk`
-> y `pip install mirotaract`; el código de los ejemplos no cambia.
+> El SDK de Python todavía no está en PyPI. Mientras tanto, instalalo desde
+> una copia del repositorio: `pip install /ruta/al/repo/sdks/python` (o
+> `"/ruta/al/repo/sdks/python[fastapi]"`). Cuando se publique va a alcanzar con
+> `pip install mirotaract`; el código de los ejemplos no cambia.
 
 Superficie de la API de datos (cliente `MiRotaract`, solo servidor: usa el
 secreto):

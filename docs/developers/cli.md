@@ -20,22 +20,19 @@ opciones.
 ### 0. Requisitos (una vez)
 
 - **Node 20+** y **Docker** con `docker compose` (v2).
-- Una copia del repositorio del kernel (`rotaract-app`). Mientras la CLI,
-  los SDKs y las imágenes no estén publicados, todo se instala desde ahí.
+- Una copia del repositorio del kernel (`rotaract-app`): `mirotaract dev`
+  construye el kernel local desde ahí mientras no haya imágenes publicadas.
+  La CLI y el SDK de JS ya están en npm.
 - Puertos libres: `54321` (API) y `54322` (web). Se cambian con
   `--api-port` / `--web-port`.
 
 ```bash
-git clone <url-del-repo> ~/rotaract-app
-cd ~/rotaract-app
-npx pnpm@10.13.1 install
-npx pnpm@10.13.1 --filter @mirotaract/sdk build     # SDK de JS (lo usa la plantilla next)
-npm install -g ./packages/cli                        # deja el comando `mirotaract`
+npm install -g @mirotaract/cli      # deja el comando `mirotaract` (o usá `npx @mirotaract/cli …`)
 mirotaract --version
-```
 
-> Sin instalarla global: `node ~/rotaract-app/packages/cli/bin/mirotaract.js …`.
-> Cuando se publique en npm alcanzará con `npx @mirotaract/cli …`.
+# El kernel local todavía se construye desde una copia del repositorio:
+git clone <url-del-repo> ~/rotaract-app
+```
 
 ### 1. Crear la app (1 minuto)
 

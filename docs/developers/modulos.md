@@ -86,8 +86,8 @@ const { ok, errors } = validateManifest(manifest);
 // errors: [{ path: "permissions[0].code", message: "El permiso «kernel.x.y» tiene que empezar con «reuniones.»: ..." }]
 ```
 
-> El paquete todavía no está en npm. Desde el repo:
-> `npm install /ruta/al/repo/packages/module-manifest`.
+> Instalación: `npm install @mirotaract/module-manifest` (incluye el comando
+> `npx mirotaract-module check mirotaract.module.json`).
 
 ## 3. Pedile al RDR que lo publique
 

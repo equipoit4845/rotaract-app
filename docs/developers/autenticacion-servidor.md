@@ -217,10 +217,8 @@ cacheado, pedí uno nuevo y reintentá **una sola vez**.
 
 ## Con los SDKs oficiales
 
-> **SDKs todavía no publicados.** `@mirotaract/sdk` (JavaScript/TypeScript,
-> Node 20+) y `mirotaract` (Python ≥ 3.10) ya existen en el monorepo
-> (`packages/sdk-js` y `sdks/python`), pero no están en npm ni en PyPI.
-> Mientras tanto, instalalos desde el repositorio (ver
+> **Instalación.** JavaScript/TypeScript (Node 20+): `npm install @mirotaract/sdk`.
+> Python (≥ 3.10): todavía no está en PyPI; instalalo desde el repositorio (ver
 > [README.md](README.md#sdks-oficiales)).
 
 Los SDKs piden el token con `client_credentials`, lo cachean y lo renuevan

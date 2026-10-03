@@ -16,6 +16,19 @@ las personas responsables de cada app activa reciben el aviso por email.
 > código tiene que ignorar los campos que no conoce. El contrato es
 > `kernel-openapi.yaml` (versión en `info.version`).
 
+<!-- entry: npm-publish -->
+## 2026-10-03 · SDKs y herramientas publicados en npm (MIT)
+
+**Tipo:** nuevo · **Rompe compatibilidad:** no
+
+- `@mirotaract/sdk` 0.1.0, `@mirotaract/cli` 0.1.0, `@mirotaract/mcp` 0.1.0 y
+  `@mirotaract/module-manifest` 1.0.0 están en npm con licencia MIT:
+  `npm install @mirotaract/sdk`, `npx @mirotaract/cli init`, `npx -y @mirotaract/mcp`.
+- La CLI renombró `--env-file` a `--env-path` (Node 20.6+ intercepta
+  `--env-file` en cualquier posición de la línea de comandos).
+- Pendientes: el SDK de Python en PyPI y `@mirotaract/ai-skills` (se publica
+  cuando supere las evaluaciones).
+
 <!-- entry: e9-portal -->
 ## 2026-10-04 · Portal de desarrolladores, registros de requests y avisos de deprecación (E9)
 

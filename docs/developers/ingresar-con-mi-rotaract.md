@@ -499,9 +499,7 @@ app.get("/auth/callback", async (req, res) => {
 
 ### Node.js con `@mirotaract/sdk`
 
-> **SDK todavía no publicado en npm.** `@mirotaract/sdk` está en el
-> monorepo (`packages/sdk-js`) y requiere Node 20+. Mientras tanto,
-> instalalo desde el repositorio (ver [README.md](README.md#sdks-oficiales)).
+> **Instalación:** `npm install @mirotaract/sdk` (Node 20+).
 
 `MiRotaractAuth` descubre los endpoints solo, genera `state`, `nonce` y el
 par PKCE, y verifica el `id_token` contra el JWKS (firma ES256, `iss`, `aud`,

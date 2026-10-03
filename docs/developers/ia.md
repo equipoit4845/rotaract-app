@@ -11,11 +11,11 @@ firmados. Hay tres piezas, y se combinan:
 | **Servidor MCP** (`@mirotaract/mcp`) | Herramientas para buscar en esta documentación, describir operaciones de la API, listar permisos y eventos, validar manifiestos y generar tipos; en local, crear apps y tokens de prueba | Configurarlo en el asistente |
 | **`llms.txt`** | Toda la documentación en un archivo | `https://developers.rotaract4845.com/llms.txt` y `/llms-full.txt` |
 
-> **Todavía no están en npm.** Mientras tanto, usalos desde una copia del
-> repositorio (`rotaract-app`): donde dice `npx @mirotaract/ai-skills`, usá
-> `node ~/rotaract-app/packages/ai-skills/bin/ai-skills.js`, y para el MCP,
-> `node ~/rotaract-app/packages/mcp-server/bin/mirotaract-mcp.js`. Antes,
-> una vez: `cd ~/rotaract-app && npx pnpm@10.13.1 install`.
+> **Instalación.** El servidor MCP está en npm (`npx -y @mirotaract/mcp`). Las
+> skills (`@mirotaract/ai-skills`) todavía no: se publican cuando superen las
+> evaluaciones de calidad. Mientras tanto, usalas desde una copia del
+> repositorio: `node ~/rotaract-app/packages/ai-skills/bin/ai-skills.js`
+> (antes, una vez: `cd ~/rotaract-app && npx pnpm@10.13.1 install`).
 
 ## 1. Instalar las skills
 
@@ -131,7 +131,7 @@ Después, en **Settings → MCP**, activá `mirotaract`.
 }
 ```
 
-Cuando se publique en npm, en los tres casos alcanza con
+En los tres casos también alcanza con el paquete publicado en npm:
 `"command": "npx", "args": ["-y", "@mirotaract/mcp"]`.
 
 ### Herramientas
