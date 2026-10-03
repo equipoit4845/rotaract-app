@@ -23,7 +23,8 @@ export function SiteHeader() {
           aria-label="Mi Rotaract para desarrolladores"
           className="flex shrink-0 items-center gap-2.5 font-semibold text-foreground"
         >
-          <Logo size={40} aria-hidden />
+          <Logo variant="mark" size={34} aria-hidden className="sm:hidden" />
+          <Logo size={40} aria-hidden className="hidden sm:block" />
           <span aria-hidden className="hidden h-6 w-px bg-border sm:block" />
           <span className="hidden sm:inline">Mi Rotaract</span>
           <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary">
