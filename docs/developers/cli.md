@@ -121,7 +121,7 @@ Opciones de `dev up` (y `dev reset`):
 | `--api-port`, `--web-port` | `54321`, `54322` | Nunca 3000/3001/5432/6379. |
 | `--app-url <url>` | `APP_URL` de `.env.local` o `http://localhost:3000` | Registra `<url>/auth/callback` en la app local. |
 | `--redirect-uri <url>` | | Dirección de regreso extra (repetible; solo `localhost`). |
-| `--env-file <archivo>` | `.env.local` | Dónde escribir las credenciales. |
+| `--env-path <archivo>` | `.env.local` | Dónde escribir las credenciales. (No se llama `--env-file` porque Node 20.6+ intercepta esa opción en cualquier posición.) |
 | `--no-build` | | No reconstruir: usa las imágenes que ya existen (o `MIROTARACT_API_IMAGE` / `MIROTARACT_WEB_IMAGE`). |
 | `--no-web` | | Solo la API (sin pantalla de login). |
 

@@ -92,7 +92,7 @@ export const COMMANDS = {
           "Dirección de regreso extra para la app local (repetible).",
         value: "<url>",
       },
-      "env-file": envFile,
+      "env-path": envFile,
       "no-build": {
         type: "boolean",
         description:
@@ -172,7 +172,7 @@ export const COMMANDS = {
         description:
           "Si el kernel no responde, usa <ruta>/kernel-openapi.yaml (o MIROTARACT_KERNEL_REPO).",
       },
-      "env-file": envFile,
+      "env-path": envFile,
     },
   },
   "webhooks listen": {
@@ -217,7 +217,7 @@ export const COMMANDS = {
           "Secreto de la app (por defecto MIROTARACT_CLIENT_SECRET; preferí la variable).",
         value: "<mrs_…>",
       },
-      "env-file": envFile,
+      "env-path": envFile,
     },
     details: [
       "La firma de cada evento usa un secreto propio de esta conexión, que se",

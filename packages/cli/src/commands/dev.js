@@ -83,7 +83,7 @@ export function planDevUp(values, { cwd, env, state }) {
           hint: `Usá otro, por ejemplo los de siempre: ${DEFAULT_API_PORT} y ${DEFAULT_WEB_PORT}.`,
         },
       );
-  const envFile = resolve(cwd, values["env-file"] ?? ".env.local");
+  const envFile = resolve(cwd, values["env-path"] ?? ".env.local");
   const projectEnv = readEnvFile(envFile);
   const appUrl = parseUrl(
     values["app-url"] ?? projectEnv.APP_URL ?? "http://localhost:3000",

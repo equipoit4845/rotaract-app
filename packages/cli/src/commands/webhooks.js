@@ -20,7 +20,7 @@ export const FORWARD_TIMEOUT_MS = 10_000;
 
 /** Flags > environment > env file (.env.local). */
 export function resolveListenOptions(values, { cwd, env }) {
-  const fileEnv = readEnvFile(resolve(cwd, values["env-file"] ?? ".env.local"));
+  const fileEnv = readEnvFile(resolve(cwd, values["env-path"] ?? ".env.local"));
   const pick = (flag, key) => values[flag] ?? env[key] ?? fileEnv[key];
   if (!values["forward-to"])
     throw new CliError("Falta --forward-to.", {

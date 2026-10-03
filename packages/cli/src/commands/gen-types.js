@@ -127,7 +127,7 @@ export async function genTypesCommand(values, ctx) {
     });
   const python = lang === "python" || lang === "py";
   const fileEnv = readEnvFile(
-    resolve(ctx.cwd, values["env-file"] ?? ".env.local"),
+    resolve(ctx.cwd, values["env-path"] ?? ".env.local"),
   );
   const baseUrl = parseUrl(
     values["base-url"] ??

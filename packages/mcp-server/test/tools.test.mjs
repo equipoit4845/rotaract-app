@@ -192,10 +192,11 @@ describe("MCP tools (in-process client)", () => {
     );
     assert.equal(bad.ok, false);
     const paths = bad.errors.map((e) => e.path);
-    assert.ok(paths.includes("/permissions/0/code"));
-    assert.ok(paths.includes("/permissions/0/scopeType"));
-    assert.ok(paths.includes("/events/subscribes/0")); // needs memberships.read
-    assert.ok(paths.includes("/events/subscribes/1")); // not in catalog
+    // Paths use the module-manifest package's format (permissions[0].code).
+    assert.ok(paths.includes("permissions[0].code"));
+    assert.ok(paths.includes("permissions[0].scopeType"));
+    assert.ok(paths.includes("events.subscribes[0]")); // needs memberships.read
+    assert.ok(paths.includes("events.subscribes[1]")); // not in catalog
     const notJson = JSON.parse(
       (await mcp.call("validate_module_manifest", { manifest: "{oops" })).text,
     );

@@ -7,8 +7,9 @@
  * is installed we use it; otherwise we fall back to a local copy of the
  * minimal shape from the E8/E9/E10 contract.
  *
- * TODO(E8): once @mirotaract/module-manifest is merged, add it as a
- * dependency of @mirotaract/mcp and delete `validateManifestLocal`.
+ * @mirotaract/module-manifest is a dependency of @mirotaract/mcp, so the
+ * package is what normally runs; the local copy only covers a standalone
+ * install where the package cannot be resolved.
  */
 
 export const OIDC_SCOPES = [
@@ -299,6 +300,22 @@ export function validateManifestLocal(
 
 let external;
 
+/** `/events/subscribes/1` → `events.subscribes[1]` (the package's format). */
+export function pointerToPath(pointer) {
+  return pointer
+    .split("/")
+    .filter(Boolean)
+    .reduce(
+      (path, part) =>
+        /^\d+$/.test(part)
+          ? `${path}[${part}]`
+          : path
+            ? `${path}.${part}`
+            : part,
+      "",
+    );
+}
+
 /** Tries the E8 package first. */
 async function loadExternal() {
   if (external !== undefined) return external;
@@ -332,8 +349,7 @@ export async function validateModuleManifest(input, options = {}) {
   if (!official)
     return {
       ...local,
-      validator:
-        "local (contrato mínimo E8; TODO: @mirotaract/module-manifest)",
+      validator: "local (contrato mínimo E8)",
     };
   const result = await official(manifest);
   const errors = (result.errors ?? []).map((e) =>
@@ -345,11 +361,12 @@ export async function validateModuleManifest(input, options = {}) {
         },
   );
   // Keep the catalog/scope cross-checks the schema alone can't express.
-  const extra = local.errors.filter(
-    (e) =>
-      e.path.startsWith("/events/subscribes") &&
-      !errors.some((x) => x.path === e.path),
-  );
+  // The package reports paths as `events.subscribes[1]`; the local checks
+  // use JSON pointers. Report everything in the package's format.
+  const extra = local.errors
+    .filter((e) => e.path.startsWith("/events/subscribes"))
+    .map((e) => ({ ...e, path: pointerToPath(e.path) }))
+    .filter((e) => !errors.some((x) => x.path === e.path));
   return {
     ok: Boolean(result.ok) && extra.length === 0,
     errors: [...errors, ...extra],

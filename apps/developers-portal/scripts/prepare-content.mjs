@@ -266,6 +266,10 @@ export function prepareRegistry() {
   const target = join(publicDir, "r");
   rmSync(target, { recursive: true, force: true });
   const index = join(source, "registry.json");
+  // dist/r is not committed: build it from packages/registry when missing.
+  const builder = join(root, "packages/registry/scripts/build.mjs");
+  if (!existsSync(index) && !process.env.PORTAL_REGISTRY_DIR && existsSync(builder))
+    spawnSync(process.execPath, [builder], { cwd: root, stdio: "inherit" });
   if (!existsSync(index)) {
     console.warn(
       `[portal] Aviso: no está el registro de componentes (${source}/registry.json). /r queda vacío hasta que packages/registry (E8) se compile.`,
