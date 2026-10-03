@@ -1,0 +1,174 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Same tokens as apps/mirotaract-web (shadcn "mist" neutrals, Rotaract
+   cranberry primary), so the portal reads as part of Mi Rotaract. */
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.148 0.004 228.8);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.148 0.004 228.8);
+  --primary: oklch(0.525 0.223 3.958);
+  --primary-foreground: oklch(0.971 0.014 343.198);
+  --secondary: oklch(0.967 0.001 286.375);
+  --secondary-foreground: oklch(0.21 0.006 285.885);
+  --muted: oklch(0.963 0.002 197.1);
+  --muted-foreground: oklch(0.56 0.021 213.5);
+  --accent: oklch(0.525 0.223 3.958);
+  --accent-foreground: oklch(0.971 0.014 343.198);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.925 0.005 214.3);
+  --input: oklch(0.925 0.005 214.3);
+  --ring: oklch(0.723 0.014 214.4);
+  --radius: 0.875rem;
+  --sidebar: oklch(0.987 0.002 197.1);
+  --success: oklch(0.55 0.15 145);
+  --warning: oklch(0.75 0.15 85);
+  --warning-foreground: oklch(0.25 0.05 85);
+  --code-bg: oklch(0.2 0.01 228);
+  --code-fg: oklch(0.95 0.005 228);
+}
+
+.dark {
+  --background: oklch(0.148 0.004 228.8);
+  --foreground: oklch(0.987 0.002 197.1);
+  --card: oklch(0.218 0.008 223.9);
+  --card-foreground: oklch(0.987 0.002 197.1);
+  --primary: oklch(0.656 0.241 354.308);
+  --primary-foreground: oklch(0.971 0.014 343.198);
+  --secondary: oklch(0.274 0.006 286.033);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.275 0.011 216.9);
+  --muted-foreground: oklch(0.723 0.014 214.4);
+  --accent: oklch(0.459 0.187 3.815);
+  --accent-foreground: oklch(0.971 0.014 343.198);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.56 0.021 213.5);
+  --sidebar: oklch(0.18 0.006 223.9);
+  --success: oklch(0.6 0.15 145);
+  --warning: oklch(0.7 0.12 85);
+  --warning-foreground: oklch(0.98 0.01 85);
+  --code-bg: oklch(0.12 0.006 228);
+  --code-fg: oklch(0.95 0.005 228);
+}
+
+@theme inline {
+  --font-sans: var(--font-public-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-code: var(--code-bg);
+  --color-code-foreground: var(--code-fg);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply scroll-pt-20 font-sans antialiased;
+  }
+  body {
+    @apply min-h-screen bg-background text-foreground;
+  }
+}
+
+/* Rendered Markdown (docs/developers/*.md). */
+.prose-mr {
+  @apply max-w-none text-[15px] leading-7 text-foreground;
+}
+.prose-mr h1 {
+  @apply mb-4 text-3xl font-bold tracking-tight text-balance;
+}
+.prose-mr h2 {
+  @apply mt-12 mb-3 scroll-mt-24 border-b border-border pb-2 text-2xl font-semibold tracking-tight;
+}
+.prose-mr h3 {
+  @apply mt-8 mb-2 scroll-mt-24 text-lg font-semibold;
+}
+.prose-mr h4 {
+  @apply mt-6 mb-2 font-semibold;
+}
+.prose-mr p {
+  @apply my-4;
+}
+.prose-mr a {
+  @apply font-medium text-primary underline-offset-4 hover:underline;
+}
+.prose-mr .heading-anchor {
+  @apply ml-2 text-muted-foreground no-underline opacity-0 transition-opacity;
+}
+.prose-mr :is(h2, h3):hover .heading-anchor {
+  @apply opacity-100;
+}
+.prose-mr ul {
+  @apply my-4 list-disc space-y-1 pl-6;
+}
+.prose-mr ol {
+  @apply my-4 list-decimal space-y-1 pl-6;
+}
+.prose-mr blockquote {
+  @apply my-5 rounded-lg border-l-4 border-primary/60 bg-primary/5 px-4 py-1 text-[14px];
+}
+.prose-mr :not(pre) > code {
+  @apply rounded-md bg-muted px-1.5 py-0.5 font-mono text-[0.85em];
+}
+.prose-mr table {
+  @apply my-5 block w-full overflow-x-auto text-sm;
+  border-collapse: collapse;
+}
+.prose-mr th {
+  @apply border-b border-border bg-muted/60 px-3 py-2 text-left font-semibold whitespace-nowrap;
+}
+.prose-mr td {
+  @apply border-b border-border px-3 py-2 align-top;
+}
+.prose-mr hr {
+  @apply my-8;
+}
+.prose-mr img {
+  @apply rounded-lg;
+}
+
+/* Code blocks (Markdown and API examples). */
+.code-block {
+  @apply my-5 overflow-hidden rounded-xl border border-border bg-code text-code-foreground;
+}
+.code-block-header {
+  @apply flex items-center justify-between gap-2 border-b border-white/10 px-4 py-2 text-xs text-white/70;
+}
+.code-block pre {
+  @apply overflow-x-auto p-4 font-mono text-[13px] leading-6;
+}
+.code-block code {
+  @apply font-mono;
+}
+.copy-code {
+  @apply inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-white/80 transition-colors hover:bg-white/10 hover:text-white;
+}

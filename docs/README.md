@@ -29,6 +29,10 @@ contratos públicos son [`kernel-openapi.yaml`](../kernel-openapi.yaml),
   `dev`, `gen types` y `webhooks listen`; distrito sintético
   (`prisma/seed-synthetic.ts`) y compose `mirotaract-dev`. Guía para
   desarrolladores: [developers/cli.md](developers/cli.md).
+- [Portal y consola de desarrolladores](16-developer-portal.md):
+  `apps/developers-portal` (guías, quickstarts probados en CI, referencia
+  con "Probar"), registros de requests de las apps, changelog, política de
+  deprecación y avisos por email.
 - [Validación v1 del Design System](design-system-v1-validation.md):
   veredicto por área con comandos y resultados reales — no afirmaciones sin
   evidencia.

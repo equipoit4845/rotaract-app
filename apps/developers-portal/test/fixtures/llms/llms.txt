@@ -1,0 +1,5 @@
+# Mi Rotaract para desarrolladores (fixture)
+
+> Fixture de prueba del portal: lo reemplaza la salida de scripts/build-llms-txt.mjs (E10).
+
+- [Webhooks](https://developers.rotaract4845.com/docs/webhooks.md)

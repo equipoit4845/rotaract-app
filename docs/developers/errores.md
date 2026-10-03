@@ -30,10 +30,13 @@ distinguirlos.
 | `code` | Código estable para tu lógica: por ejemplo `KERNEL_INVALID_TRANSITION`, o `KERNEL_HTTP_<status>` para errores genéricos. |
 | `detail` | Explicación legible. Útil para logs; no la uses para decidir (puede cambiar de redacción). |
 | `instance` | La ruta que falló. |
-| `traceId` | Correlación. Viene si mandaste `traceparent` o `X-Correlation-Id`. |
+| `traceId` | Identificador del pedido. Viene **siempre**: el trace-id de tu `traceparent` (32 caracteres hexadecimales), si no tu `X-Correlation-Id`, si no uno generado. También llega en la cabecera `X-Trace-Id` de toda respuesta, incluso las exitosas. |
 
 **Consejo:** mandá un `X-Correlation-Id` propio en cada pedido y logealo.
-Si tenés que reportar un problema al distrito, ese valor ayuda a encontrarlo.
+Con ese valor encontrás el pedido en la pestaña **Registros** de tu app en la
+consola (`/developer/apps/<app>` → Registros, filtro por traceId), con su
+ruta, su resultado y su demora. Si tenés que reportar un problema al
+distrito, mandá ese valor.
 
 ## Error OAuth
 

@@ -95,6 +95,10 @@ tipos (`mirotaract gen types`) y reenvía webhooks a tu servidor local
 
 | Documento | Contenido |
 |---|---|
+| [quickstart-nextjs.md](quickstart-nextjs.md) | Quickstart Next.js: login y padrón en 15 minutos (código probado en CI). |
+| [quickstart-express.md](quickstart-express.md) | Quickstart Express: API que verifica el token de tu app móvil, padrón y webhooks. |
+| [quickstart-fastapi.md](quickstart-fastapi.md) | Quickstart FastAPI: login con sesión del lado del servidor y padrón. |
+| [quickstart-flutter.md](quickstart-flutter.md) | Quickstart Flutter: app móvil `PUBLIC` con PKCE y padrón vía tu backend. |
 | [cli.md](cli.md) | CLI `mirotaract`: plantillas (Next.js, FastAPI, Flutter), kernel local con datos sintéticos, tipos y webhooks en local. |
 | [conceptos.md](conceptos.md) | Organizaciones, personas, membresías, períodos, cargos; apps, tipos, alcance, scopes y consentimiento. |
 | [registrar-una-app.md](registrar-una-app.md) | Para el RDR: alta de una app en la consola, secretos, rotación, pausa y revocación. |
@@ -106,6 +110,8 @@ tipos (`mirotaract gen types`) y reenvía webhooks a tu servidor local
 | [errores.md](errores.md) | Formatos de error, códigos y qué hacer con cada uno; reintentos. |
 | [seguridad.md](seguridad.md) | Checklist obligatoria antes de pedir producción. |
 | [faq.md](faq.md) | Preguntas frecuentes. |
+| [changelog.md](changelog.md) | Cambios de la API, los SDKs y la CLI, con su impacto en compatibilidad. |
+| [deprecaciones.md](deprecaciones.md) | Política de deprecación: 6 meses de aviso, cabeceras `Deprecation`/`Sunset` y emails. |
 
 ## Datos de referencia
 
@@ -119,6 +125,8 @@ tipos (`mirotaract gen types`) y reenvía webhooks a tu servidor local
 | Apps conectadas (cada persona) | `https://app.rotaract4845.com/connected-apps` |
 | Catálogo de eventos (JSON) | `https://api.rotaract4845.com/api/kernel/v1/events/catalog` |
 | Contrato OpenAPI | `kernel-openapi.yaml`, tags `OAuth`, `DeveloperApps`, `Service`, `Webhooks` y `Events` |
+| Portal para desarrolladores (guías, referencia, "Probar") | `https://developers.rotaract4845.com` ([diseño](../16-developer-portal.md)) |
+| Registros de requests de tu app | Consola de apps → tu app → **Registros** (30 días; `GET /developer/apps/{appId}/request-logs`) |
 
 ## SDKs oficiales
 
