@@ -490,13 +490,22 @@ async function ensureAppointment(input: {
   return appointment;
 }
 
+// E12.3 (docs/19-operations-e12.md): the hosted sandbox sets its own
+// passwords; the superadmin one is never the published one.
+const accountPassword = () =>
+  process.env.MIROTARACT_SANDBOX_PASSWORD || SANDBOX.password;
+const superadminPassword = () =>
+  process.env.MIROTARACT_SANDBOX_ADMIN_PASSWORD || accountPassword();
+
 async function ensureAccount(
   personId: string,
   email: string,
   superadmin: boolean,
   platformUserRoleId: string,
 ) {
-  const passwordHash = await argon2.hash(SANDBOX.password);
+  const passwordHash = await argon2.hash(
+    superadmin ? superadminPassword() : accountPassword(),
+  );
   const emailNormalized = email.toLowerCase();
   const existingForPerson = await prisma.userAccount.findUnique({
     where: { personId },
@@ -773,7 +782,7 @@ async function main() {
       club: clubs.find((c) => c.code === `SBX-${account.club}`)!.name,
     });
   }
-  log(`${users.length} cuentas de prueba (contraseña: ${SANDBOX.password})`);
+  log(`${users.length} cuentas de prueba (contraseña: ${accountPassword()})`);
 
   const rdr = users.find((u) => u.role === "DISTRICT_RDR")!;
   const confidential = await ensureApp({
@@ -805,7 +814,7 @@ async function main() {
     period: { code: year.code, name: year.name },
     clubs: clubs.map(({ id, code, name }) => ({ id, code, name })),
     people: people.length,
-    password: SANDBOX.password,
+    password: accountPassword(),
     users,
     app: {
       id: confidential.app.id,
