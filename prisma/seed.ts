@@ -67,6 +67,10 @@ const permissionCodes = [
   // govern the apps committees build on top of the Kernel.
   "kernel.app.read",
   "kernel.app.manage",
+  // --- E12 (docs/19-operations-e12.md): announce incidents and maintenances
+  // on the public status page.
+  "kernel.status.manage",
+  // --- end E12
 ];
 const roles = [
   "PLATFORM_USER",
@@ -149,6 +153,9 @@ const rolePermissions: Record<string, string[]> = {
     "kernel.audit.read",
     "kernel.app.read",
     "kernel.app.manage",
+    // --- E12
+    "kernel.status.manage",
+    // --- end E12
   ],
   DISTRICT_SECRETARY: [
     ...selfServicePermissions,

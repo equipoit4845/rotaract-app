@@ -4,6 +4,7 @@ import { useCan } from "@/lib/api";
 import { useActiveOrganization } from "@/lib/api/organizations/use-active-organization";
 import type { AdminNavItem } from "@/components/layout";
 import {
+  Activity,
   ArrowLeftRight,
   Award,
   Blocks,
@@ -57,6 +58,7 @@ export function useShellNavItems(
   const canReadPeriods = useCan("kernel.period.read", scope);
   const canReadApps = useCan("kernel.app.read", scope);
   const canReadModules = useCan("kernel.module.read", scope);
+  const canManageStatus = useCan("kernel.status.manage", scope); // E12
   const isDistrictAdminView = superadminMode === "ADMIN";
 
   const district: NavEntry[] = [];
@@ -74,6 +76,15 @@ export function useShellNavItems(
   if (canReadApps) {
     district.push({ label: "Apps", href: "/developer/apps", icon: Blocks });
   }
+  // --- E12.1: incidents and maintenances of the public status page.
+  if (canManageStatus) {
+    district.push({
+      label: "Estado",
+      href: "/developer/estado",
+      icon: Activity,
+    });
+  }
+  // --- end E12
 
   const club: NavEntry[] = [];
   if (canReadMemberships) {

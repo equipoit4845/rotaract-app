@@ -59,6 +59,10 @@ const publicOperations = new Set([
   "getEventCatalog",
   "streamWebhookEvents",
   "streamWebhookEventsAlias",
+  // --- E12 (docs/19-operations-e12.md): the public status page.
+  "getStatus",
+  "getStatusHistory",
+  // --- end E12
 ]);
 const accountOperations = new Set([
   // A person acting on their own OAuth consents (any signed-in account).
@@ -280,6 +284,12 @@ const permissionByHandler: Record<string, string> = {
   // --- E8 (docs/15-modules.md)
   installationsInTree: "kernel.module.read",
   // --- end E8
+  // --- E12 (docs/19-operations-e12.md): incidents and maintenances.
+  listStatusIncidents: "kernel.status.manage",
+  createStatusIncident: "kernel.status.manage",
+  updateStatusIncident: "kernel.status.manage",
+  addStatusIncidentUpdate: "kernel.status.manage",
+  // --- end E12
 };
 
 // Handlers whose route only carries the entity's own id (not its
@@ -590,12 +600,33 @@ async function moduleOwnerOrganization(
 }
 // --- end E8
 
+// --- E12 (docs/19-operations-e12.md) -------------------------------------
+// The status page is district-wide: kernel.status.manage is checked at
+// platform scope (SUPERADMIN) and against the district organization(s)
+// (the RDR's ORGANIZATION_TREE grant). Nothing the caller sends picks it.
+async function statusOrganizations(
+  prisma: PrismaService,
+): Promise<Array<string | undefined>> {
+  const districts = await prisma.organization.findMany({
+    where: { type: "DISTRICT" },
+    select: { id: true },
+  });
+  return [undefined, ...districts.map((district) => district.id)];
+}
+// --- end E12
+
 const organizationResolverByHandler: Record<string, OrganizationResolver> = {
   // --- E8
   createModule: moduleRegistrationOrganization,
   manifest: moduleOwnerOrganization,
   deprecate: moduleOwnerOrganization,
   // --- end E8
+  // --- E12
+  listStatusIncidents: statusOrganizations,
+  createStatusIncident: statusOrganizations,
+  updateStatusIncident: statusOrganizations,
+  addStatusIncidentUpdate: statusOrganizations,
+  // --- end E12
   getDeveloperApp: developerAppOrganization,
   updateDeveloperApp: developerAppOrganization,
   rotateDeveloperAppSecret: developerAppOrganization,

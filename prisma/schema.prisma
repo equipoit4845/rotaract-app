@@ -955,3 +955,115 @@ model DeveloperAppRequestLog {
   @@index([appId, traceId])
   @@index([createdAt])
 }
+
+// ---------------------------------------------------------------------------
+// E12.1 — status of the kernel and its satellites (docs/19-operations-e12.md).
+// The worker probes every component once a minute (StatusCheck, raw, kept
+// 7 days) and folds each result into a per-day summary (StatusDailySummary,
+// kept 90 days) the public uptime is computed from. Incidents and
+// maintenances are announced by the SUPERADMIN/RDR (kernel.status.manage).
+// No personal data in any public read: authors are never exposed.
+// ---------------------------------------------------------------------------
+enum StatusCheckResult {
+  UP
+  DEGRADED
+  DOWN
+}
+
+enum StatusIncidentKind {
+  INCIDENT
+  MAINTENANCE
+}
+
+enum StatusIncidentImpact {
+  MINOR
+  MAJOR
+  CRITICAL
+  MAINTENANCE
+}
+
+enum StatusIncidentState {
+  INVESTIGATING
+  IDENTIFIED
+  MONITORING
+  RESOLVED
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model StatusCheck {
+  id            String            @id @default(cuid())
+  /// Component key (web, api, oidc, webhooks, meetings, portal, sandbox).
+  component     String
+  result        StatusCheckResult
+  latencyMs     Int?
+  /// Short technical reason (HTTP status, timeout...). Never personal data.
+  detail        String?
+  /// Start of the minute the check belongs to: one check per component and
+  /// minute even with several workers (unique below).
+  bucket        DateTime
+  /// The check fell inside an announced maintenance of this component.
+  inMaintenance Boolean           @default(false)
+  checkedAt     DateTime          @default(now())
+
+  @@unique([component, bucket])
+  @@index([checkedAt])
+}
+
+model StatusDailySummary {
+  component    String
+  /// UTC day.
+  day          DateTime @db.Date
+  total        Int      @default(0)
+  up           Int      @default(0)
+  degraded     Int      @default(0)
+  down         Int      @default(0)
+  /// Checks inside an announced maintenance: excluded from the uptime.
+  maintenance  Int      @default(0)
+  latencySumMs BigInt   @default(0)
+  latencyCount Int      @default(0)
+  updatedAt    DateTime @default(now()) @updatedAt
+
+  @@id([component, day])
+  @@index([day])
+}
+
+model StatusIncident {
+  id             String               @id @default(cuid())
+  kind           StatusIncidentKind
+  title          String
+  impact         StatusIncidentImpact
+  state          StatusIncidentState
+  components     String[]
+  /// Maintenances only: the announced window.
+  scheduledStart DateTime?
+  scheduledEnd   DateTime?
+  startedAt      DateTime?
+  resolvedAt     DateTime?
+  /// Internal only (never in GET /status*).
+  createdById    String?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  updates StatusIncidentUpdate[]
+
+  @@index([state])
+  @@index([createdAt])
+  @@index([scheduledStart])
+}
+
+model StatusIncidentUpdate {
+  id          String              @id @default(cuid())
+  incidentId  String
+  state       StatusIncidentState
+  message     String
+  createdById String?
+  createdAt   DateTime            @default(now())
+
+  incident StatusIncident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@index([incidentId, createdAt])
+}
+// --- end E12

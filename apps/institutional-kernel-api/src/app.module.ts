@@ -54,6 +54,11 @@ import { RequestLogsService } from "./application/request-logs/request-logs.serv
 import { RequestLogsController } from "./interfaces/http/request-logs.controller";
 import { RequestLogMiddleware } from "./interfaces/http/request-log.middleware";
 import { DeprecationMiddleware } from "./interfaces/http/deprecation.middleware";
+// --- E12 — status page (docs/19-operations-e12.md)
+import { StatusProbeService } from "./application/status/status-probe.service";
+import { StatusService } from "./application/status/status.service";
+import { StatusController } from "./interfaces/http/status.controller";
+// --- end E12
 
 @Module({
   imports: [
@@ -88,6 +93,9 @@ import { DeprecationMiddleware } from "./interfaces/http/deprecation.middleware"
     EventsController,
     // E9
     RequestLogsController,
+    // --- E12
+    StatusController,
+    // --- end E12
   ],
   providers: [
     HealthService,
@@ -118,6 +126,10 @@ import { DeprecationMiddleware } from "./interfaces/http/deprecation.middleware"
     // E9
     RequestLogWriter,
     RequestLogsService,
+    // --- E12
+    StatusService,
+    StatusProbeService,
+    // --- end E12
     { provide: APP_INTERCEPTOR, useClass: OpenApiValidationInterceptor },
     // Order matters: rate limiting runs before authentication, so floods are
     // rejected before any token verification or database work.

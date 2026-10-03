@@ -77,4 +77,7 @@ export const permissionNames: Record<string, string> = {
   "kernel.audit.read": "Ver auditoría",
   "kernel.app.read": "Ver las apps conectadas al distrito",
   "kernel.app.manage": "Registrar y administrar apps",
+  // --- E12 (docs/19-operations-e12.md)
+  "kernel.status.manage": "Publicar incidentes y mantenimientos",
+  // --- end E12
 };
