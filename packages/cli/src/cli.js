@@ -54,7 +54,7 @@ export async function run(argv, ctx = {}) {
     const { command, values, positionals } = parsed;
     switch (command) {
       case "init":
-        return initCommand(values, positionals, context);
+        return await initCommand(values, positionals, context);
       case "dev up":
       case "dev down":
       case "dev reset":

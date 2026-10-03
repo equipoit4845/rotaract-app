@@ -26,6 +26,7 @@
     "test": "node --test --test-force-exit test/*.test.mjs"
   },
   "dependencies": {
+    "@mirotaract/ai-skills": "workspace:*",
     "openapi-typescript": "^7.13.0",
     "yaml": "^2.9.0"
   }

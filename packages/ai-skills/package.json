@@ -1,0 +1,36 @@
+{
+  "name": "@mirotaract/ai-skills",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Skills de IA de Mi Rotaract: Claude Code, Cursor, GitHub Copilot y AGENTS.md desde una sola fuente, con el checklist de seguridad.",
+  "license": "UNLICENSED",
+  "type": "module",
+  "bin": {
+    "mirotaract-ai-skills": "./bin/ai-skills.js"
+  },
+  "exports": {
+    ".": "./src/index.js",
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "bin",
+    "src",
+    "skills-src",
+    "prompts"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "node bin/ai-skills.js build --out dist",
+    "test": "node --test --test-force-exit test/*.test.mjs",
+    "gate": "node ../../evals/bin/evals.js gate",
+    "prepublishOnly": "node ../../evals/bin/evals.js gate"
+  },
+  "dependencies": {
+    "yaml": "^2.9.0"
+  }
+}

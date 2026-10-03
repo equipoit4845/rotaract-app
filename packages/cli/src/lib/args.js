@@ -48,10 +48,17 @@ export const COMMANDS = {
         type: "boolean",
         description: "Escribir aunque la carpeta no esté vacía.",
       },
+      ai: {
+        type: "string",
+        description:
+          "Instalar las skills de IA: claude, cursor, copilot, agents o all (separados por coma).",
+        value: "<destinos>",
+      },
     },
     details: [
       "Ejemplos:",
       "  mirotaract init mi-app --template next",
+      "  mirotaract init mi-app --template next --ai claude,cursor",
       "  mirotaract init asistencia --template fastapi --kernel-repo ~/rotaract-app",
     ],
   },
