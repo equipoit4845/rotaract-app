@@ -1,0 +1,38 @@
+{
+  "name": "@mirotaract/mcp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Servidor MCP oficial de Mi Rotaract (stdio): documentación, contrato OpenAPI, permisos, eventos, manifiestos de módulo y tipos; app y tokens de prueba solo contra un kernel local.",
+  "license": "UNLICENSED",
+  "type": "module",
+  "bin": {
+    "mirotaract-mcp": "./bin/mirotaract-mcp.js"
+  },
+  "exports": {
+    ".": "./src/server.js",
+    "./manifest": "./src/manifest.js",
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "bin",
+    "src",
+    "dist/bundle.json",
+    "examples"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "node scripts/build-bundle.mjs",
+    "test": "node scripts/build-bundle.mjs && node --test --test-force-exit test/*.test.mjs"
+  },
+  "dependencies": {
+    "@mirotaract/cli": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.32.0",
+    "yaml": "^2.9.0",
+    "zod": "^3.25.76"
+  }
+}

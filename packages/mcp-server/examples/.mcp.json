@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "mirotaract": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["${MIROTARACT_KERNEL_REPO}/packages/mcp-server/bin/mirotaract-mcp.js"],
+      "env": {
+        "MIROTARACT_BASE_URL": "${MIROTARACT_BASE_URL:-http://localhost:54321/api/kernel/v1}"
+      }
+    }
+  }
+}
