@@ -22,6 +22,8 @@ import { useState } from "react";
 import { describeKernelError } from "@/features/shell/kernel-error-message";
 
 import { formatDateTime } from "../utils/app-catalog";
+import { useAppNavigation } from "../utils/app-navigation";
+import { logsAroundAttempt } from "../utils/request-log-labels";
 import {
   DELIVERY_STATUS,
   describeAttempt,
@@ -47,6 +49,7 @@ export function WebhookDeliveriesTable({
     status || undefined,
   );
   const redeliver = useRedeliverWebhook();
+  const navigation = useAppNavigation();
   const [redelivering, setRedelivering] = useState<string | null>(null);
   const items = deliveries.data?.items ?? [];
 
@@ -144,6 +147,22 @@ export function WebhookDeliveriesTable({
                     title={delivery.lastResponseBody ?? undefined}
                   >
                     {describeAttempt(delivery)}
+                    {navigation &&
+                    delivery.status !== "SUCCEEDED" &&
+                    logsAroundAttempt(delivery.lastAttemptAt) ? (
+                      <button
+                        type="button"
+                        className="mt-1 block text-primary underline-offset-2 hover:underline"
+                        title="Los pedidos que hizo tu app al kernel 10 minutos antes y después de este intento"
+                        onClick={() =>
+                          navigation.showRequestLogs(
+                            logsAroundAttempt(delivery.lastAttemptAt)!,
+                          )
+                        }
+                      >
+                        Ver registros de ese momento
+                      </button>
+                    ) : null}
                   </TableCell>
                   <TableCell>{delivery.attempts}</TableCell>
                   {canManage ? (
