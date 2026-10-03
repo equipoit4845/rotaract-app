@@ -11,6 +11,7 @@
  * without clobbering files the user wrote (AGENTS.md and
  * copilot-instructions.md get a managed block).
  */
+import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -337,6 +338,13 @@ export function buildAll(outDir) {
       written.push(relative(outDir, destination));
     }
   return written.sort();
+}
+
+/** Content hash of the skill sources: ties eval results to an exact skills version. */
+export function fingerprint(dir = SKILLS_DIR) {
+  const hash = createHash("sha256");
+  for (const file of readdirSync(dir).filter((f) => f.endsWith(".md")).sort()) hash.update(file).update("\0").update(readFileSync(join(dir, file))).update("\0");
+  return `${VERSION}+${hash.digest("hex").slice(0, 12)}`;
 }
 
 /** Prompt templates for committees without developers (E10.5). */

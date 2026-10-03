@@ -1,0 +1,59 @@
+{
+  "id": "login-nextjs",
+  "title": "Agregá login a una app Next.js",
+  "language": "ts",
+  "skills": [
+    "mirotaract-ingresar",
+    "mirotaract-kernel-local"
+  ],
+  "fixture": "fixture",
+  "prompt": "Agregá \"Ingresar con Mi Rotaract\" a esta app Next.js (App Router). Quien ingresó ve \"Hola, <nombre>\" en la portada y un botón para salir; quien no, un botón \"Ingresar con Mi Rotaract\". Agregá /perfil con el nombre de la persona y los clubes a los que pertenece. No hace falta el email. Las variables de entorno están en .env.example (en local las escribe `mirotaract dev up`).",
+  "graders": [
+    {
+      "id": "no-web-storage-tokens"
+    },
+    {
+      "id": "jwks-verification"
+    },
+    {
+      "id": "minimal-scopes",
+      "options": {
+        "required": [
+          "openid"
+        ],
+        "allowed": [
+          "openid",
+          "profile",
+          "memberships"
+        ]
+      }
+    },
+    {
+      "id": "no-client-secrets"
+    },
+    {
+      "id": "no-pii-logs"
+    },
+    {
+      "id": "kernel-scopes"
+    }
+  ],
+  "references": {
+    "good": {
+      "expect": "pass"
+    },
+    "good-manual": {
+      "expect": "pass"
+    },
+    "bad": {
+      "expect": "fail",
+      "mustFail": [
+        "no-web-storage-tokens",
+        "jwks-verification",
+        "minimal-scopes",
+        "no-client-secrets",
+        "no-pii-logs"
+      ]
+    }
+  }
+}

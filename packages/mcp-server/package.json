@@ -10,7 +10,9 @@
   },
   "exports": {
     ".": "./src/server.js",
+    "./bundle": "./src/bundle.js",
     "./manifest": "./src/manifest.js",
+    "./sandbox": "./src/sandbox.js",
     "./package.json": "./package.json"
   },
   "engines": {

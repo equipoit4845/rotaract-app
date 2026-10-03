@@ -1,0 +1,21 @@
+{
+  "name": "@mirotaract/evals",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Evals de las skills de IA de Mi Rotaract: tareas reales, graders automáticos y gate de publicación.",
+  "license": "UNLICENSED",
+  "type": "module",
+  "bin": {
+    "mirotaract-evals": "./bin/evals.js"
+  },
+  "scripts": {
+    "test": "node --test --test-force-exit test/*.test.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.131.0",
+    "@mirotaract/ai-skills": "workspace:*",
+    "@mirotaract/mcp": "workspace:*",
+    "@mirotaract/sdk": "workspace:*",
+    "typescript": "^5.8.3"
+  }
+}

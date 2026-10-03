@@ -138,7 +138,9 @@ export function validateManifestLocal(manifest, { eventTypes, eventScopes = {} }
   if (manifest.oauth !== undefined) {
     if (!isObject(manifest.oauth)) error("/oauth", "Objeto { clientId?, scopes: [] }.");
     else {
-      if (manifest.oauth.clientId !== undefined && !/^mra_[0-9a-f]{20}$/.test(manifest.oauth.clientId)) error("/oauth/clientId", "Formato mra_ + 20 hexadecimales (lo entrega el RDR).");
+      for (const key of Object.keys(manifest.oauth))
+        if (/secret|password|token/i.test(key)) error(`/oauth/${key}`, "Nunca pongas secretos en el manifiesto (es público): van en variables de entorno del servidor.");
+      if (manifest.oauth.clientId !== undefined &&!/^mra_[0-9a-f]{20}$/.test(manifest.oauth.clientId)) error("/oauth/clientId", "Formato mra_ + 20 hexadecimales (lo entrega el RDR).");
       if (!Array.isArray(manifest.oauth.scopes)) error("/oauth/scopes", "Lista de scopes.");
       else {
         const dup = new Set();
