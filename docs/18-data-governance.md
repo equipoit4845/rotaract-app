@@ -191,7 +191,7 @@ de quien corresponda. Primer caso: las presidencias abren Reuniones
 
 `DeveloperAppListing` (una por app): `published`, `displayName` (2–60),
 `shortDescription` (≤ 160), `icon` (nombre de ícono de lucide en kebab-case,
-como `calendar-days`, o URL https de una imagen), `launchUrl` (https; http
+como `calendar-days`, o URL https de una imagen; la web dibuja un conjunto acotado de íconos, `features/governance/components/app-icon.tsx`, y uno genérico para nombres que no conoce), `launchUrl` (https; http
 solo para localhost), `audiences`, `positionCodes`, `displayOrder` (0–1000,
 menor primero).
 

@@ -93,7 +93,7 @@ Pedile al RDR que la publique y decile:
 
 - el **nombre** y una **descripción corta** (hasta 160 caracteres);
 - el **ícono**: un nombre de [lucide](https://lucide.dev/icons) como
-  `calendar-days`, o la URL https de una imagen cuadrada;
+  `calendar-days`, o la URL https de una imagen cuadrada (el panel dibuja un conjunto de íconos comunes, como `calendar-days`, `users`, `vote` o `clipboard-list`; si no conoce el nombre, muestra uno genérico);
 - el **enlace** para abrirla (https). Si no decís nada, se usa el origen de
   tu dirección de regreso;
 - **para quién**: todas las personas del distrito, presidencias de club,
