@@ -511,18 +511,22 @@ test("Connected apps — lists what each app can see and 'Quitar acceso' revokes
   backend.kernelHandler = (request) => {
     const url = new URL(request.url);
     if (url.pathname.endsWith("/auth/me")) return meResponse();
-    if (url.pathname.endsWith("/oauth/consents") && request.method === "GET") {
+    // E11.2: the page lists /me/app-access (connected apps and access history).
+    if (url.pathname.endsWith("/me/app-access") && request.method === "GET") {
       return jsonResponse(
         revoked
           ? []
           : [
               {
                 appId: "app_1",
-                clientId: "mra_0123456789abcdef0123",
                 appName: "Agenda del comité",
                 organizationName: "Distrito 4845",
+                appStatus: "ACTIVE",
+                connected: true,
                 scopes: [{ scope: "email", label: "Tu correo electrónico" }],
                 grantedAt: "2026-09-10T00:00:00.000Z",
+                lastAccessAt: null,
+                accessCount: 0,
               },
             ],
       );
