@@ -71,9 +71,8 @@ las personas responsables de cada app activa reciben el aviso por email.
   otra copia). Si el paquete está instalado, se sigue usando.
 - `init --ai` valida los destinos antes de escribir y, si la descarga falla,
   deja la app creada y dice cómo reintentar.
-- La plantilla `fastapi` sin `--kernel-repo` instala el SDK de Python desde el
-  repositorio público (`git+https://github.com/equipoit4845/rotaract-app.git#subdirectory=sdks/python`)
-  hasta que esté en PyPI.
+- La plantilla `fastapi` sin `--kernel-repo` instala el SDK de Python desde
+  PyPI (`mirotaract[fastapi]>=0.1.0`).
 
 <!-- entry: npm-publish -->
 ## 2026-10-03 · SDKs y herramientas publicados en npm y PyPI (MIT)

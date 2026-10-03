@@ -35,7 +35,6 @@ export default async function Home({
   return (
     <>
       <h1>Hola, {user.given_name ?? user.name ?? "socio/a"}</h1>
-      {user.email && <p className="muted">{user.email}</p>}
       <p>
         <Link className="button" href="/padron">
           Ver el padrón de mi club

@@ -46,7 +46,7 @@ load_dotenv(".env.local")
 load_dotenv(".env")
 
 #: Datos que pedimos a la persona al ingresar. Pedí solo lo que uses.
-LOGIN_SCOPE = "openid profile email memberships"
+LOGIN_SCOPE = "openid profile memberships"
 
 
 def _required(name: str) -> str:
@@ -223,7 +223,7 @@ async def callback(request: Request) -> Response:
     except MiRotaractOAuthError as error:
         return RedirectResponse(f"/?error={error.error}", status_code=302)
     claims = tokens.claims or {}
-    user = {key: claims[key] for key in ("sub", "name", "email") if key in claims}
+    user = {key: claims[key] for key in ("sub", "name") if key in claims}
     state.sessions.delete(old_id)  # id de sesión nuevo al ingresar
     response = RedirectResponse("/padron", status_code=302)
     set_cookie(response, state.sessions.save({"user": user}))

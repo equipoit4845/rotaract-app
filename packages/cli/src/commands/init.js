@@ -19,8 +19,8 @@ export function slug(value) {
   );
 }
 
-export const PY_SDK_FROM_GIT =
-  "mirotaract[fastapi] @ git+https://github.com/equipoit4845/rotaract-app.git#subdirectory=sdks/python";
+/** The Python SDK on PyPI (published 0.1.0, MIT). */
+export const PY_SDK_REQUIREMENT = "mirotaract[fastapi]>=0.1.0";
 
 /** Values for the {{PLACEHOLDERS}} of every template. */
 export function templateVars({ name, kernelRepo }) {
@@ -36,7 +36,7 @@ export function templateVars({ name, kernelRepo }) {
     // The Python SDK is not on PyPI yet: install it from the public repo.
     SDK_PY_REQUIREMENT: kernelRepo
       ? `mirotaract[fastapi] @ file://${join(kernelRepo, "sdks/python")}`
-      : PY_SDK_FROM_GIT,
+      : PY_SDK_REQUIREMENT,
   };
 }
 
@@ -108,7 +108,7 @@ export async function initCommand(values, positionals, ctx) {
   const sdkLine = kernelRepo
     ? `El SDK se instala desde ${kernelRepo}.`
     : template === "fastapi"
-      ? "El SDK de Python se instala desde el repositorio público (todavía no está en PyPI)."
+      ? "El SDK de Python (mirotaract) se instala desde PyPI."
       : template === "next"
         ? "El SDK (@mirotaract/sdk) se instala desde npm."
         : null;

@@ -217,10 +217,8 @@ seguridad, y las **skills de Mi Rotaract** (instrucciones por tarea para vos).
   SHA-256 coincida, y escribí cada archivo de `targets.{{SKILLS_TARGET}}` en
   su `path` (si el archivo ya existe y la entrada dice `managed: true`,
   agregá el bloque al final en vez de pisarlo).
-- Con la plantilla `fastapi`: si `pip install -r requirements.txt` no
-  encuentra el paquete `mirotaract` (el SDK de Python todavía no está en
-  PyPI), cambiá esa línea de `requirements.txt` por
-  `mirotaract[fastapi] @ git+https://github.com/equipoit4845/rotaract-app.git#subdirectory=sdks/python`.
+- Con la plantilla `fastapi`: el SDK de Python es `mirotaract[fastapi]` de
+  PyPI (Python ≥ 3.10); si `pip` no lo encuentra, revisá la versión de Python.
 - Las skills son una **versión preliminar**: todavía no pasaron las
   evaluaciones automáticas. Usalas, pero si contradicen la documentación,
   manda la documentación.

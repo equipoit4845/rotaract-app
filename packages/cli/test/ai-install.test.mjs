@@ -404,7 +404,7 @@ describe("mirotaract init --ai with the bundle", () => {
     assert.equal(readFileSync(join(cwd, "PLAN.md"), "utf8"), "# Plan\n");
     assert.match(
       readFileSync(join(cwd, "requirements.txt"), "utf8"),
-      /mirotaract\[fastapi\] @ git\+https:\/\/github\.com\/equipoit4845\/rotaract-app\.git#subdirectory=sdks\/python/,
+      /^mirotaract\[fastapi\]>=0\.1\.0$/m,
     );
     assert.ok(
       existsSync(join(cwd, ".claude/skills/mirotaract-kernel-local/SKILL.md")),

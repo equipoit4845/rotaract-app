@@ -128,7 +128,6 @@ async def home(request: Request, error: str | None = None):
     return page(
         "Inicio",
         f"<h1>Hola, {escape(name)}</h1>"
-        + (f"<p class=muted>{escape(user['email'])}</p>" if user.get("email") else "")
         + '<p><a class="button" href="/padron">Ver el padrón de mi club</a></p>'
         '<form action="/auth/logout" method="post"><button class="button secondary" type="submit">Salir</button></form>',
     )
@@ -165,7 +164,7 @@ async def callback(request: Request):
         return RedirectResponse(f"/?error={quote(error.error)}", status_code=302)
     claims = tokens.claims or {}
     # Guardamos solo los claims verificados del id_token, no los tokens.
-    user = {key: claims[key] for key in ("sub", "name", "given_name", "family_name", "email") if key in claims}
+    user = {key: claims[key] for key in ("sub", "name", "given_name", "family_name") if key in claims}
     # Id de sesión nuevo al ingresar (evita fijación de sesión).
     state.sessions.delete(old_id)
     response = RedirectResponse(pending["return_to"], status_code=302)

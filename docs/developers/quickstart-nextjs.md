@@ -53,7 +53,7 @@ function env(name: string): string {
 }
 
 /** Datos que pedimos a la persona al ingresar. Pedí solo lo que uses. */
-export const LOGIN_SCOPE = "openid profile email memberships";
+export const LOGIN_SCOPE = "openid profile memberships";
 
 let auth: MiRotaractAuth | undefined;
 let session: ReturnType<typeof createMiRotaractNext> | undefined;

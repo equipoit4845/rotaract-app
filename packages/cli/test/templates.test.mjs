@@ -66,7 +66,7 @@ describe("template rendering", () => {
     assert.equal(slug("Mi App Ñandú 2"), "mi-app-nandu-2");
   });
 
-  test("SDK dependencies point at the kernel checkout until they are published", () => {
+  test("SDK dependencies: the kernel checkout with --kernel-repo, npm/PyPI otherwise", () => {
     const local = templateVars({ name: "App", kernelRepo: "/k" });
     assert.equal(local.SDK_JS_DEPENDENCY, "file:/k/packages/sdk-js");
     assert.equal(
@@ -77,7 +77,7 @@ describe("template rendering", () => {
     assert.equal(published.SDK_JS_DEPENDENCY, "^0.1.0");
     assert.equal(
       published.SDK_PY_REQUIREMENT,
-      "mirotaract[fastapi] @ git+https://github.com/equipoit4845/rotaract-app.git#subdirectory=sdks/python",
+      "mirotaract[fastapi]>=0.1.0",
     );
     assert.equal(templateVars({ name: "9 Club" }).DART_PACKAGE, "app_9_club");
   });

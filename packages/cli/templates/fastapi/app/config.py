@@ -14,7 +14,7 @@ load_dotenv(".env.local")
 load_dotenv(".env")
 
 #: Datos que pedimos a la persona al ingresar. Pedí solo lo que uses.
-LOGIN_SCOPE = "openid profile email memberships"
+LOGIN_SCOPE = "openid profile memberships"
 
 
 def _required(name: str) -> str:
