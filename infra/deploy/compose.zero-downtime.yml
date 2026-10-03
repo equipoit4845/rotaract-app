@@ -30,6 +30,9 @@ services:
       service: api
     image: ${DEPLOY_IMAGE_PREFIX:-mirotaract}-api:blue
     pull_policy: never
+    # tini as PID 1: node gets SIGTERM and stops at once instead of after
+    # the 30 s stop timeout.
+    init: true
     build: !reset null
     ports: !reset []
     profiles: !reset []
@@ -48,6 +51,9 @@ services:
       service: web
     image: ${DEPLOY_IMAGE_PREFIX:-mirotaract}-web:blue
     pull_policy: never
+    # tini as PID 1: node gets SIGTERM and stops at once instead of after
+    # the 30 s stop timeout.
+    init: true
     build: !reset null
     ports: !reset []
     profiles: !reset []

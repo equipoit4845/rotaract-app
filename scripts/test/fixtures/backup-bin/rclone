@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Fake `rclone` for scripts/test/backup.test.mjs: "remote:path" maps to
+# $FAKE_REMOTE_DIR/path on disk.
+echo "rclone $*" >>"${FAKE_LOG:-/dev/null}"
+local_path() { echo "${FAKE_REMOTE_DIR:?}/${1#*:}"; }
+case "$1" in
+  copyto)
+    [ -n "${FAKE_UPLOAD_FAIL:-}" ] && { echo "upload failed" >&2; exit 1; }
+    dest="$(local_path "$3")"
+    mkdir -p "$(dirname "$dest")"
+    if [ -n "${FAKE_TRUNCATE:-}" ]; then head -c 10 "$2" >"$dest"; else cp "$2" "$dest"; fi
+    ;;
+  size)
+    f="$(local_path "$3")"
+    printf '{"count":1,"bytes":%s}\n' "$(wc -c <"$f" | tr -d ' ')"
+    ;;
+  delete) exit 0 ;;
+  lsf) ls -1 "$(local_path "$2")" ;;
+esac
