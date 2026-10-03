@@ -1,0 +1,119 @@
+# Ideas de ejemplo de https://developers.rotaract4845.com/ia ("¿Qué podés
+# construir?"). Cada una completa el formulario del prompt maestro con
+# "Usar esta idea". `guide` apunta a la plantilla de prompt detallada de
+# esta misma carpeta, cuando existe.
+#
+# Campos: id, title, summary (la tarjeta), template (next | fastapi),
+# scope (club | distrito), idea, users, data, guide (opcional).
+
+- id: inscripciones-evento
+  guide: inscripciones-evento
+  title: Inscripciones a un evento
+  summary: La gente entra con su cuenta de Mi Rotaract, se inscribe a la conferencia y el comité ve la lista.
+  template: next
+  scope: distrito
+  idea: >-
+    Una app de inscripciones para la Conferencia Distrital: cada socia o socio
+    entra con su cuenta de Mi Rotaract y completa un formulario corto (si
+    viene, si necesita alojamiento y restricciones alimentarias). El comité
+    organizador ve la lista y la puede exportar.
+  users: Socias y socios activos de cualquier club (se inscriben); el comité organizador y el RDR (ven la lista).
+  data: Nombre visible y club de quien se inscribe, desde Mi Rotaract; las respuestas del formulario las guarda la app.
+
+- id: asistencia-reuniones
+  guide: asistencia-reuniones
+  title: Asistencia a reuniones
+  summary: La secretaría toma asistencia sobre el padrón oficial del club y todos ven el historial.
+  template: fastapi
+  scope: club
+  idea: >-
+    Tomar asistencia a las reuniones del club: la secretaría crea una reunión
+    y marca presente o ausente sobre el padrón oficial; cada socio ve su
+    historial y el del club.
+  users: Secretaría y presidencia del club (crean reuniones y toman asistencia); socias y socios del club (ven el historial).
+  data: El padrón del club (socios activos y de licencia) desde Mi Rotaract; las reuniones y la asistencia las guarda la app.
+
+- id: bienvenida-nuevos-socios
+  guide: bienvenida-nuevos-socios
+  title: Bienvenida a nuevos socios
+  summary: Cada alta en un club aparece sola en una lista para que el comité de integración la contacte.
+  template: next
+  scope: distrito
+  idea: >-
+    Una lista de bienvenida para el comité de integración: cada vez que un
+    club da de alta a un socio, aparece solo en la lista (por webhooks) para
+    que el comité lo contacte y lo marque como "contactado".
+  users: El comité de integración del distrito y el RDR.
+  data: Altas y bajas de membresías (eventos de Mi Rotaract), nombre visible y club; el estado "contactado" lo guarda la app.
+
+- id: tablero-autoridades
+  guide: tablero-autoridades
+  title: Tablero de autoridades
+  summary: Las autoridades vigentes de cada club del distrito en una sola página, sin datos de contacto.
+  template: next
+  scope: distrito
+  idea: >-
+    Una página con las autoridades vigentes de cada club del distrito
+    (presidencia, secretaría, tesorería), ordenadas por cargo, siempre al día.
+  users: Cualquier socia o socio del distrito que ingresó con su cuenta.
+  data: Clubes y autoridades vigentes desde Mi Rotaract. La app no guarda nada.
+
+- id: horas-de-servicio
+  title: Horas de servicio
+  summary: Cada socio registra sus horas en los proyectos del club y el club ve el total del año rotario.
+  template: next
+  scope: club
+  idea: >-
+    Registro de horas de servicio: cada socia o socio carga las horas que
+    dedicó a un proyecto del club; la presidencia aprueba los registros y ve
+    el total por proyecto y por persona en el período rotario vigente.
+  users: Socias y socios del club (cargan horas); presidencia y secretaría (aprueban y ven totales).
+  data: Padrón del club y período vigente desde Mi Rotaract; los proyectos y las horas los guarda la app.
+
+- id: cuotas-del-club
+  title: Seguimiento de cuotas
+  summary: La tesorería registra qué socios están al día con la cuota; cada uno ve solo su estado.
+  template: next
+  scope: club
+  idea: >-
+    Seguimiento de cuotas del club (sin cobrar en línea): la tesorería
+    registra los pagos de cada mes y ve quién está al día; cada socia o socio
+    ve solo su propio estado.
+  users: Tesorería y presidencia del club (registran y ven todo); socias y socios (ven lo suyo).
+  data: Padrón del club desde Mi Rotaract; los montos y fechas de pago los guarda la app.
+
+- id: calendario-distrital
+  title: Calendario distrital
+  summary: Todos los clubes publican sus proyectos y eventos en un calendario común del distrito.
+  template: next
+  scope: distrito
+  idea: >-
+    Un calendario común del distrito: cada club publica sus proyectos y
+    eventos (fecha, lugar, descripción) y cualquier socio ve qué pasa en
+    todo el distrito y se anota como interesado.
+  users: Presidencia y secretaría de cada club (publican); cualquier socia o socio (mira y se anota).
+  data: Clubes y cargos desde Mi Rotaract (para saber quién puede publicar por su club); los eventos los guarda la app.
+
+- id: votaciones-asamblea
+  title: Votaciones de asamblea
+  summary: Una votación por socio activo, con resultados al cerrar; nadie ve cómo votó cada uno.
+  template: next
+  scope: club
+  idea: >-
+    Votaciones para las asambleas del club: la presidencia crea una
+    votación con opciones; cada socio activo vota una sola vez; los
+    resultados se ven al cerrarla y el voto es secreto.
+  users: Presidencia del club (crea y cierra votaciones); socias y socios activos (votan).
+  data: Padrón del club desde Mi Rotaract (quién puede votar); la app guarda las votaciones y los votos sin relacionarlos con la persona.
+
+- id: informe-mensual
+  title: Informe mensual de clubes
+  summary: Cada club completa su informe del mes y el distrito ve un tablero con quién entregó.
+  template: fastapi
+  scope: distrito
+  idea: >-
+    Informes mensuales de los clubes al distrito: la secretaría de cada club
+    completa un formulario corto con las actividades del mes; el distrito ve
+    qué clubes entregaron y un resumen, y puede descargarlo como planilla.
+  users: Secretaría de cada club (completa); RDR y secretaría distrital (revisan).
+  data: Clubes y cargos vigentes desde Mi Rotaract; los informes los guarda la app.

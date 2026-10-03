@@ -7,6 +7,7 @@ import {
   ListTree,
   Radio,
   ScrollText,
+  Sparkles,
   Terminal,
 } from "lucide-react";
 import Link from "next/link";
@@ -86,12 +87,32 @@ export default function Home() {
               <ArrowRight className="size-4" aria-hidden />
             </Link>
             <Link
+              href="/ia"
+              className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/5 px-6 font-medium text-primary transition-colors hover:border-primary/50 hover:bg-primary/10 sm:w-auto"
+            >
+              <Sparkles
+                className="size-4 transition-transform group-hover:rotate-12"
+                aria-hidden
+              />
+              Implementar con IA
+            </Link>
+            <Link
               href="/referencia"
               className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-6 font-medium transition-colors hover:bg-muted sm:w-auto"
             >
               Referencia de la API
             </Link>
           </div>
+          <p className="mt-4 text-sm text-muted-foreground">
+            ¿No programás? Con{" "}
+            <Link
+              href="/ia"
+              className="font-medium text-primary hover:underline"
+            >
+              Implementar con IA
+            </Link>{" "}
+            tu asistente de código arma la app por vos.
+          </p>
         </div>
       </section>
 

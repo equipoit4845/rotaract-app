@@ -11,6 +11,7 @@ te deja las credenciales en `.env.local`.
 | `mirotaract dev up\|down\|reset\|status` | Kernel local en Docker (API, web de login y base) con datos sintéticos. |
 | `mirotaract gen types [--lang ts\|python]` | Tipos de la API (OpenAPI) y del catálogo de eventos. |
 | `mirotaract webhooks listen --forward-to <url>` | Recibe los eventos de tu app y los reenvía, firmados, a tu servidor local. |
+| `mirotaract ai install --target claude\|cursor\|copilot\|agents\|all [carpeta]` | Instala las skills de IA de Mi Rotaract (ver [ia.md](ia.md) y [crear-con-ia.md](crear-con-ia.md)). |
 
 `mirotaract --help` y `mirotaract <comando> --help` muestran todas las
 opciones.

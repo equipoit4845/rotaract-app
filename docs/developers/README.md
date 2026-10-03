@@ -83,6 +83,10 @@ curl -s -H "Authorization: Bearer $TOKEN" \
   "$API/service/organizations/$ORGANIZATION_ID" | jq
 ```
 
+> **¿No programás?** [Creá tu app con IA](crear-con-ia.md): describís la
+> idea, copiás un prompt y tu asistente de código (Claude Code, Cursor,
+> Copilot) la construye con las herramientas oficiales.
+
 ## Empezar en 15 minutos (sin datos reales)
 
 ```bash
@@ -101,6 +105,7 @@ tipos (`mirotaract gen types`) y reenvía webhooks a tu servidor local
 
 | Documento | Contenido |
 |---|---|
+| [crear-con-ia.md](crear-con-ia.md) | Crear una app con IA, sin ser desarrollador: describís la idea, copiás un prompt y tu asistente de código la construye ([versión interactiva](https://developers.rotaract4845.com/ia)). |
 | [quickstart-nextjs.md](quickstart-nextjs.md) | Quickstart Next.js: login y padrón en 15 minutos (código probado en CI). |
 | [quickstart-express.md](quickstart-express.md) | Quickstart Express: API que verifica el token de tu app móvil, padrón y webhooks. |
 | [quickstart-fastapi.md](quickstart-fastapi.md) | Quickstart FastAPI: login con sesión del lado del servidor y padrón. |

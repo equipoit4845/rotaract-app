@@ -8,6 +8,7 @@ mirotaract init mi-app --template next|fastapi|flutter [--kernel-repo <ruta>]
 mirotaract dev up|down|reset|status [--kernel-repo <ruta>] [--api-port 54321] [--web-port 54322]
 mirotaract gen types [--lang ts|python] [--out <archivo>]
 mirotaract webhooks listen --forward-to http://localhost:3000/api/webhooks [--events a,b]
+mirotaract ai install --target claude|cursor|copilot|agents|all [carpeta]
 mirotaract --help
 ```
 
@@ -22,12 +23,19 @@ mirotaract --help
   eventos; `--lang python` genera `TypedDict`.
 - `webhooks listen`: reenvía a tu servidor local, firmados, los eventos de tu
   app, con reconexión automática.
+- `ai install` (y `init --ai`): instala las skills de IA de Mi Rotaract
+  (Claude Code, Cursor, Copilot, `AGENTS.md`). Usa `@mirotaract/ai-skills` si
+  está instalado; si no, baja el paquete de skills del portal
+  (`https://developers.rotaract4845.com/ia/skills.json`) y verifica su SHA-256
+  antes de escribir nada. `--skills-url` o `MIROTARACT_SKILLS_URL` apuntan a
+  otra copia (URL o archivo).
 
 Guía: [`docs/developers/cli.md`](../../docs/developers/cli.md). Diseño:
 [`docs/14-cli-and-local-kernel.md`](../../docs/14-cli-and-local-kernel.md).
 
-> Todavía no está publicada en npm (`"private": true`). Desde el repo:
-> `npm install -g ./packages/cli` después de `npx pnpm@10.13.1 install`.
+> Publicada en npm: `npm install -g @mirotaract/cli` o `npx @mirotaract/cli …`.
+> Para crear una app con un asistente de IA, empezá por
+> https://developers.rotaract4845.com/ia.
 
 ## Desarrollo
 

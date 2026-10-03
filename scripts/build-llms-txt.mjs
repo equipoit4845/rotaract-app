@@ -9,7 +9,7 @@
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
 
 import {
@@ -95,6 +95,14 @@ function eventSummary(catalog) {
   return lines.join("\n");
 }
 
+/** The generic master prompt (packages/ai-skills, single source). */
+async function masterPrompt(root) {
+  const skills = await import(
+    pathToFileURL(join(root, "packages/ai-skills/src/index.js")).href
+  );
+  return skills.renderMasterPrompt(skills.loadMasterTemplate(), {});
+}
+
 /** Pure builder: returns both files as strings. */
 export async function buildLlms({
   root = REPO_ROOT,
@@ -128,6 +136,8 @@ export async function buildLlms({
       ? [`- [${readme.title}](${base}/docs/README.md): ${readme.description}`]
       : []),
     `- [Documentación completa en un archivo](${base}/llms-full.txt): todas las guías, el catálogo de eventos y un resumen de la API.`,
+    `- [Prompt maestro "Creá tu solución con IA"](${base}/ia/prompt.md): instrucciones paso a paso para que un asistente de código construya una app conectada a Mi Rotaract (requisitos, herramientas oficiales, plan, kernel local, arquitectura, seguridad, producción). Página: ${base}/ia.`,
+    `- [Skills de IA (paquete versionado)](${base}/ia/skills.json): las skills de Claude Code, Cursor, Copilot y AGENTS.md en un JSON, con su SHA-256 en /ia/skills.json.sha256.`,
     "",
     "## Guías",
     "",
@@ -163,6 +173,17 @@ export async function buildLlms({
       d.content.trim(),
       "",
     ]),
+    "",
+    "---",
+    "",
+    `<!-- source: packages/ai-skills/prompts/_master.md (versión genérica, ${base}/ia/prompt.md) -->`,
+    "",
+    "# Prompt maestro: creá tu solución para Rotaract con IA",
+    "",
+    "> Lo que una persona le pega a su asistente de código desde",
+    `> ${base}/ia. Si te lo pasan, seguilo paso a paso.`,
+    "",
+    (await masterPrompt(root)).trim(),
     "",
     "---",
     "",

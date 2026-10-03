@@ -250,3 +250,41 @@ test("Search: all terms, accent-insensitive, title first", () => {
   );
   assert.deepEqual(search.searchEntries(entries, "webhooks zzz"), []);
 });
+
+test("/ia: prompt, skills bundle with sha256, loose files and the client data", async () => {
+  const { createHash } = await import("node:crypto");
+  const result = await content.prepareIa();
+  const ia = join(out, "public/ia");
+  const bundleText = readFileSync(join(ia, "skills.json"), "utf8");
+  const sum = readFileSync(join(ia, "skills.json.sha256"), "utf8");
+  const sha = createHash("sha256").update(bundleText).digest("hex");
+  assert.equal(sum, `${sha}  skills.json\n`);
+  assert.equal(result.sha256, sha);
+  const bundle = JSON.parse(bundleText);
+  assert.equal(bundle.status, "preliminary");
+  for (const entry of bundle.targets.claude)
+    assert.equal(
+      readFileSync(
+        join(ia, "claude", entry.path.split("/").slice(1).join("/")),
+        "utf8",
+      ),
+      entry.content,
+    );
+  assert.ok(existsSync(join(ia, "AGENTS.md")));
+  assert.ok(existsSync(join(ia, "cursor/rules/mirotaract-seguridad.mdc")));
+  assert.ok(existsSync(join(ia, "copilot/copilot-instructions.md")));
+  const prompt = readFileSync(join(ia, "prompt.md"), "utf8");
+  assert.match(prompt, /^# Creá mi solución para Rotaract/);
+  assert.match(prompt, /\*\*Claude Code:\*\*[\s\S]*\*\*Cursor:\*\*/);
+  assert.doesNotMatch(prompt, /<!--|\{\{[A-Z_]+\}\}/);
+  for (const id of ["claude", "cursor", "copilot", "otro"])
+    assert.ok(existsSync(join(ia, `prompt-${id}.md`)), id);
+  const data = JSON.parse(readFileSync(join(out, "generated/ia.json"), "utf8"));
+  assert.ok(data.ideas.length >= 8);
+  assert.match(data.master, /^<!-- doc/);
+  assert.equal(data.bundle.sha256, sha);
+  assert.ok(data.bundle.files.every((f) => f.url.startsWith("/ia/")));
+  // The renderer shipped to the browser is the canonical one.
+  const renderer = await import(join(out, "generated/master-prompt.js"));
+  assert.equal(renderer.renderPrompt(data.master, {}), prompt);
+});

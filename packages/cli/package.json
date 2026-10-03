@@ -1,6 +1,6 @@
 {
   "name": "@mirotaract/cli",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "CLI de Mi Rotaract: plantillas de apps, kernel local con distrito sintético, tipos generados y reenvío de webhooks.",
   "license": "MIT",
   "type": "module",

@@ -128,7 +128,7 @@ function flatGlobs(skill) {
 }
 
 function mark(source) {
-  return `<!-- ${GENERATED_MARK} ${VERSION} desde ${source}. No lo edites a mano: cambiá la fuente y corré "npx @mirotaract/ai-skills install". -->`;
+  return `<!-- ${GENERATED_MARK} ${VERSION} desde ${source}. No lo edites a mano: se regenera con "mirotaract ai install" (o "npx @mirotaract/ai-skills install"). -->`;
 }
 
 /** Skill body + the shared checklist: what every per-skill file contains. */
@@ -433,10 +433,10 @@ export function fingerprint(dir = SKILLS_DIR) {
   return `${VERSION}+${hash.digest("hex").slice(0, 12)}`;
 }
 
-/** Prompt templates for committees without developers (E10.5). */
+/** Prompt templates for committees without developers (E10.5). Files starting with `_` are not templates (master prompt, ideas). */
 export function loadPrompts(dir = PROMPTS_DIR) {
   return readdirSync(dir)
-    .filter((f) => f.endsWith(".md"))
+    .filter((f) => f.endsWith(".md") && !f.startsWith("_"))
     .sort()
     .map((file) => {
       const { data, body } = parseFrontmatter(
@@ -453,3 +453,136 @@ export function loadPrompts(dir = PROMPTS_DIR) {
       };
     });
 }
+
+/* ------------------------------------------------------------------------ */
+/* "Creá tu solución con IA": master prompt, ideas and the skills bundle.    */
+/* ------------------------------------------------------------------------ */
+
+/** prompts/_master.md: the canonical master prompt (see src/master-prompt.js). */
+export function loadMasterTemplate(dir = PROMPTS_DIR) {
+  return readFileSync(join(dir, "_master.md"), "utf8");
+}
+
+/** prompts/_planning.md: the short planning prompt for chat-only assistants. */
+export function loadPlanningTemplate(dir = PROMPTS_DIR) {
+  return readFileSync(join(dir, "_planning.md"), "utf8");
+}
+
+const IDEA_FIELDS = [
+  "id",
+  "title",
+  "summary",
+  "template",
+  "scope",
+  "idea",
+  "users",
+  "data",
+];
+
+/** prompts/_ideas.yaml: example ideas for the /ia page, validated. */
+export function loadIdeas(dir = PROMPTS_DIR) {
+  const ideas = parseYaml(readFileSync(join(dir, "_ideas.yaml"), "utf8"));
+  if (!Array.isArray(ideas))
+    throw new SkillError("_ideas.yaml: tiene que ser una lista");
+  const guides = new Set(loadPrompts(dir).map((p) => p.name));
+  const ids = new Set();
+  return ideas.map((raw, index) => {
+    const where = `_ideas.yaml[${index}]`;
+    for (const field of IDEA_FIELDS)
+      if (typeof raw?.[field] !== "string" || !raw[field].trim())
+        throw new SkillError(`${where}: falta ${field}`);
+    if (!["next", "fastapi"].includes(raw.template))
+      throw new SkillError(`${where}: template tiene que ser next o fastapi`);
+    if (!["club", "distrito"].includes(raw.scope))
+      throw new SkillError(`${where}: scope tiene que ser club o distrito`);
+    if (raw.guide && !guides.has(raw.guide))
+      throw new SkillError(
+        `${where}: no existe la plantilla prompts/${raw.guide}.md`,
+      );
+    if (ids.has(raw.id))
+      throw new SkillError(`${where}: id repetido ${raw.id}`);
+    ids.add(raw.id);
+    const clean = (v) => v.replace(/\s+/g, " ").trim();
+    return {
+      id: raw.id,
+      title: clean(raw.title),
+      summary: clean(raw.summary),
+      template: raw.template,
+      scope: raw.scope,
+      idea: clean(raw.idea),
+      users: clean(raw.users),
+      data: clean(raw.data),
+      guide: raw.guide ?? null,
+    };
+  });
+}
+
+export const BUNDLE_SCHEMA = "mirotaract-skills-bundle/1";
+export const PRELIMINARY_NOTE =
+  "Versión preliminar: todavía no pasaron las evaluaciones automáticas.";
+
+/**
+ * The skills bundle served at /ia/skills.json: every target rendered, plus
+ * what an installer needs to merge files safely. Deterministic (no dates):
+ * same sources → same bytes → same sha256. `evaluated` is true only when the
+ * release gate (evals) passed for this exact fingerprint.
+ */
+export function buildSkillsBundle({ evaluated = false, sources } = {}) {
+  const skills = sources?.skills ?? loadSkills();
+  const bundle = {
+    schema: BUNDLE_SCHEMA,
+    package: "@mirotaract/ai-skills",
+    version: VERSION,
+    fingerprint: fingerprint(),
+    status: evaluated ? "evaluated" : "preliminary",
+    note: evaluated
+      ? "Evaluada: superó el gate de evaluaciones automáticas."
+      : PRELIMINARY_NOTE,
+    markers: {
+      generated: GENERATED_MARK,
+      blockBegin: BLOCK_BEGIN,
+      blockEnd: BLOCK_END,
+    },
+    skills: skills.map(({ name, title, description }) => ({
+      name,
+      title,
+      description,
+    })),
+    targets: Object.fromEntries(
+      TARGETS.map((target) => [
+        target,
+        renderTarget(target, sources).map(({ path, content, managed }) => ({
+          path,
+          content,
+          ...(managed ? { managed: true } : {}),
+        })),
+      ]),
+    ),
+  };
+  const json = `${JSON.stringify(bundle, null, 2)}\n`;
+  return {
+    bundle,
+    json,
+    sha256: createHash("sha256").update(json).digest("hex"),
+  };
+}
+
+/**
+ * Where a bundle file is served for manual download: /ia/AGENTS.md and
+ * /ia/<target>/<path without its leading dot-folder>
+ * (.claude/skills/x/SKILL.md → claude/skills/x/SKILL.md).
+ */
+export function bundlePublicPath(target, path) {
+  if (target === "agents") return path;
+  const parts = path.split("/");
+  if (parts[0].startsWith(".")) parts.shift();
+  return `${target}/${parts.join("/")}`;
+}
+
+export {
+  ASSISTANTS,
+  ASSISTANT_IDS,
+  renderMasterPrompt,
+  renderPrompt,
+  promptFileName,
+} from "./master-prompt.js";

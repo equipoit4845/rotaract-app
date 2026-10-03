@@ -12,6 +12,12 @@ const kernelRepo = {
     "Ruta a una copia del repositorio del kernel (o MIROTARACT_KERNEL_REPO).",
   value: "<ruta>",
 };
+const skillsUrlOption = {
+  type: "string",
+  description:
+    "Paquete de skills a usar (URL o archivo; por defecto el del portal, o MIROTARACT_SKILLS_URL).",
+  value: "<url>",
+};
 const envFile = {
   type: "string",
   description: "Archivo de variables del proyecto (por defecto .env.local).",
@@ -54,12 +60,50 @@ export const COMMANDS = {
           "Instalar las skills de IA: claude, cursor, copilot, agents o all (separados por coma).",
         value: "<destinos>",
       },
+      "skills-url": skillsUrlOption,
     },
     details: [
       "Ejemplos:",
       "  mirotaract init mi-app --template next",
       "  mirotaract init mi-app --template next --ai claude,cursor",
-      "  mirotaract init asistencia --template fastapi --kernel-repo ~/rotaract-app",
+      "  mirotaract init . --name asistencia --template fastapi --ai agents --force",
+    ],
+  },
+  "ai install": {
+    usage:
+      "mirotaract ai install --target claude|cursor|copilot|agents|all [carpeta]",
+    summary:
+      "Instala las skills de IA de Mi Rotaract en un proyecto (sin el paquete @mirotaract/ai-skills).",
+    positionals: 1,
+    options: {
+      target: {
+        type: "string",
+        short: "t",
+        description:
+          "claude, cursor, copilot, agents o all (se pueden combinar con comas).",
+        value: "<destinos>",
+      },
+      force: {
+        type: "boolean",
+        description:
+          "Pisar archivos con el mismo nombre que no generó Mi Rotaract.",
+      },
+      "dry-run": {
+        type: "boolean",
+        description: "Mostrar qué haría sin escribir nada.",
+      },
+      "skills-url": skillsUrlOption,
+    },
+    details: [
+      "Si @mirotaract/ai-skills está instalado, usa ese paquete. Si no, baja el",
+      "paquete de skills del portal (https://developers.rotaract4845.com/ia/skills.json),",
+      "verifica su SHA-256 (skills.json.sha256) y lo instala.",
+      "",
+      "Destinos:",
+      "  claude   .claude/skills/<skill>/SKILL.md",
+      "  cursor   .cursor/rules/<skill>.mdc (+ mirotaract-seguridad.mdc)",
+      "  copilot  .github/copilot-instructions.md (bloque propio) + .github/instructions/",
+      "  agents   AGENTS.md (bloque propio; respeta el resto del archivo)",
     ],
   },
   "dev up": {
@@ -228,6 +272,7 @@ export const COMMANDS = {
 };
 
 const GROUPS = {
+  ai: ["install"],
   dev: ["up", "down", "reset", "status"],
   gen: ["types"],
   webhooks: ["listen"],

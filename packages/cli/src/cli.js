@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 
+import { aiInstallCommand } from "./commands/ai.js";
 import { devCommand } from "./commands/dev.js";
 import { genTypesCommand } from "./commands/gen-types.js";
 import { initCommand } from "./commands/init.js";
@@ -55,6 +56,8 @@ export async function run(argv, ctx = {}) {
     switch (command) {
       case "init":
         return await initCommand(values, positionals, context);
+      case "ai install":
+        return await aiInstallCommand(values, positionals, context);
       case "dev up":
       case "dev down":
       case "dev reset":
