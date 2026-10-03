@@ -136,7 +136,9 @@ export async function initCommand(values, positionals, ctx) {
       ...(aiWarning ?? []),
       "",
       "Siguientes pasos:",
-      ...NEXT_STEPS[template](dir, kernelRepo).map((line) => `  ${line}`),
+      ...NEXT_STEPS[template](dir, kernelRepo)
+        .filter((line) => line !== "cd .")
+        .map((line) => `  ${line}`),
       "",
       "Antes de producción, repasá AGENTS.md (checklist de seguridad).",
     ].join("\n") + "\n",
