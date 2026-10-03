@@ -1,10 +1,13 @@
 "use client";
 
-import { useCan } from "@/lib/api";
+import { useCan, useMyApps } from "@/lib/api";
 import { useActiveOrganization } from "@/lib/api/organizations/use-active-organization";
 import type { AdminNavItem } from "@/components/layout";
 import {
+  AppWindow,
   ArrowLeftRight,
+  ClipboardCheck,
+  LayoutGrid,
   Award,
   Blocks,
   Building2,
@@ -57,6 +60,10 @@ export function useShellNavItems(
   const canReadPeriods = useCan("kernel.period.read", scope);
   const canReadApps = useCan("kernel.app.read", scope);
   const canReadModules = useCan("kernel.module.read", scope);
+  // E11: the RDR reviews and publishes apps; everybody sees the apps the
+  // district published for them.
+  const canReviewApps = useCan("kernel.app.review", scope);
+  const myApps = useMyApps();
   const isDistrictAdminView = superadminMode === "ADMIN";
 
   const district: NavEntry[] = [];
@@ -73,6 +80,18 @@ export function useShellNavItems(
   // see the apps console.
   if (canReadApps) {
     district.push({ label: "Apps", href: "/developer/apps", icon: Blocks });
+  }
+  if (canReviewApps) {
+    district.push({
+      label: "Revisión de apps",
+      href: "/developer/reviews",
+      icon: ClipboardCheck,
+    });
+    district.push({
+      label: "Apps del distrito",
+      href: "/developer/catalog",
+      icon: LayoutGrid,
+    });
   }
 
   const club: NavEntry[] = [];
@@ -118,6 +137,9 @@ export function useShellNavItems(
   const entries: NavEntry[] = [
     { label: "Inicio", href: "/dashboard", icon: Home },
   ];
+  if ((myApps.data?.length ?? 0) > 0) {
+    entries.push({ label: "Aplicaciones", href: "/apps", icon: AppWindow });
+  }
   if (district.length) {
     entries.push({ label: "Distrito", icon: Landmark, children: district });
   }

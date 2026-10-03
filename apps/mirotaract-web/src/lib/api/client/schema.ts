@@ -4,8746 +4,8793 @@
  */
 
 export interface paths {
-    "/auth/register": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Registrar una nueva cuenta
-         * @description Crea `Person` y `UserAccount` atómicamente (CA-ID-01).
-         */
-        post: operations["registerAccount"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/login": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Iniciar sesión */
-        post: operations["authenticateAccount"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/refresh": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Rotar el refresh token de una sesión
-         * @description Rota el refresh token y revoca el anterior (CA-ID-04).
-         */
-        post: operations["refreshSession"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/logout": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Cerrar la sesión actual */
-        post: operations["revokeSession"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/logout-all": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Cerrar todas las sesiones de la cuenta */
-        post: operations["revokeAllSessions"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/verify-email": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Verificar el email de la cuenta */
-        post: operations["verifyEmail"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/forgot-password": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Solicitar recuperación de contraseña */
-        post: operations["requestPasswordReset"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/reset-password": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Restablecer contraseña con token */
-        post: operations["resetPassword"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/invitations/accept": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Aceptar una invitación y crear la cuenta vinculada
-         * @description Consume una invitación PENDING no vencida y crea UserAccount vinculada a su Person en una única transacción. Es público, rate-limited y está exento de Idempotency-Key; el token es de un único uso.
-         */
-        post: operations["acceptAccountInvitation"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Obtener el contexto de la cuenta autenticada
-         * @description No depende de servicios externos (CA-ID-07).
-         */
-        get: operations["getOwnAccount"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Actualizar email de la cuenta propia */
-        patch: operations["updateOwnAccount"];
-        trace?: never;
-    };
-    "/auth/me/password": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Cambiar la contraseña propia */
-        patch: operations["changePassword"];
-        trace?: never;
-    };
-    "/auth/sessions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Listar sesiones activas de la cuenta */
-        get: operations["listOwnSessions"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/sessions/{sessionId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Revocar una sesión puntual */
-        delete: operations["revokeOwnSession"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/introspect": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Introspección de token (uso interno/gateway) */
-        post: operations["introspectToken"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/accounts/{accountId}/suspend": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Suspender una cuenta (administración de plataforma)
-         * @description kernel-spec.md §8.1 SuspendAccount. Administración de cuentas de terceros, distinta de las operaciones propias de `/auth/me/*`.
-         */
-        post: operations["suspendAccount"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/accounts/{accountId}/reactivate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Reactivar una cuenta suspendida
-         * @description kernel-spec.md §8.1 ReactivateAccount.
-         */
-        post: operations["reactivateAccount"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/accounts/{accountId}/disable": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Deshabilitar una cuenta de forma permanente
-         * @description kernel-spec.md §8.1 DisableAccount. Transición terminal.
-         */
-        post: operations["disableAccount"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/persons": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Listar personas */
-        get: operations["listPersons"];
-        put?: never;
-        /** Crear una persona (puede no tener cuenta) */
-        post: operations["createPerson"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/persons/{personId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Obtener una persona
-         * @description Requiere `kernel.person.read`, o `kernel.person.read.self` si `personId` corresponde a la persona vinculada a la cuenta autenticada.
-         */
-        get: operations["getPerson"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Actualizar datos de una persona
-         * @description Requiere `kernel.person.manage`, o `kernel.person.update.self` sobre la propia persona.
-         */
-        patch: operations["updatePerson"];
-        trace?: never;
-    };
-    "/persons/{personId}/archive": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Archivar una persona
-         * @description Una persona archivada no puede recibir membresías, cargos ni roles nuevos (invariante 6.2.3). No elimina su historial (invariante 6.2.2).
-         */
-        post: operations["archivePerson"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/persons/{personId}/invitations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Invitar a una persona a vincular una cuenta */
-        post: operations["invitePersonToCreateAccount"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/organizations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Listar organizaciones */
-        get: operations["listOrganizations"];
-        put?: never;
-        /** Crear una organización */
-        post: operations["createOrganization"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/organizations/{organizationId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Obtener una organización */
-        get: operations["getOrganization"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Actualizar datos de una organización */
-        patch: operations["updateOrganization"];
-        trace?: never;
-    };
-    "/organizations/{organizationId}/activate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Activar una organización (DRAFT/INACTIVE → ACTIVE) */
-        post: operations["activateOrganization"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/organizations/{organizationId}/deactivate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Desactivar una organización (ACTIVE → INACTIVE)
-         * @description (Supuesto) `kernel-spec.md` §10.1 no define un permiso distinto para desactivar; se asume que reutiliza `kernel.organization.activate` por tratarse de la misma transición administrativa reversible.
-         */
-        post: operations["deactivateOrganization"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/organizations/{organizationId}/archive": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Archivar una organización (terminal) */
-        post: operations["archiveOrganization"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/organizations/{organizationId}/move": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Reasignar el padre de una organización
-         * @description Valida que el cambio no genere ciclos (invariante 6.3.6).
-         */
-        post: operations["moveOrganization"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/organizations/{organizationId}/children": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Listar hijos directos */
-        get: operations["listOrganizationChildren"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/organizations/{organizationId}/ancestors": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Listar ancestros ordenados desde el padre inmediato */
-        get: operations["listOrganizationAncestors"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/organizations/{organizationId}/descendants": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Listar todos los descendientes */
-        get: operations["listOrganizationDescendants"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/organizations/{organizationId}/memberships": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Listar membresías de una organización */
-        get: operations["listOrganizationMemberships"];
-        put?: never;
-        /** Crear una membresía en una organización */
-        post: operations["createMembership"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/memberships/{membershipId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Obtener una membresía */
-        get: operations["getMembership"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Actualizar metadatos de una membresía */
-        patch: operations["updateMembership"];
-        trace?: never;
-    };
-    "/memberships/{membershipId}/activate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Activar una membresía (PENDING → ACTIVE)
-         * @description Requiere `joinedAt` (invariante 6.4.2). Registra transición (CA-MEM-03).
-         */
-        post: operations["activateMembership"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/memberships/{membershipId}/leave": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Pasar a licencia (ACTIVE → ON_LEAVE) */
-        post: operations["putMembershipOnLeave"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/memberships/{membershipId}/resume": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Volver de licencia (ON_LEAVE → ACTIVE) */
-        post: operations["resumeMembership"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/memberships/{membershipId}/deactivate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Desactivar una membresía (→ INACTIVE)
-         * @description Requiere `endedAt` (invariante 6.4.3).
-         */
-        post: operations["deactivateMembership"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/memberships/{membershipId}/graduate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Marcar egreso (ACTIVE → GRADUATED) */
-        post: operations["graduateMembership"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/memberships/{membershipId}/reactivate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Reactivar una membresía en estado terminal (→ ACTIVE)
-         * @description Preserva el mismo ID y agrega historial (invariante 6.4.7). Sólo aplica desde `INACTIVE` según la máquina de estados (§7.3); estados `GRADUATED`/`TRANSFERRED` no tienen retorno documentado y deberían resolverse con una nueva membresía o un `MembershipTransfer` (supuesto, pendiente de aclaración en `kernel-spec.md`).
-         */
-        post: operations["reactivateMembership"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/memberships/{membershipId}/history": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Historial de transiciones de una membresía */
-        get: operations["getMembershipHistory"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/persons/{personId}/memberships": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Listar membresías de una persona
-         * @description Requiere `kernel.membership.read`, o acceso propio si `personId` corresponde a la persona autenticada.
-         */
-        get: operations["listPersonMemberships"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/organizations/{organizationId}/periods": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Listar períodos de una organización */
-        get: operations["listPeriods"];
-        put?: never;
-        /** Crear un período (DRAFT) */
-        post: operations["createPeriod"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/organizations/{organizationId}/periods/current": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Obtener el período ACTIVE vigente */
-        get: operations["getCurrentPeriod"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/periods/{periodId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Obtener un período */
-        get: operations["getPeriod"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Actualizar un período en estado DRAFT */
-        patch: operations["updateDraftPeriod"];
-        trace?: never;
-    };
-    "/periods/{periodId}/schedule": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Programar un período (DRAFT → SCHEDULED) */
-        post: operations["schedulePeriod"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/periods/{periodId}/activate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Activar un período (SCHEDULED → ACTIVE)
-         * @description Sólo se activa desde `SCHEDULED` (invariante 6.5.4). No puede haber dos períodos `ACTIVE` para la misma organización (invariante 6.5.2, CA-PER-02). Emite `kernel.period.activated.v1` (CA-PER-03).
-         */
-        post: operations["activatePeriod"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/periods/{periodId}/close": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Cerrar un período (ACTIVE → CLOSED)
-         * @description Finaliza sus cargos activos en la misma transacción (invariante 6.5.7, CA-PER-04).
-         */
-        post: operations["closePeriod"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/periods/{periodId}/cancel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Cancelar un período (DRAFT/SCHEDULED → CANCELLED)
-         * @description (Supuesto) `kernel-spec.md` §10.1 no define un permiso propio para cancelar; se asume que reutiliza `kernel.period.update` por ser una corrección administrativa previa a la activación.
-         */
-        post: operations["cancelPeriod"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/position-definitions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Listar definiciones de cargo */
-        get: operations["listPositionDefinitions"];
-        put?: never;
-        /**
-         * Registrar una definición de cargo
-         * @description Registra un cargo. Todo cargo DISTRICT configurable debe indicar el distrito propietario y un permiso de edición. La autorización se evalúa en ese distrito.
-         */
-        post: operations["createPositionDefinition"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/position-definitions/{positionDefinitionId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Editar una definición de cargo
-         * @description Requiere el editPermissionCode configurado en el cargo y se evalúa sobre el distrito propietario. Los cargos de sistema no son editables desde un distrito.
-         */
-        patch: operations["updatePositionDefinition"];
-        trace?: never;
-    };
-    "/position-definitions/{positionDefinitionId}/permissions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Listar lo que permite un cargo
-         * @description Devuelve los permisos del rol defaultRoleCode del cargo (lista vacía si el cargo no deriva un rol). Se autoriza en la organización dueña del cargo.
-         */
-        get: operations["listPositionPermissions"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/position-definitions/{positionDefinitionId}/permissions/{permissionId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Asociar un permiso al rol técnico de un cargo
-         * @description Requiere editPermissionCode. Actualiza el rol defaultRoleCode del cargo; responde 409 si el cargo no tiene rol técnico asociado.
-         */
-        put: operations["attachPermissionToPosition"];
-        post?: never;
-        /** Quitar un permiso del rol técnico de un cargo */
-        delete: operations["detachPermissionFromPosition"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/organizations/{organizationId}/appointments": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Listar cargos de una organización */
-        get: operations["listAppointments"];
-        put?: never;
-        /**
-         * Crear un cargo (NOMINATED)
-         * @description Para un cargo de CLUB, la membresía habilitante debe pertenecer a ese club. Para un cargo de DISTRICT, puede pertenecer a cualquier club descendiente, sin crear membresía distrital artificial. El período debe corresponder a la organización o a un ancestro aplicable. Puede crearse para un período futuro y coexistir con el cargo ACTIVE actual.
-         */
-        post: operations["createAppointment"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/organizations/{organizationId}/authorities/current": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Obtener las autoridades ACTIVE del período vigente
-         * @description `Appointment` es la única fuente de verdad para presidencias y autoridades (§4.5, CA-APP-03, CA-APP-04). No existen flags `isPresident`.
-         */
-        get: operations["getCurrentAuthorities"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/appointments/{appointmentId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Obtener un cargo */
-        get: operations["getAppointment"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/appointments/{appointmentId}/elect": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Marcar un cargo como electo (NOMINATED → ELECTED)
-         * @description (Supuesto) Se asume `kernel.appointment.create` como permiso requerido; §10.1 no distingue un permiso propio para la transición "elect".
-         */
-        post: operations["markAppointmentElected"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/appointments/{appointmentId}/activate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Activar un cargo (ELECTED → ACTIVE)
-         * @description Sólo se activa si la membresía habilitante está `ACTIVE`, el período ya está `ACTIVE` y llegó `startsAt`. Un cargo singleton admite una sola asignación `ACTIVE` por organización/período/posición (invariante 6.6.4, CA-APP-02). Puede materializar una `RoleAssignment` derivada (§10.3).
-         */
-        post: operations["activateAppointment"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/appointments/{appointmentId}/end": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Finalizar un cargo (ACTIVE → ENDED) */
-        post: operations["endAppointment"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/appointments/{appointmentId}/revoke": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Revocar un cargo
-         * @description Un cargo revocado no puede reactivarse; se crea uno nuevo (invariante 6.6.7). Revoca el rol derivado si existía (CA-APP-05).
-         */
-        post: operations["revokeAppointment"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/permissions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Listar definiciones de permiso
-         * @description Incluye los permisos de los módulos registrados (`moduleId` no nulo). `organizationId` indica desde qué organización se consulta (E8: el RDR la usa para la pantalla de permisos de cargos del distrito).
-         */
-        get: operations["listPermissions"];
-        put?: never;
-        /**
-         * Registrar una definición de permiso
-         * @description Un módulo sólo puede registrar permisos dentro de su namespace (invariante 6.7.9). No se agregan permisos mediante enums compilados (invariante 6.7.2).
-         */
-        post: operations["registerPermission"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/roles": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Listar definiciones de rol */
-        get: operations["listRoles"];
-        put?: never;
-        /** Crear una definición de rol */
-        post: operations["createRole"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/roles/{roleId}/permissions/{permissionId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** Adjuntar un permiso a un rol */
-        put: operations["attachPermissionToRole"];
-        post?: never;
-        /** Quitar un permiso de un rol */
-        delete: operations["detachPermissionFromRole"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/role-assignments": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Listar asignaciones de rol */
-        get: operations["listRoleAssignments"];
-        put?: never;
-        /**
-         * Otorgar (o denegar explícitamente) un rol en un alcance
-         * @description `PLATFORM` sólo puede asignarse a roles expresamente autorizados (invariante 6.7.7).
-         */
-        post: operations["grantRole"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/role-assignments/{assignmentId}/revoke": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Revocar una asignación de rol */
-        post: operations["revokeRole"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/authorization/check": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Evaluar una decisión de autorización puntual
-         * @description Denegación por defecto (principio 9). `DENY` gana sobre `ALLOW` con igual o mayor especificidad (invariante 6.7.4). Un sujeto autenticado siempre puede consultar su propia autorización (`subjectId` = persona propia); consultar la de otro `subjectId` requiere `kernel.role.read`.
-         */
-        post: operations["checkAuthorization"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/authorization/batch-check": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Evaluar hasta 100 decisiones de autorización (CA-AUTHZ-06) */
-        post: operations["batchCheckAuthorization"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/persons/{personId}/effective-permissions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Listar permisos efectivos de una persona en un alcance */
-        get: operations["getEffectivePermissions"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/membership-applications": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Listar solicitudes de ingreso
-         * @description Requiere `kernel.application.review` para ver solicitudes de terceros; sin ese permiso, `kernel.application.read.self` limita el resultado a las propias y el filtro `personId` se ignora (se fuerza al actor).
-         */
-        get: operations["listMembershipApplications"];
-        put?: never;
-        /** Crear una solicitud de ingreso (DRAFT) */
-        post: operations["createMembershipApplication"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/membership-applications/{applicationId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Obtener una solicitud */
-        get: operations["getMembershipApplication"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/membership-applications/{applicationId}/submit": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Enviar una solicitud (DRAFT → SUBMITTED) */
-        post: operations["submitMembershipApplication"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/membership-applications/{applicationId}/approve": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Aprobar una solicitud (SUBMITTED → APPROVED)
-         * @description Crea o reactiva la membresía en la misma transacción (invariante 6.8.3-4, CA-SOL-02).
-         */
-        post: operations["approveMembershipApplication"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/membership-applications/{applicationId}/reject": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Rechazar una solicitud (SUBMITTED → REJECTED)
-         * @description Exige motivo (invariante 6.8.5, CA-SOL-03).
-         */
-        post: operations["rejectMembershipApplication"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/membership-applications/{applicationId}/cancel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Cancelar una solicitud propia (DRAFT/SUBMITTED → CANCELLED)
-         * @description Sólo se cancela desde `DRAFT` o `SUBMITTED` (invariante 6.8.6).
-         */
-        post: operations["cancelMembershipApplication"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/membership-transfers": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Listar transferencias
-         * @description Sin `kernel.transfer.accept`/`.confirm`/`.reject` (alcance staff), el resultado se limita a las transferencias solicitadas por el propio actor (`kernel.transfer.read.self`); el filtro `requestedById` se ignora en ese caso y se fuerza al actor.
-         */
-        get: operations["listMembershipTransfers"];
-        put?: never;
-        /**
-         * Solicitar una transferencia de membresía (REQUESTED)
-         * @description Sólo se transfiere una membresía `ACTIVE` (invariante 6.9.1, CA-TRA-01). Origen y destino deben ser diferentes (invariante 6.9.2). Sólo una transferencia abierta por membresía (invariante 6.9.3, CA-TRA-06).
-         */
-        post: operations["requestMembershipTransfer"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/membership-transfers/{transferId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Obtener una transferencia */
-        get: operations["getMembershipTransfer"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/membership-transfers/{transferId}/accept": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Aceptar desde la organización destino (REQUESTED → ACCEPTED_BY_DESTINATION)
-         * @description El destino acepta antes de que el origen confirme (invariante 6.9.4, CA-TRA-02).
-         */
-        post: operations["acceptTransferByDestination"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/membership-transfers/{transferId}/confirm": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Confirmar desde la organización origen (ACCEPTED_BY_DESTINATION → CONFIRMED_BY_ORIGIN)
-         * @description CA-TRA-03. Puede disparar `complete` automáticamente según configuración (§9.10).
-         */
-        post: operations["confirmTransferByOrigin"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/membership-transfers/{transferId}/complete": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Completar la transferencia (CONFIRMED_BY_ORIGIN → COMPLETED)
-         * @description Operación administrativa/interna o automática tras `confirm` (§9.10). En una única transacción: marca la membresía origen `TRANSFERRED`, finaliza cargos activos incompatibles, crea o reactiva la membresía destino, guarda `destinationMembershipId` y emite un único evento (invariante 6.9.5-6, CA-TRA-04, CA-TRA-05). Es inmutable una vez completada (invariante 6.9.8). (Supuesto) Se asume que requiere `kernel.transfer.confirm` cuando se invoca manualmente; §10.1 no define un permiso "complete" propio.
-         */
-        post: operations["completeMembershipTransfer"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/membership-transfers/{transferId}/reject": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Rechazar una transferencia
-         * @description Exige motivo (invariante 6.9.7).
-         */
-        post: operations["rejectMembershipTransfer"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/membership-transfers/{transferId}/cancel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Cancelar una transferencia propia
-         * @description (Supuesto) Se asume `kernel.transfer.create.self` como permiso requerido, por ser el solicitante quien cancela su propia solicitud; §10.1 no define un permiso "cancel" dedicado.
-         */
-        post: operations["cancelMembershipTransfer"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/modules": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Listar módulos registrados (catálogo)
-         * @description Incluye los permisos de cada módulo. `organizationId` indica desde qué organización se consulta (el permiso se evalúa ahí): sin él sólo responde a permisos de alcance plataforma.
-         */
-        get: operations["listModules"];
-        put?: never;
-        /**
-         * Registrar un módulo desde su manifiesto
-         * @description Registra un módulo a partir de su manifiesto (`mirotaract.module.json`, contrato v1, ver `packages/module-manifest`), vinculado a la app de desarrollador que lo publica. Quién: el RDR (o la plataforma), con `kernel.module.register` en la organización de esa app. El módulo queda `ACTIVE` y gobernado desde esa organización. Cada permiso del manifiesto se crea como `PermissionDefinition` en el espacio de nombres del módulo (`<id>.*`), listo para asignarse a cargos. No ejecuta código externo (decisión final #10) ni migra tablas (CA-MOD-01). Errores de validación: 422 con `errors[]` en español.
-         */
-        post: operations["registerModule"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/modules/{moduleId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Obtener un módulo (con sus permisos) */
-        get: operations["getModule"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/modules/{moduleId}/manifest": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Publicar una versión nueva del manifiesto
-         * @description Reemplaza el manifiesto. El `id` no cambia y la versión no puede ser anterior a la publicada. Los permisos se sincronizan: se crean los nuevos, se actualizan nombre y descripción de los existentes y se borran los que ya no están (también de los cargos que los tenían). Se autoriza contra la organización dueña del módulo.
-         */
-        put: operations["updateModuleManifest"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/modules/{moduleId}/deprecate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Marcar un módulo como DEPRECATED
-         * @description Un módulo `DEPRECATED` no admite instalaciones nuevas (invariante 6.10.3); las existentes siguen funcionando. Se autoriza contra la organización dueña del módulo.
-         */
-        post: operations["deprecateModule"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/organizations/{organizationId}/modules/{moduleId}/install": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Instalar un módulo en una organización (PENDING)
-         * @description Una organización tiene como máximo una instalación por módulo (invariante 6.10.2). Si la instalación anterior está `DISABLED`, se reinstala (vuelve a `PENDING`). Si se manda `configuration`, se valida contra el `configurationSchema` del módulo y se guarda con sus valores por defecto. Quién: la presidencia del club (`kernel.module.install` en ese club) o un cargo de distrito para el distrito y sus clubes.
-         */
-        post: operations["installModule"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/organizations/{organizationId}/modules/{moduleId}/activate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Activar una instalación (PENDING/SUSPENDED → ACTIVE)
-         * @description Valida la configuración guardada contra `configurationSchema` (invariante 6.10.4, CA-MOD-02) y le aplica los valores por defecto. Emite `kernel.module-activated.v1` (CA-MOD-03). Desde que está activa, los permisos del módulo valen en esta organización.
-         */
-        post: operations["activateModuleInstallation"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/organizations/{organizationId}/modules/{moduleId}/configuration": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Actualizar la configuración de una instalación
-         * @description Reemplaza la configuración entera. Se valida contra `configurationSchema` y se guarda con los valores por defecto.
-         */
-        patch: operations["updateModuleConfiguration"];
-        trace?: never;
-    };
-    "/organizations/{organizationId}/modules/{moduleId}/suspend": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Desactivar una instalación (ACTIVE → SUSPENDED)
-         * @description Reversible con `activate`. Mientras tanto, los permisos del módulo no valen en esta organización.
-         */
-        post: operations["suspendModuleInstallation"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/organizations/{organizationId}/modules/{moduleId}/disable": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Desinstalar (DISABLED)
-         * @description No elimina datos del servicio consumidor (invariante 6.10.5, CA-MOD-04). Para volver a usarlo, se instala de nuevo.
-         */
-        post: operations["disableModuleInstallation"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/organizations/{organizationId}/modules": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Listar instalaciones de módulos de una organización */
-        get: operations["listOrganizationModules"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/organizations/{organizationId}/module-installations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Instalaciones de una organización y de las que dependen de ella
-         * @description Vista de distrito: las instalaciones del distrito y de todos sus clubes, con el nombre de cada organización.
-         */
-        get: operations["listModuleInstallationsInTree"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/organizations/{organizationId}/capabilities": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Obtener capacidades habilitadas (módulos activos)
-         * @description Refleja instalación y permisos (CA-MOD-05).
-         */
-        get: operations["getOrganizationCapabilities"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/service/users/{accountId}/context": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Obtener el UserContext de una cuenta (para servicios) */
-        get: operations["serviceGetUserContext"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/service/organizations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Listar organizaciones visibles para la app */
-        get: operations["serviceListOrganizations"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/service/organizations/{organizationId}/members": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Padrón de socios de una organización
-         * @description email, phone y birthDate de cada persona solo aparecen con el scope kernel.service.persons.contact.read; sin él se omiten.
-         */
-        get: operations["serviceListMembers"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/service/organizations/{organizationId}/authorities": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Autoridades vigentes (nombramientos ACTIVE) */
-        get: operations["serviceListAuthorities"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/service/organizations/{organizationId}/periods": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Períodos de una organización */
-        get: operations["serviceListPeriods"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/service/persons/batch": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Obtener varias personas por id
-         * @description Máximo 100 ids. Las personas fuera del alcance de la app se omiten de la respuesta (no fallan el pedido).
-         */
-        post: operations["serviceBatchPersons"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/service/persons/{personId}/memberships": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Membresías de una persona dentro del alcance de la app */
-        get: operations["servicePersonMemberships"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/service/persons/{personId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Obtener resumen de persona (para servicios) */
-        get: operations["serviceGetPerson"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/service/organizations/{organizationId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Obtener resumen de organización (para servicios) */
-        get: operations["serviceGetOrganization"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/service/organizations/{organizationId}/membership-snapshot": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Obtener snapshot de membresías (para quórum, listas, etc.) */
-        get: operations["serviceGetMembershipSnapshot"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/service/organizations/{organizationId}/authority-snapshot": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Obtener snapshot de autoridades vigentes */
-        get: operations["serviceGetAuthoritySnapshot"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/service/organizations/{organizationId}/period-snapshot": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Obtener snapshot del período vigente */
-        get: operations["serviceGetPeriodSnapshot"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/service/authorization/check": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Evaluar autorización (para servicios, sin sesión de usuario) */
-        post: operations["serviceCheckAuthorization"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/service/authorization/batch-check": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Evaluar hasta 100 decisiones (para servicios) */
-        post: operations["serviceBatchCheckAuthorization"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/service/modules/{moduleId}/installations/{organizationId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Obtener el estado de instalación de un módulo (para el propio servicio consumidor) */
-        get: operations["serviceGetModuleInstallation"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/.well-known/openid-configuration": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Documento de discovery de OpenID Connect */
-        get: operations["getOpenIdConfiguration"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/.well-known/jwks.json": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Claves públicas para verificar tokens (JWKS)
-         * @description Incluye la clave activa y las retiradas en los últimos 30 días, para que los tokens firmados antes de una rotación sigan verificando.
-         */
-        get: operations["getJwks"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/developer/apps": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Listar las apps registradas en una organización */
-        get: operations["listDeveloperApps"];
-        put?: never;
-        /**
-         * Registrar una app
-         * @description Una app CONFIDENTIAL recibe su secreto en esta respuesta, una única vez. Una app PUBLIC (SPA o móvil) no tiene secreto, usa PKCE y no puede pedir client_credentials ni scopes de servicio.
-         */
-        post: operations["createDeveloperApp"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/developer/apps/{appId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Ver una app */
-        get: operations["getDeveloperApp"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Editar nombre, descripción, scopes o URLs de retorno */
-        patch: operations["updateDeveloperApp"];
-        trace?: never;
-    };
-    "/developer/apps/{appId}/secrets": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Crear un secreto nuevo (rotación)
-         * @description Devuelve el secreto nuevo una única vez. El secreto anterior sigue siendo válido 7 días o hasta que se revoque, para rotar sin cortar el servicio. Nunca hay más de dos secretos vigentes.
-         */
-        post: operations["rotateDeveloperAppSecret"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/developer/apps/{appId}/secrets/{secretId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Revocar un secreto */
-        delete: operations["revokeDeveloperAppSecret"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/developer/apps/{appId}/suspend": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Pausar una app (deja de obtener tokens) */
-        post: operations["suspendDeveloperApp"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/developer/apps/{appId}/activate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Reactivar una app pausada */
-        post: operations["activateDeveloperApp"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/developer/apps/{appId}/revoke": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Revocar una app definitivamente
-         * @description Terminal. Revoca sus secretos, sus refresh tokens y los consentimientos otorgados por las personas.
-         */
-        post: operations["revokeDeveloperApp"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/developer/apps/{appId}/webhooks/stream": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Stream de eventos para desarrollo (Server-Sent Events)
-         * @description Para `mirotaract webhooks listen`. Emite cada evento que la app recibiría por webhook, tal cual se haría el POST: primero `event: ready` con `{ "secret": "whsec_..." }` (secreto propio de este stream), después un `event: webhook` por evento con `data: {"headers": {...}, "body": "<json crudo>"}`, firmado con ese secreto. Se autentica con las credenciales de la app (Basic `client_id:secreto`), no con una sesión. Solo existe si `KERNEL_WEBHOOK_STREAM_ENABLED=true` (kernel local o de pruebas); si no, 404.
-         */
-        get: operations["streamWebhookEvents"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/developer-apps/{appId}/webhooks/stream": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Stream de eventos para desarrollo (ruta del contrato E6/E7)
-         * @description Igual que `GET /developer/apps/{appId}/webhooks/stream`.
-         */
-        get: operations["streamWebhookEventsAlias"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/developer/apps/{appId}/webhooks": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Listar los endpoints de webhooks de una app */
-        get: operations["listWebhookEndpoints"];
-        put?: never;
-        /**
-         * Registrar un endpoint
-         * @description Devuelve el secreto de firma (`whsec_...`) una única vez. La URL tiene que ser https y apuntar a una dirección pública (se verifica también después de resolver el DNS). Cada tipo de evento exige el scope de la app indicado en el catálogo.
-         */
-        post: operations["createWebhookEndpoint"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/developer/apps/{appId}/webhooks/{endpointId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Ver un endpoint */
-        get: operations["getWebhookEndpoint"];
-        put?: never;
-        post?: never;
-        /** Borrar un endpoint (y su historial de envíos) */
-        delete: operations["deleteWebhookEndpoint"];
-        options?: never;
-        head?: never;
-        /**
-         * Cambiar URL, eventos o descripción, o activar / desactivar
-         * @description `status: ENABLED` reactiva un endpoint desactivado (a mano o automáticamente tras 72 h de fallas) y reinicia su racha de fallas.
-         */
-        patch: operations["updateWebhookEndpoint"];
-        trace?: never;
-    };
-    "/developer/apps/{appId}/webhooks/{endpointId}/rotate-secret": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Crear un secreto de firma nuevo
-         * @description Devuelve el secreto nuevo una única vez. Durante 24 h los envíos llevan dos firmas (`v1=` nueva, `v1=` anterior) para poder actualizar el receptor sin rechazar eventos.
-         */
-        post: operations["rotateWebhookSecret"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/developer/apps/{appId}/webhooks/{endpointId}/test": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Mandar un evento de prueba (ping.v1)
-         * @description Queda en cola y se envía en segundos. Es un único intento, sin reintentos.
-         */
-        post: operations["sendWebhookTest"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/developer/apps/{appId}/webhooks/{endpointId}/deliveries": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Envíos de un endpoint, del más reciente al más viejo */
-        get: operations["listWebhookDeliveries"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/developer/apps/{appId}/webhooks/{endpointId}/deliveries/{deliveryId}/redeliver": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Reenviar un evento ya enviado (o fallido)
-         * @description Mismo evento (mismo id y mismo cuerpo), un intento más, ahora. Si falla vuelve a FAILED; no reinicia los reintentos automáticos.
-         */
-        post: operations["redeliverWebhook"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/developer/apps/{appId}/request-logs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Registros de los requests que hizo una app
-         * @description Una fila por request autenticado como la app (token de servicio, token de usuario emitido a la app, o credenciales del cliente en `/oauth/token` y `/oauth/revoke`), del más reciente al más viejo. Guarda método, ruta (plantilla, sin ids), estado, código de error, latencia, traceId, instante e IP truncada (/24 en IPv4, /48 en IPv6). Nunca guarda cuerpos, tokens ni datos personales. Se conservan 30 días. Mismo permiso que leer la app.
-         */
-        get: operations["listRequestLogs"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/developer/app-reviews": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Cola de revisión de apps del distrito (RDR)
-         * @description Apps de la organización y sus descendientes en un estado de revisión (por defecto `IN_REVIEW`), de la más vieja a la más nueva, con lo que la lista de control necesita: propósito, datos pedidos (y cuáles no están aprobados todavía), responsable, política de privacidad y contacto.
-         */
-        get: operations["listDeveloperAppReviews"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/developer/apps/{appId}/reviews": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Historial de revisión de una app
-         * @description Envíos, aprobaciones, rechazos (con su motivo) y reaperturas, del más reciente al más viejo.
-         */
-        get: operations["listDeveloperAppReviewHistory"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/developer/apps/{appId}/review": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Aprobar o rechazar una app en revisión (RDR)
-         * @description Aprobar exige marcar los cinco puntos de la lista de control y que la app haya cargado propósito, política de privacidad y contacto; los datos que pide quedan aprobados. Rechazar exige un motivo (10 a 1000 caracteres) que ve el equipo de la app. 409 si la app no está esperando revisión.
-         */
-        post: operations["reviewDeveloperApp"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/developer/apps/{appId}/review-request": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Volver a pedir la revisión (después de un rechazo) */
-        post: operations["requestDeveloperAppReview"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/developer/apps/{appId}/quota": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Límites de la app y cuánto usó
-         * @description Ventanas fijas por minuto y por día (UTC), por `client_id`. `source` dice de dónde salen los límites: `default` (los del distrito), `review` (los más bajos de una app que todavía no se aprobó) o `custom` (los que fijó el RDR).
-         */
-        get: operations["getDeveloperAppQuota"];
-        /**
-         * Fijar los límites de una app (RDR)
-         * @description `null` vuelve al valor por defecto.
-         */
-        put: operations["updateDeveloperAppQuota"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/developer/app-catalog": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Apps del distrito que se pueden mostrar a los socios (RDR)
-         * @description Apps aprobadas y activas de la organización y sus descendientes, con cómo se muestran en el panel de Mi Rotaract. Si todavía no se guardó nada (`saved: false`), `listing` trae una sugerencia armada con la app y su módulo (E8): nombre, ícono y enlace.
-         */
-        get: operations["listAppCatalog"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/developer/apps/{appId}/listing": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Publicar una app en el panel de los socios y elegir a quién (RDR)
-         * @description Solo una app aprobada y activa se puede publicar. Pausar o revocar la app la despublica sola. El público se evalúa contra las membresías y cargos ACTIVE de cada persona dentro del árbol de la organización de la app; si la app tiene un módulo (E8) instalado pero no activo en un club, los socios de ese club no la ven.
-         */
-        put: operations["updateDeveloperAppListing"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/me/apps": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Apps del distrito para la persona autenticada
-         * @description Solo las apps publicadas cuyo público incluye a la persona, y nada más que lo necesario para mostrarlas y abrirlas.
-         */
-        get: operations["listMyApps"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/me/app-access": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Apps que accedieron a mis datos
-         * @description Las apps a las que la persona dio acceso con "Ingresar con Mi Rotaract" (`connected`, se puede quitar con `DELETE /oauth/consents/{appId}`) y las que leyeron sus datos desde su servidor (por ejemplo, la app de su club), con la cantidad de accesos y el último, en los últimos 12 meses.
-         */
-        get: operations["listMyAppAccess"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/me/app-access/{appId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Historial de accesos de una app a mis datos
-         * @description Del más reciente al más viejo. Solo los accesos a los datos de la persona autenticada; los accesos repetidos del mismo tipo dentro de 15 minutos se agrupan. Sin cuerpos ni datos: solo qué tipo de dato.
-         */
-        get: operations["listMyAppAccessEvents"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/events/catalog": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Catálogo público de eventos
-         * @description Tipos de evento que una app puede recibir por webhook, con su versión, el scope que exige, el JSON Schema de `data` y un ejemplo completo del cuerpo que se envía. Generado de la misma fuente que usa el kernel para emitirlos.
-         */
-        get: operations["getEventCatalog"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/oauth/apps/{clientId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Datos públicos de una app (para la pantalla de consentimiento) */
-        get: operations["getPublicDeveloperApp"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/oauth/authorize/context": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Validar un pedido de autorización y describirlo
-         * @description La Web lo llama con los parámetros de /oauth/authorize antes de mostrar el consentimiento. Valida client_id, redirect_uri (coincidencia exacta), scopes permitidos a la app y PKCE S256. Indica si la persona ya había otorgado esos scopes.
-         */
-        get: operations["getAuthorizationContext"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/oauth/authorize": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Aprobar o rechazar un pedido de autorización
-         * @description Con decision=approve guarda el consentimiento, emite un código de un solo uso (60 s) atado a la app, la redirect_uri y el code_challenge, y devuelve la URL de retorno con code y state. Con decision=deny devuelve la URL de retorno con error=access_denied.
-         */
-        post: operations["authorizeOAuthRequest"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/oauth/token": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Emitir tokens (client_credentials, authorization_code, refresh_token)
-         * @description Autenticación del cliente por HTTP Basic (client_secret_basic), por client_id + client_secret en el body (client_secret_post), o solo client_id para apps PUBLIC con PKCE. Los errores siguen RFC 6749 §5.2 (`{ error, error_description }`), no Problem Details.
-         */
-        post: operations["issueOAuthToken"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/oauth/revoke": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Revocar un refresh token (RFC 7009)
-         * @description Responde 200 aunque el token no exista, como indica RFC 7009.
-         */
-        post: operations["revokeOAuthToken"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/oauth/userinfo": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Datos de la persona según los scopes otorgados */
-        get: operations["getOAuthUserInfo"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/oauth/consents": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Apps a las que la persona autenticada dio acceso */
-        get: operations["listOAuthConsents"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/oauth/consents/{appId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * Quitarle el acceso a una app
-         * @description Revoca el consentimiento y todos los refresh tokens de esa app para la persona.
-         */
-        delete: operations["revokeOAuthConsent"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
+  "/auth/register": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Registrar una nueva cuenta
+     * @description Crea `Person` y `UserAccount` atómicamente (CA-ID-01).
+     */
+    post: operations["registerAccount"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/auth/login": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Iniciar sesión */
+    post: operations["authenticateAccount"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/auth/refresh": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Rotar el refresh token de una sesión
+     * @description Rota el refresh token y revoca el anterior (CA-ID-04).
+     */
+    post: operations["refreshSession"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/auth/logout": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Cerrar la sesión actual */
+    post: operations["revokeSession"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/auth/logout-all": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Cerrar todas las sesiones de la cuenta */
+    post: operations["revokeAllSessions"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/auth/verify-email": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Verificar el email de la cuenta */
+    post: operations["verifyEmail"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/auth/forgot-password": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Solicitar recuperación de contraseña */
+    post: operations["requestPasswordReset"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/auth/reset-password": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Restablecer contraseña con token */
+    post: operations["resetPassword"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/auth/invitations/accept": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Aceptar una invitación y crear la cuenta vinculada
+     * @description Consume una invitación PENDING no vencida y crea UserAccount vinculada a su Person en una única transacción. Es público, rate-limited y está exento de Idempotency-Key; el token es de un único uso.
+     */
+    post: operations["acceptAccountInvitation"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/auth/me": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Obtener el contexto de la cuenta autenticada
+     * @description No depende de servicios externos (CA-ID-07).
+     */
+    get: operations["getOwnAccount"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Actualizar email de la cuenta propia */
+    patch: operations["updateOwnAccount"];
+    trace?: never;
+  };
+  "/auth/me/password": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Cambiar la contraseña propia */
+    patch: operations["changePassword"];
+    trace?: never;
+  };
+  "/auth/sessions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Listar sesiones activas de la cuenta */
+    get: operations["listOwnSessions"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/auth/sessions/{sessionId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Revocar una sesión puntual */
+    delete: operations["revokeOwnSession"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/auth/introspect": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Introspección de token (uso interno/gateway) */
+    post: operations["introspectToken"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/auth/accounts/{accountId}/suspend": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Suspender una cuenta (administración de plataforma)
+     * @description kernel-spec.md §8.1 SuspendAccount. Administración de cuentas de terceros, distinta de las operaciones propias de `/auth/me/*`.
+     */
+    post: operations["suspendAccount"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/auth/accounts/{accountId}/reactivate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Reactivar una cuenta suspendida
+     * @description kernel-spec.md §8.1 ReactivateAccount.
+     */
+    post: operations["reactivateAccount"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/auth/accounts/{accountId}/disable": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Deshabilitar una cuenta de forma permanente
+     * @description kernel-spec.md §8.1 DisableAccount. Transición terminal.
+     */
+    post: operations["disableAccount"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/persons": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Listar personas */
+    get: operations["listPersons"];
+    put?: never;
+    /** Crear una persona (puede no tener cuenta) */
+    post: operations["createPerson"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/persons/{personId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Obtener una persona
+     * @description Requiere `kernel.person.read`, o `kernel.person.read.self` si `personId` corresponde a la persona vinculada a la cuenta autenticada.
+     */
+    get: operations["getPerson"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Actualizar datos de una persona
+     * @description Requiere `kernel.person.manage`, o `kernel.person.update.self` sobre la propia persona.
+     */
+    patch: operations["updatePerson"];
+    trace?: never;
+  };
+  "/persons/{personId}/archive": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Archivar una persona
+     * @description Una persona archivada no puede recibir membresías, cargos ni roles nuevos (invariante 6.2.3). No elimina su historial (invariante 6.2.2).
+     */
+    post: operations["archivePerson"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/persons/{personId}/invitations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Invitar a una persona a vincular una cuenta */
+    post: operations["invitePersonToCreateAccount"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/organizations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Listar organizaciones */
+    get: operations["listOrganizations"];
+    put?: never;
+    /** Crear una organización */
+    post: operations["createOrganization"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/organizations/{organizationId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Obtener una organización */
+    get: operations["getOrganization"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Actualizar datos de una organización */
+    patch: operations["updateOrganization"];
+    trace?: never;
+  };
+  "/organizations/{organizationId}/activate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Activar una organización (DRAFT/INACTIVE → ACTIVE) */
+    post: operations["activateOrganization"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/organizations/{organizationId}/deactivate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Desactivar una organización (ACTIVE → INACTIVE)
+     * @description (Supuesto) `kernel-spec.md` §10.1 no define un permiso distinto para desactivar; se asume que reutiliza `kernel.organization.activate` por tratarse de la misma transición administrativa reversible.
+     */
+    post: operations["deactivateOrganization"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/organizations/{organizationId}/archive": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Archivar una organización (terminal) */
+    post: operations["archiveOrganization"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/organizations/{organizationId}/move": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Reasignar el padre de una organización
+     * @description Valida que el cambio no genere ciclos (invariante 6.3.6).
+     */
+    post: operations["moveOrganization"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/organizations/{organizationId}/children": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Listar hijos directos */
+    get: operations["listOrganizationChildren"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/organizations/{organizationId}/ancestors": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Listar ancestros ordenados desde el padre inmediato */
+    get: operations["listOrganizationAncestors"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/organizations/{organizationId}/descendants": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Listar todos los descendientes */
+    get: operations["listOrganizationDescendants"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/organizations/{organizationId}/memberships": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Listar membresías de una organización */
+    get: operations["listOrganizationMemberships"];
+    put?: never;
+    /** Crear una membresía en una organización */
+    post: operations["createMembership"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/memberships/{membershipId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Obtener una membresía */
+    get: operations["getMembership"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Actualizar metadatos de una membresía */
+    patch: operations["updateMembership"];
+    trace?: never;
+  };
+  "/memberships/{membershipId}/activate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Activar una membresía (PENDING → ACTIVE)
+     * @description Requiere `joinedAt` (invariante 6.4.2). Registra transición (CA-MEM-03).
+     */
+    post: operations["activateMembership"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/memberships/{membershipId}/leave": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Pasar a licencia (ACTIVE → ON_LEAVE) */
+    post: operations["putMembershipOnLeave"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/memberships/{membershipId}/resume": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Volver de licencia (ON_LEAVE → ACTIVE) */
+    post: operations["resumeMembership"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/memberships/{membershipId}/deactivate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Desactivar una membresía (→ INACTIVE)
+     * @description Requiere `endedAt` (invariante 6.4.3).
+     */
+    post: operations["deactivateMembership"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/memberships/{membershipId}/graduate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Marcar egreso (ACTIVE → GRADUATED) */
+    post: operations["graduateMembership"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/memberships/{membershipId}/reactivate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Reactivar una membresía en estado terminal (→ ACTIVE)
+     * @description Preserva el mismo ID y agrega historial (invariante 6.4.7). Sólo aplica desde `INACTIVE` según la máquina de estados (§7.3); estados `GRADUATED`/`TRANSFERRED` no tienen retorno documentado y deberían resolverse con una nueva membresía o un `MembershipTransfer` (supuesto, pendiente de aclaración en `kernel-spec.md`).
+     */
+    post: operations["reactivateMembership"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/memberships/{membershipId}/history": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Historial de transiciones de una membresía */
+    get: operations["getMembershipHistory"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/persons/{personId}/memberships": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Listar membresías de una persona
+     * @description Requiere `kernel.membership.read`, o acceso propio si `personId` corresponde a la persona autenticada.
+     */
+    get: operations["listPersonMemberships"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/organizations/{organizationId}/periods": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Listar períodos de una organización */
+    get: operations["listPeriods"];
+    put?: never;
+    /** Crear un período (DRAFT) */
+    post: operations["createPeriod"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/organizations/{organizationId}/periods/current": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Obtener el período ACTIVE vigente */
+    get: operations["getCurrentPeriod"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/periods/{periodId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Obtener un período */
+    get: operations["getPeriod"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Actualizar un período en estado DRAFT */
+    patch: operations["updateDraftPeriod"];
+    trace?: never;
+  };
+  "/periods/{periodId}/schedule": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Programar un período (DRAFT → SCHEDULED) */
+    post: operations["schedulePeriod"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/periods/{periodId}/activate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Activar un período (SCHEDULED → ACTIVE)
+     * @description Sólo se activa desde `SCHEDULED` (invariante 6.5.4). No puede haber dos períodos `ACTIVE` para la misma organización (invariante 6.5.2, CA-PER-02). Emite `kernel.period.activated.v1` (CA-PER-03).
+     */
+    post: operations["activatePeriod"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/periods/{periodId}/close": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Cerrar un período (ACTIVE → CLOSED)
+     * @description Finaliza sus cargos activos en la misma transacción (invariante 6.5.7, CA-PER-04).
+     */
+    post: operations["closePeriod"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/periods/{periodId}/cancel": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Cancelar un período (DRAFT/SCHEDULED → CANCELLED)
+     * @description (Supuesto) `kernel-spec.md` §10.1 no define un permiso propio para cancelar; se asume que reutiliza `kernel.period.update` por ser una corrección administrativa previa a la activación.
+     */
+    post: operations["cancelPeriod"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/position-definitions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Listar definiciones de cargo */
+    get: operations["listPositionDefinitions"];
+    put?: never;
+    /**
+     * Registrar una definición de cargo
+     * @description Registra un cargo. Todo cargo DISTRICT configurable debe indicar el distrito propietario y un permiso de edición. La autorización se evalúa en ese distrito.
+     */
+    post: operations["createPositionDefinition"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/position-definitions/{positionDefinitionId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Editar una definición de cargo
+     * @description Requiere el editPermissionCode configurado en el cargo y se evalúa sobre el distrito propietario. Los cargos de sistema no son editables desde un distrito.
+     */
+    patch: operations["updatePositionDefinition"];
+    trace?: never;
+  };
+  "/position-definitions/{positionDefinitionId}/permissions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Listar lo que permite un cargo
+     * @description Devuelve los permisos del rol defaultRoleCode del cargo (lista vacía si el cargo no deriva un rol). Se autoriza en la organización dueña del cargo.
+     */
+    get: operations["listPositionPermissions"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/position-definitions/{positionDefinitionId}/permissions/{permissionId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Asociar un permiso al rol técnico de un cargo
+     * @description Requiere editPermissionCode. Actualiza el rol defaultRoleCode del cargo; responde 409 si el cargo no tiene rol técnico asociado.
+     */
+    put: operations["attachPermissionToPosition"];
+    post?: never;
+    /** Quitar un permiso del rol técnico de un cargo */
+    delete: operations["detachPermissionFromPosition"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/organizations/{organizationId}/appointments": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Listar cargos de una organización */
+    get: operations["listAppointments"];
+    put?: never;
+    /**
+     * Crear un cargo (NOMINATED)
+     * @description Para un cargo de CLUB, la membresía habilitante debe pertenecer a ese club. Para un cargo de DISTRICT, puede pertenecer a cualquier club descendiente, sin crear membresía distrital artificial. El período debe corresponder a la organización o a un ancestro aplicable. Puede crearse para un período futuro y coexistir con el cargo ACTIVE actual.
+     */
+    post: operations["createAppointment"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/organizations/{organizationId}/authorities/current": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Obtener las autoridades ACTIVE del período vigente
+     * @description `Appointment` es la única fuente de verdad para presidencias y autoridades (§4.5, CA-APP-03, CA-APP-04). No existen flags `isPresident`.
+     */
+    get: operations["getCurrentAuthorities"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/appointments/{appointmentId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Obtener un cargo */
+    get: operations["getAppointment"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/appointments/{appointmentId}/elect": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Marcar un cargo como electo (NOMINATED → ELECTED)
+     * @description (Supuesto) Se asume `kernel.appointment.create` como permiso requerido; §10.1 no distingue un permiso propio para la transición "elect".
+     */
+    post: operations["markAppointmentElected"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/appointments/{appointmentId}/activate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Activar un cargo (ELECTED → ACTIVE)
+     * @description Sólo se activa si la membresía habilitante está `ACTIVE`, el período ya está `ACTIVE` y llegó `startsAt`. Un cargo singleton admite una sola asignación `ACTIVE` por organización/período/posición (invariante 6.6.4, CA-APP-02). Puede materializar una `RoleAssignment` derivada (§10.3).
+     */
+    post: operations["activateAppointment"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/appointments/{appointmentId}/end": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Finalizar un cargo (ACTIVE → ENDED) */
+    post: operations["endAppointment"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/appointments/{appointmentId}/revoke": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Revocar un cargo
+     * @description Un cargo revocado no puede reactivarse; se crea uno nuevo (invariante 6.6.7). Revoca el rol derivado si existía (CA-APP-05).
+     */
+    post: operations["revokeAppointment"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/permissions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Listar definiciones de permiso
+     * @description Incluye los permisos de los módulos registrados (`moduleId` no nulo). `organizationId` indica desde qué organización se consulta (E8: el RDR la usa para la pantalla de permisos de cargos del distrito).
+     */
+    get: operations["listPermissions"];
+    put?: never;
+    /**
+     * Registrar una definición de permiso
+     * @description Un módulo sólo puede registrar permisos dentro de su namespace (invariante 6.7.9). No se agregan permisos mediante enums compilados (invariante 6.7.2).
+     */
+    post: operations["registerPermission"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/roles": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Listar definiciones de rol */
+    get: operations["listRoles"];
+    put?: never;
+    /** Crear una definición de rol */
+    post: operations["createRole"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/roles/{roleId}/permissions/{permissionId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Adjuntar un permiso a un rol */
+    put: operations["attachPermissionToRole"];
+    post?: never;
+    /** Quitar un permiso de un rol */
+    delete: operations["detachPermissionFromRole"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/role-assignments": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Listar asignaciones de rol */
+    get: operations["listRoleAssignments"];
+    put?: never;
+    /**
+     * Otorgar (o denegar explícitamente) un rol en un alcance
+     * @description `PLATFORM` sólo puede asignarse a roles expresamente autorizados (invariante 6.7.7).
+     */
+    post: operations["grantRole"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/role-assignments/{assignmentId}/revoke": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Revocar una asignación de rol */
+    post: operations["revokeRole"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/authorization/check": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Evaluar una decisión de autorización puntual
+     * @description Denegación por defecto (principio 9). `DENY` gana sobre `ALLOW` con igual o mayor especificidad (invariante 6.7.4). Un sujeto autenticado siempre puede consultar su propia autorización (`subjectId` = persona propia); consultar la de otro `subjectId` requiere `kernel.role.read`.
+     */
+    post: operations["checkAuthorization"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/authorization/batch-check": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Evaluar hasta 100 decisiones de autorización (CA-AUTHZ-06) */
+    post: operations["batchCheckAuthorization"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/persons/{personId}/effective-permissions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Listar permisos efectivos de una persona en un alcance */
+    get: operations["getEffectivePermissions"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/membership-applications": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Listar solicitudes de ingreso
+     * @description Requiere `kernel.application.review` para ver solicitudes de terceros; sin ese permiso, `kernel.application.read.self` limita el resultado a las propias y el filtro `personId` se ignora (se fuerza al actor).
+     */
+    get: operations["listMembershipApplications"];
+    put?: never;
+    /** Crear una solicitud de ingreso (DRAFT) */
+    post: operations["createMembershipApplication"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/membership-applications/{applicationId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Obtener una solicitud */
+    get: operations["getMembershipApplication"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/membership-applications/{applicationId}/submit": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Enviar una solicitud (DRAFT → SUBMITTED) */
+    post: operations["submitMembershipApplication"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/membership-applications/{applicationId}/approve": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Aprobar una solicitud (SUBMITTED → APPROVED)
+     * @description Crea o reactiva la membresía en la misma transacción (invariante 6.8.3-4, CA-SOL-02).
+     */
+    post: operations["approveMembershipApplication"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/membership-applications/{applicationId}/reject": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Rechazar una solicitud (SUBMITTED → REJECTED)
+     * @description Exige motivo (invariante 6.8.5, CA-SOL-03).
+     */
+    post: operations["rejectMembershipApplication"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/membership-applications/{applicationId}/cancel": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Cancelar una solicitud propia (DRAFT/SUBMITTED → CANCELLED)
+     * @description Sólo se cancela desde `DRAFT` o `SUBMITTED` (invariante 6.8.6).
+     */
+    post: operations["cancelMembershipApplication"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/membership-transfers": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Listar transferencias
+     * @description Sin `kernel.transfer.accept`/`.confirm`/`.reject` (alcance staff), el resultado se limita a las transferencias solicitadas por el propio actor (`kernel.transfer.read.self`); el filtro `requestedById` se ignora en ese caso y se fuerza al actor.
+     */
+    get: operations["listMembershipTransfers"];
+    put?: never;
+    /**
+     * Solicitar una transferencia de membresía (REQUESTED)
+     * @description Sólo se transfiere una membresía `ACTIVE` (invariante 6.9.1, CA-TRA-01). Origen y destino deben ser diferentes (invariante 6.9.2). Sólo una transferencia abierta por membresía (invariante 6.9.3, CA-TRA-06).
+     */
+    post: operations["requestMembershipTransfer"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/membership-transfers/{transferId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Obtener una transferencia */
+    get: operations["getMembershipTransfer"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/membership-transfers/{transferId}/accept": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Aceptar desde la organización destino (REQUESTED → ACCEPTED_BY_DESTINATION)
+     * @description El destino acepta antes de que el origen confirme (invariante 6.9.4, CA-TRA-02).
+     */
+    post: operations["acceptTransferByDestination"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/membership-transfers/{transferId}/confirm": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Confirmar desde la organización origen (ACCEPTED_BY_DESTINATION → CONFIRMED_BY_ORIGIN)
+     * @description CA-TRA-03. Puede disparar `complete` automáticamente según configuración (§9.10).
+     */
+    post: operations["confirmTransferByOrigin"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/membership-transfers/{transferId}/complete": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Completar la transferencia (CONFIRMED_BY_ORIGIN → COMPLETED)
+     * @description Operación administrativa/interna o automática tras `confirm` (§9.10). En una única transacción: marca la membresía origen `TRANSFERRED`, finaliza cargos activos incompatibles, crea o reactiva la membresía destino, guarda `destinationMembershipId` y emite un único evento (invariante 6.9.5-6, CA-TRA-04, CA-TRA-05). Es inmutable una vez completada (invariante 6.9.8). (Supuesto) Se asume que requiere `kernel.transfer.confirm` cuando se invoca manualmente; §10.1 no define un permiso "complete" propio.
+     */
+    post: operations["completeMembershipTransfer"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/membership-transfers/{transferId}/reject": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Rechazar una transferencia
+     * @description Exige motivo (invariante 6.9.7).
+     */
+    post: operations["rejectMembershipTransfer"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/membership-transfers/{transferId}/cancel": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Cancelar una transferencia propia
+     * @description (Supuesto) Se asume `kernel.transfer.create.self` como permiso requerido, por ser el solicitante quien cancela su propia solicitud; §10.1 no define un permiso "cancel" dedicado.
+     */
+    post: operations["cancelMembershipTransfer"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/modules": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Listar módulos registrados (catálogo)
+     * @description Incluye los permisos de cada módulo. `organizationId` indica desde qué organización se consulta (el permiso se evalúa ahí): sin él sólo responde a permisos de alcance plataforma.
+     */
+    get: operations["listModules"];
+    put?: never;
+    /**
+     * Registrar un módulo desde su manifiesto
+     * @description Registra un módulo a partir de su manifiesto (`mirotaract.module.json`, contrato v1, ver `packages/module-manifest`), vinculado a la app de desarrollador que lo publica. Quién: el RDR (o la plataforma), con `kernel.module.register` en la organización de esa app. El módulo queda `ACTIVE` y gobernado desde esa organización. Cada permiso del manifiesto se crea como `PermissionDefinition` en el espacio de nombres del módulo (`<id>.*`), listo para asignarse a cargos. No ejecuta código externo (decisión final #10) ni migra tablas (CA-MOD-01). Errores de validación: 422 con `errors[]` en español.
+     */
+    post: operations["registerModule"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/modules/{moduleId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Obtener un módulo (con sus permisos) */
+    get: operations["getModule"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/modules/{moduleId}/manifest": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Publicar una versión nueva del manifiesto
+     * @description Reemplaza el manifiesto. El `id` no cambia y la versión no puede ser anterior a la publicada. Los permisos se sincronizan: se crean los nuevos, se actualizan nombre y descripción de los existentes y se borran los que ya no están (también de los cargos que los tenían). Se autoriza contra la organización dueña del módulo.
+     */
+    put: operations["updateModuleManifest"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/modules/{moduleId}/deprecate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Marcar un módulo como DEPRECATED
+     * @description Un módulo `DEPRECATED` no admite instalaciones nuevas (invariante 6.10.3); las existentes siguen funcionando. Se autoriza contra la organización dueña del módulo.
+     */
+    post: operations["deprecateModule"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/organizations/{organizationId}/modules/{moduleId}/install": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Instalar un módulo en una organización (PENDING)
+     * @description Una organización tiene como máximo una instalación por módulo (invariante 6.10.2). Si la instalación anterior está `DISABLED`, se reinstala (vuelve a `PENDING`). Si se manda `configuration`, se valida contra el `configurationSchema` del módulo y se guarda con sus valores por defecto. Quién: la presidencia del club (`kernel.module.install` en ese club) o un cargo de distrito para el distrito y sus clubes.
+     */
+    post: operations["installModule"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/organizations/{organizationId}/modules/{moduleId}/activate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Activar una instalación (PENDING/SUSPENDED → ACTIVE)
+     * @description Valida la configuración guardada contra `configurationSchema` (invariante 6.10.4, CA-MOD-02) y le aplica los valores por defecto. Emite `kernel.module-activated.v1` (CA-MOD-03). Desde que está activa, los permisos del módulo valen en esta organización.
+     */
+    post: operations["activateModuleInstallation"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/organizations/{organizationId}/modules/{moduleId}/configuration": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Actualizar la configuración de una instalación
+     * @description Reemplaza la configuración entera. Se valida contra `configurationSchema` y se guarda con los valores por defecto.
+     */
+    patch: operations["updateModuleConfiguration"];
+    trace?: never;
+  };
+  "/organizations/{organizationId}/modules/{moduleId}/suspend": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Desactivar una instalación (ACTIVE → SUSPENDED)
+     * @description Reversible con `activate`. Mientras tanto, los permisos del módulo no valen en esta organización.
+     */
+    post: operations["suspendModuleInstallation"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/organizations/{organizationId}/modules/{moduleId}/disable": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Desinstalar (DISABLED)
+     * @description No elimina datos del servicio consumidor (invariante 6.10.5, CA-MOD-04). Para volver a usarlo, se instala de nuevo.
+     */
+    post: operations["disableModuleInstallation"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/organizations/{organizationId}/modules": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Listar instalaciones de módulos de una organización */
+    get: operations["listOrganizationModules"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/organizations/{organizationId}/module-installations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Instalaciones de una organización y de las que dependen de ella
+     * @description Vista de distrito: las instalaciones del distrito y de todos sus clubes, con el nombre de cada organización.
+     */
+    get: operations["listModuleInstallationsInTree"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/organizations/{organizationId}/capabilities": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Obtener capacidades habilitadas (módulos activos)
+     * @description Refleja instalación y permisos (CA-MOD-05).
+     */
+    get: operations["getOrganizationCapabilities"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/service/users/{accountId}/context": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Obtener el UserContext de una cuenta (para servicios) */
+    get: operations["serviceGetUserContext"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/service/organizations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Listar organizaciones visibles para la app */
+    get: operations["serviceListOrganizations"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/service/organizations/{organizationId}/members": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Padrón de socios de una organización
+     * @description email, phone y birthDate de cada persona solo aparecen con el scope kernel.service.persons.contact.read; sin él se omiten.
+     */
+    get: operations["serviceListMembers"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/service/organizations/{organizationId}/authorities": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Autoridades vigentes (nombramientos ACTIVE) */
+    get: operations["serviceListAuthorities"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/service/organizations/{organizationId}/periods": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Períodos de una organización */
+    get: operations["serviceListPeriods"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/service/persons/batch": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Obtener varias personas por id
+     * @description Máximo 100 ids. Las personas fuera del alcance de la app se omiten de la respuesta (no fallan el pedido).
+     */
+    post: operations["serviceBatchPersons"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/service/persons/{personId}/memberships": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Membresías de una persona dentro del alcance de la app */
+    get: operations["servicePersonMemberships"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/service/persons/{personId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Obtener resumen de persona (para servicios) */
+    get: operations["serviceGetPerson"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/service/organizations/{organizationId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Obtener resumen de organización (para servicios) */
+    get: operations["serviceGetOrganization"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/service/organizations/{organizationId}/membership-snapshot": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Obtener snapshot de membresías (para quórum, listas, etc.) */
+    get: operations["serviceGetMembershipSnapshot"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/service/organizations/{organizationId}/authority-snapshot": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Obtener snapshot de autoridades vigentes */
+    get: operations["serviceGetAuthoritySnapshot"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/service/organizations/{organizationId}/period-snapshot": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Obtener snapshot del período vigente */
+    get: operations["serviceGetPeriodSnapshot"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/service/authorization/check": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Evaluar autorización (para servicios, sin sesión de usuario) */
+    post: operations["serviceCheckAuthorization"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/service/authorization/batch-check": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Evaluar hasta 100 decisiones (para servicios) */
+    post: operations["serviceBatchCheckAuthorization"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/service/modules/{moduleId}/installations/{organizationId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Obtener el estado de instalación de un módulo (para el propio servicio consumidor) */
+    get: operations["serviceGetModuleInstallation"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/.well-known/openid-configuration": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Documento de discovery de OpenID Connect */
+    get: operations["getOpenIdConfiguration"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/.well-known/jwks.json": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Claves públicas para verificar tokens (JWKS)
+     * @description Incluye la clave activa y las retiradas en los últimos 30 días, para que los tokens firmados antes de una rotación sigan verificando.
+     */
+    get: operations["getJwks"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/developer/apps": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Listar las apps registradas en una organización */
+    get: operations["listDeveloperApps"];
+    put?: never;
+    /**
+     * Registrar una app
+     * @description Una app CONFIDENTIAL recibe su secreto en esta respuesta, una única vez. Una app PUBLIC (SPA o móvil) no tiene secreto, usa PKCE y no puede pedir client_credentials ni scopes de servicio.
+     */
+    post: operations["createDeveloperApp"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/developer/apps/{appId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Ver una app */
+    get: operations["getDeveloperApp"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Editar nombre, descripción, scopes o URLs de retorno */
+    patch: operations["updateDeveloperApp"];
+    trace?: never;
+  };
+  "/developer/apps/{appId}/secrets": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Crear un secreto nuevo (rotación)
+     * @description Devuelve el secreto nuevo una única vez. El secreto anterior sigue siendo válido 7 días o hasta que se revoque, para rotar sin cortar el servicio. Nunca hay más de dos secretos vigentes.
+     */
+    post: operations["rotateDeveloperAppSecret"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/developer/apps/{appId}/secrets/{secretId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Revocar un secreto */
+    delete: operations["revokeDeveloperAppSecret"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/developer/apps/{appId}/suspend": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Pausar una app (deja de obtener tokens) */
+    post: operations["suspendDeveloperApp"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/developer/apps/{appId}/activate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Reactivar una app pausada */
+    post: operations["activateDeveloperApp"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/developer/apps/{appId}/revoke": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Revocar una app definitivamente
+     * @description Terminal. Revoca sus secretos, sus refresh tokens y los consentimientos otorgados por las personas.
+     */
+    post: operations["revokeDeveloperApp"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/developer/apps/{appId}/webhooks/stream": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Stream de eventos para desarrollo (Server-Sent Events)
+     * @description Para `mirotaract webhooks listen`. Emite cada evento que la app recibiría por webhook, tal cual se haría el POST: primero `event: ready` con `{ "secret": "whsec_..." }` (secreto propio de este stream), después un `event: webhook` por evento con `data: {"headers": {...}, "body": "<json crudo>"}`, firmado con ese secreto. Se autentica con las credenciales de la app (Basic `client_id:secreto`), no con una sesión. Solo existe si `KERNEL_WEBHOOK_STREAM_ENABLED=true` (kernel local o de pruebas); si no, 404.
+     */
+    get: operations["streamWebhookEvents"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/developer-apps/{appId}/webhooks/stream": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Stream de eventos para desarrollo (ruta del contrato E6/E7)
+     * @description Igual que `GET /developer/apps/{appId}/webhooks/stream`.
+     */
+    get: operations["streamWebhookEventsAlias"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/developer/apps/{appId}/webhooks": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Listar los endpoints de webhooks de una app */
+    get: operations["listWebhookEndpoints"];
+    put?: never;
+    /**
+     * Registrar un endpoint
+     * @description Devuelve el secreto de firma (`whsec_...`) una única vez. La URL tiene que ser https y apuntar a una dirección pública (se verifica también después de resolver el DNS). Cada tipo de evento exige el scope de la app indicado en el catálogo.
+     */
+    post: operations["createWebhookEndpoint"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/developer/apps/{appId}/webhooks/{endpointId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Ver un endpoint */
+    get: operations["getWebhookEndpoint"];
+    put?: never;
+    post?: never;
+    /** Borrar un endpoint (y su historial de envíos) */
+    delete: operations["deleteWebhookEndpoint"];
+    options?: never;
+    head?: never;
+    /**
+     * Cambiar URL, eventos o descripción, o activar / desactivar
+     * @description `status: ENABLED` reactiva un endpoint desactivado (a mano o automáticamente tras 72 h de fallas) y reinicia su racha de fallas.
+     */
+    patch: operations["updateWebhookEndpoint"];
+    trace?: never;
+  };
+  "/developer/apps/{appId}/webhooks/{endpointId}/rotate-secret": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Crear un secreto de firma nuevo
+     * @description Devuelve el secreto nuevo una única vez. Durante 24 h los envíos llevan dos firmas (`v1=` nueva, `v1=` anterior) para poder actualizar el receptor sin rechazar eventos.
+     */
+    post: operations["rotateWebhookSecret"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/developer/apps/{appId}/webhooks/{endpointId}/test": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Mandar un evento de prueba (ping.v1)
+     * @description Queda en cola y se envía en segundos. Es un único intento, sin reintentos.
+     */
+    post: operations["sendWebhookTest"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/developer/apps/{appId}/webhooks/{endpointId}/deliveries": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Envíos de un endpoint, del más reciente al más viejo */
+    get: operations["listWebhookDeliveries"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/developer/apps/{appId}/webhooks/{endpointId}/deliveries/{deliveryId}/redeliver": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Reenviar un evento ya enviado (o fallido)
+     * @description Mismo evento (mismo id y mismo cuerpo), un intento más, ahora. Si falla vuelve a FAILED; no reinicia los reintentos automáticos.
+     */
+    post: operations["redeliverWebhook"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/developer/apps/{appId}/request-logs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Registros de los requests que hizo una app
+     * @description Una fila por request autenticado como la app (token de servicio, token de usuario emitido a la app, o credenciales del cliente en `/oauth/token` y `/oauth/revoke`), del más reciente al más viejo. Guarda método, ruta (plantilla, sin ids), estado, código de error, latencia, traceId, instante e IP truncada (/24 en IPv4, /48 en IPv6). Nunca guarda cuerpos, tokens ni datos personales. Se conservan 30 días. Mismo permiso que leer la app.
+     */
+    get: operations["listRequestLogs"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/developer/app-reviews": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Cola de revisión de apps del distrito (RDR)
+     * @description Apps de la organización y sus descendientes en un estado de revisión (por defecto `IN_REVIEW`), de la más vieja a la más nueva, con lo que la lista de control necesita: propósito, datos pedidos (y cuáles no están aprobados todavía), responsable, política de privacidad y contacto.
+     */
+    get: operations["listDeveloperAppReviews"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/developer/apps/{appId}/reviews": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Historial de revisión de una app
+     * @description Envíos, aprobaciones, rechazos (con su motivo) y reaperturas, del más reciente al más viejo.
+     */
+    get: operations["listDeveloperAppReviewHistory"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/developer/apps/{appId}/review": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Aprobar o rechazar una app en revisión (RDR)
+     * @description Aprobar exige marcar los cinco puntos de la lista de control y que la app haya cargado propósito, política de privacidad y contacto; los datos que pide quedan aprobados. Rechazar exige un motivo (10 a 1000 caracteres) que ve el equipo de la app. 409 si la app no está esperando revisión.
+     */
+    post: operations["reviewDeveloperApp"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/developer/apps/{appId}/review-request": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Volver a pedir la revisión (después de un rechazo) */
+    post: operations["requestDeveloperAppReview"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/developer/apps/{appId}/quota": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Límites de la app y cuánto usó
+     * @description Ventanas fijas por minuto y por día (UTC), por `client_id`. `source` dice de dónde salen los límites: `default` (los del distrito), `review` (los más bajos de una app que todavía no se aprobó) o `custom` (los que fijó el RDR).
+     */
+    get: operations["getDeveloperAppQuota"];
+    /**
+     * Fijar los límites de una app (RDR)
+     * @description `null` vuelve al valor por defecto.
+     */
+    put: operations["updateDeveloperAppQuota"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/developer/app-catalog": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Apps del distrito que se pueden mostrar a los socios (RDR)
+     * @description Apps aprobadas y activas de la organización y sus descendientes, con cómo se muestran en el panel de Mi Rotaract. Si todavía no se guardó nada (`saved: false`), `listing` trae una sugerencia armada con la app y su módulo (E8): nombre, ícono y enlace.
+     */
+    get: operations["listAppCatalog"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/developer/apps/{appId}/listing": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Publicar una app en el panel de los socios y elegir a quién (RDR)
+     * @description Solo una app aprobada y activa se puede publicar. Pausar o revocar la app la despublica sola. El público se evalúa contra las membresías y cargos ACTIVE de cada persona dentro del árbol de la organización de la app; si la app tiene un módulo (E8) instalado pero no activo en un club, los socios de ese club no la ven.
+     */
+    put: operations["updateDeveloperAppListing"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/me/apps": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Apps del distrito para la persona autenticada
+     * @description Solo las apps publicadas cuyo público incluye a la persona, y nada más que lo necesario para mostrarlas y abrirlas.
+     */
+    get: operations["listMyApps"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/me/app-access": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Apps que accedieron a mis datos
+     * @description Las apps a las que la persona dio acceso con "Ingresar con Mi Rotaract" (`connected`, se puede quitar con `DELETE /oauth/consents/{appId}`) y las que leyeron sus datos desde su servidor (por ejemplo, la app de su club), con la cantidad de accesos y el último, en los últimos 12 meses.
+     */
+    get: operations["listMyAppAccess"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/me/app-access/{appId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Historial de accesos de una app a mis datos
+     * @description Del más reciente al más viejo. Solo los accesos a los datos de la persona autenticada; los accesos repetidos del mismo tipo dentro de 15 minutos se agrupan. Sin cuerpos ni datos: solo qué tipo de dato.
+     */
+    get: operations["listMyAppAccessEvents"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/events/catalog": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Catálogo público de eventos
+     * @description Tipos de evento que una app puede recibir por webhook, con su versión, el scope que exige, el JSON Schema de `data` y un ejemplo completo del cuerpo que se envía. Generado de la misma fuente que usa el kernel para emitirlos.
+     */
+    get: operations["getEventCatalog"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/oauth/apps/{clientId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Datos públicos de una app (para la pantalla de consentimiento) */
+    get: operations["getPublicDeveloperApp"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/oauth/authorize/context": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Validar un pedido de autorización y describirlo
+     * @description La Web lo llama con los parámetros de /oauth/authorize antes de mostrar el consentimiento. Valida client_id, redirect_uri (coincidencia exacta), scopes permitidos a la app y PKCE S256. Indica si la persona ya había otorgado esos scopes.
+     */
+    get: operations["getAuthorizationContext"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/oauth/authorize": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Aprobar o rechazar un pedido de autorización
+     * @description Con decision=approve guarda el consentimiento, emite un código de un solo uso (60 s) atado a la app, la redirect_uri y el code_challenge, y devuelve la URL de retorno con code y state. Con decision=deny devuelve la URL de retorno con error=access_denied.
+     */
+    post: operations["authorizeOAuthRequest"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/oauth/token": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Emitir tokens (client_credentials, authorization_code, refresh_token)
+     * @description Autenticación del cliente por HTTP Basic (client_secret_basic), por client_id + client_secret en el body (client_secret_post), o solo client_id para apps PUBLIC con PKCE. Los errores siguen RFC 6749 §5.2 (`{ error, error_description }`), no Problem Details.
+     */
+    post: operations["issueOAuthToken"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/oauth/revoke": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Revocar un refresh token (RFC 7009)
+     * @description Responde 200 aunque el token no exista, como indica RFC 7009.
+     */
+    post: operations["revokeOAuthToken"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/oauth/userinfo": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Datos de la persona según los scopes otorgados */
+    get: operations["getOAuthUserInfo"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/oauth/consents": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Apps a las que la persona autenticada dio acceso */
+    get: operations["listOAuthConsents"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/oauth/consents/{appId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Quitarle el acceso a una app
+     * @description Revoca el consentimiento y todos los refresh tokens de esa app para la persona.
+     */
+    delete: operations["revokeOAuthConsent"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: {
-        /**
-         * @description Problem Details (RFC 9457).
-         * @example {
-         *       "type": "https://api.rotaract4845.com/errors/invalid-transition",
-         *       "title": "Invalid state transition",
-         *       "status": 409,
-         *       "code": "KERNEL_INVALID_TRANSITION",
-         *       "detail": "ACTIVE membership cannot transition directly to PENDING",
-         *       "instance": "/api/kernel/v1/memberships/mem_123/status",
-         *       "traceId": "trc_123"
-         *     }
-         */
-        Error: {
-            /** Format: uri */
-            type: string;
-            title: string;
-            status: number;
-            /** @description Código estable de error, p. ej. `KERNEL_INVALID_TRANSITION`. */
-            code: string;
-            detail?: string;
-            instance: string;
-            /** @description Identificador del request (E9). Siempre presente: el trace-id de `traceparent` si vino, si no `X-Correlation-Id`, si no uno generado. También viaja en la cabecera `X-Trace-Id` de toda respuesta y es el filtro de los registros de la app. */
-            traceId?: string;
-            /** @description Errores por campo (p. ej. un manifiesto o una configuración de módulo). `path` es la ruta del campo (`permissions[0].code`, "" para la raíz) y `message` está en español, listo para mostrar. */
-            errors?: {
-                path: string;
-                message: string;
-                keyword?: string;
-            }[];
-        };
-        PageInfo: {
-            nextCursor?: string | null;
-            hasMore?: boolean;
-        };
-        /** @enum {string} */
-        AccountStatus: "PENDING_VERIFICATION" | "ACTIVE" | "SUSPENDED" | "DISABLED";
-        /** @enum {string} */
-        PlatformRole: "USER" | "SUPERADMIN";
-        /** @enum {string} */
-        OrganizationType: "DISTRICT" | "CLUB" | "OTHER";
-        /** @enum {string} */
-        OrganizationStatus: "DRAFT" | "ACTIVE" | "INACTIVE" | "ARCHIVED";
-        /** @enum {string} */
-        MembershipStatus: "PENDING" | "ACTIVE" | "ON_LEAVE" | "INACTIVE" | "GRADUATED" | "TRANSFERRED";
-        /** @enum {string} */
-        MembershipTransitionType: "CREATED" | "ACTIVATED" | "LEAVE_STARTED" | "LEAVE_ENDED" | "DEACTIVATED" | "GRADUATED" | "TRANSFERRED_OUT" | "TRANSFERRED_IN" | "REACTIVATED";
-        /** @enum {string} */
-        PeriodStatus: "DRAFT" | "SCHEDULED" | "ACTIVE" | "CLOSED" | "CANCELLED";
-        /** @enum {string} */
-        AppointmentStatus: "NOMINATED" | "ELECTED" | "ACTIVE" | "ENDED" | "REVOKED";
-        /** @enum {string} */
-        ScopeType: "PLATFORM" | "ORGANIZATION" | "ORGANIZATION_TREE";
-        /** @enum {string} */
-        AssignmentEffect: "ALLOW" | "DENY";
-        /** @enum {string} */
-        ApplicationStatus: "DRAFT" | "SUBMITTED" | "APPROVED" | "REJECTED" | "CANCELLED" | "EXPIRED";
-        /** @enum {string} */
-        TransferStatus: "REQUESTED" | "ACCEPTED_BY_DESTINATION" | "CONFIRMED_BY_ORIGIN" | "COMPLETED" | "REJECTED" | "CANCELLED" | "EXPIRED";
-        /** @enum {string} */
-        InvitationStatus: "PENDING" | "ACCEPTED" | "EXPIRED" | "REVOKED";
-        /** @enum {string} */
-        ModuleStatus: "DRAFT" | "ACTIVE" | "DEPRECATED" | "DISABLED";
-        /** @enum {string} */
-        InstallationStatus: "PENDING" | "ACTIVE" | "SUSPENDED" | "DISABLED";
-        /** @enum {string} */
-        ActorType: "USER" | "SERVICE" | "SYSTEM";
-        Person: {
-            id: string;
-            firstName: string;
-            lastName: string;
-            displayName?: string | null;
-            /** Format: email */
-            primaryEmail?: string | null;
-            phone?: string | null;
-            /** Format: date */
-            birthDate?: string | null;
-            avatarUrl?: string | null;
-            externalReference?: string | null;
-            metadata?: Record<string, never> | null;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-            /** Format: date-time */
-            archivedAt?: string | null;
-        };
-        /** @description Vista mínima de Person para consumo entre servicios (§12.5 — sin email salvo necesidad explícita). */
-        PersonSummary: {
-            id: string;
-            firstName: string;
-            lastName: string;
-            displayName?: string | null;
-            avatarUrl?: string | null;
-        };
-        PersonPage: {
-            items?: components["schemas"]["Person"][];
-            pageInfo?: components["schemas"]["PageInfo"];
-        };
-        /** @description Nunca expone `passwordHash` (§14.5). */
-        UserAccount: {
-            id: string;
-            personId: string;
-            /** Format: email */
-            email: string;
-            status: components["schemas"]["AccountStatus"];
-            platformRole: components["schemas"]["PlatformRole"];
-            /** Format: date-time */
-            emailVerifiedAt?: string | null;
-            mustChangePassword?: boolean;
-            /** Format: date-time */
-            lastLoginAt?: string | null;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-            /** Format: date-time */
-            disabledAt?: string | null;
-        };
-        AccountSession: {
-            id: string;
-            userAgent: string | null;
-            ipAddress?: string | null;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            lastUsedAt: string;
-            /** Format: date-time */
-            expiresAt: string;
-            /** Format: date-time */
-            revokedAt?: string | null;
-            /** @description Indica si es la sesión con la que se realizó la solicitud. */
-            current?: boolean;
-        };
-        RegisterAccountRequest: {
-            firstName: string;
-            lastName: string;
-            /** Format: email */
-            email: string;
-            password: string;
-        };
-        LoginRequest: {
-            /** Format: email */
-            email: string;
-            password: string;
-        };
-        AuthTokens: {
-            accessToken: string;
-            refreshToken: string;
-            /** @enum {string} */
-            tokenType: "Bearer";
-            /** @description Segundos de vida del access token (600 = 10 minutos, §14.1). */
-            expiresIn: number;
-        };
-        IntrospectionResult: {
-            active: boolean;
-            accountId?: string | null;
-            personId?: string | null;
-            sessionId?: string | null;
-            platformRole?: components["schemas"]["PlatformRole"];
-            /** Format: date-time */
-            expiresAt?: string | null;
-        };
-        CreatePersonRequest: {
-            firstName: string;
-            lastName: string;
-            /** Format: email */
-            primaryEmail?: string | null;
-            phone?: string | null;
-            /** Format: date */
-            birthDate?: string | null;
-            externalReference?: string | null;
-            metadata?: Record<string, never> | null;
-        };
-        UpdatePersonRequest: {
-            firstName?: string;
-            lastName?: string;
-            displayName?: string | null;
-            /** Format: email */
-            primaryEmail?: string | null;
-            phone?: string | null;
-            /** Format: date */
-            birthDate?: string | null;
-            avatarUrl?: string | null;
-            metadata?: Record<string, never> | null;
-        };
-        Organization: {
-            id: string;
-            parentId?: string | null;
-            type: components["schemas"]["OrganizationType"];
-            code: string;
-            name: string;
-            slug: string;
-            status: components["schemas"]["OrganizationStatus"];
-            countryCode?: string | null;
-            region?: string | null;
-            city?: string | null;
-            /** @default America/Argentina/Cordoba */
-            timezone: string;
-            contactEmail?: string | null;
-            contactPhone?: string | null;
-            logoUrl?: string | null;
-            /** Format: date */
-            foundedAt?: string | null;
-            description?: string | null;
-            attributes?: Record<string, never> | null;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-            /** Format: date-time */
-            archivedAt?: string | null;
-        };
-        OrganizationSummary: {
-            id: string;
-            parentId?: string | null;
-            type: components["schemas"]["OrganizationType"];
-            code: string;
-            name: string;
-            slug: string;
-            status: components["schemas"]["OrganizationStatus"];
-        };
-        OrganizationPage: {
-            items?: components["schemas"]["Organization"][];
-            pageInfo?: components["schemas"]["PageInfo"];
-        };
-        CreateOrganizationRequest: {
-            parentId?: string | null;
-            type: components["schemas"]["OrganizationType"];
-            code: string;
-            name: string;
-            slug: string;
-            countryCode?: string | null;
-            region?: string | null;
-            city?: string | null;
-            timezone?: string | null;
-            contactEmail?: string | null;
-            contactPhone?: string | null;
-            /** Format: date */
-            foundedAt?: string | null;
-            description?: string | null;
-            attributes?: Record<string, never> | null;
-        };
-        UpdateOrganizationRequest: {
-            name?: string;
-            countryCode?: string | null;
-            region?: string | null;
-            city?: string | null;
-            timezone?: string;
-            contactEmail?: string | null;
-            contactPhone?: string | null;
-            logoUrl?: string | null;
-            description?: string | null;
-            attributes?: Record<string, never> | null;
-        };
-        OrganizationMembership: {
-            id: string;
-            organizationId: string;
-            personId: string;
-            memberNumber?: string | null;
-            status: components["schemas"]["MembershipStatus"];
-            /** Format: date-time */
-            joinedAt?: string | null;
-            /** Format: date-time */
-            statusChangedAt?: string;
-            /** Format: date-time */
-            endedAt?: string | null;
-            /** @description Nunca se expone en eventos de integración (§11.3). */
-            internalNotes?: string | null;
-            metadata?: Record<string, never> | null;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-        };
-        MembershipPage: {
-            items?: components["schemas"]["OrganizationMembership"][];
-            pageInfo?: components["schemas"]["PageInfo"];
-        };
-        CreateMembershipRequest: {
-            personId: string;
-            memberNumber?: string | null;
-            metadata?: Record<string, never> | null;
-        };
-        MembershipTransition: {
-            id: string;
-            membershipId: string;
-            type: components["schemas"]["MembershipTransitionType"];
-            fromStatus?: components["schemas"]["MembershipStatus"];
-            toStatus: components["schemas"]["MembershipStatus"];
-            reasonCode?: string | null;
-            reasonText?: string | null;
-            /** Format: date-time */
-            effectiveAt: string;
-            performedById?: string | null;
-            commandId?: string | null;
-            /** Format: date-time */
-            createdAt: string;
-        };
-        InstitutionalPeriod: {
-            id: string;
-            organizationId: string;
-            code: string;
-            name: string;
-            sequence: number;
-            /**
-             * Format: date-time
-             * @description Debe ser 1 de julio (00:00 UTC).
-             */
-            startDate: string;
-            /**
-             * Format: date-time
-             * @description Debe ser 30 de junio del año siguiente (00:00 UTC).
-             */
-            endDate: string;
-            status: components["schemas"]["PeriodStatus"];
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-            /** Format: date-time */
-            closedAt?: string | null;
-        };
-        CreatePeriodRequest: {
-            code: string;
-            name: string;
-            sequence: number;
-            /**
-             * Format: date
-             * @description Debe ser 1 de julio.
-             */
-            startDate: string;
-            /**
-             * Format: date
-             * @description Debe ser 30 de junio del año siguiente.
-             */
-            endDate: string;
-        };
-        UpdatePeriodRequest: {
-            name?: string;
-            /**
-             * Format: date
-             * @description Debe ser 1 de julio.
-             */
-            startDate?: string;
-            /**
-             * Format: date
-             * @description Debe ser 30 de junio del año siguiente.
-             */
-            endDate?: string;
-        };
-        PositionDefinition: {
-            id: string;
-            code: string;
-            name: string;
-            description?: string | null;
-            organizationType: components["schemas"]["OrganizationType"];
-            /** @description Distrito propietario; requerido para cargos DISTRICT no sistémicos. */
-            ownerOrganizationId?: string | null;
-            /** @description Permiso requerido para editar este cargo y los permisos de su rol técnico. */
-            editPermissionCode: string;
-            defaultRoleCode?: string | null;
-            isSingletonPerPeriod: boolean;
-            isSystem: boolean;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-        };
-        CreatePositionDefinitionRequest: {
-            code: string;
-            name: string;
-            description?: string | null;
-            organizationType: components["schemas"]["OrganizationType"];
-            ownerOrganizationId?: string | null;
-            /** @default kernel.position.manage */
-            editPermissionCode: string;
-            defaultRoleCode?: string | null;
-            /** @default false */
-            isSingletonPerPeriod: boolean;
-        };
-        UpdatePositionDefinitionRequest: {
-            name?: string;
-            description?: string | null;
-            editPermissionCode?: string;
-            defaultRoleCode?: string | null;
-            isSingletonPerPeriod?: boolean;
-        };
-        Appointment: {
-            id: string;
-            organizationId: string;
-            membershipId: string;
-            /** @description Organización de la membresía habilitante; puede diferir de organizationId sólo para cargos DISTRICT. */
-            readonly membershipOrganizationId: string;
-            periodId: string;
-            positionDefinitionId: string;
-            status: components["schemas"]["AppointmentStatus"];
-            /** Format: date-time */
-            startsAt?: string | null;
-            /** Format: date-time */
-            endsAt?: string | null;
-            createdById?: string | null;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            activatedAt?: string | null;
-            /** Format: date-time */
-            endedAt?: string | null;
-            /** Format: date-time */
-            revokedAt?: string | null;
-            revokedById?: string | null;
-            revokeReason?: string | null;
-            /** Format: date-time */
-            updatedAt: string;
-        };
-        CreateAppointmentRequest: {
-            /** @description Membresía ACTIVE habilitante. Para DISTRICT debe ser de un CLUB descendiente; para CLUB, del mismo club. */
-            membershipId: string;
-            periodId: string;
-            positionDefinitionId: string;
-            /** Format: date-time */
-            startsAt?: string | null;
-            /** Format: date-time */
-            endsAt?: string | null;
-        };
-        PermissionDefinition: {
-            id: string;
-            /** @description Formato `<namespace>.<resource>.<action>` (invariante 6.7.1). */
-            code: string;
-            namespace: string;
-            name: string;
-            description?: string | null;
-            resourceType?: string | null;
-            moduleId?: string | null;
-            isSystem: boolean;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-        };
-        CreatePermissionRequest: {
-            code: string;
-            namespace: string;
-            name: string;
-            description?: string | null;
-            resourceType?: string | null;
-            moduleId?: string | null;
-        };
-        RoleDefinition: {
-            id: string;
-            code: string;
-            name: string;
-            description?: string | null;
-            moduleId?: string | null;
-            isSystem: boolean;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-        };
-        CreateRoleRequest: {
-            code: string;
-            name: string;
-            description?: string | null;
-            moduleId?: string | null;
-        };
-        RoleAssignment: {
-            id: string;
-            personId: string;
-            roleDefinitionId: string;
-            effect: components["schemas"]["AssignmentEffect"];
-            scopeType: components["schemas"]["ScopeType"];
-            /** @description Requerido si `scopeType` != PLATFORM (invariante de esquema §5.1). */
-            organizationId?: string | null;
-            periodId?: string | null;
-            /** Format: date-time */
-            validFrom: string;
-            /** Format: date-time */
-            validUntil?: string | null;
-            grantedById?: string | null;
-            reason?: string | null;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            revokedAt?: string | null;
-            revokedById?: string | null;
-            /** @description FK obligatoria para asignaciones derivadas de un cargo; null si fue asignada manualmente. */
-            readonly sourceAppointmentId?: string | null;
-        };
-        GrantRoleRequest: {
-            personId: string;
-            roleDefinitionId: string;
-            effect?: components["schemas"]["AssignmentEffect"];
-            scopeType: components["schemas"]["ScopeType"];
-            organizationId?: string | null;
-            periodId?: string | null;
-            /** Format: date-time */
-            validFrom?: string;
-            /** Format: date-time */
-            validUntil?: string | null;
-            reason?: string | null;
-        };
-        AuthorizationCheckRequest: {
-            /** @description personId a evaluar. */
-            subjectId: string;
-            /** @example meetings.meeting.create */
-            permission: string;
-            scope: {
-                type: components["schemas"]["ScopeType"];
-                organizationId?: string | null;
-            };
-            periodId?: string | null;
-            resource?: {
-                type?: string;
-                id?: string;
-                attributes?: Record<string, never>;
-            } | null;
-        };
-        AuthorizationDecision: {
-            allowed: boolean;
-            decisionId: string;
-            subjectId: string;
-            permission: string;
-            matchedAssignments?: string[];
-            /**
-             * @description `ROLE_ALLOWED`, `SUPERADMIN_BYPASS`, `EXPLICIT_DENY`, `NO_GRANT`; para permisos de módulos (E8) además `MODULE_NOT_INSTALLED`, `MODULE_NOT_ACTIVE` (instalación pendiente o desactivada en esa organización) y `MODULE_DISABLED`.
-             * @example [
-             *       "ROLE_ALLOWED"
-             *     ]
-             */
-            reasonCodes?: string[];
-            /** Format: date-time */
-            evaluatedAt: string;
-            /** Format: date-time */
-            cacheUntil?: string | null;
-        };
-        MembershipApplication: {
-            id: string;
-            organizationId: string;
-            requesterPersonId: string;
-            membershipId?: string | null;
-            status: components["schemas"]["ApplicationStatus"];
-            message?: string | null;
-            /** Format: date-time */
-            submittedAt?: string | null;
-            reviewedById?: string | null;
-            /** Format: date-time */
-            reviewedAt?: string | null;
-            rejectionReason?: string | null;
-            /** Format: date-time */
-            expiresAt?: string | null;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-        };
-        CreateMembershipApplicationRequest: {
-            organizationId: string;
-            message?: string | null;
-        };
-        MembershipTransfer: {
-            id: string;
-            membershipId: string;
-            fromOrganizationId: string;
-            toOrganizationId: string;
-            requestedById: string;
-            status: components["schemas"]["TransferStatus"];
-            reason?: string | null;
-            /** Format: date-time */
-            requestedAt: string;
-            acceptedById?: string | null;
-            /** Format: date-time */
-            acceptedAt?: string | null;
-            confirmedById?: string | null;
-            /** Format: date-time */
-            confirmedAt?: string | null;
-            /** Format: date-time */
-            completedAt?: string | null;
-            rejectedById?: string | null;
-            /** Format: date-time */
-            rejectedAt?: string | null;
-            rejectionReason?: string | null;
-            cancelledById?: string | null;
-            /** Format: date-time */
-            cancelledAt?: string | null;
-            /** Format: date-time */
-            expiresAt?: string | null;
-            destinationMembershipId?: string | null;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-        };
-        RequestMembershipTransferRequest: {
-            membershipId: string;
-            toOrganizationId: string;
-            reason?: string | null;
-        };
-        AccountInvitation: {
-            id: string;
-            membershipId: string;
-            personId: string;
-            /** Format: email */
-            email: string;
-            status: components["schemas"]["InvitationStatus"];
-            invitedById?: string | null;
-            /** Format: date-time */
-            expiresAt: string;
-            /** Format: date-time */
-            acceptedAt?: string | null;
-            /** Format: date-time */
-            revokedAt?: string | null;
-            /** Format: date-time */
-            createdAt: string;
-        };
-        AcceptAccountInvitationRequest: {
-            token: string;
-            /** Format: password */
-            password: string;
-        };
-        ModuleDefinition: {
-            /** @description Identificador estable, p. ej. `reuniones` (invariante 6.10.1). Es el prefijo de sus permisos. */
-            id: string;
-            name: string;
-            description?: string | null;
-            version: string;
-            contractVersion: number;
-            status: components["schemas"]["ModuleStatus"];
-            /** @description Manifiesto tal como se publicó (ver ModuleManifest). */
-            manifest: Record<string, never>;
-            configurationSchema?: Record<string, never> | null;
-            /** @description App de desarrollador dueña del módulo (E8). Nulo en módulos anteriores a E8. */
-            developerAppId?: string | null;
-            /** @description Organización desde la que se gobierna (la de la app). */
-            ownerOrganizationId?: string | null;
-            /** @description Permisos del módulo (en `GET /modules`, `GET /modules/{id}` y al registrar o actualizar). */
-            permissions?: components["schemas"]["PermissionDefinition"][];
-            /** Format: date-time */
-            registeredAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-        };
-        /**
-         * @description `mirotaract.module.json`, contrato v1. Esquema completo (JSON Schema draft-07): https://developers.rotaract4845.com/schemas/module-manifest.v1.json (fuente: `packages/module-manifest/schema/module-manifest.v1.json`). El kernel lo valida entero y responde 422 con `errors[]` en español; acá se declara abierto para que esos errores lleguen tal cual.
-         * @example {
-         *       "id": "reuniones",
-         *       "name": "Reuniones distritales",
-         *       "version": "1.0.0",
-         *       "contractVersion": 1,
-         *       "permissions": [
-         *         {
-         *           "code": "reuniones.vote.cast",
-         *           "name": "Votar en nombre del club",
-         *           "scopeType": "ORGANIZATION"
-         *         }
-         *       ],
-         *       "events": {
-         *         "subscribes": [
-         *           "appointment.activated.v1"
-         *         ],
-         *         "emits": []
-         *       },
-         *       "configurationSchema": {
-         *         "type": "object",
-         *         "required": [
-         *           "emailContacto"
-         *         ],
-         *         "properties": {
-         *           "emailContacto": {
-         *             "type": "string",
-         *             "format": "email",
-         *             "title": "Email de contacto del club"
-         *           }
-         *         }
-         *       },
-         *       "ui": {
-         *         "entryUrl": "https://reuniones.rotaract4845.com",
-         *         "navLabel": "Reuniones",
-         *         "icon": "calendar-check"
-         *       }
-         *     }
-         */
-        ModuleManifest: Record<string, never>;
-        RegisterModuleRequest: {
-            /** @description App de desarrollador dueña del módulo. Tiene que estar activa. */
-            appId: string;
-            manifest: components["schemas"]["ModuleManifest"];
-        };
-        ModuleInstallation: {
-            id: string;
-            moduleId: string;
-            organizationId: string;
-            status: components["schemas"]["InstallationStatus"];
-            configuration?: Record<string, never> | null;
-            installedById?: string | null;
-            /** Format: date-time */
-            installedAt: string;
-            /** Format: date-time */
-            activatedAt?: string | null;
-            /** Format: date-time */
-            disabledAt?: string | null;
-            /** Format: date-time */
-            updatedAt: string;
-            /** @description El módulo (sólo en `GET /organizations/{id}/modules`), sin `permissions`. */
-            module?: components["schemas"]["ModuleDefinition"];
-        };
-        ModuleInstallationInTree: components["schemas"]["ModuleInstallation"] & {
-            organizationName: string;
-            organizationType: components["schemas"]["OrganizationType"];
-        };
-        UserContext: {
-            accountId: string;
-            personId: string;
-            /** @enum {string} */
-            accountStatus: "ACTIVE";
-            platformRole: components["schemas"]["PlatformRole"];
-            displayName: string;
-            memberships: {
-                membershipId: string;
-                organizationId: string;
-                organizationType: components["schemas"]["OrganizationType"];
-                status: string;
-            }[];
-            /** @description Contextos organizacionales que la persona puede seleccionar en la Web. Incluye membresías activas y organizaciones alcanzables por una asignación de rol vigente; no reemplaza memberships. */
-            workspaces?: {
-                organizationId: string;
-                name: string;
-                organizationType: components["schemas"]["OrganizationType"];
-                sources: ("MEMBERSHIP" | "ROLE_ASSIGNMENT")[];
-                roleCodes: string[];
-                /**
-                 * @description E8: permisos de módulos que la persona tiene en esta organización, sólo de módulos activos ahí (la misma decisión que daría `/authorization/check`).
-                 * @example [
-                 *       "reuniones.vote.cast"
-                 *     ]
-                 */
-                modulePermissions?: string[];
-            }[];
-            contextVersion: number;
-        };
-        MembershipSnapshot: {
-            snapshotId: string;
-            organizationId: string;
-            /** Format: date-time */
-            capturedAt: string;
-            sourceVersion: number;
-            members: {
-                membershipId: string;
-                personId: string;
-                accountId?: string | null;
-                status: string;
-            }[];
-        };
-        AuthoritySnapshot: {
-            snapshotId: string;
-            organizationId: string;
-            periodId: string;
-            /** Format: date-time */
-            capturedAt: string;
-            appointments: {
-                appointmentId: string;
-                positionCode: string;
-                membershipId: string;
-                membershipOrganizationId: string;
-                personId: string;
-                /** @enum {string} */
-                status: "ACTIVE";
-                /** Format: date-time */
-                startsAt?: string | null;
-                /** Format: date-time */
-                endsAt?: string | null;
-            }[];
-        };
-        /** @description Snapshot sellado del período activo, o null si no existe. */
-        PeriodSnapshot: {
-            snapshotId: string;
-            organizationId: string;
-            /** Format: date-time */
-            capturedAt: string;
-            currentPeriod?: {
-                periodId: string;
-                code: string;
-                name: string;
-                sequence: number;
-                /** Format: date */
-                startDate: string;
-                /** Format: date */
-                endDate: string;
-                /** @enum {string} */
-                status: "ACTIVE";
-            } | null;
-        };
-        /**
-         * @description CONFIDENTIAL = servidor con secreto; PUBLIC = SPA o móvil con PKCE.
-         * @enum {string}
-         */
-        DeveloperAppType: "CONFIDENTIAL" | "PUBLIC";
-        /** @enum {string} */
-        DeveloperAppStatus: "ACTIVE" | "SUSPENDED" | "REVOKED";
-        DeveloperAppSecretSummary: {
-            id: string;
-            /** @description Últimos 4 caracteres. */
-            hint: string;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            expiresAt?: string | null;
-            /** Format: date-time */
-            revokedAt?: string | null;
-            /** Format: date-time */
-            lastUsedAt?: string | null;
-        };
-        DeveloperApp: {
-            id: string;
-            clientId: string;
-            name: string;
-            description?: string | null;
-            type: components["schemas"]["DeveloperAppType"];
-            status: components["schemas"]["DeveloperAppStatus"];
-            organizationId: string;
-            ownerPersonId: string;
-            grantTypes: ("client_credentials" | "authorization_code" | "refresh_token")[];
-            scopes: string[];
-            redirectUris: string[];
-            secrets: components["schemas"]["DeveloperAppSecretSummary"][];
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-            /** Format: date-time */
-            suspendedAt?: string | null;
-            /** Format: date-time */
-            revokedAt?: string | null;
-            reviewStatus?: components["schemas"]["DeveloperAppReviewStatus"];
-            /** @description Scopes aprobados por el distrito; los únicos que sirven para cualquier persona. */
-            approvedScopes?: string[];
-            /** Format: date-time */
-            approvedAt?: string | null;
-            /** Format: date-time */
-            reviewedAt?: string | null;
-            purpose?: string | null;
-            privacyPolicyUrl?: string | null;
-            contactEmail?: string | null;
-            /** @description Cuentas (además del responsable) que pueden ingresar mientras la app está en revisión. */
-            testAccountEmails?: string[];
-            /** @description Límite fijado por el RDR; null = el del distrito. */
-            quotaPerMinute?: number | null;
-            quotaPerDay?: number | null;
-        };
-        CreateDeveloperAppRequest: {
-            name: string;
-            description?: string | null;
-            type: components["schemas"]["DeveloperAppType"];
-            /** @description Organización a la que queda atada la app (club o distrito). */
-            organizationId: string;
-            grantTypes: ("client_credentials" | "authorization_code" | "refresh_token")[];
-            scopes: string[];
-            /** @description Obligatorio con authorization_code. https, o http solo para localhost. */
-            redirectUris?: string[];
-            /** @description Para qué es la app y quién la usa. */
-            purpose?: string | null;
-            /** @description URL https de la política de privacidad. */
-            privacyPolicyUrl?: string | null;
-            /** @description Correo de contacto del equipo. */
-            contactEmail?: string | null;
-            testAccountEmails?: string[];
-        };
-        UpdateDeveloperAppRequest: {
-            name?: string;
-            description?: string | null;
-            scopes?: string[];
-            redirectUris?: string[];
-            /** @description Para qué es la app y quién la usa. */
-            purpose?: string | null;
-            /** @description URL https de la política de privacidad. */
-            privacyPolicyUrl?: string | null;
-            /** @description Correo de contacto del equipo. */
-            contactEmail?: string | null;
-            testAccountEmails?: string[];
-        };
-        DeveloperAppSecretCreated: {
-            secretId: string;
-            /** @description Se muestra una única vez. */
-            secret: string;
-            hint: string;
-            /** Format: date-time */
-            createdAt: string;
-        };
-        CreatedDeveloperApp: {
-            app: components["schemas"]["DeveloperApp"];
-            /** @description Solo para apps CONFIDENTIAL; se muestra una única vez. */
-            clientSecret?: string | null;
-        };
-        PublicDeveloperApp: {
-            clientId: string;
-            name: string;
-            description?: string | null;
-            type: components["schemas"]["DeveloperAppType"];
-            organizationName: string;
-        };
-        ScopeDescription: {
-            scope: string;
-            label: string;
-        };
-        AuthorizationContext: {
-            app: components["schemas"]["PublicDeveloperApp"];
-            scopes: components["schemas"]["ScopeDescription"][];
-            alreadyGranted: boolean;
-        };
-        AuthorizeRequest: {
-            clientId: string;
-            redirectUri: string;
-            scope: string;
-            state?: string | null;
-            nonce?: string | null;
-            codeChallenge: string;
-            /** @enum {string} */
-            codeChallengeMethod: "S256";
-            /** @enum {string} */
-            decision: "approve" | "deny";
-        };
-        AuthorizeResponse: {
-            redirectTo: string;
-        };
-        TokenRequest: {
-            /** @enum {string} */
-            grant_type: "client_credentials" | "authorization_code" | "refresh_token";
-            client_id?: string;
-            client_secret?: string;
-            scope?: string;
-            code?: string;
-            redirect_uri?: string;
-            code_verifier?: string;
-            refresh_token?: string;
-        };
-        TokenResponse: {
-            access_token: string;
-            /** @enum {string} */
-            token_type: "Bearer";
-            expires_in: number;
-            scope: string;
-            id_token?: string;
-            refresh_token?: string;
-        };
-        RevokeTokenRequest: {
-            token: string;
-            token_type_hint?: string;
-            client_id?: string;
-            client_secret?: string;
-        };
-        OAuthError: {
-            /** @enum {string} */
-            error: "invalid_request" | "invalid_client" | "invalid_grant" | "unauthorized_client" | "unsupported_grant_type" | "invalid_scope" | "invalid_token" | "access_denied";
-            error_description?: string;
-        };
-        UserInfo: {
-            /** @description personId estable. */
-            sub: string;
-            name?: string;
-            given_name?: string;
-            family_name?: string;
-            picture?: string | null;
-            email?: string;
-            email_verified?: boolean;
-            memberships?: {
-                organizationId: string;
-                organizationName: string;
-                organizationType: string;
-                status: string;
-            }[];
-            positions?: {
-                organizationId: string;
-                positionCode: string;
-                positionName: string;
-                periodId: string;
-            }[];
-        };
-        OAuthConsent: {
-            appId: string;
-            clientId: string;
-            appName: string;
-            organizationName: string;
-            scopes: components["schemas"]["ScopeDescription"][];
-            /** Format: date-time */
-            grantedAt: string;
-        };
-        OpenIdConfiguration: {
-            issuer: string;
-            authorization_endpoint: string;
-            token_endpoint: string;
-            userinfo_endpoint?: string;
-            revocation_endpoint?: string;
-            jwks_uri: string;
-        } & {
-            [key: string]: unknown;
-        };
-        Jwks: {
-            keys: {
-                [key: string]: unknown;
-            }[];
-        };
-        OrganizationView: {
-            id: string;
-            type: components["schemas"]["OrganizationType"];
-            code: string;
-            name: string;
-            slug: string;
-            status: components["schemas"]["OrganizationStatus"];
-            parentId: string | null;
-            countryCode?: string | null;
-            region?: string | null;
-            city?: string | null;
-            timezone?: string | null;
-            logoUrl?: string | null;
-            description?: string | null;
-            /** Format: date-time */
-            updatedAt: string;
-        };
-        OrganizationViewPage: {
-            items: components["schemas"]["OrganizationView"][];
-            pageInfo: components["schemas"]["PageInfo"];
-        };
-        /** @description email, phone y birthDate solo con el scope kernel.service.persons.contact.read; sin él, las propiedades no aparecen. */
-        PersonView: {
-            id: string;
-            displayName: string;
-            firstName: string;
-            lastName: string;
-            avatarUrl?: string | null;
-            email?: string | null;
-            phone?: string | null;
-            /** Format: date */
-            birthDate?: string | null;
-            /** Format: date-time */
-            updatedAt: string;
-        };
-        MemberView: {
-            membershipId: string;
-            organizationId: string;
-            personId: string;
-            status: components["schemas"]["MembershipStatus"];
-            /** Format: date-time */
-            joinedAt?: string | null;
-            memberNumber?: string | null;
-            person: components["schemas"]["PersonView"];
-            /** Format: date-time */
-            updatedAt: string;
-        };
-        MemberViewPage: {
-            items: components["schemas"]["MemberView"][];
-            pageInfo: components["schemas"]["PageInfo"];
-        };
-        PersonMembershipView: {
-            membershipId: string;
-            organizationId: string;
-            organizationName: string;
-            organizationType: components["schemas"]["OrganizationType"];
-            status: components["schemas"]["MembershipStatus"];
-            /** Format: date-time */
-            joinedAt?: string | null;
-            /** Format: date-time */
-            endedAt?: string | null;
-        };
-        AuthorityView: {
-            appointmentId: string;
-            organizationId: string;
-            periodId: string;
-            positionCode: string;
-            positionName: string;
-            status: components["schemas"]["AppointmentStatus"];
-            /** Format: date-time */
-            startsAt?: string | null;
-            /** Format: date-time */
-            endsAt?: string | null;
-            /** @description Sin datos de contacto. */
-            person: {
-                id: string;
-                displayName: string;
-                avatarUrl?: string | null;
-            };
-        };
-        PeriodView: {
-            id: string;
-            organizationId: string;
-            code: string;
-            name: string;
-            status: components["schemas"]["PeriodStatus"];
-            /** Format: date-time */
-            startDate: string;
-            /** Format: date-time */
-            endDate: string;
-        };
-        /** @enum {string} */
-        WebhookEndpointStatus: "ENABLED" | "DISABLED";
-        /** @enum {string} */
-        WebhookDeliveryStatus: "PENDING" | "SUCCEEDED" | "FAILED";
-        WebhookEndpoint: {
-            id: string;
-            appId: string;
-            url: string;
-            description?: string | null;
-            eventTypes: string[];
-            status: components["schemas"]["WebhookEndpointStatus"];
-            /**
-             * @description AUTO_FAILURES = se desactivó solo tras 72 h en que fallaron todos los envíos.
-             * @enum {string|null}
-             */
-            disabledReason?: "MANUAL" | "AUTO_FAILURES" | null;
-            /** Format: date-time */
-            disabledAt?: string | null;
-            /** @description Últimos 4 caracteres del secreto vigente. */
-            secretHint: string;
-            /**
-             * Format: date-time
-             * @description Hasta cuándo se firma también con el secreto anterior (rotación).
-             */
-            previousSecretExpiresAt?: string | null;
-            /** Format: date-time */
-            secretRotatedAt?: string | null;
-            /** Format: date-time */
-            failingSince?: string | null;
-            consecutiveFailures: number;
-            /** Format: date-time */
-            lastSuccessAt?: string | null;
-            /** Format: date-time */
-            lastFailureAt?: string | null;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-        };
-        WebhookEndpointWithSecret: {
-            endpoint: components["schemas"]["WebhookEndpoint"];
-            /** @description `whsec_...`. Se muestra una única vez. */
-            secret: string;
-        };
-        CreateWebhookEndpointRequest: {
-            url: string;
-            eventTypes: string[];
-            description?: string | null;
-        };
-        UpdateWebhookEndpointRequest: {
-            url?: string;
-            eventTypes?: string[];
-            description?: string | null;
-            status?: components["schemas"]["WebhookEndpointStatus"];
-        };
-        WebhookDelivery: {
-            id: string;
-            endpointId: string;
-            /** @description `evt_...`, igual a MiRotaract-Webhook-Id. */
-            eventId: string;
-            eventType: string;
-            organizationId?: string | null;
-            status: components["schemas"]["WebhookDeliveryStatus"];
-            attempts: number;
-            /** Format: date-time */
-            nextAttemptAt?: string | null;
-            /** Format: date-time */
-            retryUntil: string;
-            /** Format: date-time */
-            firstAttemptAt?: string | null;
-            /** Format: date-time */
-            lastAttemptAt?: string | null;
-            lastResponseStatus?: number | null;
-            /** @description Primer KB de la respuesta del receptor. */
-            lastResponseBody?: string | null;
-            lastLatencyMs?: number | null;
-            lastError?: string | null;
-            /** Format: date-time */
-            deliveredAt?: string | null;
-            /** Format: date-time */
-            createdAt: string;
-        };
-        WebhookDeliveryPage: {
-            items: components["schemas"]["WebhookDelivery"][];
-            pageInfo: components["schemas"]["PageInfo"];
-        };
-        EventCatalog: {
-            version: number;
-            signature: {
-                algorithm: string;
-                signedPayload: string;
-                headers: {
-                    id: string;
-                    timestamp: string;
-                    signature: string;
-                };
-                toleranceSec: number;
-            };
-            /** @description JSON Schema del cuerpo (igual para todos los tipos). */
-            envelope: Record<string, never>;
-            events: components["schemas"]["EventCatalogEntry"][];
-        };
-        EventCatalogEntry: {
-            /** @description Con versión, p. ej. membership.activated.v1. */
-            type: string;
-            name: string;
-            version: number;
-            title: string;
-            description: string;
-            /** @description Scope de servicio que necesita la app para recibirlo. */
-            scope?: string | null;
-            /** @description JSON Schema de `data`. */
-            schema: Record<string, never>;
-            example: {
-                id: string;
-                type: string;
-                /** Format: date-time */
-                createdAt: string;
-                organizationId: string;
-                data: Record<string, never>;
-            };
-        };
-        RequestLog: {
-            id: string;
-            appId: string;
-            /** @example GET */
-            method: string;
-            /**
-             * @description Plantilla de la ruta, sin ids (`/service/organizations/{organizationId}`).
-             * @example /service/organizations/{organizationId}/members
-             */
-            route: string;
-            /** @example 403 */
-            status: number;
-            /** @description Código del error (`code` de Problem Details o `error` de OAuth). Null si salió bien. */
-            code?: string | null;
-            /** @description `type` de Problem Details, o `oauth` para errores OAuth. */
-            type?: string | null;
-            latencyMs: number;
-            traceId: string;
-            /**
-             * @description IP truncada (IPv4 /24, IPv6 /48).
-             * @example 181.120.34.0
-             */
-            clientIp?: string | null;
-            /** Format: date-time */
-            createdAt: string;
-        };
-        RequestLogPage: {
-            items: components["schemas"]["RequestLog"][];
-            pageInfo: components["schemas"]["PageInfo"];
-        };
-        /**
-         * @description `IN_REVIEW`: esperando al RDR (lo que no está aprobado solo sirve para el responsable y las cuentas de prueba). `APPROVED`: lo que pide está aprobado. `REJECTED`: el RDR pidió cambios; la app conserva lo que ya tenía aprobado, si tenía algo.
-         * @enum {string}
-         */
-        DeveloperAppReviewStatus: "IN_REVIEW" | "APPROVED" | "REJECTED";
-        /** @description Lista de control del RDR (E11.1). Un punto que falta cuenta como no revisado. */
-        ReviewChecklist: {
-            /** @description El propósito está claro y es del distrito. */
-            purpose?: boolean;
-            /** @description Los datos que pide son los necesarios para ese propósito. */
-            data?: boolean;
-            /** @description Hay una persona responsable identificada. */
-            owner?: boolean;
-            /** @description Tiene una política de privacidad publicada. */
-            privacyPolicy?: boolean;
-            /** @description Tiene un contacto que responde. */
-            contact?: boolean;
-        };
-        ReviewDeveloperAppRequest: {
-            /** @enum {string} */
-            decision: "approve" | "reject";
-            checklist: components["schemas"]["ReviewChecklist"];
-            /** @description Obligatorio para rechazar (al menos 10 caracteres). */
-            reason?: string | null;
-        };
-        DeveloperAppReviewEntry: {
-            id: string;
-            /**
-             * @description `REOPENED`: la app pidió datos que no estaban aprobados. `AUTO_APPROVED`: ya existía cuando empezó la revisión (E11).
-             * @enum {string}
-             */
-            kind: "SUBMITTED" | "APPROVED" | "REJECTED" | "REOPENED" | "AUTO_APPROVED";
-            checklist?: {
-                [key: string]: boolean;
-            } | null;
-            reason?: string | null;
-            actorPersonId?: string | null;
-            actorName?: string | null;
-            scopes: string[];
-            /** Format: date-time */
-            createdAt: string;
-        };
-        DeveloperAppReviewItem: {
-            appId: string;
-            name: string;
-            description?: string | null;
-            type: components["schemas"]["DeveloperAppType"];
-            status: components["schemas"]["DeveloperAppStatus"];
-            reviewStatus: components["schemas"]["DeveloperAppReviewStatus"];
-            organizationId: string;
-            organizationName: string;
-            ownerPersonId: string;
-            ownerName: string;
-            purpose?: string | null;
-            privacyPolicyUrl?: string | null;
-            contactEmail?: string | null;
-            scopes: components["schemas"]["ScopeDescription"][];
-            /** @description Los que todavía no están aprobados. */
-            pendingScopes: components["schemas"]["ScopeDescription"][];
-            /** Format: date-time */
-            submittedAt: string;
-            /** Format: date-time */
-            approvedAt?: string | null;
-        };
-        QuotaWindow: {
-            limit: number;
-            used: number;
-            remaining: number;
-            resetsInSeconds: number;
-        };
-        DeveloperAppQuota: {
-            enabled: boolean;
-            /** @enum {string} */
-            source: "default" | "review" | "custom";
-            perMinute: components["schemas"]["QuotaWindow"];
-            perDay: components["schemas"]["QuotaWindow"];
-            defaults: {
-                perMinute: number;
-                perDay: number;
-            };
-        };
-        UpdateDeveloperAppQuotaRequest: {
-            perMinute?: number | null;
-            perDay?: number | null;
-        };
-        /**
-         * @description `DISTRICT_MEMBERS`: toda persona con una membresía o un cargo activo en el árbol de la app. `CLUB_PRESIDENTS`: presidencia de club (`CLUB_PRESIDENT`). `CLUB_AUTHORITIES`: cualquier cargo activo de club. `DISTRICT_AUTHORITIES`: cualquier cargo activo del distrito. `POSITIONS`: los cargos de `positionCodes`. Se combinan (unión).
-         * @enum {string}
-         */
-        AppAudience: "DISTRICT_MEMBERS" | "CLUB_PRESIDENTS" | "CLUB_AUTHORITIES" | "DISTRICT_AUTHORITIES" | "POSITIONS";
-        AppListing: {
-            published: boolean;
-            displayName: string;
-            shortDescription?: string | null;
-            /** @description Nombre de un ícono de lucide (`calendar-days`) o URL https de una imagen. */
-            icon?: string | null;
-            launchUrl?: string | null;
-            audiences: components["schemas"]["AppAudience"][];
-            positionCodes: string[];
-            displayOrder: number;
-            /** Format: date-time */
-            publishedAt?: string | null;
-            /** Format: date-time */
-            updatedAt?: string | null;
-        };
-        UpdateAppListingRequest: {
-            published?: boolean;
-            displayName?: string;
-            shortDescription?: string | null;
-            icon?: string | null;
-            /** @description https (o http solo para localhost). */
-            launchUrl?: string;
-            audiences?: components["schemas"]["AppAudience"][];
-            positionCodes?: string[];
-            displayOrder?: number;
-        };
-        AppCatalogItem: {
-            appId: string;
-            appName: string;
-            organizationId: string;
-            organizationName: string;
-            reviewStatus: components["schemas"]["DeveloperAppReviewStatus"];
-            /** @description false = `listing` es una sugerencia */
-            saved: boolean;
-            module?: {
-                moduleId: string;
-                entryUrl?: string;
-                navLabel?: string;
-                icon?: string;
-            } | null;
-            listing: components["schemas"]["AppListing"];
-        };
-        MyApp: {
-            appId: string;
-            name: string;
-            description?: string | null;
-            icon?: string | null;
-            launchUrl: string;
-        };
-        MyAppAccess: {
-            appId: string;
-            appName: string;
-            organizationName: string;
-            appStatus: components["schemas"]["DeveloperAppStatus"];
-            /** @description La persona le dio acceso con "Ingresar con Mi Rotaract" y se lo puede quitar. */
-            connected: boolean;
-            /** Format: date-time */
-            grantedAt?: string | null;
-            scopes: components["schemas"]["ScopeDescription"][];
-            /** Format: date-time */
-            lastAccessAt?: string | null;
-            /** @description Accesos registrados en los últimos 12 meses. */
-            accessCount: number;
-        };
-        MyAppAccessEvent: {
-            id: string;
-            /** @enum {string} */
-            kind: "CONSENT_GRANTED" | "SIGN_IN" | "TOKEN_REFRESH" | "USERINFO" | "DATA_READ" | "CONSENT_REVOKED";
-            /** @description Qué tipo de dato (`profile`, `email`, `person`, `contact`, `person-memberships`, ...). */
-            details: string[];
-            /** @description Frase lista para mostrar */
-            description: string;
-            /** Format: date-time */
-            occurredAt: string;
-        };
-        MyAppAccessEventPage: {
-            items: components["schemas"]["MyAppAccessEvent"][];
-            pageInfo: components["schemas"]["PageInfo"];
-        };
+  schemas: {
+    /**
+     * @description Problem Details (RFC 9457).
+     * @example {
+     *       "type": "https://api.rotaract4845.com/errors/invalid-transition",
+     *       "title": "Invalid state transition",
+     *       "status": 409,
+     *       "code": "KERNEL_INVALID_TRANSITION",
+     *       "detail": "ACTIVE membership cannot transition directly to PENDING",
+     *       "instance": "/api/kernel/v1/memberships/mem_123/status",
+     *       "traceId": "trc_123"
+     *     }
+     */
+    Error: {
+      /** Format: uri */
+      type: string;
+      title: string;
+      status: number;
+      /** @description Código estable de error, p. ej. `KERNEL_INVALID_TRANSITION`. */
+      code: string;
+      detail?: string;
+      instance: string;
+      /** @description Identificador del request (E9). Siempre presente: el trace-id de `traceparent` si vino, si no `X-Correlation-Id`, si no uno generado. También viaja en la cabecera `X-Trace-Id` de toda respuesta y es el filtro de los registros de la app. */
+      traceId?: string;
+      /** @description Errores por campo (p. ej. un manifiesto o una configuración de módulo). `path` es la ruta del campo (`permissions[0].code`, "" para la raíz) y `message` está en español, listo para mostrar. */
+      errors?: {
+        path: string;
+        message: string;
+        keyword?: string;
+      }[];
     };
-    responses: {
-        /** @description La app superó su límite por minuto o por día (`code`: `KERNEL_RATE_LIMITED`). Reintentar después de `Retry-After`. El límite por IP del kernel también puede responder 429. */
-        RateLimited: {
-            headers: {
-                "Retry-After": components["headers"]["Retry-After"];
-                "RateLimit-Policy": components["headers"]["RateLimit-Policy"];
-                RateLimit: components["headers"]["RateLimit"];
-                [name: string]: unknown;
-            };
-            content: {
-                "application/problem+json": components["schemas"]["Error"];
-            };
-        };
-        /** @description Pedido inválido. */
-        Error: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/problem+json": components["schemas"]["Error"];
-            };
-        };
-        /** @description Recurso inexistente. */
-        NotFound: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/problem+json": components["schemas"]["Error"];
-            };
-        };
-        /** @description La transición de estado solicitada no es válida desde el estado actual. */
-        InvalidTransition: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/problem+json": components["schemas"]["Error"];
-            };
-        };
-        /** @description El sujeto autenticado no tiene el permiso requerido en el alcance solicitado. */
-        Forbidden: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/problem+json": components["schemas"]["Error"];
-            };
-        };
+    PageInfo: {
+      nextCursor?: string | null;
+      hasMore?: boolean;
     };
-    parameters: {
-        /** @description Devuelve solo lo modificado desde este instante (sincronización incremental). */
-        updatedSince: string;
-        /** @description ETag de una respuesta anterior; si no hubo cambios responde 304. */
-        ifNoneMatch: string;
-        appId: string;
-        endpointId: string;
-        personId: string;
-        organizationId: string;
+    /** @enum {string} */
+    AccountStatus: "PENDING_VERIFICATION" | "ACTIVE" | "SUSPENDED" | "DISABLED";
+    /** @enum {string} */
+    PlatformRole: "USER" | "SUPERADMIN";
+    /** @enum {string} */
+    OrganizationType: "DISTRICT" | "CLUB" | "OTHER";
+    /** @enum {string} */
+    OrganizationStatus: "DRAFT" | "ACTIVE" | "INACTIVE" | "ARCHIVED";
+    /** @enum {string} */
+    MembershipStatus:
+      | "PENDING"
+      | "ACTIVE"
+      | "ON_LEAVE"
+      | "INACTIVE"
+      | "GRADUATED"
+      | "TRANSFERRED";
+    /** @enum {string} */
+    MembershipTransitionType:
+      | "CREATED"
+      | "ACTIVATED"
+      | "LEAVE_STARTED"
+      | "LEAVE_ENDED"
+      | "DEACTIVATED"
+      | "GRADUATED"
+      | "TRANSFERRED_OUT"
+      | "TRANSFERRED_IN"
+      | "REACTIVATED";
+    /** @enum {string} */
+    PeriodStatus: "DRAFT" | "SCHEDULED" | "ACTIVE" | "CLOSED" | "CANCELLED";
+    /** @enum {string} */
+    AppointmentStatus: "NOMINATED" | "ELECTED" | "ACTIVE" | "ENDED" | "REVOKED";
+    /** @enum {string} */
+    ScopeType: "PLATFORM" | "ORGANIZATION" | "ORGANIZATION_TREE";
+    /** @enum {string} */
+    AssignmentEffect: "ALLOW" | "DENY";
+    /** @enum {string} */
+    ApplicationStatus:
+      "DRAFT" | "SUBMITTED" | "APPROVED" | "REJECTED" | "CANCELLED" | "EXPIRED";
+    /** @enum {string} */
+    TransferStatus:
+      | "REQUESTED"
+      | "ACCEPTED_BY_DESTINATION"
+      | "CONFIRMED_BY_ORIGIN"
+      | "COMPLETED"
+      | "REJECTED"
+      | "CANCELLED"
+      | "EXPIRED";
+    /** @enum {string} */
+    InvitationStatus: "PENDING" | "ACCEPTED" | "EXPIRED" | "REVOKED";
+    /** @enum {string} */
+    ModuleStatus: "DRAFT" | "ACTIVE" | "DEPRECATED" | "DISABLED";
+    /** @enum {string} */
+    InstallationStatus: "PENDING" | "ACTIVE" | "SUSPENDED" | "DISABLED";
+    /** @enum {string} */
+    ActorType: "USER" | "SERVICE" | "SYSTEM";
+    Person: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      displayName?: string | null;
+      /** Format: email */
+      primaryEmail?: string | null;
+      phone?: string | null;
+      /** Format: date */
+      birthDate?: string | null;
+      avatarUrl?: string | null;
+      externalReference?: string | null;
+      metadata?: Record<string, never> | null;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+      /** Format: date-time */
+      archivedAt?: string | null;
+    };
+    /** @description Vista mínima de Person para consumo entre servicios (§12.5 — sin email salvo necesidad explícita). */
+    PersonSummary: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      displayName?: string | null;
+      avatarUrl?: string | null;
+    };
+    PersonPage: {
+      items?: components["schemas"]["Person"][];
+      pageInfo?: components["schemas"]["PageInfo"];
+    };
+    /** @description Nunca expone `passwordHash` (§14.5). */
+    UserAccount: {
+      id: string;
+      personId: string;
+      /** Format: email */
+      email: string;
+      status: components["schemas"]["AccountStatus"];
+      platformRole: components["schemas"]["PlatformRole"];
+      /** Format: date-time */
+      emailVerifiedAt?: string | null;
+      mustChangePassword?: boolean;
+      /** Format: date-time */
+      lastLoginAt?: string | null;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+      /** Format: date-time */
+      disabledAt?: string | null;
+    };
+    AccountSession: {
+      id: string;
+      userAgent: string | null;
+      ipAddress?: string | null;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      lastUsedAt: string;
+      /** Format: date-time */
+      expiresAt: string;
+      /** Format: date-time */
+      revokedAt?: string | null;
+      /** @description Indica si es la sesión con la que se realizó la solicitud. */
+      current?: boolean;
+    };
+    RegisterAccountRequest: {
+      firstName: string;
+      lastName: string;
+      /** Format: email */
+      email: string;
+      password: string;
+    };
+    LoginRequest: {
+      /** Format: email */
+      email: string;
+      password: string;
+    };
+    AuthTokens: {
+      accessToken: string;
+      refreshToken: string;
+      /** @enum {string} */
+      tokenType: "Bearer";
+      /** @description Segundos de vida del access token (600 = 10 minutos, §14.1). */
+      expiresIn: number;
+    };
+    IntrospectionResult: {
+      active: boolean;
+      accountId?: string | null;
+      personId?: string | null;
+      sessionId?: string | null;
+      platformRole?: components["schemas"]["PlatformRole"];
+      /** Format: date-time */
+      expiresAt?: string | null;
+    };
+    CreatePersonRequest: {
+      firstName: string;
+      lastName: string;
+      /** Format: email */
+      primaryEmail?: string | null;
+      phone?: string | null;
+      /** Format: date */
+      birthDate?: string | null;
+      externalReference?: string | null;
+      metadata?: Record<string, never> | null;
+    };
+    UpdatePersonRequest: {
+      firstName?: string;
+      lastName?: string;
+      displayName?: string | null;
+      /** Format: email */
+      primaryEmail?: string | null;
+      phone?: string | null;
+      /** Format: date */
+      birthDate?: string | null;
+      avatarUrl?: string | null;
+      metadata?: Record<string, never> | null;
+    };
+    Organization: {
+      id: string;
+      parentId?: string | null;
+      type: components["schemas"]["OrganizationType"];
+      code: string;
+      name: string;
+      slug: string;
+      status: components["schemas"]["OrganizationStatus"];
+      countryCode?: string | null;
+      region?: string | null;
+      city?: string | null;
+      /** @default America/Argentina/Cordoba */
+      timezone: string;
+      contactEmail?: string | null;
+      contactPhone?: string | null;
+      logoUrl?: string | null;
+      /** Format: date */
+      foundedAt?: string | null;
+      description?: string | null;
+      attributes?: Record<string, never> | null;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+      /** Format: date-time */
+      archivedAt?: string | null;
+    };
+    OrganizationSummary: {
+      id: string;
+      parentId?: string | null;
+      type: components["schemas"]["OrganizationType"];
+      code: string;
+      name: string;
+      slug: string;
+      status: components["schemas"]["OrganizationStatus"];
+    };
+    OrganizationPage: {
+      items?: components["schemas"]["Organization"][];
+      pageInfo?: components["schemas"]["PageInfo"];
+    };
+    CreateOrganizationRequest: {
+      parentId?: string | null;
+      type: components["schemas"]["OrganizationType"];
+      code: string;
+      name: string;
+      slug: string;
+      countryCode?: string | null;
+      region?: string | null;
+      city?: string | null;
+      timezone?: string | null;
+      contactEmail?: string | null;
+      contactPhone?: string | null;
+      /** Format: date */
+      foundedAt?: string | null;
+      description?: string | null;
+      attributes?: Record<string, never> | null;
+    };
+    UpdateOrganizationRequest: {
+      name?: string;
+      countryCode?: string | null;
+      region?: string | null;
+      city?: string | null;
+      timezone?: string;
+      contactEmail?: string | null;
+      contactPhone?: string | null;
+      logoUrl?: string | null;
+      description?: string | null;
+      attributes?: Record<string, never> | null;
+    };
+    OrganizationMembership: {
+      id: string;
+      organizationId: string;
+      personId: string;
+      memberNumber?: string | null;
+      status: components["schemas"]["MembershipStatus"];
+      /** Format: date-time */
+      joinedAt?: string | null;
+      /** Format: date-time */
+      statusChangedAt?: string;
+      /** Format: date-time */
+      endedAt?: string | null;
+      /** @description Nunca se expone en eventos de integración (§11.3). */
+      internalNotes?: string | null;
+      metadata?: Record<string, never> | null;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    MembershipPage: {
+      items?: components["schemas"]["OrganizationMembership"][];
+      pageInfo?: components["schemas"]["PageInfo"];
+    };
+    CreateMembershipRequest: {
+      personId: string;
+      memberNumber?: string | null;
+      metadata?: Record<string, never> | null;
+    };
+    MembershipTransition: {
+      id: string;
+      membershipId: string;
+      type: components["schemas"]["MembershipTransitionType"];
+      fromStatus?: components["schemas"]["MembershipStatus"];
+      toStatus: components["schemas"]["MembershipStatus"];
+      reasonCode?: string | null;
+      reasonText?: string | null;
+      /** Format: date-time */
+      effectiveAt: string;
+      performedById?: string | null;
+      commandId?: string | null;
+      /** Format: date-time */
+      createdAt: string;
+    };
+    InstitutionalPeriod: {
+      id: string;
+      organizationId: string;
+      code: string;
+      name: string;
+      sequence: number;
+      /**
+       * Format: date-time
+       * @description Debe ser 1 de julio (00:00 UTC).
+       */
+      startDate: string;
+      /**
+       * Format: date-time
+       * @description Debe ser 30 de junio del año siguiente (00:00 UTC).
+       */
+      endDate: string;
+      status: components["schemas"]["PeriodStatus"];
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+      /** Format: date-time */
+      closedAt?: string | null;
+    };
+    CreatePeriodRequest: {
+      code: string;
+      name: string;
+      sequence: number;
+      /**
+       * Format: date
+       * @description Debe ser 1 de julio.
+       */
+      startDate: string;
+      /**
+       * Format: date
+       * @description Debe ser 30 de junio del año siguiente.
+       */
+      endDate: string;
+    };
+    UpdatePeriodRequest: {
+      name?: string;
+      /**
+       * Format: date
+       * @description Debe ser 1 de julio.
+       */
+      startDate?: string;
+      /**
+       * Format: date
+       * @description Debe ser 30 de junio del año siguiente.
+       */
+      endDate?: string;
+    };
+    PositionDefinition: {
+      id: string;
+      code: string;
+      name: string;
+      description?: string | null;
+      organizationType: components["schemas"]["OrganizationType"];
+      /** @description Distrito propietario; requerido para cargos DISTRICT no sistémicos. */
+      ownerOrganizationId?: string | null;
+      /** @description Permiso requerido para editar este cargo y los permisos de su rol técnico. */
+      editPermissionCode: string;
+      defaultRoleCode?: string | null;
+      isSingletonPerPeriod: boolean;
+      isSystem: boolean;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    CreatePositionDefinitionRequest: {
+      code: string;
+      name: string;
+      description?: string | null;
+      organizationType: components["schemas"]["OrganizationType"];
+      ownerOrganizationId?: string | null;
+      /** @default kernel.position.manage */
+      editPermissionCode: string;
+      defaultRoleCode?: string | null;
+      /** @default false */
+      isSingletonPerPeriod: boolean;
+    };
+    UpdatePositionDefinitionRequest: {
+      name?: string;
+      description?: string | null;
+      editPermissionCode?: string;
+      defaultRoleCode?: string | null;
+      isSingletonPerPeriod?: boolean;
+    };
+    Appointment: {
+      id: string;
+      organizationId: string;
+      membershipId: string;
+      /** @description Organización de la membresía habilitante; puede diferir de organizationId sólo para cargos DISTRICT. */
+      readonly membershipOrganizationId: string;
+      periodId: string;
+      positionDefinitionId: string;
+      status: components["schemas"]["AppointmentStatus"];
+      /** Format: date-time */
+      startsAt?: string | null;
+      /** Format: date-time */
+      endsAt?: string | null;
+      createdById?: string | null;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      activatedAt?: string | null;
+      /** Format: date-time */
+      endedAt?: string | null;
+      /** Format: date-time */
+      revokedAt?: string | null;
+      revokedById?: string | null;
+      revokeReason?: string | null;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    CreateAppointmentRequest: {
+      /** @description Membresía ACTIVE habilitante. Para DISTRICT debe ser de un CLUB descendiente; para CLUB, del mismo club. */
+      membershipId: string;
+      periodId: string;
+      positionDefinitionId: string;
+      /** Format: date-time */
+      startsAt?: string | null;
+      /** Format: date-time */
+      endsAt?: string | null;
+    };
+    PermissionDefinition: {
+      id: string;
+      /** @description Formato `<namespace>.<resource>.<action>` (invariante 6.7.1). */
+      code: string;
+      namespace: string;
+      name: string;
+      description?: string | null;
+      resourceType?: string | null;
+      moduleId?: string | null;
+      isSystem: boolean;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    CreatePermissionRequest: {
+      code: string;
+      namespace: string;
+      name: string;
+      description?: string | null;
+      resourceType?: string | null;
+      moduleId?: string | null;
+    };
+    RoleDefinition: {
+      id: string;
+      code: string;
+      name: string;
+      description?: string | null;
+      moduleId?: string | null;
+      isSystem: boolean;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    CreateRoleRequest: {
+      code: string;
+      name: string;
+      description?: string | null;
+      moduleId?: string | null;
+    };
+    RoleAssignment: {
+      id: string;
+      personId: string;
+      roleDefinitionId: string;
+      effect: components["schemas"]["AssignmentEffect"];
+      scopeType: components["schemas"]["ScopeType"];
+      /** @description Requerido si `scopeType` != PLATFORM (invariante de esquema §5.1). */
+      organizationId?: string | null;
+      periodId?: string | null;
+      /** Format: date-time */
+      validFrom: string;
+      /** Format: date-time */
+      validUntil?: string | null;
+      grantedById?: string | null;
+      reason?: string | null;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      revokedAt?: string | null;
+      revokedById?: string | null;
+      /** @description FK obligatoria para asignaciones derivadas de un cargo; null si fue asignada manualmente. */
+      readonly sourceAppointmentId?: string | null;
+    };
+    GrantRoleRequest: {
+      personId: string;
+      roleDefinitionId: string;
+      effect?: components["schemas"]["AssignmentEffect"];
+      scopeType: components["schemas"]["ScopeType"];
+      organizationId?: string | null;
+      periodId?: string | null;
+      /** Format: date-time */
+      validFrom?: string;
+      /** Format: date-time */
+      validUntil?: string | null;
+      reason?: string | null;
+    };
+    AuthorizationCheckRequest: {
+      /** @description personId a evaluar. */
+      subjectId: string;
+      /** @example meetings.meeting.create */
+      permission: string;
+      scope: {
+        type: components["schemas"]["ScopeType"];
+        organizationId?: string | null;
+      };
+      periodId?: string | null;
+      resource?: {
+        type?: string;
+        id?: string;
+        attributes?: Record<string, never>;
+      } | null;
+    };
+    AuthorizationDecision: {
+      allowed: boolean;
+      decisionId: string;
+      subjectId: string;
+      permission: string;
+      matchedAssignments?: string[];
+      /**
+       * @description `ROLE_ALLOWED`, `SUPERADMIN_BYPASS`, `EXPLICIT_DENY`, `NO_GRANT`; para permisos de módulos (E8) además `MODULE_NOT_INSTALLED`, `MODULE_NOT_ACTIVE` (instalación pendiente o desactivada en esa organización) y `MODULE_DISABLED`.
+       * @example [
+       *       "ROLE_ALLOWED"
+       *     ]
+       */
+      reasonCodes?: string[];
+      /** Format: date-time */
+      evaluatedAt: string;
+      /** Format: date-time */
+      cacheUntil?: string | null;
+    };
+    MembershipApplication: {
+      id: string;
+      organizationId: string;
+      requesterPersonId: string;
+      membershipId?: string | null;
+      status: components["schemas"]["ApplicationStatus"];
+      message?: string | null;
+      /** Format: date-time */
+      submittedAt?: string | null;
+      reviewedById?: string | null;
+      /** Format: date-time */
+      reviewedAt?: string | null;
+      rejectionReason?: string | null;
+      /** Format: date-time */
+      expiresAt?: string | null;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    CreateMembershipApplicationRequest: {
+      organizationId: string;
+      message?: string | null;
+    };
+    MembershipTransfer: {
+      id: string;
+      membershipId: string;
+      fromOrganizationId: string;
+      toOrganizationId: string;
+      requestedById: string;
+      status: components["schemas"]["TransferStatus"];
+      reason?: string | null;
+      /** Format: date-time */
+      requestedAt: string;
+      acceptedById?: string | null;
+      /** Format: date-time */
+      acceptedAt?: string | null;
+      confirmedById?: string | null;
+      /** Format: date-time */
+      confirmedAt?: string | null;
+      /** Format: date-time */
+      completedAt?: string | null;
+      rejectedById?: string | null;
+      /** Format: date-time */
+      rejectedAt?: string | null;
+      rejectionReason?: string | null;
+      cancelledById?: string | null;
+      /** Format: date-time */
+      cancelledAt?: string | null;
+      /** Format: date-time */
+      expiresAt?: string | null;
+      destinationMembershipId?: string | null;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    RequestMembershipTransferRequest: {
+      membershipId: string;
+      toOrganizationId: string;
+      reason?: string | null;
+    };
+    AccountInvitation: {
+      id: string;
+      membershipId: string;
+      personId: string;
+      /** Format: email */
+      email: string;
+      status: components["schemas"]["InvitationStatus"];
+      invitedById?: string | null;
+      /** Format: date-time */
+      expiresAt: string;
+      /** Format: date-time */
+      acceptedAt?: string | null;
+      /** Format: date-time */
+      revokedAt?: string | null;
+      /** Format: date-time */
+      createdAt: string;
+    };
+    AcceptAccountInvitationRequest: {
+      token: string;
+      /** Format: password */
+      password: string;
+    };
+    ModuleDefinition: {
+      /** @description Identificador estable, p. ej. `reuniones` (invariante 6.10.1). Es el prefijo de sus permisos. */
+      id: string;
+      name: string;
+      description?: string | null;
+      version: string;
+      contractVersion: number;
+      status: components["schemas"]["ModuleStatus"];
+      /** @description Manifiesto tal como se publicó (ver ModuleManifest). */
+      manifest: Record<string, never>;
+      configurationSchema?: Record<string, never> | null;
+      /** @description App de desarrollador dueña del módulo (E8). Nulo en módulos anteriores a E8. */
+      developerAppId?: string | null;
+      /** @description Organización desde la que se gobierna (la de la app). */
+      ownerOrganizationId?: string | null;
+      /** @description Permisos del módulo (en `GET /modules`, `GET /modules/{id}` y al registrar o actualizar). */
+      permissions?: components["schemas"]["PermissionDefinition"][];
+      /** Format: date-time */
+      registeredAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    /**
+     * @description `mirotaract.module.json`, contrato v1. Esquema completo (JSON Schema draft-07): https://developers.rotaract4845.com/schemas/module-manifest.v1.json (fuente: `packages/module-manifest/schema/module-manifest.v1.json`). El kernel lo valida entero y responde 422 con `errors[]` en español; acá se declara abierto para que esos errores lleguen tal cual.
+     * @example {
+     *       "id": "reuniones",
+     *       "name": "Reuniones distritales",
+     *       "version": "1.0.0",
+     *       "contractVersion": 1,
+     *       "permissions": [
+     *         {
+     *           "code": "reuniones.vote.cast",
+     *           "name": "Votar en nombre del club",
+     *           "scopeType": "ORGANIZATION"
+     *         }
+     *       ],
+     *       "events": {
+     *         "subscribes": [
+     *           "appointment.activated.v1"
+     *         ],
+     *         "emits": []
+     *       },
+     *       "configurationSchema": {
+     *         "type": "object",
+     *         "required": [
+     *           "emailContacto"
+     *         ],
+     *         "properties": {
+     *           "emailContacto": {
+     *             "type": "string",
+     *             "format": "email",
+     *             "title": "Email de contacto del club"
+     *           }
+     *         }
+     *       },
+     *       "ui": {
+     *         "entryUrl": "https://reuniones.rotaract4845.com",
+     *         "navLabel": "Reuniones",
+     *         "icon": "calendar-check"
+     *       }
+     *     }
+     */
+    ModuleManifest: Record<string, never>;
+    RegisterModuleRequest: {
+      /** @description App de desarrollador dueña del módulo. Tiene que estar activa. */
+      appId: string;
+      manifest: components["schemas"]["ModuleManifest"];
+    };
+    ModuleInstallation: {
+      id: string;
+      moduleId: string;
+      organizationId: string;
+      status: components["schemas"]["InstallationStatus"];
+      configuration?: Record<string, never> | null;
+      installedById?: string | null;
+      /** Format: date-time */
+      installedAt: string;
+      /** Format: date-time */
+      activatedAt?: string | null;
+      /** Format: date-time */
+      disabledAt?: string | null;
+      /** Format: date-time */
+      updatedAt: string;
+      /** @description El módulo (sólo en `GET /organizations/{id}/modules`), sin `permissions`. */
+      module?: components["schemas"]["ModuleDefinition"];
+    };
+    ModuleInstallationInTree: components["schemas"]["ModuleInstallation"] & {
+      organizationName: string;
+      organizationType: components["schemas"]["OrganizationType"];
+    };
+    UserContext: {
+      accountId: string;
+      personId: string;
+      /** @enum {string} */
+      accountStatus: "ACTIVE";
+      platformRole: components["schemas"]["PlatformRole"];
+      displayName: string;
+      memberships: {
         membershipId: string;
-        periodId: string;
+        organizationId: string;
+        organizationType: components["schemas"]["OrganizationType"];
+        status: string;
+      }[];
+      /** @description Contextos organizacionales que la persona puede seleccionar en la Web. Incluye membresías activas y organizaciones alcanzables por una asignación de rol vigente; no reemplaza memberships. */
+      workspaces?: {
+        organizationId: string;
+        name: string;
+        organizationType: components["schemas"]["OrganizationType"];
+        sources: ("MEMBERSHIP" | "ROLE_ASSIGNMENT")[];
+        roleCodes: string[];
+        /**
+         * @description E8: permisos de módulos que la persona tiene en esta organización, sólo de módulos activos ahí (la misma decisión que daría `/authorization/check`).
+         * @example [
+         *       "reuniones.vote.cast"
+         *     ]
+         */
+        modulePermissions?: string[];
+      }[];
+      contextVersion: number;
+    };
+    MembershipSnapshot: {
+      snapshotId: string;
+      organizationId: string;
+      /** Format: date-time */
+      capturedAt: string;
+      sourceVersion: number;
+      members: {
+        membershipId: string;
+        personId: string;
+        accountId?: string | null;
+        status: string;
+      }[];
+    };
+    AuthoritySnapshot: {
+      snapshotId: string;
+      organizationId: string;
+      periodId: string;
+      /** Format: date-time */
+      capturedAt: string;
+      appointments: {
         appointmentId: string;
-        positionDefinitionId: string;
-        /** @description Organización desde la que se consulta; el permiso requerido se evalúa en ella. */
-        scopeOrganizationId: string;
+        positionCode: string;
+        membershipId: string;
+        membershipOrganizationId: string;
+        personId: string;
+        /** @enum {string} */
+        status: "ACTIVE";
+        /** Format: date-time */
+        startsAt?: string | null;
+        /** Format: date-time */
+        endsAt?: string | null;
+      }[];
+    };
+    /** @description Snapshot sellado del período activo, o null si no existe. */
+    PeriodSnapshot: {
+      snapshotId: string;
+      organizationId: string;
+      /** Format: date-time */
+      capturedAt: string;
+      currentPeriod?: {
+        periodId: string;
+        code: string;
+        name: string;
+        sequence: number;
+        /** Format: date */
+        startDate: string;
+        /** Format: date */
+        endDate: string;
+        /** @enum {string} */
+        status: "ACTIVE";
+      } | null;
+    };
+    /**
+     * @description CONFIDENTIAL = servidor con secreto; PUBLIC = SPA o móvil con PKCE.
+     * @enum {string}
+     */
+    DeveloperAppType: "CONFIDENTIAL" | "PUBLIC";
+    /** @enum {string} */
+    DeveloperAppStatus: "ACTIVE" | "SUSPENDED" | "REVOKED";
+    DeveloperAppSecretSummary: {
+      id: string;
+      /** @description Últimos 4 caracteres. */
+      hint: string;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      expiresAt?: string | null;
+      /** Format: date-time */
+      revokedAt?: string | null;
+      /** Format: date-time */
+      lastUsedAt?: string | null;
+    };
+    DeveloperApp: {
+      id: string;
+      clientId: string;
+      name: string;
+      description?: string | null;
+      type: components["schemas"]["DeveloperAppType"];
+      status: components["schemas"]["DeveloperAppStatus"];
+      organizationId: string;
+      ownerPersonId: string;
+      grantTypes: (
+        "client_credentials" | "authorization_code" | "refresh_token"
+      )[];
+      scopes: string[];
+      redirectUris: string[];
+      secrets: components["schemas"]["DeveloperAppSecretSummary"][];
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+      /** Format: date-time */
+      suspendedAt?: string | null;
+      /** Format: date-time */
+      revokedAt?: string | null;
+      reviewStatus?: components["schemas"]["DeveloperAppReviewStatus"];
+      /** @description Scopes aprobados por el distrito; los únicos que sirven para cualquier persona. */
+      approvedScopes?: string[];
+      /** Format: date-time */
+      approvedAt?: string | null;
+      /** Format: date-time */
+      reviewedAt?: string | null;
+      purpose?: string | null;
+      privacyPolicyUrl?: string | null;
+      contactEmail?: string | null;
+      /** @description Cuentas (además del responsable) que pueden ingresar mientras la app está en revisión. */
+      testAccountEmails?: string[];
+      /** @description Límite fijado por el RDR; null = el del distrito. */
+      quotaPerMinute?: number | null;
+      quotaPerDay?: number | null;
+    };
+    CreateDeveloperAppRequest: {
+      name: string;
+      description?: string | null;
+      type: components["schemas"]["DeveloperAppType"];
+      /** @description Organización a la que queda atada la app (club o distrito). */
+      organizationId: string;
+      grantTypes: (
+        "client_credentials" | "authorization_code" | "refresh_token"
+      )[];
+      scopes: string[];
+      /** @description Obligatorio con authorization_code. https, o http solo para localhost. */
+      redirectUris?: string[];
+      /** @description Para qué es la app y quién la usa. */
+      purpose?: string | null;
+      /** @description URL https de la política de privacidad. */
+      privacyPolicyUrl?: string | null;
+      /** @description Correo de contacto del equipo. */
+      contactEmail?: string | null;
+      testAccountEmails?: string[];
+    };
+    UpdateDeveloperAppRequest: {
+      name?: string;
+      description?: string | null;
+      scopes?: string[];
+      redirectUris?: string[];
+      /** @description Para qué es la app y quién la usa. */
+      purpose?: string | null;
+      /** @description URL https de la política de privacidad. */
+      privacyPolicyUrl?: string | null;
+      /** @description Correo de contacto del equipo. */
+      contactEmail?: string | null;
+      testAccountEmails?: string[];
+    };
+    DeveloperAppSecretCreated: {
+      secretId: string;
+      /** @description Se muestra una única vez. */
+      secret: string;
+      hint: string;
+      /** Format: date-time */
+      createdAt: string;
+    };
+    CreatedDeveloperApp: {
+      app: components["schemas"]["DeveloperApp"];
+      /** @description Solo para apps CONFIDENTIAL; se muestra una única vez. */
+      clientSecret?: string | null;
+    };
+    PublicDeveloperApp: {
+      clientId: string;
+      name: string;
+      description?: string | null;
+      type: components["schemas"]["DeveloperAppType"];
+      organizationName: string;
+    };
+    ScopeDescription: {
+      scope: string;
+      label: string;
+    };
+    AuthorizationContext: {
+      app: components["schemas"]["PublicDeveloperApp"];
+      scopes: components["schemas"]["ScopeDescription"][];
+      alreadyGranted: boolean;
+    };
+    AuthorizeRequest: {
+      clientId: string;
+      redirectUri: string;
+      scope: string;
+      state?: string | null;
+      nonce?: string | null;
+      codeChallenge: string;
+      /** @enum {string} */
+      codeChallengeMethod: "S256";
+      /** @enum {string} */
+      decision: "approve" | "deny";
+    };
+    AuthorizeResponse: {
+      redirectTo: string;
+    };
+    TokenRequest: {
+      /** @enum {string} */
+      grant_type: "client_credentials" | "authorization_code" | "refresh_token";
+      client_id?: string;
+      client_secret?: string;
+      scope?: string;
+      code?: string;
+      redirect_uri?: string;
+      code_verifier?: string;
+      refresh_token?: string;
+    };
+    TokenResponse: {
+      access_token: string;
+      /** @enum {string} */
+      token_type: "Bearer";
+      expires_in: number;
+      scope: string;
+      id_token?: string;
+      refresh_token?: string;
+    };
+    RevokeTokenRequest: {
+      token: string;
+      token_type_hint?: string;
+      client_id?: string;
+      client_secret?: string;
+    };
+    OAuthError: {
+      /** @enum {string} */
+      error:
+        | "invalid_request"
+        | "invalid_client"
+        | "invalid_grant"
+        | "unauthorized_client"
+        | "unsupported_grant_type"
+        | "invalid_scope"
+        | "invalid_token"
+        | "access_denied";
+      error_description?: string;
+    };
+    UserInfo: {
+      /** @description personId estable. */
+      sub: string;
+      name?: string;
+      given_name?: string;
+      family_name?: string;
+      picture?: string | null;
+      email?: string;
+      email_verified?: boolean;
+      memberships?: {
+        organizationId: string;
+        organizationName: string;
+        organizationType: string;
+        status: string;
+      }[];
+      positions?: {
+        organizationId: string;
+        positionCode: string;
+        positionName: string;
+        periodId: string;
+      }[];
+    };
+    OAuthConsent: {
+      appId: string;
+      clientId: string;
+      appName: string;
+      organizationName: string;
+      scopes: components["schemas"]["ScopeDescription"][];
+      /** Format: date-time */
+      grantedAt: string;
+    };
+    OpenIdConfiguration: {
+      issuer: string;
+      authorization_endpoint: string;
+      token_endpoint: string;
+      userinfo_endpoint?: string;
+      revocation_endpoint?: string;
+      jwks_uri: string;
+    } & {
+      [key: string]: unknown;
+    };
+    Jwks: {
+      keys: {
+        [key: string]: unknown;
+      }[];
+    };
+    OrganizationView: {
+      id: string;
+      type: components["schemas"]["OrganizationType"];
+      code: string;
+      name: string;
+      slug: string;
+      status: components["schemas"]["OrganizationStatus"];
+      parentId: string | null;
+      countryCode?: string | null;
+      region?: string | null;
+      city?: string | null;
+      timezone?: string | null;
+      logoUrl?: string | null;
+      description?: string | null;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    OrganizationViewPage: {
+      items: components["schemas"]["OrganizationView"][];
+      pageInfo: components["schemas"]["PageInfo"];
+    };
+    /** @description email, phone y birthDate solo con el scope kernel.service.persons.contact.read; sin él, las propiedades no aparecen. */
+    PersonView: {
+      id: string;
+      displayName: string;
+      firstName: string;
+      lastName: string;
+      avatarUrl?: string | null;
+      email?: string | null;
+      phone?: string | null;
+      /** Format: date */
+      birthDate?: string | null;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    MemberView: {
+      membershipId: string;
+      organizationId: string;
+      personId: string;
+      status: components["schemas"]["MembershipStatus"];
+      /** Format: date-time */
+      joinedAt?: string | null;
+      memberNumber?: string | null;
+      person: components["schemas"]["PersonView"];
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    MemberViewPage: {
+      items: components["schemas"]["MemberView"][];
+      pageInfo: components["schemas"]["PageInfo"];
+    };
+    PersonMembershipView: {
+      membershipId: string;
+      organizationId: string;
+      organizationName: string;
+      organizationType: components["schemas"]["OrganizationType"];
+      status: components["schemas"]["MembershipStatus"];
+      /** Format: date-time */
+      joinedAt?: string | null;
+      /** Format: date-time */
+      endedAt?: string | null;
+    };
+    AuthorityView: {
+      appointmentId: string;
+      organizationId: string;
+      periodId: string;
+      positionCode: string;
+      positionName: string;
+      status: components["schemas"]["AppointmentStatus"];
+      /** Format: date-time */
+      startsAt?: string | null;
+      /** Format: date-time */
+      endsAt?: string | null;
+      /** @description Sin datos de contacto. */
+      person: {
+        id: string;
+        displayName: string;
+        avatarUrl?: string | null;
+      };
+    };
+    PeriodView: {
+      id: string;
+      organizationId: string;
+      code: string;
+      name: string;
+      status: components["schemas"]["PeriodStatus"];
+      /** Format: date-time */
+      startDate: string;
+      /** Format: date-time */
+      endDate: string;
+    };
+    /** @enum {string} */
+    WebhookEndpointStatus: "ENABLED" | "DISABLED";
+    /** @enum {string} */
+    WebhookDeliveryStatus: "PENDING" | "SUCCEEDED" | "FAILED";
+    WebhookEndpoint: {
+      id: string;
+      appId: string;
+      url: string;
+      description?: string | null;
+      eventTypes: string[];
+      status: components["schemas"]["WebhookEndpointStatus"];
+      /**
+       * @description AUTO_FAILURES = se desactivó solo tras 72 h en que fallaron todos los envíos.
+       * @enum {string|null}
+       */
+      disabledReason?: "MANUAL" | "AUTO_FAILURES" | null;
+      /** Format: date-time */
+      disabledAt?: string | null;
+      /** @description Últimos 4 caracteres del secreto vigente. */
+      secretHint: string;
+      /**
+       * Format: date-time
+       * @description Hasta cuándo se firma también con el secreto anterior (rotación).
+       */
+      previousSecretExpiresAt?: string | null;
+      /** Format: date-time */
+      secretRotatedAt?: string | null;
+      /** Format: date-time */
+      failingSince?: string | null;
+      consecutiveFailures: number;
+      /** Format: date-time */
+      lastSuccessAt?: string | null;
+      /** Format: date-time */
+      lastFailureAt?: string | null;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    WebhookEndpointWithSecret: {
+      endpoint: components["schemas"]["WebhookEndpoint"];
+      /** @description `whsec_...`. Se muestra una única vez. */
+      secret: string;
+    };
+    CreateWebhookEndpointRequest: {
+      url: string;
+      eventTypes: string[];
+      description?: string | null;
+    };
+    UpdateWebhookEndpointRequest: {
+      url?: string;
+      eventTypes?: string[];
+      description?: string | null;
+      status?: components["schemas"]["WebhookEndpointStatus"];
+    };
+    WebhookDelivery: {
+      id: string;
+      endpointId: string;
+      /** @description `evt_...`, igual a MiRotaract-Webhook-Id. */
+      eventId: string;
+      eventType: string;
+      organizationId?: string | null;
+      status: components["schemas"]["WebhookDeliveryStatus"];
+      attempts: number;
+      /** Format: date-time */
+      nextAttemptAt?: string | null;
+      /** Format: date-time */
+      retryUntil: string;
+      /** Format: date-time */
+      firstAttemptAt?: string | null;
+      /** Format: date-time */
+      lastAttemptAt?: string | null;
+      lastResponseStatus?: number | null;
+      /** @description Primer KB de la respuesta del receptor. */
+      lastResponseBody?: string | null;
+      lastLatencyMs?: number | null;
+      lastError?: string | null;
+      /** Format: date-time */
+      deliveredAt?: string | null;
+      /** Format: date-time */
+      createdAt: string;
+    };
+    WebhookDeliveryPage: {
+      items: components["schemas"]["WebhookDelivery"][];
+      pageInfo: components["schemas"]["PageInfo"];
+    };
+    EventCatalog: {
+      version: number;
+      signature: {
+        algorithm: string;
+        signedPayload: string;
+        headers: {
+          id: string;
+          timestamp: string;
+          signature: string;
+        };
+        toleranceSec: number;
+      };
+      /** @description JSON Schema del cuerpo (igual para todos los tipos). */
+      envelope: Record<string, never>;
+      events: components["schemas"]["EventCatalogEntry"][];
+    };
+    EventCatalogEntry: {
+      /** @description Con versión, p. ej. membership.activated.v1. */
+      type: string;
+      name: string;
+      version: number;
+      title: string;
+      description: string;
+      /** @description Scope de servicio que necesita la app para recibirlo. */
+      scope?: string | null;
+      /** @description JSON Schema de `data`. */
+      schema: Record<string, never>;
+      example: {
+        id: string;
+        type: string;
+        /** Format: date-time */
+        createdAt: string;
+        organizationId: string;
+        data: Record<string, never>;
+      };
+    };
+    RequestLog: {
+      id: string;
+      appId: string;
+      /** @example GET */
+      method: string;
+      /**
+       * @description Plantilla de la ruta, sin ids (`/service/organizations/{organizationId}`).
+       * @example /service/organizations/{organizationId}/members
+       */
+      route: string;
+      /** @example 403 */
+      status: number;
+      /** @description Código del error (`code` de Problem Details o `error` de OAuth). Null si salió bien. */
+      code?: string | null;
+      /** @description `type` de Problem Details, o `oauth` para errores OAuth. */
+      type?: string | null;
+      latencyMs: number;
+      traceId: string;
+      /**
+       * @description IP truncada (IPv4 /24, IPv6 /48).
+       * @example 181.120.34.0
+       */
+      clientIp?: string | null;
+      /** Format: date-time */
+      createdAt: string;
+    };
+    RequestLogPage: {
+      items: components["schemas"]["RequestLog"][];
+      pageInfo: components["schemas"]["PageInfo"];
+    };
+    /**
+     * @description `IN_REVIEW`: esperando al RDR (lo que no está aprobado solo sirve para el responsable y las cuentas de prueba). `APPROVED`: lo que pide está aprobado. `REJECTED`: el RDR pidió cambios; la app conserva lo que ya tenía aprobado, si tenía algo.
+     * @enum {string}
+     */
+    DeveloperAppReviewStatus: "IN_REVIEW" | "APPROVED" | "REJECTED";
+    /** @description Lista de control del RDR (E11.1). Un punto que falta cuenta como no revisado. */
+    ReviewChecklist: {
+      /** @description El propósito está claro y es del distrito. */
+      purpose?: boolean;
+      /** @description Los datos que pide son los necesarios para ese propósito. */
+      data?: boolean;
+      /** @description Hay una persona responsable identificada. */
+      owner?: boolean;
+      /** @description Tiene una política de privacidad publicada. */
+      privacyPolicy?: boolean;
+      /** @description Tiene un contacto que responde. */
+      contact?: boolean;
+    };
+    ReviewDeveloperAppRequest: {
+      /** @enum {string} */
+      decision: "approve" | "reject";
+      checklist: components["schemas"]["ReviewChecklist"];
+      /** @description Obligatorio para rechazar (al menos 10 caracteres). */
+      reason?: string | null;
+    };
+    DeveloperAppReviewEntry: {
+      id: string;
+      /**
+       * @description `REOPENED`: la app pidió datos que no estaban aprobados. `AUTO_APPROVED`: ya existía cuando empezó la revisión (E11).
+       * @enum {string}
+       */
+      kind:
+        "SUBMITTED" | "APPROVED" | "REJECTED" | "REOPENED" | "AUTO_APPROVED";
+      checklist?: {
+        [key: string]: boolean;
+      } | null;
+      reason?: string | null;
+      actorPersonId?: string | null;
+      actorName?: string | null;
+      scopes: string[];
+      /** Format: date-time */
+      createdAt: string;
+    };
+    DeveloperAppReviewItem: {
+      appId: string;
+      name: string;
+      description?: string | null;
+      type: components["schemas"]["DeveloperAppType"];
+      status: components["schemas"]["DeveloperAppStatus"];
+      reviewStatus: components["schemas"]["DeveloperAppReviewStatus"];
+      organizationId: string;
+      organizationName: string;
+      ownerPersonId: string;
+      ownerName: string;
+      purpose?: string | null;
+      privacyPolicyUrl?: string | null;
+      contactEmail?: string | null;
+      scopes: components["schemas"]["ScopeDescription"][];
+      /** @description Los que todavía no están aprobados. */
+      pendingScopes: components["schemas"]["ScopeDescription"][];
+      /** Format: date-time */
+      submittedAt: string;
+      /** Format: date-time */
+      approvedAt?: string | null;
+    };
+    QuotaWindow: {
+      limit: number;
+      used: number;
+      remaining: number;
+      resetsInSeconds: number;
+    };
+    DeveloperAppQuota: {
+      enabled: boolean;
+      /** @enum {string} */
+      source: "default" | "review" | "custom";
+      perMinute: components["schemas"]["QuotaWindow"];
+      perDay: components["schemas"]["QuotaWindow"];
+      defaults: {
+        perMinute: number;
+        perDay: number;
+      };
+    };
+    UpdateDeveloperAppQuotaRequest: {
+      perMinute?: number | null;
+      perDay?: number | null;
+    };
+    /**
+     * @description `DISTRICT_MEMBERS`: toda persona con una membresía o un cargo activo en el árbol de la app. `CLUB_PRESIDENTS`: presidencia de club (`CLUB_PRESIDENT`). `CLUB_AUTHORITIES`: cualquier cargo activo de club. `DISTRICT_AUTHORITIES`: cualquier cargo activo del distrito. `POSITIONS`: los cargos de `positionCodes`. Se combinan (unión).
+     * @enum {string}
+     */
+    AppAudience:
+      | "DISTRICT_MEMBERS"
+      | "CLUB_PRESIDENTS"
+      | "CLUB_AUTHORITIES"
+      | "DISTRICT_AUTHORITIES"
+      | "POSITIONS";
+    AppListing: {
+      published: boolean;
+      displayName: string;
+      shortDescription?: string | null;
+      /** @description Nombre de un ícono de lucide (`calendar-days`) o URL https de una imagen. */
+      icon?: string | null;
+      launchUrl?: string | null;
+      audiences: components["schemas"]["AppAudience"][];
+      positionCodes: string[];
+      displayOrder: number;
+      /** Format: date-time */
+      publishedAt?: string | null;
+      /** Format: date-time */
+      updatedAt?: string | null;
+    };
+    UpdateAppListingRequest: {
+      published?: boolean;
+      displayName?: string;
+      shortDescription?: string | null;
+      icon?: string | null;
+      /** @description https (o http solo para localhost). */
+      launchUrl?: string;
+      audiences?: components["schemas"]["AppAudience"][];
+      positionCodes?: string[];
+      displayOrder?: number;
+    };
+    AppCatalogItem: {
+      appId: string;
+      appName: string;
+      organizationId: string;
+      organizationName: string;
+      reviewStatus: components["schemas"]["DeveloperAppReviewStatus"];
+      /** @description false = `listing` es una sugerencia */
+      saved: boolean;
+      module?: {
         moduleId: string;
-        applicationId: string;
-        transferId: string;
-        roleId: string;
-        permissionId: string;
-        assignmentId: string;
-        sessionId: string;
-        accountId: string;
-        /** @description Búsqueda de texto libre. */
-        query: string;
-        /** @description Cursor de paginación opaco devuelto por la página anterior. */
-        cursor: string;
-        /** @description Tamaño de página. Por defecto 25, máximo 100 (§18). */
-        limit: number;
+        entryUrl?: string;
+        navLabel?: string;
+        icon?: string;
+      } | null;
+      listing: components["schemas"]["AppListing"];
     };
-    requestBodies: never;
-    headers: {
-        /** @description Obligatorio en todo POST que crea o transiciona un agregado, salvo los flujos Auth expresamente exentos. Su ámbito es (operationId, actorScope). Reutilizarla con el mismo body devuelve la respuesta original; con distinto body devuelve 409 sin ejecutar el comando. */
-        "Idempotency-Key": string;
-        /** @description Identificador de correlación propagado a eventos y auditoría. */
-        "X-Correlation-Id": string;
-        /** @description Cabecera de trazado distribuido (W3C Trace Context). */
-        traceparent: string;
-        /** @description Identificador del request; el mismo `traceId` de Problem Details y de los registros. */
-        "X-Trace-Id": string;
-        /** @description RFC 9745. Solo en operaciones marcadas `deprecated: true`: `@<segundos Unix>` del día en que se deprecó (`x-deprecated-at`). */
-        Deprecation: string;
-        /** @description RFC 8594. Fecha HTTP a partir de la cual la operación puede dejar de existir (`x-sunset`, al menos 6 meses después de `x-deprecated-at`). */
-        Sunset: string;
-        /** @description Segundos a esperar antes de reintentar (RFC 9110 §10.2.3). */
-        "Retry-After": number;
-        /** @description draft-ietf-httpapi-ratelimit-headers: los límites de la app, uno por ventana (`q` pedidos cada `w` segundos). */
-        "RateLimit-Policy": string;
-        /** @description draft-ietf-httpapi-ratelimit-headers: pedidos que quedan (`r`) y segundos hasta que se renueva cada ventana (`t`). */
-        RateLimit: string;
+    MyApp: {
+      appId: string;
+      name: string;
+      description?: string | null;
+      icon?: string | null;
+      launchUrl: string;
     };
-    pathItems: never;
+    MyAppAccess: {
+      appId: string;
+      appName: string;
+      organizationName: string;
+      appStatus: components["schemas"]["DeveloperAppStatus"];
+      /** @description La persona le dio acceso con "Ingresar con Mi Rotaract" y se lo puede quitar. */
+      connected: boolean;
+      /** Format: date-time */
+      grantedAt?: string | null;
+      scopes: components["schemas"]["ScopeDescription"][];
+      /** Format: date-time */
+      lastAccessAt?: string | null;
+      /** @description Accesos registrados en los últimos 12 meses. */
+      accessCount: number;
+    };
+    MyAppAccessEvent: {
+      id: string;
+      /** @enum {string} */
+      kind:
+        | "CONSENT_GRANTED"
+        | "SIGN_IN"
+        | "TOKEN_REFRESH"
+        | "USERINFO"
+        | "DATA_READ"
+        | "CONSENT_REVOKED";
+      /** @description Qué tipo de dato (`profile`, `email`, `person`, `contact`, `person-memberships`, ...). */
+      details: string[];
+      /** @description Frase lista para mostrar */
+      description: string;
+      /** Format: date-time */
+      occurredAt: string;
+    };
+    MyAppAccessEventPage: {
+      items: components["schemas"]["MyAppAccessEvent"][];
+      pageInfo: components["schemas"]["PageInfo"];
+    };
+  };
+  responses: {
+    /** @description La app superó su límite por minuto o por día (`code`: `KERNEL_RATE_LIMITED`). Reintentar después de `Retry-After`. El límite por IP del kernel también puede responder 429. */
+    RateLimited: {
+      headers: {
+        "Retry-After": components["headers"]["Retry-After"];
+        "RateLimit-Policy": components["headers"]["RateLimit-Policy"];
+        RateLimit: components["headers"]["RateLimit"];
+        [name: string]: unknown;
+      };
+      content: {
+        "application/problem+json": components["schemas"]["Error"];
+      };
+    };
+    /** @description Pedido inválido. */
+    Error: {
+      headers: {
+        [name: string]: unknown;
+      };
+      content: {
+        "application/problem+json": components["schemas"]["Error"];
+      };
+    };
+    /** @description Recurso inexistente. */
+    NotFound: {
+      headers: {
+        [name: string]: unknown;
+      };
+      content: {
+        "application/problem+json": components["schemas"]["Error"];
+      };
+    };
+    /** @description La transición de estado solicitada no es válida desde el estado actual. */
+    InvalidTransition: {
+      headers: {
+        [name: string]: unknown;
+      };
+      content: {
+        "application/problem+json": components["schemas"]["Error"];
+      };
+    };
+    /** @description El sujeto autenticado no tiene el permiso requerido en el alcance solicitado. */
+    Forbidden: {
+      headers: {
+        [name: string]: unknown;
+      };
+      content: {
+        "application/problem+json": components["schemas"]["Error"];
+      };
+    };
+  };
+  parameters: {
+    /** @description Devuelve solo lo modificado desde este instante (sincronización incremental). */
+    updatedSince: string;
+    /** @description ETag de una respuesta anterior; si no hubo cambios responde 304. */
+    ifNoneMatch: string;
+    appId: string;
+    endpointId: string;
+    personId: string;
+    organizationId: string;
+    membershipId: string;
+    periodId: string;
+    appointmentId: string;
+    positionDefinitionId: string;
+    /** @description Organización desde la que se consulta; el permiso requerido se evalúa en ella. */
+    scopeOrganizationId: string;
+    moduleId: string;
+    applicationId: string;
+    transferId: string;
+    roleId: string;
+    permissionId: string;
+    assignmentId: string;
+    sessionId: string;
+    accountId: string;
+    /** @description Búsqueda de texto libre. */
+    query: string;
+    /** @description Cursor de paginación opaco devuelto por la página anterior. */
+    cursor: string;
+    /** @description Tamaño de página. Por defecto 25, máximo 100 (§18). */
+    limit: number;
+  };
+  requestBodies: never;
+  headers: {
+    /** @description Obligatorio en todo POST que crea o transiciona un agregado, salvo los flujos Auth expresamente exentos. Su ámbito es (operationId, actorScope). Reutilizarla con el mismo body devuelve la respuesta original; con distinto body devuelve 409 sin ejecutar el comando. */
+    "Idempotency-Key": string;
+    /** @description Identificador de correlación propagado a eventos y auditoría. */
+    "X-Correlation-Id": string;
+    /** @description Cabecera de trazado distribuido (W3C Trace Context). */
+    traceparent: string;
+    /** @description Identificador del request; el mismo `traceId` de Problem Details y de los registros. */
+    "X-Trace-Id": string;
+    /** @description RFC 9745. Solo en operaciones marcadas `deprecated: true`: `@<segundos Unix>` del día en que se deprecó (`x-deprecated-at`). */
+    Deprecation: string;
+    /** @description RFC 8594. Fecha HTTP a partir de la cual la operación puede dejar de existir (`x-sunset`, al menos 6 meses después de `x-deprecated-at`). */
+    Sunset: string;
+    /** @description Segundos a esperar antes de reintentar (RFC 9110 §10.2.3). */
+    "Retry-After": number;
+    /** @description draft-ietf-httpapi-ratelimit-headers: los límites de la app, uno por ventana (`q` pedidos cada `w` segundos). */
+    "RateLimit-Policy": string;
+    /** @description draft-ietf-httpapi-ratelimit-headers: pedidos que quedan (`r`) y segundos hasta que se renueva cada ventana (`t`). */
+    RateLimit: string;
+  };
+  pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    registerAccount: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RegisterAccountRequest"];
-            };
-        };
-        responses: {
-            /** @description Cuenta creada, pendiente de verificación de email. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserAccount"];
-                };
-            };
-            /** @description Email ya registrado (CA-ID-02). */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    authenticateAccount: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LoginRequest"];
-            };
-        };
-        responses: {
-            /** @description Autenticación exitosa. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AuthTokens"];
-                };
-            };
-            /** @description Credenciales inválidas o cuenta no verificada (CA-ID-03). */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Cuenta bloqueada por intentos fallidos. */
-            423: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    refreshSession: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    refreshToken: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Nuevo par de tokens. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AuthTokens"];
-                };
-            };
-            /** @description Refresh token inválido, revocado o expirado. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    revokeSession: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Sesión revocada. */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    revokeAllSessions: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Todas las sesiones revocadas. */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    verifyEmail: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    token: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Email verificado. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserAccount"];
-                };
-            };
-            /** @description Token usado o vencido. */
-            410: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    requestPasswordReset: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** Format: email */
-                    email: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Solicitud aceptada. Responde 202 exista o no el email, para no filtrar existencia de cuentas. */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    resetPassword: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    token: string;
-                    newPassword: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Contraseña actualizada. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Token usado o vencido (CA-ID-05). */
-            410: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    acceptAccountInvitation: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AcceptAccountInvitationRequest"];
-            };
-        };
-        responses: {
-            /** @description Cuenta creada e invitación aceptada. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserAccount"];
-                };
-            };
-            /** @description Invitación ya consumida, revocada o la persona ya tiene cuenta. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    getOwnAccount: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserContext"];
-                };
-            };
-        };
-    };
-    updateOwnAccount: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** Format: email */
-                    email?: string;
-                };
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserAccount"];
-                };
-            };
-            /** @description Email ya en uso. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    changePassword: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    currentPassword: string;
-                    newPassword: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Contraseña actualizada. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Contraseña actual incorrecta. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    listOwnSessions: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccountSession"][];
-                };
-            };
-        };
-    };
-    revokeOwnSession: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                sessionId: components["parameters"]["sessionId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Sesión revocada. */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: components["responses"]["NotFound"];
-        };
-    };
-    introspectToken: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    token: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Resultado de introspección. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["IntrospectionResult"];
-                };
-            };
-        };
-    };
-    suspendAccount: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                accountId: components["parameters"]["accountId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserAccount"];
-                };
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    reactivateAccount: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                accountId: components["parameters"]["accountId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserAccount"];
-                };
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    disableAccount: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                accountId: components["parameters"]["accountId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserAccount"];
-                };
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    listPersons: {
-        parameters: {
-            query?: {
-                /** @description Búsqueda de texto libre. */
-                query?: components["parameters"]["query"];
-                /** @description Cursor de paginación opaco devuelto por la página anterior. */
-                cursor?: components["parameters"]["cursor"];
-                /** @description Tamaño de página. Por defecto 25, máximo 100 (§18). */
-                limit?: components["parameters"]["limit"];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PersonPage"];
-                };
-            };
-        };
-    };
-    createPerson: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreatePersonRequest"];
-            };
-        };
-        responses: {
-            /** @description Creado. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Person"];
-                };
-            };
-        };
-    };
-    getPerson: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                personId: components["parameters"]["personId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Person"];
-                };
-            };
-            404: components["responses"]["NotFound"];
-        };
-    };
-    updatePerson: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                personId: components["parameters"]["personId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdatePersonRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Person"];
-                };
-            };
-        };
-    };
-    archivePerson: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                personId: components["parameters"]["personId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Person"];
-                };
-            };
-        };
-    };
-    invitePersonToCreateAccount: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                personId: components["parameters"]["personId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    membershipId: string;
-                    /** Format: email */
-                    email: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Invitación creada. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccountInvitation"];
-                };
-            };
-        };
-    };
-    listOrganizations: {
-        parameters: {
-            query?: {
-                type?: components["schemas"]["OrganizationType"];
-                status?: components["schemas"]["OrganizationStatus"];
-                parentId?: string;
-                /** @description Búsqueda de texto libre. */
-                query?: components["parameters"]["query"];
-                /** @description Cursor de paginación opaco devuelto por la página anterior. */
-                cursor?: components["parameters"]["cursor"];
-                /** @description Tamaño de página. Por defecto 25, máximo 100 (§18). */
-                limit?: components["parameters"]["limit"];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OrganizationPage"];
-                };
-            };
-        };
-    };
-    createOrganization: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateOrganizationRequest"];
-            };
-        };
-        responses: {
-            /** @description Creada. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Organization"];
-                };
-            };
-        };
-    };
-    getOrganization: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                organizationId: components["parameters"]["organizationId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Organization"];
-                };
-            };
-            404: components["responses"]["NotFound"];
-        };
-    };
-    updateOrganization: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                organizationId: components["parameters"]["organizationId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateOrganizationRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Organization"];
-                };
-            };
-        };
-    };
-    activateOrganization: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                organizationId: components["parameters"]["organizationId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Organization"];
-                };
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    deactivateOrganization: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                organizationId: components["parameters"]["organizationId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Organization"];
-                };
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    archiveOrganization: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                organizationId: components["parameters"]["organizationId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Organization"];
-                };
-            };
-        };
-    };
-    moveOrganization: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                organizationId: components["parameters"]["organizationId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    newParentId: string | null;
-                };
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Organization"];
-                };
-            };
-            /** @description El movimiento genera un ciclo jerárquico (CA-ORG-03). */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    listOrganizationChildren: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                organizationId: components["parameters"]["organizationId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Organization"][];
-                };
-            };
-        };
-    };
-    listOrganizationAncestors: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                organizationId: components["parameters"]["organizationId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Organization"][];
-                };
-            };
-        };
-    };
-    listOrganizationDescendants: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                organizationId: components["parameters"]["organizationId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Organization"][];
-                };
-            };
-        };
-    };
-    listOrganizationMemberships: {
-        parameters: {
-            query?: {
-                status?: components["schemas"]["MembershipStatus"][];
-                /** @description Cursor de paginación opaco devuelto por la página anterior. */
-                cursor?: components["parameters"]["cursor"];
-                /** @description Tamaño de página. Por defecto 25, máximo 100 (§18). */
-                limit?: components["parameters"]["limit"];
-            };
-            header?: never;
-            path: {
-                organizationId: components["parameters"]["organizationId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MembershipPage"];
-                };
-            };
-        };
-    };
-    createMembership: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                organizationId: components["parameters"]["organizationId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateMembershipRequest"];
-            };
-        };
-        responses: {
-            /** @description Creada. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OrganizationMembership"];
-                };
-            };
-            /** @description Ya existe membresía para esa persona en la organización (CA-MEM-02). */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    getMembership: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                membershipId: components["parameters"]["membershipId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OrganizationMembership"];
-                };
-            };
-            404: components["responses"]["NotFound"];
-        };
-    };
-    updateMembership: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                membershipId: components["parameters"]["membershipId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    memberNumber?: string | null;
-                    internalNotes?: string | null;
-                    metadata?: Record<string, never> | null;
-                };
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OrganizationMembership"];
-                };
-            };
-        };
-    };
-    activateMembership: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                membershipId: components["parameters"]["membershipId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": {
-                    /** Format: date-time */
-                    joinedAt?: string;
-                };
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OrganizationMembership"];
-                };
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    putMembershipOnLeave: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                membershipId: components["parameters"]["membershipId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": {
-                    reasonCode?: string | null;
-                    reasonText?: string | null;
-                };
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OrganizationMembership"];
-                };
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    resumeMembership: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                membershipId: components["parameters"]["membershipId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OrganizationMembership"];
-                };
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    deactivateMembership: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                membershipId: components["parameters"]["membershipId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": {
-                    reasonCode?: string | null;
-                    reasonText?: string | null;
-                };
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OrganizationMembership"];
-                };
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    graduateMembership: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                membershipId: components["parameters"]["membershipId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OrganizationMembership"];
-                };
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    reactivateMembership: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                membershipId: components["parameters"]["membershipId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OrganizationMembership"];
-                };
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    getMembershipHistory: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                membershipId: components["parameters"]["membershipId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MembershipTransition"][];
-                };
-            };
-        };
-    };
-    listPersonMemberships: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                personId: components["parameters"]["personId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OrganizationMembership"][];
-                };
-            };
-        };
-    };
-    listPeriods: {
-        parameters: {
-            query?: {
-                status?: components["schemas"]["PeriodStatus"];
-            };
-            header?: never;
-            path: {
-                organizationId: components["parameters"]["organizationId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InstitutionalPeriod"][];
-                };
-            };
-        };
-    };
-    createPeriod: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                organizationId: components["parameters"]["organizationId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreatePeriodRequest"];
-            };
-        };
-        responses: {
-            /** @description Creado. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InstitutionalPeriod"];
-                };
-            };
-            /** @description Fechas inválidas: el período debe ir del 1 de julio al 30 de junio siguiente (CA-PER-01/01a). */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    getCurrentPeriod: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                organizationId: components["parameters"]["organizationId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InstitutionalPeriod"];
-                };
-            };
-            /** @description No hay período activo. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    getPeriod: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                periodId: components["parameters"]["periodId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InstitutionalPeriod"];
-                };
-            };
-            404: components["responses"]["NotFound"];
-        };
-    };
-    updateDraftPeriod: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                periodId: components["parameters"]["periodId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdatePeriodRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InstitutionalPeriod"];
-                };
-            };
-            /** @description El período no está en DRAFT. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    schedulePeriod: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                periodId: components["parameters"]["periodId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InstitutionalPeriod"];
-                };
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    activatePeriod: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                periodId: components["parameters"]["periodId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InstitutionalPeriod"];
-                };
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    closePeriod: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                periodId: components["parameters"]["periodId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InstitutionalPeriod"];
-                };
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    cancelPeriod: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                periodId: components["parameters"]["periodId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InstitutionalPeriod"];
-                };
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    listPositionDefinitions: {
-        parameters: {
-            query?: {
-                organizationType?: components["schemas"]["OrganizationType"];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PositionDefinition"][];
-                };
-            };
-        };
-    };
-    createPositionDefinition: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreatePositionDefinitionRequest"];
-            };
-        };
-        responses: {
-            /** @description Creada. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PositionDefinition"];
-                };
-            };
-        };
-    };
-    updatePositionDefinition: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                positionDefinitionId: components["parameters"]["positionDefinitionId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdatePositionDefinitionRequest"];
-            };
-        };
-        responses: {
-            /** @description Actualizada. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PositionDefinition"];
-                };
-            };
-            403: components["responses"]["Forbidden"];
-        };
-    };
-    listPositionPermissions: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                positionDefinitionId: components["parameters"]["positionDefinitionId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PermissionDefinition"][];
-                };
-            };
-        };
-    };
-    attachPermissionToPosition: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                positionDefinitionId: components["parameters"]["positionDefinitionId"];
-                permissionId: components["parameters"]["permissionId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Permiso asociado. */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    detachPermissionFromPosition: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                positionDefinitionId: components["parameters"]["positionDefinitionId"];
-                permissionId: components["parameters"]["permissionId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Permiso quitado. */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    listAppointments: {
-        parameters: {
-            query?: {
-                periodId?: string;
-                positionCode?: string;
-                membershipId?: string;
-                status?: components["schemas"]["AppointmentStatus"];
-            };
-            header?: never;
-            path: {
-                organizationId: components["parameters"]["organizationId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Appointment"][];
-                };
-            };
-        };
-    };
-    createAppointment: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                organizationId: components["parameters"]["organizationId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateAppointmentRequest"];
-            };
-        };
-        responses: {
-            /** @description Creado. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Appointment"];
-                };
-            };
-        };
-    };
-    getCurrentAuthorities: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                organizationId: components["parameters"]["organizationId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Appointment"][];
-                };
-            };
-        };
-    };
-    getAppointment: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                appointmentId: components["parameters"]["appointmentId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Appointment"];
-                };
-            };
-            404: components["responses"]["NotFound"];
-        };
-    };
-    markAppointmentElected: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                appointmentId: components["parameters"]["appointmentId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Appointment"];
-                };
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    activateAppointment: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                appointmentId: components["parameters"]["appointmentId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Appointment"];
-                };
-            };
-            /** @description Transición inválida, o ya existe un titular ACTIVE para un cargo singleton (CA-APP-02). */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    endAppointment: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                appointmentId: components["parameters"]["appointmentId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Appointment"];
-                };
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    revokeAppointment: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                appointmentId: components["parameters"]["appointmentId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    revokeReason: string;
-                };
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Appointment"];
-                };
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    listPermissions: {
-        parameters: {
-            query?: {
-                /** @description Organización desde la que se consulta; el permiso requerido se evalúa en ella. */
-                organizationId?: components["parameters"]["scopeOrganizationId"];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PermissionDefinition"][];
-                };
-            };
-        };
-    };
-    registerPermission: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreatePermissionRequest"];
-            };
-        };
-        responses: {
-            /** @description Creado. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PermissionDefinition"];
-                };
-            };
-        };
-    };
-    listRoles: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RoleDefinition"][];
-                };
-            };
-        };
-    };
-    createRole: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateRoleRequest"];
-            };
-        };
-        responses: {
-            /** @description Creado. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RoleDefinition"];
-                };
-            };
-        };
-    };
-    attachPermissionToRole: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                roleId: components["parameters"]["roleId"];
-                permissionId: components["parameters"]["permissionId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Adjuntado. */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    detachPermissionFromRole: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                roleId: components["parameters"]["roleId"];
-                permissionId: components["parameters"]["permissionId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Quitado. */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    listRoleAssignments: {
-        parameters: {
-            query?: {
-                personId?: string;
-                organizationId?: string;
-                roleDefinitionId?: string;
-                includeRevoked?: boolean;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RoleAssignment"][];
-                };
-            };
-        };
-    };
-    grantRole: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["GrantRoleRequest"];
-            };
-        };
-        responses: {
-            /** @description Creado. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RoleAssignment"];
-                };
-            };
-        };
-    };
-    revokeRole: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                assignmentId: components["parameters"]["assignmentId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RoleAssignment"];
-                };
-            };
-        };
-    };
-    checkAuthorization: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AuthorizationCheckRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AuthorizationDecision"];
-                };
-            };
-        };
-    };
-    batchCheckAuthorization: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    checks: components["schemas"]["AuthorizationCheckRequest"][];
-                };
-            };
-        };
-        responses: {
-            /** @description Devuelve una decisión por cada ítem, en el mismo orden (CA-AUTHZ-06). */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AuthorizationDecision"][];
-                };
-            };
-        };
-    };
-    getEffectivePermissions: {
-        parameters: {
-            query?: {
-                organizationId?: string;
-                periodId?: string;
-            };
-            header?: never;
-            path: {
-                personId: components["parameters"]["personId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example [
-                     *       "kernel.membership.read",
-                     *       "meetings.meeting.create"
-                     *     ]
-                     */
-                    "application/json": string[];
-                };
-            };
-        };
-    };
-    listMembershipApplications: {
-        parameters: {
-            query?: {
-                organizationId?: string;
-                personId?: string;
-                status?: components["schemas"]["ApplicationStatus"];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MembershipApplication"][];
-                };
-            };
-        };
-    };
-    createMembershipApplication: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateMembershipApplicationRequest"];
-            };
-        };
-        responses: {
-            /** @description Creada. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MembershipApplication"];
-                };
-            };
-            /** @description Ya existe una solicitud abierta (CA-SOL-01). */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    getMembershipApplication: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                applicationId: components["parameters"]["applicationId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MembershipApplication"];
-                };
-            };
-            404: components["responses"]["NotFound"];
-        };
-    };
-    submitMembershipApplication: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                applicationId: components["parameters"]["applicationId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MembershipApplication"];
-                };
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    approveMembershipApplication: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                applicationId: components["parameters"]["applicationId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MembershipApplication"];
-                };
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    rejectMembershipApplication: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                applicationId: components["parameters"]["applicationId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    rejectionReason: string;
-                };
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MembershipApplication"];
-                };
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    cancelMembershipApplication: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                applicationId: components["parameters"]["applicationId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MembershipApplication"];
-                };
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    listMembershipTransfers: {
-        parameters: {
-            query?: {
-                membershipId?: string;
-                fromOrganizationId?: string;
-                toOrganizationId?: string;
-                status?: components["schemas"]["TransferStatus"];
-                requestedById?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MembershipTransfer"][];
-                };
-            };
-        };
-    };
-    requestMembershipTransfer: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RequestMembershipTransferRequest"];
-            };
-        };
-        responses: {
-            /** @description Creada. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MembershipTransfer"];
-                };
-            };
-            /** @description Ya existe una transferencia abierta para esa membresía. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    getMembershipTransfer: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                transferId: components["parameters"]["transferId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MembershipTransfer"];
-                };
-            };
-            404: components["responses"]["NotFound"];
-        };
-    };
-    acceptTransferByDestination: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                transferId: components["parameters"]["transferId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MembershipTransfer"];
-                };
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    confirmTransferByOrigin: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                transferId: components["parameters"]["transferId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MembershipTransfer"];
-                };
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    completeMembershipTransfer: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                transferId: components["parameters"]["transferId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MembershipTransfer"];
-                };
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    rejectMembershipTransfer: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                transferId: components["parameters"]["transferId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    rejectionReason: string;
-                };
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MembershipTransfer"];
-                };
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    cancelMembershipTransfer: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                transferId: components["parameters"]["transferId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MembershipTransfer"];
-                };
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    listModules: {
-        parameters: {
-            query?: {
-                status?: components["schemas"]["ModuleStatus"];
-                /** @description Organización desde la que se consulta; el permiso requerido se evalúa en ella. */
-                organizationId?: components["parameters"]["scopeOrganizationId"];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModuleDefinition"][];
-                };
-            };
-        };
-    };
-    registerModule: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RegisterModuleRequest"];
-            };
-        };
-        responses: {
-            /** @description Registrado. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModuleDefinition"];
-                };
-            };
-            404: components["responses"]["NotFound"];
-            /** @description Ya existe un módulo con ese id, la app no está activa o un código de permiso ya pertenece a otro. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Manifiesto inválido (`KERNEL_MODULE_MANIFEST_INVALID`) u `oauth.clientId` de otra app (`KERNEL_MODULE_APP_MISMATCH`). */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    getModule: {
-        parameters: {
-            query?: {
-                /** @description Organización desde la que se consulta; el permiso requerido se evalúa en ella. */
-                organizationId?: components["parameters"]["scopeOrganizationId"];
-            };
-            header?: never;
-            path: {
-                moduleId: components["parameters"]["moduleId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModuleDefinition"];
-                };
-            };
-            404: components["responses"]["NotFound"];
-        };
-    };
-    updateModuleManifest: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                moduleId: components["parameters"]["moduleId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    manifest: components["schemas"]["ModuleManifest"];
-                };
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModuleDefinition"];
-                };
-            };
-            404: components["responses"]["NotFound"];
-            /** @description Un código de permiso nuevo ya pertenece a otro. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Manifiesto inválido, de otro módulo, versión anterior u `oauth.clientId` de otra app. */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    deprecateModule: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                moduleId: components["parameters"]["moduleId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModuleDefinition"];
-                };
-            };
-        };
-    };
-    installModule: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                organizationId: components["parameters"]["organizationId"];
-                moduleId: components["parameters"]["moduleId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": {
-                    configuration?: Record<string, never> | null;
-                };
-            };
-        };
-        responses: {
-            /** @description Instalada. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModuleInstallation"];
-                };
-            };
-            404: components["responses"]["NotFound"];
-            /** @description Ya está instalado, o el módulo no admite instalaciones (`DEPRECATED`/`DISABLED`). */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Configuración inválida contra `configurationSchema` (`KERNEL_MODULE_CONFIGURATION_INVALID`). */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    activateModuleInstallation: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                organizationId: components["parameters"]["organizationId"];
-                moduleId: components["parameters"]["moduleId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModuleInstallation"];
-                };
-            };
-            404: components["responses"]["NotFound"];
-            409: components["responses"]["InvalidTransition"];
-            /** @description Configuración inválida contra `configurationSchema` (CA-MOD-02). */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    updateModuleConfiguration: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                organizationId: components["parameters"]["organizationId"];
-                moduleId: components["parameters"]["moduleId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    configuration: Record<string, never>;
-                };
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModuleInstallation"];
-                };
-            };
-            404: components["responses"]["NotFound"];
-            /** @description La instalación está `DISABLED`. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Configuración inválida contra `configurationSchema`. */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    suspendModuleInstallation: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                organizationId: components["parameters"]["organizationId"];
-                moduleId: components["parameters"]["moduleId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModuleInstallation"];
-                };
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    disableModuleInstallation: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                organizationId: components["parameters"]["organizationId"];
-                moduleId: components["parameters"]["moduleId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModuleInstallation"];
-                };
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    listOrganizationModules: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                organizationId: components["parameters"]["organizationId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModuleInstallation"][];
-                };
-            };
-        };
-    };
-    listModuleInstallationsInTree: {
-        parameters: {
-            query?: {
-                includeDescendants?: boolean;
-                moduleId?: string;
-                status?: components["schemas"]["InstallationStatus"];
-            };
-            header?: never;
-            path: {
-                organizationId: components["parameters"]["organizationId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModuleInstallationInTree"][];
-                };
-            };
-        };
-    };
-    getOrganizationCapabilities: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                organizationId: components["parameters"]["organizationId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        organizationId: string;
-                        modules: {
-                            moduleId: string;
-                            status: components["schemas"]["InstallationStatus"];
-                        }[];
-                        capabilities: {
-                            moduleId: string;
-                            capability: string;
-                        }[];
-                    };
-                };
-            };
-        };
-    };
-    serviceGetUserContext: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                accountId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserContext"];
-                };
-            };
-            429: components["responses"]["RateLimited"];
-        };
-    };
-    serviceListOrganizations: {
-        parameters: {
-            query?: {
-                type?: components["schemas"]["OrganizationType"];
-                status?: components["schemas"]["OrganizationStatus"];
-                parentId?: string;
-                /** @description Devuelve solo lo modificado desde este instante (sincronización incremental). */
-                updatedSince?: components["parameters"]["updatedSince"];
-                /** @description Cursor de paginación opaco devuelto por la página anterior. */
-                cursor?: components["parameters"]["cursor"];
-                /** @description Tamaño de página. Por defecto 25, máximo 100 (§18). */
-                limit?: components["parameters"]["limit"];
-            };
-            header?: {
-                /** @description ETag de una respuesta anterior; si no hubo cambios responde 304. */
-                "If-None-Match"?: components["parameters"]["ifNoneMatch"];
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    ETag?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OrganizationViewPage"];
-                };
-            };
-            /** @description Sin cambios desde el ETag enviado. */
-            304: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            429: components["responses"]["RateLimited"];
-        };
-    };
-    serviceListMembers: {
-        parameters: {
-            query?: {
-                status?: components["schemas"]["MembershipStatus"];
-                /** @description Devuelve solo lo modificado desde este instante (sincronización incremental). */
-                updatedSince?: components["parameters"]["updatedSince"];
-                /** @description Cursor de paginación opaco devuelto por la página anterior. */
-                cursor?: components["parameters"]["cursor"];
-                /** @description Tamaño de página. Por defecto 25, máximo 100 (§18). */
-                limit?: components["parameters"]["limit"];
-            };
-            header?: {
-                /** @description ETag de una respuesta anterior; si no hubo cambios responde 304. */
-                "If-None-Match"?: components["parameters"]["ifNoneMatch"];
-            };
-            path: {
-                organizationId: components["parameters"]["organizationId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    ETag?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MemberViewPage"];
-                };
-            };
-            /** @description Sin cambios desde el ETag enviado. */
-            304: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            403: components["responses"]["Forbidden"];
-            404: components["responses"]["NotFound"];
-            429: components["responses"]["RateLimited"];
-        };
-    };
-    serviceListAuthorities: {
-        parameters: {
-            query?: {
-                /** @description Incluye las autoridades de las organizaciones hijas (por ejemplo, todos los clubes de un distrito). */
-                includeDescendants?: boolean;
-            };
-            header?: {
-                /** @description ETag de una respuesta anterior; si no hubo cambios responde 304. */
-                "If-None-Match"?: components["parameters"]["ifNoneMatch"];
-            };
-            path: {
-                organizationId: components["parameters"]["organizationId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    ETag?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AuthorityView"][];
-                };
-            };
-            /** @description Sin cambios desde el ETag enviado. */
-            304: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            403: components["responses"]["Forbidden"];
-            404: components["responses"]["NotFound"];
-            429: components["responses"]["RateLimited"];
-        };
-    };
-    serviceListPeriods: {
-        parameters: {
-            query?: {
-                status?: components["schemas"]["PeriodStatus"];
-            };
-            header?: {
-                /** @description ETag de una respuesta anterior; si no hubo cambios responde 304. */
-                "If-None-Match"?: components["parameters"]["ifNoneMatch"];
-            };
-            path: {
-                organizationId: components["parameters"]["organizationId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    ETag?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PeriodView"][];
-                };
-            };
-            /** @description Sin cambios desde el ETag enviado. */
-            304: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            403: components["responses"]["Forbidden"];
-            404: components["responses"]["NotFound"];
-            429: components["responses"]["RateLimited"];
-        };
-    };
-    serviceBatchPersons: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    ids: string[];
-                };
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PersonView"][];
-                };
-            };
-            400: components["responses"]["Error"];
-            403: components["responses"]["Forbidden"];
-            429: components["responses"]["RateLimited"];
-        };
-    };
-    servicePersonMemberships: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description ETag de una respuesta anterior; si no hubo cambios responde 304. */
-                "If-None-Match"?: components["parameters"]["ifNoneMatch"];
-            };
-            path: {
-                personId: components["parameters"]["personId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    ETag?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PersonMembershipView"][];
-                };
-            };
-            /** @description Sin cambios desde el ETag enviado. */
-            304: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            403: components["responses"]["Forbidden"];
-            404: components["responses"]["NotFound"];
-            429: components["responses"]["RateLimited"];
-        };
-    };
-    serviceGetPerson: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description ETag de una respuesta anterior; si no hubo cambios responde 304. */
-                "If-None-Match"?: components["parameters"]["ifNoneMatch"];
-            };
-            path: {
-                personId: components["parameters"]["personId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    ETag?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PersonView"];
-                };
-            };
-            /** @description Sin cambios desde el ETag enviado. */
-            304: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: components["responses"]["NotFound"];
-            429: components["responses"]["RateLimited"];
-        };
-    };
-    serviceGetOrganization: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description ETag de una respuesta anterior; si no hubo cambios responde 304. */
-                "If-None-Match"?: components["parameters"]["ifNoneMatch"];
-            };
-            path: {
-                organizationId: components["parameters"]["organizationId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    ETag?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OrganizationView"];
-                };
-            };
-            /** @description Sin cambios desde el ETag enviado. */
-            304: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: components["responses"]["NotFound"];
-            429: components["responses"]["RateLimited"];
-        };
-    };
-    serviceGetMembershipSnapshot: {
-        parameters: {
-            query?: {
-                status?: components["schemas"]["MembershipStatus"][];
-                at?: string;
-            };
-            header?: never;
-            path: {
-                organizationId: components["parameters"]["organizationId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MembershipSnapshot"];
-                };
-            };
-            429: components["responses"]["RateLimited"];
-        };
-    };
-    serviceGetAuthoritySnapshot: {
-        parameters: {
-            query?: {
-                periodId?: string;
-                at?: string;
-            };
-            header?: never;
-            path: {
-                organizationId: components["parameters"]["organizationId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AuthoritySnapshot"];
-                };
-            };
-            429: components["responses"]["RateLimited"];
-        };
-    };
-    serviceGetPeriodSnapshot: {
-        parameters: {
-            query?: {
-                at?: string;
-            };
-            header?: never;
-            path: {
-                organizationId: components["parameters"]["organizationId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PeriodSnapshot"];
-                };
-            };
-            429: components["responses"]["RateLimited"];
-        };
-    };
-    serviceCheckAuthorization: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AuthorizationCheckRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AuthorizationDecision"];
-                };
-            };
-            429: components["responses"]["RateLimited"];
-        };
-    };
-    serviceBatchCheckAuthorization: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    checks: components["schemas"]["AuthorizationCheckRequest"][];
-                };
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AuthorizationDecision"][];
-                };
-            };
-            429: components["responses"]["RateLimited"];
-        };
-    };
-    serviceGetModuleInstallation: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                moduleId: components["parameters"]["moduleId"];
-                organizationId: components["parameters"]["organizationId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModuleInstallation"];
-                };
-            };
-            404: components["responses"]["NotFound"];
-            429: components["responses"]["RateLimited"];
-        };
-    };
-    getOpenIdConfiguration: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OpenIdConfiguration"];
-                };
-            };
-        };
-    };
-    getJwks: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Jwks"];
-                };
-            };
-        };
-    };
-    listDeveloperApps: {
-        parameters: {
-            query: {
-                organizationId: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DeveloperApp"][];
-                };
-            };
-            403: components["responses"]["Forbidden"];
-        };
-    };
-    createDeveloperApp: {
-        parameters: {
-            query?: never;
-            header: {
-                "Idempotency-Key": string;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateDeveloperAppRequest"];
-            };
-        };
-        responses: {
-            /** @description Creada. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CreatedDeveloperApp"];
-                };
-            };
-            400: components["responses"]["Error"];
-            403: components["responses"]["Forbidden"];
-        };
-    };
-    getDeveloperApp: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                appId: components["parameters"]["appId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DeveloperApp"];
-                };
-            };
-            404: components["responses"]["NotFound"];
-        };
-    };
-    updateDeveloperApp: {
-        parameters: {
-            query?: never;
-            header: {
-                "Idempotency-Key": string;
-            };
-            path: {
-                appId: components["parameters"]["appId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateDeveloperAppRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DeveloperApp"];
-                };
-            };
-            400: components["responses"]["Error"];
-            404: components["responses"]["NotFound"];
-        };
-    };
-    rotateDeveloperAppSecret: {
-        parameters: {
-            query?: never;
-            header: {
-                "Idempotency-Key": string;
-            };
-            path: {
-                appId: components["parameters"]["appId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Creado. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DeveloperAppSecretCreated"];
-                };
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    revokeDeveloperAppSecret: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                appId: components["parameters"]["appId"];
-                secretId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Revocado. */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: components["responses"]["NotFound"];
-        };
-    };
-    suspendDeveloperApp: {
-        parameters: {
-            query?: never;
-            header: {
-                "Idempotency-Key": string;
-            };
-            path: {
-                appId: components["parameters"]["appId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DeveloperApp"];
-                };
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    activateDeveloperApp: {
-        parameters: {
-            query?: never;
-            header: {
-                "Idempotency-Key": string;
-            };
-            path: {
-                appId: components["parameters"]["appId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DeveloperApp"];
-                };
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    revokeDeveloperApp: {
-        parameters: {
-            query?: never;
-            header: {
-                "Idempotency-Key": string;
-            };
-            path: {
-                appId: components["parameters"]["appId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DeveloperApp"];
-                };
-            };
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    streamWebhookEvents: {
-        parameters: {
-            query?: {
-                /** @description Tipos separados por coma. Por defecto, todos los que la app puede recibir. */
-                events?: string;
-            };
-            header?: never;
-            path: {
-                appId: components["parameters"]["appId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Stream abierto. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "text/event-stream": string;
-                };
-            };
-            400: components["responses"]["Error"];
-            401: components["responses"]["Error"];
-            403: components["responses"]["Forbidden"];
-            404: components["responses"]["NotFound"];
-        };
-    };
-    streamWebhookEventsAlias: {
-        parameters: {
-            query?: {
-                events?: string;
-            };
-            header?: never;
-            path: {
-                appId: components["parameters"]["appId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Stream abierto. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "text/event-stream": string;
-                };
-            };
-            401: components["responses"]["Error"];
-            404: components["responses"]["NotFound"];
-        };
-    };
-    listWebhookEndpoints: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                appId: components["parameters"]["appId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WebhookEndpoint"][];
-                };
-            };
-            403: components["responses"]["Forbidden"];
-            404: components["responses"]["NotFound"];
-        };
-    };
-    createWebhookEndpoint: {
-        parameters: {
-            query?: never;
-            header: {
-                "Idempotency-Key": string;
-            };
-            path: {
-                appId: components["parameters"]["appId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateWebhookEndpointRequest"];
-            };
-        };
-        responses: {
-            /** @description Creado. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WebhookEndpointWithSecret"];
-                };
-            };
-            400: components["responses"]["Error"];
-            403: components["responses"]["Forbidden"];
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    getWebhookEndpoint: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                appId: components["parameters"]["appId"];
-                endpointId: components["parameters"]["endpointId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WebhookEndpoint"];
-                };
-            };
-            404: components["responses"]["NotFound"];
-        };
-    };
-    deleteWebhookEndpoint: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                appId: components["parameters"]["appId"];
-                endpointId: components["parameters"]["endpointId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Borrado. */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: components["responses"]["NotFound"];
-        };
-    };
-    updateWebhookEndpoint: {
-        parameters: {
-            query?: never;
-            header: {
-                "Idempotency-Key": string;
-            };
-            path: {
-                appId: components["parameters"]["appId"];
-                endpointId: components["parameters"]["endpointId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateWebhookEndpointRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WebhookEndpoint"];
-                };
-            };
-            400: components["responses"]["Error"];
-            404: components["responses"]["NotFound"];
-        };
-    };
-    rotateWebhookSecret: {
-        parameters: {
-            query?: never;
-            header: {
-                "Idempotency-Key": string;
-            };
-            path: {
-                appId: components["parameters"]["appId"];
-                endpointId: components["parameters"]["endpointId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Creado. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WebhookEndpointWithSecret"];
-                };
-            };
-            404: components["responses"]["NotFound"];
-        };
-    };
-    sendWebhookTest: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                appId: components["parameters"]["appId"];
-                endpointId: components["parameters"]["endpointId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description En cola. */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WebhookDelivery"];
-                };
-            };
-            404: components["responses"]["NotFound"];
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    listWebhookDeliveries: {
-        parameters: {
-            query?: {
-                status?: components["schemas"]["WebhookDeliveryStatus"];
-                /** @description Cursor de paginación opaco devuelto por la página anterior. */
-                cursor?: components["parameters"]["cursor"];
-                /** @description Tamaño de página. Por defecto 25, máximo 100 (§18). */
-                limit?: components["parameters"]["limit"];
-            };
-            header?: never;
-            path: {
-                appId: components["parameters"]["appId"];
-                endpointId: components["parameters"]["endpointId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WebhookDeliveryPage"];
-                };
-            };
-            404: components["responses"]["NotFound"];
-        };
-    };
-    redeliverWebhook: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                appId: components["parameters"]["appId"];
-                endpointId: components["parameters"]["endpointId"];
-                deliveryId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description En cola. */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WebhookDelivery"];
-                };
-            };
-            404: components["responses"]["NotFound"];
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    listRequestLogs: {
-        parameters: {
-            query?: {
-                /** @description Clase (`2xx`, `3xx`, `4xx`, `5xx`), `error` (cualquier 4xx o 5xx) o un código exacto (`404`). */
-                status?: string;
-                /** @description Código de error exacto (`KERNEL_HTTP_403`, `invalid_client`, ...). */
-                code?: string;
-                traceId?: string;
-                /** @description Desde este instante (inclusive). */
-                from?: string;
-                /** @description Hasta este instante (exclusive). */
-                to?: string;
-                /** @description Cursor de paginación opaco devuelto por la página anterior. */
-                cursor?: components["parameters"]["cursor"];
-                /** @description Tamaño de página. Por defecto 25, máximo 100 (§18). */
-                limit?: components["parameters"]["limit"];
-            };
-            header?: never;
-            path: {
-                appId: components["parameters"]["appId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RequestLogPage"];
-                };
-            };
-            400: components["responses"]["Error"];
-            403: components["responses"]["Forbidden"];
-            404: components["responses"]["NotFound"];
-        };
-    };
-    listDeveloperAppReviews: {
-        parameters: {
-            query: {
-                organizationId: string;
-                status?: components["schemas"]["DeveloperAppReviewStatus"];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DeveloperAppReviewItem"][];
-                };
-            };
-            400: components["responses"]["Error"];
-            403: components["responses"]["Forbidden"];
-        };
-    };
-    listDeveloperAppReviewHistory: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                appId: components["parameters"]["appId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DeveloperAppReviewEntry"][];
-                };
-            };
-            404: components["responses"]["NotFound"];
-        };
-    };
-    reviewDeveloperApp: {
-        parameters: {
-            query?: never;
-            header: {
-                "Idempotency-Key": string;
-            };
-            path: {
-                appId: components["parameters"]["appId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ReviewDeveloperAppRequest"];
-            };
-        };
-        responses: {
-            /** @description Decisión registrada. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DeveloperAppReviewEntry"];
-                };
-            };
-            400: components["responses"]["Error"];
-            403: components["responses"]["Forbidden"];
-            404: components["responses"]["NotFound"];
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    requestDeveloperAppReview: {
-        parameters: {
-            query?: never;
-            header: {
-                "Idempotency-Key": string;
-            };
-            path: {
-                appId: components["parameters"]["appId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description La app vuelve a la cola de revisión. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        appId: string;
-                        reviewStatus: components["schemas"]["DeveloperAppReviewStatus"];
-                    };
-                };
-            };
-            404: components["responses"]["NotFound"];
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    getDeveloperAppQuota: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                appId: components["parameters"]["appId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DeveloperAppQuota"];
-                };
-            };
-            404: components["responses"]["NotFound"];
-        };
-    };
-    updateDeveloperAppQuota: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                appId: components["parameters"]["appId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateDeveloperAppQuotaRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DeveloperAppQuota"];
-                };
-            };
-            400: components["responses"]["Error"];
-            403: components["responses"]["Forbidden"];
-            404: components["responses"]["NotFound"];
-        };
-    };
-    listAppCatalog: {
-        parameters: {
-            query: {
-                organizationId: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AppCatalogItem"][];
-                };
-            };
-            400: components["responses"]["Error"];
-            403: components["responses"]["Forbidden"];
-        };
-    };
-    updateDeveloperAppListing: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                appId: components["parameters"]["appId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateAppListingRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AppListing"];
-                };
-            };
-            400: components["responses"]["Error"];
-            403: components["responses"]["Forbidden"];
-            404: components["responses"]["NotFound"];
-            409: components["responses"]["InvalidTransition"];
-        };
-    };
-    listMyApps: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MyApp"][];
-                };
-            };
-        };
-    };
-    listMyAppAccess: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MyAppAccess"][];
-                };
-            };
-        };
-    };
-    listMyAppAccessEvents: {
-        parameters: {
-            query?: {
-                /** @description Cursor de paginación opaco devuelto por la página anterior. */
-                cursor?: components["parameters"]["cursor"];
-                /** @description Tamaño de página. Por defecto 25, máximo 100 (§18). */
-                limit?: components["parameters"]["limit"];
-            };
-            header?: never;
-            path: {
-                appId: components["parameters"]["appId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MyAppAccessEventPage"];
-                };
-            };
-            400: components["responses"]["Error"];
-        };
-    };
-    getEventCatalog: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["EventCatalog"];
-                };
-            };
-        };
-    };
-    getPublicDeveloperApp: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                clientId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PublicDeveloperApp"];
-                };
-            };
-            404: components["responses"]["NotFound"];
-        };
-    };
-    getAuthorizationContext: {
-        parameters: {
-            query: {
-                client_id: string;
-                redirect_uri: string;
-                scope: string;
-                response_type: "code";
-                code_challenge: string;
-                code_challenge_method: "S256";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AuthorizationContext"];
-                };
-            };
-            400: components["responses"]["Error"];
-        };
-    };
-    authorizeOAuthRequest: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AuthorizeRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AuthorizeResponse"];
-                };
-            };
-            400: components["responses"]["Error"];
-        };
-    };
-    issueOAuthToken: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/x-www-form-urlencoded": components["schemas"]["TokenRequest"];
-                "application/json": components["schemas"]["TokenRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TokenResponse"];
-                };
-            };
-            /** @description Pedido inválido. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OAuthError"];
-                };
-            };
-            /** @description Cliente no autenticado. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OAuthError"];
-                };
-            };
-            429: components["responses"]["RateLimited"];
-        };
-    };
-    revokeOAuthToken: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/x-www-form-urlencoded": components["schemas"]["RevokeTokenRequest"];
-                "application/json": components["schemas"]["RevokeTokenRequest"];
-            };
-        };
-        responses: {
-            /** @description Revocado o inexistente. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Cliente no autenticado. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OAuthError"];
-                };
-            };
-            429: components["responses"]["RateLimited"];
-        };
-    };
-    getOAuthUserInfo: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserInfo"];
-                };
-            };
-            /** @description Token ausente, vencido o revocado. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OAuthError"];
-                };
-            };
-            429: components["responses"]["RateLimited"];
-        };
-    };
-    listOAuthConsents: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OAuthConsent"][];
-                };
-            };
-        };
-    };
-    revokeOAuthConsent: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                appId: components["parameters"]["appId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Revocado. */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: components["responses"]["NotFound"];
-        };
-    };
+  registerAccount: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RegisterAccountRequest"];
+      };
+    };
+    responses: {
+      /** @description Cuenta creada, pendiente de verificación de email. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserAccount"];
+        };
+      };
+      /** @description Email ya registrado (CA-ID-02). */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Error"];
+        };
+      };
+    };
+  };
+  authenticateAccount: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["LoginRequest"];
+      };
+    };
+    responses: {
+      /** @description Autenticación exitosa. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AuthTokens"];
+        };
+      };
+      /** @description Credenciales inválidas o cuenta no verificada (CA-ID-03). */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Error"];
+        };
+      };
+      /** @description Cuenta bloqueada por intentos fallidos. */
+      423: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Error"];
+        };
+      };
+    };
+  };
+  refreshSession: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          refreshToken: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Nuevo par de tokens. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AuthTokens"];
+        };
+      };
+      /** @description Refresh token inválido, revocado o expirado. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Error"];
+        };
+      };
+    };
+  };
+  revokeSession: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Sesión revocada. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  revokeAllSessions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Todas las sesiones revocadas. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  verifyEmail: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          token: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Email verificado. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserAccount"];
+        };
+      };
+      /** @description Token usado o vencido. */
+      410: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Error"];
+        };
+      };
+    };
+  };
+  requestPasswordReset: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** Format: email */
+          email: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Solicitud aceptada. Responde 202 exista o no el email, para no filtrar existencia de cuentas. */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  resetPassword: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          token: string;
+          newPassword: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Contraseña actualizada. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Token usado o vencido (CA-ID-05). */
+      410: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Error"];
+        };
+      };
+    };
+  };
+  acceptAccountInvitation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AcceptAccountInvitationRequest"];
+      };
+    };
+    responses: {
+      /** @description Cuenta creada e invitación aceptada. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserAccount"];
+        };
+      };
+      /** @description Invitación ya consumida, revocada o la persona ya tiene cuenta. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Error"];
+        };
+      };
+    };
+  };
+  getOwnAccount: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserContext"];
+        };
+      };
+    };
+  };
+  updateOwnAccount: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** Format: email */
+          email?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserAccount"];
+        };
+      };
+      /** @description Email ya en uso. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Error"];
+        };
+      };
+    };
+  };
+  changePassword: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          currentPassword: string;
+          newPassword: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Contraseña actualizada. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Contraseña actual incorrecta. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  listOwnSessions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AccountSession"][];
+        };
+      };
+    };
+  };
+  revokeOwnSession: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        sessionId: components["parameters"]["sessionId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Sesión revocada. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components["responses"]["NotFound"];
+    };
+  };
+  introspectToken: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          token: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Resultado de introspección. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["IntrospectionResult"];
+        };
+      };
+    };
+  };
+  suspendAccount: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        accountId: components["parameters"]["accountId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserAccount"];
+        };
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  reactivateAccount: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        accountId: components["parameters"]["accountId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserAccount"];
+        };
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  disableAccount: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        accountId: components["parameters"]["accountId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserAccount"];
+        };
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  listPersons: {
+    parameters: {
+      query?: {
+        /** @description Búsqueda de texto libre. */
+        query?: components["parameters"]["query"];
+        /** @description Cursor de paginación opaco devuelto por la página anterior. */
+        cursor?: components["parameters"]["cursor"];
+        /** @description Tamaño de página. Por defecto 25, máximo 100 (§18). */
+        limit?: components["parameters"]["limit"];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PersonPage"];
+        };
+      };
+    };
+  };
+  createPerson: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreatePersonRequest"];
+      };
+    };
+    responses: {
+      /** @description Creado. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Person"];
+        };
+      };
+    };
+  };
+  getPerson: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        personId: components["parameters"]["personId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Person"];
+        };
+      };
+      404: components["responses"]["NotFound"];
+    };
+  };
+  updatePerson: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        personId: components["parameters"]["personId"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdatePersonRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Person"];
+        };
+      };
+    };
+  };
+  archivePerson: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        personId: components["parameters"]["personId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Person"];
+        };
+      };
+    };
+  };
+  invitePersonToCreateAccount: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        personId: components["parameters"]["personId"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          membershipId: string;
+          /** Format: email */
+          email: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Invitación creada. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AccountInvitation"];
+        };
+      };
+    };
+  };
+  listOrganizations: {
+    parameters: {
+      query?: {
+        type?: components["schemas"]["OrganizationType"];
+        status?: components["schemas"]["OrganizationStatus"];
+        parentId?: string;
+        /** @description Búsqueda de texto libre. */
+        query?: components["parameters"]["query"];
+        /** @description Cursor de paginación opaco devuelto por la página anterior. */
+        cursor?: components["parameters"]["cursor"];
+        /** @description Tamaño de página. Por defecto 25, máximo 100 (§18). */
+        limit?: components["parameters"]["limit"];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OrganizationPage"];
+        };
+      };
+    };
+  };
+  createOrganization: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateOrganizationRequest"];
+      };
+    };
+    responses: {
+      /** @description Creada. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Organization"];
+        };
+      };
+    };
+  };
+  getOrganization: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        organizationId: components["parameters"]["organizationId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Organization"];
+        };
+      };
+      404: components["responses"]["NotFound"];
+    };
+  };
+  updateOrganization: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        organizationId: components["parameters"]["organizationId"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateOrganizationRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Organization"];
+        };
+      };
+    };
+  };
+  activateOrganization: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        organizationId: components["parameters"]["organizationId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Organization"];
+        };
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  deactivateOrganization: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        organizationId: components["parameters"]["organizationId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Organization"];
+        };
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  archiveOrganization: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        organizationId: components["parameters"]["organizationId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Organization"];
+        };
+      };
+    };
+  };
+  moveOrganization: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        organizationId: components["parameters"]["organizationId"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          newParentId: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Organization"];
+        };
+      };
+      /** @description El movimiento genera un ciclo jerárquico (CA-ORG-03). */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Error"];
+        };
+      };
+    };
+  };
+  listOrganizationChildren: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        organizationId: components["parameters"]["organizationId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Organization"][];
+        };
+      };
+    };
+  };
+  listOrganizationAncestors: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        organizationId: components["parameters"]["organizationId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Organization"][];
+        };
+      };
+    };
+  };
+  listOrganizationDescendants: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        organizationId: components["parameters"]["organizationId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Organization"][];
+        };
+      };
+    };
+  };
+  listOrganizationMemberships: {
+    parameters: {
+      query?: {
+        status?: components["schemas"]["MembershipStatus"][];
+        /** @description Cursor de paginación opaco devuelto por la página anterior. */
+        cursor?: components["parameters"]["cursor"];
+        /** @description Tamaño de página. Por defecto 25, máximo 100 (§18). */
+        limit?: components["parameters"]["limit"];
+      };
+      header?: never;
+      path: {
+        organizationId: components["parameters"]["organizationId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MembershipPage"];
+        };
+      };
+    };
+  };
+  createMembership: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        organizationId: components["parameters"]["organizationId"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateMembershipRequest"];
+      };
+    };
+    responses: {
+      /** @description Creada. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OrganizationMembership"];
+        };
+      };
+      /** @description Ya existe membresía para esa persona en la organización (CA-MEM-02). */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Error"];
+        };
+      };
+    };
+  };
+  getMembership: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        membershipId: components["parameters"]["membershipId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OrganizationMembership"];
+        };
+      };
+      404: components["responses"]["NotFound"];
+    };
+  };
+  updateMembership: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        membershipId: components["parameters"]["membershipId"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          memberNumber?: string | null;
+          internalNotes?: string | null;
+          metadata?: Record<string, never> | null;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OrganizationMembership"];
+        };
+      };
+    };
+  };
+  activateMembership: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        membershipId: components["parameters"]["membershipId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        "application/json": {
+          /** Format: date-time */
+          joinedAt?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OrganizationMembership"];
+        };
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  putMembershipOnLeave: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        membershipId: components["parameters"]["membershipId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        "application/json": {
+          reasonCode?: string | null;
+          reasonText?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OrganizationMembership"];
+        };
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  resumeMembership: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        membershipId: components["parameters"]["membershipId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OrganizationMembership"];
+        };
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  deactivateMembership: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        membershipId: components["parameters"]["membershipId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        "application/json": {
+          reasonCode?: string | null;
+          reasonText?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OrganizationMembership"];
+        };
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  graduateMembership: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        membershipId: components["parameters"]["membershipId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OrganizationMembership"];
+        };
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  reactivateMembership: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        membershipId: components["parameters"]["membershipId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OrganizationMembership"];
+        };
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  getMembershipHistory: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        membershipId: components["parameters"]["membershipId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MembershipTransition"][];
+        };
+      };
+    };
+  };
+  listPersonMemberships: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        personId: components["parameters"]["personId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OrganizationMembership"][];
+        };
+      };
+    };
+  };
+  listPeriods: {
+    parameters: {
+      query?: {
+        status?: components["schemas"]["PeriodStatus"];
+      };
+      header?: never;
+      path: {
+        organizationId: components["parameters"]["organizationId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InstitutionalPeriod"][];
+        };
+      };
+    };
+  };
+  createPeriod: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        organizationId: components["parameters"]["organizationId"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreatePeriodRequest"];
+      };
+    };
+    responses: {
+      /** @description Creado. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InstitutionalPeriod"];
+        };
+      };
+      /** @description Fechas inválidas: el período debe ir del 1 de julio al 30 de junio siguiente (CA-PER-01/01a). */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Error"];
+        };
+      };
+    };
+  };
+  getCurrentPeriod: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        organizationId: components["parameters"]["organizationId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InstitutionalPeriod"];
+        };
+      };
+      /** @description No hay período activo. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Error"];
+        };
+      };
+    };
+  };
+  getPeriod: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        periodId: components["parameters"]["periodId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InstitutionalPeriod"];
+        };
+      };
+      404: components["responses"]["NotFound"];
+    };
+  };
+  updateDraftPeriod: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        periodId: components["parameters"]["periodId"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdatePeriodRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InstitutionalPeriod"];
+        };
+      };
+      /** @description El período no está en DRAFT. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Error"];
+        };
+      };
+    };
+  };
+  schedulePeriod: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        periodId: components["parameters"]["periodId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InstitutionalPeriod"];
+        };
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  activatePeriod: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        periodId: components["parameters"]["periodId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InstitutionalPeriod"];
+        };
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  closePeriod: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        periodId: components["parameters"]["periodId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InstitutionalPeriod"];
+        };
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  cancelPeriod: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        periodId: components["parameters"]["periodId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InstitutionalPeriod"];
+        };
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  listPositionDefinitions: {
+    parameters: {
+      query?: {
+        organizationType?: components["schemas"]["OrganizationType"];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PositionDefinition"][];
+        };
+      };
+    };
+  };
+  createPositionDefinition: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreatePositionDefinitionRequest"];
+      };
+    };
+    responses: {
+      /** @description Creada. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PositionDefinition"];
+        };
+      };
+    };
+  };
+  updatePositionDefinition: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        positionDefinitionId: components["parameters"]["positionDefinitionId"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdatePositionDefinitionRequest"];
+      };
+    };
+    responses: {
+      /** @description Actualizada. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PositionDefinition"];
+        };
+      };
+      403: components["responses"]["Forbidden"];
+    };
+  };
+  listPositionPermissions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        positionDefinitionId: components["parameters"]["positionDefinitionId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PermissionDefinition"][];
+        };
+      };
+    };
+  };
+  attachPermissionToPosition: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        positionDefinitionId: components["parameters"]["positionDefinitionId"];
+        permissionId: components["parameters"]["permissionId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Permiso asociado. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  detachPermissionFromPosition: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        positionDefinitionId: components["parameters"]["positionDefinitionId"];
+        permissionId: components["parameters"]["permissionId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Permiso quitado. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  listAppointments: {
+    parameters: {
+      query?: {
+        periodId?: string;
+        positionCode?: string;
+        membershipId?: string;
+        status?: components["schemas"]["AppointmentStatus"];
+      };
+      header?: never;
+      path: {
+        organizationId: components["parameters"]["organizationId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Appointment"][];
+        };
+      };
+    };
+  };
+  createAppointment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        organizationId: components["parameters"]["organizationId"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateAppointmentRequest"];
+      };
+    };
+    responses: {
+      /** @description Creado. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Appointment"];
+        };
+      };
+    };
+  };
+  getCurrentAuthorities: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        organizationId: components["parameters"]["organizationId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Appointment"][];
+        };
+      };
+    };
+  };
+  getAppointment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        appointmentId: components["parameters"]["appointmentId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Appointment"];
+        };
+      };
+      404: components["responses"]["NotFound"];
+    };
+  };
+  markAppointmentElected: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        appointmentId: components["parameters"]["appointmentId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Appointment"];
+        };
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  activateAppointment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        appointmentId: components["parameters"]["appointmentId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Appointment"];
+        };
+      };
+      /** @description Transición inválida, o ya existe un titular ACTIVE para un cargo singleton (CA-APP-02). */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Error"];
+        };
+      };
+    };
+  };
+  endAppointment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        appointmentId: components["parameters"]["appointmentId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Appointment"];
+        };
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  revokeAppointment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        appointmentId: components["parameters"]["appointmentId"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          revokeReason: string;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Appointment"];
+        };
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  listPermissions: {
+    parameters: {
+      query?: {
+        /** @description Organización desde la que se consulta; el permiso requerido se evalúa en ella. */
+        organizationId?: components["parameters"]["scopeOrganizationId"];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PermissionDefinition"][];
+        };
+      };
+    };
+  };
+  registerPermission: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreatePermissionRequest"];
+      };
+    };
+    responses: {
+      /** @description Creado. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PermissionDefinition"];
+        };
+      };
+    };
+  };
+  listRoles: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RoleDefinition"][];
+        };
+      };
+    };
+  };
+  createRole: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateRoleRequest"];
+      };
+    };
+    responses: {
+      /** @description Creado. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RoleDefinition"];
+        };
+      };
+    };
+  };
+  attachPermissionToRole: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        roleId: components["parameters"]["roleId"];
+        permissionId: components["parameters"]["permissionId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Adjuntado. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  detachPermissionFromRole: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        roleId: components["parameters"]["roleId"];
+        permissionId: components["parameters"]["permissionId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Quitado. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  listRoleAssignments: {
+    parameters: {
+      query?: {
+        personId?: string;
+        organizationId?: string;
+        roleDefinitionId?: string;
+        includeRevoked?: boolean;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RoleAssignment"][];
+        };
+      };
+    };
+  };
+  grantRole: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["GrantRoleRequest"];
+      };
+    };
+    responses: {
+      /** @description Creado. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RoleAssignment"];
+        };
+      };
+    };
+  };
+  revokeRole: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        assignmentId: components["parameters"]["assignmentId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RoleAssignment"];
+        };
+      };
+    };
+  };
+  checkAuthorization: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AuthorizationCheckRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AuthorizationDecision"];
+        };
+      };
+    };
+  };
+  batchCheckAuthorization: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          checks: components["schemas"]["AuthorizationCheckRequest"][];
+        };
+      };
+    };
+    responses: {
+      /** @description Devuelve una decisión por cada ítem, en el mismo orden (CA-AUTHZ-06). */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AuthorizationDecision"][];
+        };
+      };
+    };
+  };
+  getEffectivePermissions: {
+    parameters: {
+      query?: {
+        organizationId?: string;
+        periodId?: string;
+      };
+      header?: never;
+      path: {
+        personId: components["parameters"]["personId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          /**
+           * @example [
+           *       "kernel.membership.read",
+           *       "meetings.meeting.create"
+           *     ]
+           */
+          "application/json": string[];
+        };
+      };
+    };
+  };
+  listMembershipApplications: {
+    parameters: {
+      query?: {
+        organizationId?: string;
+        personId?: string;
+        status?: components["schemas"]["ApplicationStatus"];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MembershipApplication"][];
+        };
+      };
+    };
+  };
+  createMembershipApplication: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateMembershipApplicationRequest"];
+      };
+    };
+    responses: {
+      /** @description Creada. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MembershipApplication"];
+        };
+      };
+      /** @description Ya existe una solicitud abierta (CA-SOL-01). */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Error"];
+        };
+      };
+    };
+  };
+  getMembershipApplication: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        applicationId: components["parameters"]["applicationId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MembershipApplication"];
+        };
+      };
+      404: components["responses"]["NotFound"];
+    };
+  };
+  submitMembershipApplication: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        applicationId: components["parameters"]["applicationId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MembershipApplication"];
+        };
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  approveMembershipApplication: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        applicationId: components["parameters"]["applicationId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MembershipApplication"];
+        };
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  rejectMembershipApplication: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        applicationId: components["parameters"]["applicationId"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          rejectionReason: string;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MembershipApplication"];
+        };
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  cancelMembershipApplication: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        applicationId: components["parameters"]["applicationId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MembershipApplication"];
+        };
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  listMembershipTransfers: {
+    parameters: {
+      query?: {
+        membershipId?: string;
+        fromOrganizationId?: string;
+        toOrganizationId?: string;
+        status?: components["schemas"]["TransferStatus"];
+        requestedById?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MembershipTransfer"][];
+        };
+      };
+    };
+  };
+  requestMembershipTransfer: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RequestMembershipTransferRequest"];
+      };
+    };
+    responses: {
+      /** @description Creada. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MembershipTransfer"];
+        };
+      };
+      /** @description Ya existe una transferencia abierta para esa membresía. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Error"];
+        };
+      };
+    };
+  };
+  getMembershipTransfer: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        transferId: components["parameters"]["transferId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MembershipTransfer"];
+        };
+      };
+      404: components["responses"]["NotFound"];
+    };
+  };
+  acceptTransferByDestination: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        transferId: components["parameters"]["transferId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MembershipTransfer"];
+        };
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  confirmTransferByOrigin: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        transferId: components["parameters"]["transferId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MembershipTransfer"];
+        };
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  completeMembershipTransfer: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        transferId: components["parameters"]["transferId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MembershipTransfer"];
+        };
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  rejectMembershipTransfer: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        transferId: components["parameters"]["transferId"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          rejectionReason: string;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MembershipTransfer"];
+        };
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  cancelMembershipTransfer: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        transferId: components["parameters"]["transferId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MembershipTransfer"];
+        };
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  listModules: {
+    parameters: {
+      query?: {
+        status?: components["schemas"]["ModuleStatus"];
+        /** @description Organización desde la que se consulta; el permiso requerido se evalúa en ella. */
+        organizationId?: components["parameters"]["scopeOrganizationId"];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ModuleDefinition"][];
+        };
+      };
+    };
+  };
+  registerModule: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RegisterModuleRequest"];
+      };
+    };
+    responses: {
+      /** @description Registrado. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ModuleDefinition"];
+        };
+      };
+      404: components["responses"]["NotFound"];
+      /** @description Ya existe un módulo con ese id, la app no está activa o un código de permiso ya pertenece a otro. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Error"];
+        };
+      };
+      /** @description Manifiesto inválido (`KERNEL_MODULE_MANIFEST_INVALID`) u `oauth.clientId` de otra app (`KERNEL_MODULE_APP_MISMATCH`). */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Error"];
+        };
+      };
+    };
+  };
+  getModule: {
+    parameters: {
+      query?: {
+        /** @description Organización desde la que se consulta; el permiso requerido se evalúa en ella. */
+        organizationId?: components["parameters"]["scopeOrganizationId"];
+      };
+      header?: never;
+      path: {
+        moduleId: components["parameters"]["moduleId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ModuleDefinition"];
+        };
+      };
+      404: components["responses"]["NotFound"];
+    };
+  };
+  updateModuleManifest: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        moduleId: components["parameters"]["moduleId"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          manifest: components["schemas"]["ModuleManifest"];
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ModuleDefinition"];
+        };
+      };
+      404: components["responses"]["NotFound"];
+      /** @description Un código de permiso nuevo ya pertenece a otro. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Error"];
+        };
+      };
+      /** @description Manifiesto inválido, de otro módulo, versión anterior u `oauth.clientId` de otra app. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Error"];
+        };
+      };
+    };
+  };
+  deprecateModule: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        moduleId: components["parameters"]["moduleId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ModuleDefinition"];
+        };
+      };
+    };
+  };
+  installModule: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        organizationId: components["parameters"]["organizationId"];
+        moduleId: components["parameters"]["moduleId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        "application/json": {
+          configuration?: Record<string, never> | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Instalada. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ModuleInstallation"];
+        };
+      };
+      404: components["responses"]["NotFound"];
+      /** @description Ya está instalado, o el módulo no admite instalaciones (`DEPRECATED`/`DISABLED`). */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Error"];
+        };
+      };
+      /** @description Configuración inválida contra `configurationSchema` (`KERNEL_MODULE_CONFIGURATION_INVALID`). */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Error"];
+        };
+      };
+    };
+  };
+  activateModuleInstallation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        organizationId: components["parameters"]["organizationId"];
+        moduleId: components["parameters"]["moduleId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ModuleInstallation"];
+        };
+      };
+      404: components["responses"]["NotFound"];
+      409: components["responses"]["InvalidTransition"];
+      /** @description Configuración inválida contra `configurationSchema` (CA-MOD-02). */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Error"];
+        };
+      };
+    };
+  };
+  updateModuleConfiguration: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        organizationId: components["parameters"]["organizationId"];
+        moduleId: components["parameters"]["moduleId"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          configuration: Record<string, never>;
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ModuleInstallation"];
+        };
+      };
+      404: components["responses"]["NotFound"];
+      /** @description La instalación está `DISABLED`. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Error"];
+        };
+      };
+      /** @description Configuración inválida contra `configurationSchema`. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Error"];
+        };
+      };
+    };
+  };
+  suspendModuleInstallation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        organizationId: components["parameters"]["organizationId"];
+        moduleId: components["parameters"]["moduleId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ModuleInstallation"];
+        };
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  disableModuleInstallation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        organizationId: components["parameters"]["organizationId"];
+        moduleId: components["parameters"]["moduleId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ModuleInstallation"];
+        };
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  listOrganizationModules: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        organizationId: components["parameters"]["organizationId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ModuleInstallation"][];
+        };
+      };
+    };
+  };
+  listModuleInstallationsInTree: {
+    parameters: {
+      query?: {
+        includeDescendants?: boolean;
+        moduleId?: string;
+        status?: components["schemas"]["InstallationStatus"];
+      };
+      header?: never;
+      path: {
+        organizationId: components["parameters"]["organizationId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ModuleInstallationInTree"][];
+        };
+      };
+    };
+  };
+  getOrganizationCapabilities: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        organizationId: components["parameters"]["organizationId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            organizationId: string;
+            modules: {
+              moduleId: string;
+              status: components["schemas"]["InstallationStatus"];
+            }[];
+            capabilities: {
+              moduleId: string;
+              capability: string;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  serviceGetUserContext: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        accountId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserContext"];
+        };
+      };
+      429: components["responses"]["RateLimited"];
+    };
+  };
+  serviceListOrganizations: {
+    parameters: {
+      query?: {
+        type?: components["schemas"]["OrganizationType"];
+        status?: components["schemas"]["OrganizationStatus"];
+        parentId?: string;
+        /** @description Devuelve solo lo modificado desde este instante (sincronización incremental). */
+        updatedSince?: components["parameters"]["updatedSince"];
+        /** @description Cursor de paginación opaco devuelto por la página anterior. */
+        cursor?: components["parameters"]["cursor"];
+        /** @description Tamaño de página. Por defecto 25, máximo 100 (§18). */
+        limit?: components["parameters"]["limit"];
+      };
+      header?: {
+        /** @description ETag de una respuesta anterior; si no hubo cambios responde 304. */
+        "If-None-Match"?: components["parameters"]["ifNoneMatch"];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          ETag?: string;
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OrganizationViewPage"];
+        };
+      };
+      /** @description Sin cambios desde el ETag enviado. */
+      304: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      429: components["responses"]["RateLimited"];
+    };
+  };
+  serviceListMembers: {
+    parameters: {
+      query?: {
+        status?: components["schemas"]["MembershipStatus"];
+        /** @description Devuelve solo lo modificado desde este instante (sincronización incremental). */
+        updatedSince?: components["parameters"]["updatedSince"];
+        /** @description Cursor de paginación opaco devuelto por la página anterior. */
+        cursor?: components["parameters"]["cursor"];
+        /** @description Tamaño de página. Por defecto 25, máximo 100 (§18). */
+        limit?: components["parameters"]["limit"];
+      };
+      header?: {
+        /** @description ETag de una respuesta anterior; si no hubo cambios responde 304. */
+        "If-None-Match"?: components["parameters"]["ifNoneMatch"];
+      };
+      path: {
+        organizationId: components["parameters"]["organizationId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          ETag?: string;
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MemberViewPage"];
+        };
+      };
+      /** @description Sin cambios desde el ETag enviado. */
+      304: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      403: components["responses"]["Forbidden"];
+      404: components["responses"]["NotFound"];
+      429: components["responses"]["RateLimited"];
+    };
+  };
+  serviceListAuthorities: {
+    parameters: {
+      query?: {
+        /** @description Incluye las autoridades de las organizaciones hijas (por ejemplo, todos los clubes de un distrito). */
+        includeDescendants?: boolean;
+      };
+      header?: {
+        /** @description ETag de una respuesta anterior; si no hubo cambios responde 304. */
+        "If-None-Match"?: components["parameters"]["ifNoneMatch"];
+      };
+      path: {
+        organizationId: components["parameters"]["organizationId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          ETag?: string;
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AuthorityView"][];
+        };
+      };
+      /** @description Sin cambios desde el ETag enviado. */
+      304: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      403: components["responses"]["Forbidden"];
+      404: components["responses"]["NotFound"];
+      429: components["responses"]["RateLimited"];
+    };
+  };
+  serviceListPeriods: {
+    parameters: {
+      query?: {
+        status?: components["schemas"]["PeriodStatus"];
+      };
+      header?: {
+        /** @description ETag de una respuesta anterior; si no hubo cambios responde 304. */
+        "If-None-Match"?: components["parameters"]["ifNoneMatch"];
+      };
+      path: {
+        organizationId: components["parameters"]["organizationId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          ETag?: string;
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PeriodView"][];
+        };
+      };
+      /** @description Sin cambios desde el ETag enviado. */
+      304: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      403: components["responses"]["Forbidden"];
+      404: components["responses"]["NotFound"];
+      429: components["responses"]["RateLimited"];
+    };
+  };
+  serviceBatchPersons: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          ids: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PersonView"][];
+        };
+      };
+      400: components["responses"]["Error"];
+      403: components["responses"]["Forbidden"];
+      429: components["responses"]["RateLimited"];
+    };
+  };
+  servicePersonMemberships: {
+    parameters: {
+      query?: never;
+      header?: {
+        /** @description ETag de una respuesta anterior; si no hubo cambios responde 304. */
+        "If-None-Match"?: components["parameters"]["ifNoneMatch"];
+      };
+      path: {
+        personId: components["parameters"]["personId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          ETag?: string;
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PersonMembershipView"][];
+        };
+      };
+      /** @description Sin cambios desde el ETag enviado. */
+      304: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      403: components["responses"]["Forbidden"];
+      404: components["responses"]["NotFound"];
+      429: components["responses"]["RateLimited"];
+    };
+  };
+  serviceGetPerson: {
+    parameters: {
+      query?: never;
+      header?: {
+        /** @description ETag de una respuesta anterior; si no hubo cambios responde 304. */
+        "If-None-Match"?: components["parameters"]["ifNoneMatch"];
+      };
+      path: {
+        personId: components["parameters"]["personId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          ETag?: string;
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PersonView"];
+        };
+      };
+      /** @description Sin cambios desde el ETag enviado. */
+      304: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components["responses"]["NotFound"];
+      429: components["responses"]["RateLimited"];
+    };
+  };
+  serviceGetOrganization: {
+    parameters: {
+      query?: never;
+      header?: {
+        /** @description ETag de una respuesta anterior; si no hubo cambios responde 304. */
+        "If-None-Match"?: components["parameters"]["ifNoneMatch"];
+      };
+      path: {
+        organizationId: components["parameters"]["organizationId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          ETag?: string;
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OrganizationView"];
+        };
+      };
+      /** @description Sin cambios desde el ETag enviado. */
+      304: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components["responses"]["NotFound"];
+      429: components["responses"]["RateLimited"];
+    };
+  };
+  serviceGetMembershipSnapshot: {
+    parameters: {
+      query?: {
+        status?: components["schemas"]["MembershipStatus"][];
+        at?: string;
+      };
+      header?: never;
+      path: {
+        organizationId: components["parameters"]["organizationId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MembershipSnapshot"];
+        };
+      };
+      429: components["responses"]["RateLimited"];
+    };
+  };
+  serviceGetAuthoritySnapshot: {
+    parameters: {
+      query?: {
+        periodId?: string;
+        at?: string;
+      };
+      header?: never;
+      path: {
+        organizationId: components["parameters"]["organizationId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AuthoritySnapshot"];
+        };
+      };
+      429: components["responses"]["RateLimited"];
+    };
+  };
+  serviceGetPeriodSnapshot: {
+    parameters: {
+      query?: {
+        at?: string;
+      };
+      header?: never;
+      path: {
+        organizationId: components["parameters"]["organizationId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PeriodSnapshot"];
+        };
+      };
+      429: components["responses"]["RateLimited"];
+    };
+  };
+  serviceCheckAuthorization: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AuthorizationCheckRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AuthorizationDecision"];
+        };
+      };
+      429: components["responses"]["RateLimited"];
+    };
+  };
+  serviceBatchCheckAuthorization: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          checks: components["schemas"]["AuthorizationCheckRequest"][];
+        };
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AuthorizationDecision"][];
+        };
+      };
+      429: components["responses"]["RateLimited"];
+    };
+  };
+  serviceGetModuleInstallation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        moduleId: components["parameters"]["moduleId"];
+        organizationId: components["parameters"]["organizationId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ModuleInstallation"];
+        };
+      };
+      404: components["responses"]["NotFound"];
+      429: components["responses"]["RateLimited"];
+    };
+  };
+  getOpenIdConfiguration: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OpenIdConfiguration"];
+        };
+      };
+    };
+  };
+  getJwks: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Jwks"];
+        };
+      };
+    };
+  };
+  listDeveloperApps: {
+    parameters: {
+      query: {
+        organizationId: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DeveloperApp"][];
+        };
+      };
+      403: components["responses"]["Forbidden"];
+    };
+  };
+  createDeveloperApp: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateDeveloperAppRequest"];
+      };
+    };
+    responses: {
+      /** @description Creada. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CreatedDeveloperApp"];
+        };
+      };
+      400: components["responses"]["Error"];
+      403: components["responses"]["Forbidden"];
+    };
+  };
+  getDeveloperApp: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        appId: components["parameters"]["appId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DeveloperApp"];
+        };
+      };
+      404: components["responses"]["NotFound"];
+    };
+  };
+  updateDeveloperApp: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        appId: components["parameters"]["appId"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateDeveloperAppRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DeveloperApp"];
+        };
+      };
+      400: components["responses"]["Error"];
+      404: components["responses"]["NotFound"];
+    };
+  };
+  rotateDeveloperAppSecret: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        appId: components["parameters"]["appId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Creado. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DeveloperAppSecretCreated"];
+        };
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  revokeDeveloperAppSecret: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        appId: components["parameters"]["appId"];
+        secretId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Revocado. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components["responses"]["NotFound"];
+    };
+  };
+  suspendDeveloperApp: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        appId: components["parameters"]["appId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DeveloperApp"];
+        };
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  activateDeveloperApp: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        appId: components["parameters"]["appId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DeveloperApp"];
+        };
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  revokeDeveloperApp: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        appId: components["parameters"]["appId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DeveloperApp"];
+        };
+      };
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  streamWebhookEvents: {
+    parameters: {
+      query?: {
+        /** @description Tipos separados por coma. Por defecto, todos los que la app puede recibir. */
+        events?: string;
+      };
+      header?: never;
+      path: {
+        appId: components["parameters"]["appId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Stream abierto. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "text/event-stream": string;
+        };
+      };
+      400: components["responses"]["Error"];
+      401: components["responses"]["Error"];
+      403: components["responses"]["Forbidden"];
+      404: components["responses"]["NotFound"];
+    };
+  };
+  streamWebhookEventsAlias: {
+    parameters: {
+      query?: {
+        events?: string;
+      };
+      header?: never;
+      path: {
+        appId: components["parameters"]["appId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Stream abierto. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "text/event-stream": string;
+        };
+      };
+      401: components["responses"]["Error"];
+      404: components["responses"]["NotFound"];
+    };
+  };
+  listWebhookEndpoints: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        appId: components["parameters"]["appId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WebhookEndpoint"][];
+        };
+      };
+      403: components["responses"]["Forbidden"];
+      404: components["responses"]["NotFound"];
+    };
+  };
+  createWebhookEndpoint: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        appId: components["parameters"]["appId"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateWebhookEndpointRequest"];
+      };
+    };
+    responses: {
+      /** @description Creado. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WebhookEndpointWithSecret"];
+        };
+      };
+      400: components["responses"]["Error"];
+      403: components["responses"]["Forbidden"];
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  getWebhookEndpoint: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        appId: components["parameters"]["appId"];
+        endpointId: components["parameters"]["endpointId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WebhookEndpoint"];
+        };
+      };
+      404: components["responses"]["NotFound"];
+    };
+  };
+  deleteWebhookEndpoint: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        appId: components["parameters"]["appId"];
+        endpointId: components["parameters"]["endpointId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Borrado. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components["responses"]["NotFound"];
+    };
+  };
+  updateWebhookEndpoint: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        appId: components["parameters"]["appId"];
+        endpointId: components["parameters"]["endpointId"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateWebhookEndpointRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WebhookEndpoint"];
+        };
+      };
+      400: components["responses"]["Error"];
+      404: components["responses"]["NotFound"];
+    };
+  };
+  rotateWebhookSecret: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        appId: components["parameters"]["appId"];
+        endpointId: components["parameters"]["endpointId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Creado. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WebhookEndpointWithSecret"];
+        };
+      };
+      404: components["responses"]["NotFound"];
+    };
+  };
+  sendWebhookTest: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        appId: components["parameters"]["appId"];
+        endpointId: components["parameters"]["endpointId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description En cola. */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WebhookDelivery"];
+        };
+      };
+      404: components["responses"]["NotFound"];
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  listWebhookDeliveries: {
+    parameters: {
+      query?: {
+        status?: components["schemas"]["WebhookDeliveryStatus"];
+        /** @description Cursor de paginación opaco devuelto por la página anterior. */
+        cursor?: components["parameters"]["cursor"];
+        /** @description Tamaño de página. Por defecto 25, máximo 100 (§18). */
+        limit?: components["parameters"]["limit"];
+      };
+      header?: never;
+      path: {
+        appId: components["parameters"]["appId"];
+        endpointId: components["parameters"]["endpointId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WebhookDeliveryPage"];
+        };
+      };
+      404: components["responses"]["NotFound"];
+    };
+  };
+  redeliverWebhook: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        appId: components["parameters"]["appId"];
+        endpointId: components["parameters"]["endpointId"];
+        deliveryId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description En cola. */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WebhookDelivery"];
+        };
+      };
+      404: components["responses"]["NotFound"];
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  listRequestLogs: {
+    parameters: {
+      query?: {
+        /** @description Clase (`2xx`, `3xx`, `4xx`, `5xx`), `error` (cualquier 4xx o 5xx) o un código exacto (`404`). */
+        status?: string;
+        /** @description Código de error exacto (`KERNEL_HTTP_403`, `invalid_client`, ...). */
+        code?: string;
+        traceId?: string;
+        /** @description Desde este instante (inclusive). */
+        from?: string;
+        /** @description Hasta este instante (exclusive). */
+        to?: string;
+        /** @description Cursor de paginación opaco devuelto por la página anterior. */
+        cursor?: components["parameters"]["cursor"];
+        /** @description Tamaño de página. Por defecto 25, máximo 100 (§18). */
+        limit?: components["parameters"]["limit"];
+      };
+      header?: never;
+      path: {
+        appId: components["parameters"]["appId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RequestLogPage"];
+        };
+      };
+      400: components["responses"]["Error"];
+      403: components["responses"]["Forbidden"];
+      404: components["responses"]["NotFound"];
+    };
+  };
+  listDeveloperAppReviews: {
+    parameters: {
+      query: {
+        organizationId: string;
+        status?: components["schemas"]["DeveloperAppReviewStatus"];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DeveloperAppReviewItem"][];
+        };
+      };
+      400: components["responses"]["Error"];
+      403: components["responses"]["Forbidden"];
+    };
+  };
+  listDeveloperAppReviewHistory: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        appId: components["parameters"]["appId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DeveloperAppReviewEntry"][];
+        };
+      };
+      404: components["responses"]["NotFound"];
+    };
+  };
+  reviewDeveloperApp: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        appId: components["parameters"]["appId"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ReviewDeveloperAppRequest"];
+      };
+    };
+    responses: {
+      /** @description Decisión registrada. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DeveloperAppReviewEntry"];
+        };
+      };
+      400: components["responses"]["Error"];
+      403: components["responses"]["Forbidden"];
+      404: components["responses"]["NotFound"];
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  requestDeveloperAppReview: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        appId: components["parameters"]["appId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description La app vuelve a la cola de revisión. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            appId: string;
+            reviewStatus: components["schemas"]["DeveloperAppReviewStatus"];
+          };
+        };
+      };
+      404: components["responses"]["NotFound"];
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  getDeveloperAppQuota: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        appId: components["parameters"]["appId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DeveloperAppQuota"];
+        };
+      };
+      404: components["responses"]["NotFound"];
+    };
+  };
+  updateDeveloperAppQuota: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        appId: components["parameters"]["appId"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateDeveloperAppQuotaRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DeveloperAppQuota"];
+        };
+      };
+      400: components["responses"]["Error"];
+      403: components["responses"]["Forbidden"];
+      404: components["responses"]["NotFound"];
+    };
+  };
+  listAppCatalog: {
+    parameters: {
+      query: {
+        organizationId: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AppCatalogItem"][];
+        };
+      };
+      400: components["responses"]["Error"];
+      403: components["responses"]["Forbidden"];
+    };
+  };
+  updateDeveloperAppListing: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        appId: components["parameters"]["appId"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateAppListingRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AppListing"];
+        };
+      };
+      400: components["responses"]["Error"];
+      403: components["responses"]["Forbidden"];
+      404: components["responses"]["NotFound"];
+      409: components["responses"]["InvalidTransition"];
+    };
+  };
+  listMyApps: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MyApp"][];
+        };
+      };
+    };
+  };
+  listMyAppAccess: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MyAppAccess"][];
+        };
+      };
+    };
+  };
+  listMyAppAccessEvents: {
+    parameters: {
+      query?: {
+        /** @description Cursor de paginación opaco devuelto por la página anterior. */
+        cursor?: components["parameters"]["cursor"];
+        /** @description Tamaño de página. Por defecto 25, máximo 100 (§18). */
+        limit?: components["parameters"]["limit"];
+      };
+      header?: never;
+      path: {
+        appId: components["parameters"]["appId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MyAppAccessEventPage"];
+        };
+      };
+      400: components["responses"]["Error"];
+    };
+  };
+  getEventCatalog: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EventCatalog"];
+        };
+      };
+    };
+  };
+  getPublicDeveloperApp: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        clientId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PublicDeveloperApp"];
+        };
+      };
+      404: components["responses"]["NotFound"];
+    };
+  };
+  getAuthorizationContext: {
+    parameters: {
+      query: {
+        client_id: string;
+        redirect_uri: string;
+        scope: string;
+        response_type: "code";
+        code_challenge: string;
+        code_challenge_method: "S256";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AuthorizationContext"];
+        };
+      };
+      400: components["responses"]["Error"];
+    };
+  };
+  authorizeOAuthRequest: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AuthorizeRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AuthorizeResponse"];
+        };
+      };
+      400: components["responses"]["Error"];
+    };
+  };
+  issueOAuthToken: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/x-www-form-urlencoded": components["schemas"]["TokenRequest"];
+        "application/json": components["schemas"]["TokenRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TokenResponse"];
+        };
+      };
+      /** @description Pedido inválido. */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OAuthError"];
+        };
+      };
+      /** @description Cliente no autenticado. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OAuthError"];
+        };
+      };
+      429: components["responses"]["RateLimited"];
+    };
+  };
+  revokeOAuthToken: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/x-www-form-urlencoded": components["schemas"]["RevokeTokenRequest"];
+        "application/json": components["schemas"]["RevokeTokenRequest"];
+      };
+    };
+    responses: {
+      /** @description Revocado o inexistente. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Cliente no autenticado. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OAuthError"];
+        };
+      };
+      429: components["responses"]["RateLimited"];
+    };
+  };
+  getOAuthUserInfo: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserInfo"];
+        };
+      };
+      /** @description Token ausente, vencido o revocado. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OAuthError"];
+        };
+      };
+      429: components["responses"]["RateLimited"];
+    };
+  };
+  listOAuthConsents: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OAuthConsent"][];
+        };
+      };
+    };
+  };
+  revokeOAuthConsent: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        appId: components["parameters"]["appId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Revocado. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components["responses"]["NotFound"];
+    };
+  };
 }

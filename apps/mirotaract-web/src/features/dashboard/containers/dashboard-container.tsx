@@ -2,6 +2,7 @@
 
 import { useActiveOrganizationContext } from "@/features/shell/active-organization-context";
 import { DataState } from "@/components/layout";
+import { MyAppsCard } from "@/features/governance/components/my-apps-grid";
 
 import { ClubDashboard } from "./club-dashboard";
 import { DistrictDashboard } from "./district-dashboard";
@@ -22,12 +23,23 @@ export function DashboardContainer() {
     return <DataState kind="empty" title="Elegí una organización" />;
   }
 
+  // E11.4: the district's apps for this person, on every dashboard.
   if (organization.type === "DISTRICT") {
-    return <DistrictDashboard organization={organization} />;
+    return (
+      <>
+        <DistrictDashboard organization={organization} />
+        <MyAppsCard />
+      </>
+    );
   }
 
   if (organization.type === "CLUB") {
-    return <ClubDashboard organization={organization} />;
+    return (
+      <>
+        <ClubDashboard organization={organization} />
+        <MyAppsCard />
+      </>
+    );
   }
 
   // OTHER: not one of the two dashboard scopes the product spec defines

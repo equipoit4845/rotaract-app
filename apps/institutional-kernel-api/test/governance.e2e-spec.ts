@@ -30,6 +30,8 @@ import {
  *    app hides it.
  */
 describe("Data governance E2E (E11)", () => {
+  // Quota tests may wait for a fresh UTC minute; the VPS is also slow.
+  jest.setTimeout(120_000);
   let app: INestApplication;
   let prisma: PrismaClient;
   let http: any;
