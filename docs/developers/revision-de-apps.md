@@ -43,7 +43,7 @@ curl -X PATCH "$API/developer/apps/$APP_ID" \
 | Aparecer en el panel de los socios | No. |
 
 Para probar con datos completos sin tocar los reales usá el kernel local
-(`mirotaract dev`, ver [cli.md](cli.md)).
+(`mirotaract dev`, ver [cli.md](cli.md)): la app de ejemplo del kernel local y las que crea el servidor MCP en el sandbox vienen aprobadas.
 
 En la consola, tu app muestra **En revisión** y la lista de qué está
 limitado. Por la API, `GET /developer/apps/{appId}` trae `reviewStatus`
