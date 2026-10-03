@@ -24,7 +24,7 @@ export function templateVars({ name, kernelRepo }) {
     PROJECT_NAME: projectSlug,
     PROJECT_TITLE: name,
     DART_PACKAGE: projectSlug.replace(/-/g, "_").replace(/^([0-9])/, "app_$1"),
-    // Not on npm/PyPI yet: install from the kernel checkout when we know it.
+    // Published on npm/PyPI; --kernel-repo points at a local checkout instead.
     SDK_JS_DEPENDENCY: kernelRepo
       ? `file:${join(kernelRepo, "packages/sdk-js")}`
       : "^0.1.0",

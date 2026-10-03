@@ -667,15 +667,16 @@ importers:
 
   packages/cli:
     dependencies:
-      '@mirotaract/ai-skills':
-        specifier: workspace:*
-        version: link:../ai-skills
       openapi-typescript:
         specifier: ^7.13.0
         version: 7.13.0(typescript@5.9.3)
       yaml:
         specifier: ^2.9.0
         version: 2.9.0
+    devDependencies:
+      '@mirotaract/ai-skills':
+        specifier: workspace:*
+        version: link:../ai-skills
 
   packages/design-tokens:
     devDependencies:

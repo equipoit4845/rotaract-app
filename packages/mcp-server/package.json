@@ -1,9 +1,8 @@
 {
   "name": "@mirotaract/mcp",
   "version": "0.1.0",
-  "private": true,
   "description": "Servidor MCP oficial de Mi Rotaract (stdio): documentación, contrato OpenAPI, permisos, eventos, manifiestos de módulo y tipos; app y tokens de prueba solo contra un kernel local.",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "type": "module",
   "bin": {
     "mirotaract-mcp": "./bin/mirotaract-mcp.js"
@@ -22,7 +21,8 @@
     "bin",
     "src",
     "dist/bundle.json",
-    "examples"
+    "examples",
+    "LICENSE"
   ],
   "publishConfig": {
     "access": "public"
@@ -38,5 +38,21 @@
     "@modelcontextprotocol/sdk": "^1.32.0",
     "yaml": "^2.9.0",
     "zod": "^3.25.76"
-  }
+  },
+  "author": "Distrito 4845 de Rotaract",
+  "homepage": "https://developers.rotaract4845.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/equipoit4845/rotaract-app.git",
+    "directory": "packages/mcp-server"
+  },
+  "bugs": {
+    "url": "https://github.com/equipoit4845/rotaract-app/issues"
+  },
+  "keywords": [
+    "mirotaract",
+    "rotaract",
+    "mcp",
+    "ai"
+  ]
 }

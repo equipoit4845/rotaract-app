@@ -1,9 +1,8 @@
 {
   "name": "@mirotaract/sdk",
   "version": "0.1.0",
-  "private": true,
   "description": "SDK oficial de Mi Rotaract: API de datos institucionales e \"Ingresar con Mi Rotaract\" (OAuth 2.0 + OpenID Connect).",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "type": "module",
   "sideEffects": false,
   "engines": {
@@ -47,7 +46,8 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "publishConfig": {
     "access": "public"
@@ -64,5 +64,23 @@
   "devDependencies": {
     "@types/node": "^24.0.10",
     "typescript": "^5.8.3"
-  }
+  },
+  "author": "Distrito 4845 de Rotaract",
+  "homepage": "https://developers.rotaract4845.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/equipoit4845/rotaract-app.git",
+    "directory": "packages/sdk-js"
+  },
+  "bugs": {
+    "url": "https://github.com/equipoit4845/rotaract-app/issues"
+  },
+  "keywords": [
+    "mirotaract",
+    "rotaract",
+    "oidc",
+    "oauth",
+    "sdk",
+    "webhooks"
+  ]
 }

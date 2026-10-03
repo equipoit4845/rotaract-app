@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "SDK oficial de Mi Rotaract: API de datos institucionales e \"Ingresar con Mi Rotaract\" (OAuth 2.0 + OpenID Connect)."
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "Proprietary" }
+license = { text = "MIT" }
 authors = [{ name = "Mi Rotaract" }]
 dependencies = [
   "httpx>=0.27,<1",

@@ -1,9 +1,8 @@
 {
   "name": "@mirotaract/cli",
   "version": "0.1.0",
-  "private": true,
   "description": "CLI de Mi Rotaract: plantillas de apps, kernel local con distrito sintético, tipos generados y reenvío de webhooks.",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "type": "module",
   "bin": {
     "mirotaract": "./bin/mirotaract.js"
@@ -16,7 +15,8 @@
     "src",
     "compose",
     "templates",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "publishConfig": {
     "access": "public"
@@ -26,8 +26,33 @@
     "test": "node --test --test-force-exit test/*.test.mjs"
   },
   "dependencies": {
-    "@mirotaract/ai-skills": "workspace:*",
     "openapi-typescript": "^7.13.0",
     "yaml": "^2.9.0"
+  },
+  "author": "Distrito 4845 de Rotaract",
+  "homepage": "https://developers.rotaract4845.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/equipoit4845/rotaract-app.git",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/equipoit4845/rotaract-app/issues"
+  },
+  "keywords": [
+    "mirotaract",
+    "rotaract",
+    "cli"
+  ],
+  "devDependencies": {
+    "@mirotaract/ai-skills": "workspace:*"
+  },
+  "peerDependencies": {
+    "@mirotaract/ai-skills": ">=0.1.0"
+  },
+  "peerDependenciesMeta": {
+    "@mirotaract/ai-skills": {
+      "optional": true
+    }
   }
 }

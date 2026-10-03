@@ -1,9 +1,8 @@
 {
   "name": "@mirotaract/ai-skills",
   "version": "0.1.0",
-  "private": true,
   "description": "Skills de IA de Mi Rotaract: Claude Code, Cursor, GitHub Copilot y AGENTS.md desde una sola fuente, con el checklist de seguridad.",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "type": "module",
   "bin": {
     "mirotaract-ai-skills": "./bin/ai-skills.js"
@@ -19,7 +18,8 @@
     "bin",
     "src",
     "skills-src",
-    "prompts"
+    "prompts",
+    "LICENSE"
   ],
   "publishConfig": {
     "access": "public"
@@ -33,5 +33,21 @@
   },
   "dependencies": {
     "yaml": "^2.9.0"
-  }
+  },
+  "author": "Distrito 4845 de Rotaract",
+  "homepage": "https://developers.rotaract4845.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/equipoit4845/rotaract-app.git",
+    "directory": "packages/ai-skills"
+  },
+  "bugs": {
+    "url": "https://github.com/equipoit4845/rotaract-app/issues"
+  },
+  "keywords": [
+    "mirotaract",
+    "rotaract",
+    "ai",
+    "skills"
+  ]
 }
