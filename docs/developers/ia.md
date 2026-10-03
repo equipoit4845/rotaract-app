@@ -1,5 +1,10 @@
 # Programar con asistentes de IA
 
+> **¿Querés que el asistente construya la app entera?** Empezá por
+> [Crear una app con IA](crear-con-ia.md) (o
+> [developers.rotaract4845.com/ia](https://developers.rotaract4845.com/ia)):
+> un prompt que instala todo lo de esta página y arma la app paso a paso.
+
 Si usás Claude Code, Cursor, GitHub Copilot u otro asistente, dale el
 contexto de Mi Rotaract para que integre bien a la primera: login con PKCE y
 verificación por JWKS, token de servicio con scopes mínimos, webhooks
@@ -13,13 +18,21 @@ firmados. Hay tres piezas, y se combinan:
 
 > **Instalación.** El servidor MCP está en npm (`npx -y @mirotaract/mcp`). Las
 > skills (`@mirotaract/ai-skills`) todavía no: se publican cuando superen las
-> evaluaciones de calidad. Mientras tanto, usalas desde una copia del
-> repositorio: `node ~/rotaract-app/packages/ai-skills/bin/ai-skills.js`
-> (antes, una vez: `cd ~/rotaract-app && npx pnpm@10.13.1 install`).
+> evaluaciones de calidad. Mientras tanto, la CLI las instala desde el portal
+> sin el paquete: `npx @mirotaract/cli@latest ai install --target claude`
+> (baja [`/ia/skills.json`](https://developers.rotaract4845.com/ia/skills.json)
+> y verifica su SHA-256). Son una **versión preliminar**: todavía no pasaron
+> las evaluaciones automáticas.
 
 ## 1. Instalar las skills
 
-En la carpeta de tu app:
+En la carpeta de tu app, con la CLI (no necesita el paquete de skills):
+
+```bash
+npx @mirotaract/cli@latest ai install --target claude   # o cursor, copilot, agents, all
+```
+
+O con el paquete, cuando esté publicado (o desde una copia del repo):
 
 ```bash
 npx @mirotaract/ai-skills install --target claude     # Claude Code

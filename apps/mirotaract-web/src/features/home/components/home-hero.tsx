@@ -1,5 +1,5 @@
 import { buttonVariants } from "@/components/ui";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 export function HomeHero() {
@@ -43,6 +43,18 @@ export function HomeHero() {
             Conocé más
           </a>
         </div>
+        <a
+          href="https://developers.rotaract4845.com/ia"
+          className="group mt-8 inline-flex items-center gap-2 rounded-full border border-border bg-background/70 px-4 py-2 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+        >
+          <Sparkles className="size-4 text-primary" aria-hidden />
+          ¿Tenés una idea para tu club?{" "}
+          <span className="font-medium text-primary">Creá una app con IA</span>
+          <ArrowRight
+            className="size-3.5 text-primary transition-transform group-hover:translate-x-0.5"
+            aria-hidden
+          />
+        </a>
       </div>
     </section>
   );

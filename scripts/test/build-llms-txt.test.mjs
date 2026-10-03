@@ -168,3 +168,19 @@ describe("developer sources", () => {
     );
   });
 });
+
+describe("build-llms-txt: Creá tu solución con IA", () => {
+  test("llms.txt links the master prompt and the skills bundle; llms-full includes the prompt", async () => {
+    const { llms, full } = await buildLlms();
+    assert.match(
+      llms,
+      /\]\(https:\/\/developers\.rotaract4845\.com\/ia\/prompt\.md\): /,
+    );
+    assert.match(llms, /\/ia\/skills\.json\): /);
+    assert.ok(full.includes("# Creá mi solución para Rotaract"));
+    assert.ok(
+      full.includes("<!-- source: packages/ai-skills/prompts/_master.md"),
+    );
+    assert.doesNotMatch(full, /<!-- (if:|else|\/if)/);
+  });
+});

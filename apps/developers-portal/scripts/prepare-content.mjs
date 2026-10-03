@@ -7,13 +7,17 @@
  * - search index (docs + API)       → public/search-index.json
  * - E8 shadcn registry (optional)   → public/r/*.json + src/generated/registry.json
  * - E10 llms.txt (optional)         → public/llms.txt, public/llms-full.txt
+ * - "Creá tu solución con IA"       → public/ia/* (prompt.md, skills.json + .sha256,
+ *   (packages/ai-skills)               the skills by hand) + src/generated/ia.json
+ *                                      and src/generated/master-prompt.js (renderer)
  *
  * The E8/E10 outputs are consumed only through their contract interfaces
  * (packages/registry/dist/r, scripts/build-llms-txt.mjs → dist/llms). When
  * they are not there yet the build continues with a notice.
  *
  * Env (tests): PORTAL_REPO_ROOT, PORTAL_REGISTRY_DIR, PORTAL_LLMS_DIR,
- * PORTAL_PUBLIC_DIR, PORTAL_GENERATED_DIR.
+ * PORTAL_PUBLIC_DIR, PORTAL_GENERATED_DIR. MIROTARACT_SKILLS_EVALUATED=1
+ * marks the skills bundle as evaluated (only after the evals gate passed).
  */
 import { spawnSync } from "node:child_process";
 import {
@@ -26,7 +30,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { parse } from "yaml";
 
 const portal = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -45,6 +49,7 @@ export const GROUPS = [
     title: "Empezar",
     slugs: [
       "introduccion",
+      "crear-con-ia",
       "conceptos",
       "quickstart-nextjs",
       "quickstart-express",
@@ -268,7 +273,11 @@ export function prepareRegistry() {
   const index = join(source, "registry.json");
   // dist/r is not committed: build it from packages/registry when missing.
   const builder = join(root, "packages/registry/scripts/build.mjs");
-  if (!existsSync(index) && !process.env.PORTAL_REGISTRY_DIR && existsSync(builder))
+  if (
+    !existsSync(index) &&
+    !process.env.PORTAL_REGISTRY_DIR &&
+    existsSync(builder)
+  )
     spawnSync(process.execPath, [builder], { cwd: root, stdio: "inherit" });
   if (!existsSync(index)) {
     console.warn(
@@ -337,13 +346,75 @@ export function prepareLlms() {
   return copied === 2;
 }
 
-function main() {
+/**
+ * /ia: the master prompt (one source: packages/ai-skills/prompts/_master.md),
+ * the ideas, and the versioned skills bundle with its sha256, plus every
+ * skill file for manual download. The renderer is copied into the client
+ * bundle so the page assembles the prompt in the browser.
+ */
+export async function prepareIa() {
+  const pkg = join(root, "packages/ai-skills");
+  const skills = await import(pathToFileURL(join(pkg, "src/index.js")).href);
+  const target = join(publicDir, "ia");
+  rmSync(target, { recursive: true, force: true });
+
+  const evaluated = process.env.MIROTARACT_SKILLS_EVALUATED === "1";
+  const { bundle, json, sha256 } = skills.buildSkillsBundle({ evaluated });
+  write(join(target, "skills.json"), json);
+  write(join(target, "skills.json.sha256"), `${sha256}  skills.json\n`);
+  const files = [];
+  for (const [name, entries] of Object.entries(bundle.targets))
+    for (const entry of entries) {
+      const url = `/ia/${skills.bundlePublicPath(name, entry.path)}`;
+      write(join(publicDir, url), entry.content);
+      files.push({ target: name, path: entry.path, url });
+    }
+
+  const master = skills.loadMasterTemplate();
+  const planning = skills.loadPlanningTemplate();
+  write(join(target, "prompt.md"), skills.renderMasterPrompt(master, {}));
+  for (const id of skills.ASSISTANT_IDS)
+    write(
+      join(target, `prompt-${id}.md`),
+      skills.renderMasterPrompt(master, { assistant: id }),
+    );
+
+  copyFileSync(
+    join(pkg, "src/master-prompt.js"),
+    join(generated, "master-prompt.js"),
+  );
+  copyFileSync(
+    join(pkg, "src/master-prompt.d.ts"),
+    join(generated, "master-prompt.d.ts"),
+  );
+  write(
+    join(generated, "ia.json"),
+    JSON.stringify({
+      master,
+      planning,
+      ideas: skills.loadIdeas(),
+      bundle: {
+        version: bundle.version,
+        fingerprint: bundle.fingerprint,
+        status: bundle.status,
+        note: bundle.note,
+        sha256,
+        skills: bundle.skills.map(({ name, title }) => ({ name, title })),
+        files,
+      },
+    }),
+  );
+  return { files: files.length, status: bundle.status, sha256 };
+}
+
+async function main() {
   mkdirSync(generated, { recursive: true });
   const docs = prepareDocs();
   const openapi = prepareOpenApi();
   const indexed = searchIndex(docs, openapi);
   const registryItems = prepareRegistry();
   const llms = prepareLlms();
+  const ia = await prepareIa();
   write(
     join(generated, "meta.json"),
     JSON.stringify({
@@ -351,10 +422,11 @@ function main() {
       contractVersion: openapi.info?.version ?? null,
       registryItems,
       llms,
+      skills: { status: ia.status, sha256: ia.sha256 },
     }),
   );
   console.log(
-    `[portal] ${docs.length} páginas, ${indexed} entradas de búsqueda, registro: ${registryItems} componentes, llms.txt: ${llms ? "sí" : "no"}`,
+    `[portal] ${docs.length} páginas, ${indexed} entradas de búsqueda, registro: ${registryItems} componentes, llms.txt: ${llms ? "sí" : "no"}, /ia: ${ia.files} archivos de skills (${ia.status})`,
   );
 }
 
@@ -362,4 +434,4 @@ if (
   process.argv[1] &&
   resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 )
-  main();
+  await main();
