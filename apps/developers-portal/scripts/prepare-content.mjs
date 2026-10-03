@@ -69,6 +69,12 @@ export const GROUPS = [
     title: "Producción",
     slugs: ["seguridad", "deprecaciones", "changelog", "faq"],
   },
+  // --- E12 (docs/19-operations-e12.md)
+  {
+    title: "Operación",
+    slugs: ["estado", "sandbox"],
+  },
+  // --- end E12
 ];
 const OTHER_GROUP = "Más guías";
 
@@ -268,7 +274,11 @@ export function prepareRegistry() {
   const index = join(source, "registry.json");
   // dist/r is not committed: build it from packages/registry when missing.
   const builder = join(root, "packages/registry/scripts/build.mjs");
-  if (!existsSync(index) && !process.env.PORTAL_REGISTRY_DIR && existsSync(builder))
+  if (
+    !existsSync(index) &&
+    !process.env.PORTAL_REGISTRY_DIR &&
+    existsSync(builder)
+  )
     spawnSync(process.execPath, [builder], { cwd: root, stdio: "inherit" });
   if (!existsSync(index)) {
     console.warn(

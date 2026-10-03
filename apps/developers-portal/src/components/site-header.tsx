@@ -10,6 +10,7 @@ const LINKS = [
   { href: "/referencia", label: "API" },
   { href: "/eventos", label: "Eventos" },
   { href: "/changelog", label: "Changelog" },
+  { href: "/estado", label: "Estado" }, // E12
 ];
 
 export function SiteHeader() {
