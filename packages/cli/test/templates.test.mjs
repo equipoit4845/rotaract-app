@@ -75,10 +75,7 @@ describe("template rendering", () => {
     );
     const published = templateVars({ name: "App", kernelRepo: null });
     assert.equal(published.SDK_JS_DEPENDENCY, "^0.1.0");
-    assert.equal(
-      published.SDK_PY_REQUIREMENT,
-      "mirotaract[fastapi]>=0.1.0",
-    );
+    assert.equal(published.SDK_PY_REQUIREMENT, "mirotaract[fastapi]>=0.1.0");
     assert.equal(templateVars({ name: "9 Club" }).DART_PACKAGE, "app_9_club");
   });
 
