@@ -237,6 +237,42 @@ export class Sandbox {
       },
     });
     const app = created.app;
+    // E11: a new app starts in review. In the local sandbox (synthetic data
+    // only) the sandbox RDR approves it right away, so it works with every
+    // scope it asked for. Best effort: an older local kernel has no review.
+    let reviewStatus = app.reviewStatus ?? null;
+    if (reviewStatus === "IN_REVIEW") {
+      try {
+        await this.request(`/developer/apps/${app.id}`, {
+          method: "PATCH",
+          token,
+          headers: { "idempotency-key": randomUUID() },
+          json: {
+            purpose: "App de prueba en el sandbox local (datos sintéticos).",
+            privacyPolicyUrl: "https://developers.rotaract4845.com/docs/seguridad",
+            contactEmail: "sandbox@example.org",
+          },
+        });
+        await this.request(`/developer/apps/${app.id}/review`, {
+          method: "POST",
+          token,
+          headers: { "idempotency-key": randomUUID() },
+          json: {
+            decision: "approve",
+            checklist: {
+              purpose: true,
+              data: true,
+              owner: true,
+              privacyPolicy: true,
+              contact: true,
+            },
+          },
+        });
+        reviewStatus = "APPROVED";
+      } catch {
+        // Left in review: only the owner and test accounts can sign in.
+      }
+    }
     this.lastApp = {
       id: app.id,
       clientId: app.clientId,
@@ -254,6 +290,7 @@ export class Sandbox {
         grantTypes: app.grantTypes,
         scopes: app.scopes,
         redirectUris: app.redirectUris,
+        reviewStatus,
       },
       clientSecret: created.clientSecret ?? null,
       organization: {
