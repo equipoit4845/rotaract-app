@@ -1,0 +1,106 @@
+{
+  "$schema": "https://developers.rotaract4845.com/schemas/module-manifest.v1.json",
+  "id": "reuniones",
+  "name": "Reuniones distritales",
+  "description": "Asambleas y reuniones del distrito con quórum, votaciones por club, cartas poder y actas.",
+  "version": "1.0.0",
+  "contractVersion": 1,
+  "permissions": [
+    {
+      "code": "reuniones.meeting.manage",
+      "name": "Crear y conducir reuniones distritales",
+      "description": "Convocar, abrir y cerrar reuniones, manejar el orden del día y abrir votaciones. Pensado para el RDR y la secretaría distrital.",
+      "scopeType": "ORGANIZATION_TREE"
+    },
+    {
+      "code": "reuniones.club-standing.manage",
+      "name": "Habilitar clubes para votar en las reuniones",
+      "description": "Marcar qué clubes están constituidos y al día para contar en el quórum.",
+      "scopeType": "ORGANIZATION_TREE"
+    },
+    {
+      "code": "reuniones.vote.cast",
+      "name": "Votar en nombre del club",
+      "description": "Emitir el voto del club en las votaciones de una reunión. Pensado para la presidencia.",
+      "scopeType": "ORGANIZATION"
+    },
+    {
+      "code": "reuniones.proxy.manage",
+      "name": "Otorgar cartas poder del club",
+      "description": "Designar a otra persona para que vote por el club cuando la presidencia no puede asistir.",
+      "scopeType": "ORGANIZATION"
+    },
+    {
+      "code": "reuniones.meeting.attend",
+      "name": "Participar de las reuniones distritales",
+      "description": "Entrar a las reuniones en las que el club participa y seguir el orden del día.",
+      "scopeType": "ORGANIZATION"
+    },
+    {
+      "code": "reuniones.minutes.read",
+      "name": "Ver y descargar actas de reuniones",
+      "scopeType": "ORGANIZATION"
+    }
+  ],
+  "events": {
+    "subscribes": [
+      "appointment.activated.v1",
+      "appointment.ended.v1",
+      "membership.activated.v1",
+      "membership.ended.v1",
+      "organization.updated.v1"
+    ],
+    "emits": ["reuniones.meeting.closed.v1"]
+  },
+  "configurationSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["emailContacto"],
+    "properties": {
+      "emailContacto": {
+        "type": "string",
+        "format": "email",
+        "title": "Email de contacto del club",
+        "description": "Adónde mandamos las convocatorias y las actas."
+      },
+      "votosPorClub": {
+        "type": "integer",
+        "title": "Votos por club",
+        "description": "Cuántos votos tiene el club en cada votación.",
+        "minimum": 1,
+        "maximum": 2,
+        "default": 1
+      },
+      "avisarPorEmail": {
+        "type": "boolean",
+        "title": "Avisar por email cuando se convoca una reunión",
+        "default": true
+      },
+      "idioma": {
+        "type": "string",
+        "title": "Idioma de las actas",
+        "enum": ["es", "pt"],
+        "default": "es"
+      }
+    }
+  },
+  "ui": {
+    "entryUrl": "https://reuniones.rotaract4845.com",
+    "navLabel": "Reuniones",
+    "icon": "calendar-check"
+  },
+  "oauth": {
+    "scopes": [
+      "openid",
+      "profile",
+      "email",
+      "memberships",
+      "positions",
+      "kernel.service.organizations.read",
+      "kernel.service.memberships.read",
+      "kernel.service.authorities.read",
+      "kernel.service.persons.read",
+      "kernel.service.authorization.check"
+    ]
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "name": "@mirotaract/module-manifest",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Contrato del manifiesto de módulos de Mi Rotaract (mirotaract.module.json): JSON Schema v1, tipos, validateManifest y validateConfiguration con errores en español.",
+  "license": "UNLICENSED",
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20"
+  },
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    },
+    "./schema": "./schema/module-manifest.v1.json",
+    "./schema/module-manifest.v1.json": "./schema/module-manifest.v1.json",
+    "./examples/reuniones": "./examples/reuniones/mirotaract.module.json",
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "mirotaract-module": "./bin/mirotaract-module.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "schema",
+    "examples",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "lint": "prettier --check src bin test",
+    "check:example": "node bin/mirotaract-module.js check examples/reuniones/mirotaract.module.json",
+    "test": "node --test --test-force-exit test/*.test.mjs"
+  },
+  "dependencies": {
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1"
+  }
+}
