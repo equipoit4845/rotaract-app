@@ -16,6 +16,10 @@ export class ProblemFilter implements ExceptionFilter {
     const http = host.switchToHttp();
     const response = http.getResponse<Response>();
     const request = http.getRequest<Request>();
+    // The response already went out (e.g. an OAuth error answered by the
+    // handler itself, then a later failure): rewriting its status would only
+    // corrupt what the request log and the client see.
+    if ((response as { headersSent?: boolean }).headersSent) return;
     // OAuth endpoints answer in RFC 6749 §5.2 / RFC 6750 §3.1 shape, which
     // is what OAuth client libraries parse, never Problem Details.
     if (error instanceof OAuthError) {
