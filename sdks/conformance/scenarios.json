@@ -2,9 +2,24 @@
   "version": 1,
   "description": "Escenarios de conformidad de los SDKs oficiales de Mi Rotaract (docs/12-data-api-and-sdks.md §E5). Cada runner implementa todos los ids, en este orden, contra un kernel real descartable. Resultado por escenario: PASS, FAIL, PENDING (requiere una épica que el kernel todavía no expone: el endpoint responde 404) o SKIP (falta una variable de entorno). Un SDK no se publica si su runner tiene algún FAIL.",
   "env": {
-    "required": ["MR_BASE_URL", "MR_CLIENT_ID", "MR_CLIENT_SECRET", "MR_ORG_ID", "MR_OTHER_ORG_ID"],
-    "oidc": ["MR_PUBLIC_CLIENT_ID", "MR_REDIRECT_URI", "MR_USER_ACCESS_TOKEN | MR_USER_EMAIL + MR_USER_PASSWORD"],
-    "optional": ["MR_PERSON_ID", "MR_OUTSIDER_PERSON_ID"]
+    "required": [
+      "MR_BASE_URL",
+      "MR_CLIENT_ID",
+      "MR_CLIENT_SECRET",
+      "MR_ORG_ID",
+      "MR_OTHER_ORG_ID"
+    ],
+    "oidc": [
+      "MR_PUBLIC_CLIENT_ID",
+      "MR_REDIRECT_URI",
+      "MR_USER_ACCESS_TOKEN | MR_USER_EMAIL + MR_USER_PASSWORD"
+    ],
+    "optional": [
+      "MR_PERSON_ID",
+      "MR_OUTSIDER_PERSON_ID",
+      "MR_QUOTA_CLIENT_ID + MR_QUOTA_CLIENT_SECRET",
+      "MR_REVIEW_CLIENT_ID + MR_REVIEW_CLIENT_SECRET"
+    ]
   },
   "scenarios": [
     {
@@ -146,6 +161,18 @@
       "requires": "E7",
       "description": "GET {MR_BASE_URL}/events/catalog (público, sin credenciales).",
       "expected": "Incluye membership.activated.v1 con scope kernel.service.memberships.read y un ejemplo con id evt_..., type, createdAt, organizationId y data."
+    },
+    {
+      "id": "review.limited_until_approved",
+      "requires": "E11",
+      "description": "App en revisión (MR_REVIEW_CLIENT_ID): el token client_credentials solo trae los scopes sin datos personales; pedir kernel.service.persons.read explícitamente falla; clubs.get(MR_ORG_ID) funciona y persons.get(MR_PERSON_ID) no.",
+      "expected": "Pedir scope kernel.service.persons.read → MiRotaractOAuthError invalid_scope. Sin scope: clubs.get OK y persons.get → MiRotaractApiError 403."
+    },
+    {
+      "id": "quota.retry_after_then_typed_error",
+      "requires": "E11",
+      "description": "App con un límite muy bajo (MR_QUOTA_CLIENT_ID, 3 pedidos por minuto). Se llama clubs.get(MR_ORG_ID) hasta superar la cuota, con un sleep que registra las esperas en vez de dormir y un tope de espera de 61 s.",
+      "expected": "Antes de rendirse, el SDK reintenta esperando lo que dice Retry-After (segundos enteros entre 1 y 60); al final lanza MiRotaractRateLimitError (subclase de MiRotaractApiError) con status 429, code KERNEL_RATE_LIMITED, retryAfter / retry_after entre 1 y 60 y RateLimit-Policy con q=3."
     }
   ]
 }

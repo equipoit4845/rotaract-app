@@ -134,13 +134,14 @@ class MiRotaract(_ClientCore):
         token_refresh_skew: float = 60,
         http_client: httpx.Client | None = None,
         max_retries: int = 2,
+        max_retry_delay: float = 30.0,
         timeout: float = 30.0,
         sleep: Any = None,
     ):
         super().__init__(
             base_url, client_id, client_secret, scope, client_auth_method, token_endpoint, token_refresh_skew
         )
-        self._http = SyncHttp(HttpConfig(max_retries=max_retries, timeout=timeout), http_client, sleep)
+        self._http = SyncHttp(HttpConfig(max_retries=max_retries, max_retry_delay=max_retry_delay, timeout=timeout), http_client, sleep)
         self._lock = threading.Lock()
         self.clubs = Clubs(self)
         self.organizations = self.clubs
@@ -341,13 +342,14 @@ class AsyncMiRotaract(_ClientCore):
         token_refresh_skew: float = 60,
         http_client: httpx.AsyncClient | None = None,
         max_retries: int = 2,
+        max_retry_delay: float = 30.0,
         timeout: float = 30.0,
         sleep: Any = None,
     ):
         super().__init__(
             base_url, client_id, client_secret, scope, client_auth_method, token_endpoint, token_refresh_skew
         )
-        self._http = AsyncHttp(HttpConfig(max_retries=max_retries, timeout=timeout), http_client, sleep)
+        self._http = AsyncHttp(HttpConfig(max_retries=max_retries, max_retry_delay=max_retry_delay, timeout=timeout), http_client, sleep)
         self._lock: asyncio.Lock | None = None
         self.clubs = AsyncClubs(self)
         self.organizations = self.clubs

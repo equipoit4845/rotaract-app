@@ -15,6 +15,7 @@ const {
   MiRotaractAuth,
   MiRotaractApiError,
   MiRotaractOAuthError,
+  MiRotaractRateLimitError,
   MiRotaractWebhookError,
   verifyWebhook,
 } = await import(sdkPath);
@@ -456,6 +457,68 @@ const scenarios = {
         ex.data,
       "ejemplo incompleto",
     );
+  },
+  // --- E11 -------------------------------------------------------------------
+  async "review.limited_until_approved"() {
+    need("MR_REVIEW_CLIENT_ID", "MR_REVIEW_CLIENT_SECRET", "MR_PERSON_ID");
+    const credentials = {
+      clientId: env.MR_REVIEW_CLIENT_ID,
+      clientSecret: env.MR_REVIEW_CLIENT_SECRET,
+    };
+    await expectError(
+      newClient({ ...credentials, scope: "kernel.service.persons.read" }).clubs.get(
+        env.MR_ORG_ID,
+      ),
+      isOAuth("invalid_scope"),
+      "invalid_scope",
+    );
+    const limited = newClient(credentials);
+    const club = await limited.clubs.get(env.MR_ORG_ID);
+    check(club.id === env.MR_ORG_ID, "clubs.get");
+    await expectError(
+      limited.persons.get(env.MR_PERSON_ID),
+      isApi(403),
+      "403 (dato personal sin aprobar)",
+    );
+  },
+  async "quota.retry_after_then_typed_error"() {
+    need("MR_QUOTA_CLIENT_ID", "MR_QUOTA_CLIENT_SECRET");
+    const waits = [];
+    const limited = newClient({
+      clientId: env.MR_QUOTA_CLIENT_ID,
+      clientSecret: env.MR_QUOTA_CLIENT_SECRET,
+      maxRetries: 2,
+      maxRetryDelayMs: 61_000,
+      sleep: async (ms) => {
+        waits.push(ms);
+      },
+    });
+    let error;
+    for (let i = 0; i < 10 && !error; i++)
+      await limited.clubs.get(env.MR_ORG_ID).catch((caught) => {
+        error = caught;
+      });
+    check(error, "nunca llegó un 429 (¿cuota de 3 por minuto?)");
+    check(
+      error instanceof MiRotaractRateLimitError &&
+        error instanceof MiRotaractApiError,
+      `se esperaba MiRotaractRateLimitError, llegó ${error?.name}: ${error?.message}`,
+    );
+    check(
+      error.status === 429 && error.code === "KERNEL_RATE_LIMITED",
+      `${error.status} ${error.code}`,
+    );
+    check(
+      error.retryAfter >= 1 && error.retryAfter <= 60,
+      `retryAfter ${error.retryAfter}`,
+    );
+    check(/q=3/.test(error.rateLimitPolicy ?? ""), `policy ${error.rateLimitPolicy}`);
+    check(waits.length === 2, `reintentos: ${waits.length}`);
+    for (const wait of waits)
+      check(
+        wait % 1000 === 0 && wait >= 1000 && wait <= 60_000,
+        `espera ${wait} ms (debería ser Retry-After)`,
+      );
   },
 };
 

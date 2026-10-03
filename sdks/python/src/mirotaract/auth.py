@@ -265,6 +265,7 @@ class MiRotaractAuth(_AuthCore):
         clock_tolerance: int = 30,
         http_client: httpx.Client | None = None,
         max_retries: int = 2,
+        max_retry_delay: float = 30.0,
         timeout: float = 30.0,
         jwks_cooldown: float = 30,
         sleep: Any = None,
@@ -279,7 +280,7 @@ class MiRotaractAuth(_AuthCore):
             clock_tolerance=clock_tolerance,
             jwks_cooldown=jwks_cooldown,
         )
-        self._http = SyncHttp(HttpConfig(max_retries=max_retries, timeout=timeout), http_client, sleep)
+        self._http = SyncHttp(HttpConfig(max_retries=max_retries, max_retry_delay=max_retry_delay, timeout=timeout), http_client, sleep)
 
     def close(self) -> None:
         self._http.close()
@@ -390,6 +391,7 @@ class AsyncMiRotaractAuth(_AuthCore):
         clock_tolerance: int = 30,
         http_client: httpx.AsyncClient | None = None,
         max_retries: int = 2,
+        max_retry_delay: float = 30.0,
         timeout: float = 30.0,
         jwks_cooldown: float = 30,
         sleep: Any = None,
@@ -404,7 +406,7 @@ class AsyncMiRotaractAuth(_AuthCore):
             clock_tolerance=clock_tolerance,
             jwks_cooldown=jwks_cooldown,
         )
-        self._http = AsyncHttp(HttpConfig(max_retries=max_retries, timeout=timeout), http_client, sleep)
+        self._http = AsyncHttp(HttpConfig(max_retries=max_retries, max_retry_delay=max_retry_delay, timeout=timeout), http_client, sleep)
 
     async def aclose(self) -> None:
         await self._http.aclose()
