@@ -129,6 +129,19 @@ services:
     depends_on:
       api: { condition: service_healthy }
 
+  # E9 — developer portal (docs/16-developer-portal.md), behind
+  # developers.rotaract4845.com. Static content; no database or secrets.
+  developers-portal:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: infra/docker/developers-portal.Dockerfile
+      args:
+        NEXT_PUBLIC_SITE_URL: ${DEVELOPERS_PORTAL_SITE_URL:-}
+    environment:
+      NEXT_PUBLIC_SITE_URL: ${DEVELOPERS_PORTAL_SITE_URL:-}
+    ports: ["127.0.0.1:3004:3004"]
+
 volumes:
   postgres-data:
   redis-data:

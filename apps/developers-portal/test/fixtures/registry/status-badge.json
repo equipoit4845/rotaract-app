@@ -1,0 +1,14 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "status-badge",
+  "type": "registry:component",
+  "title": "Status badge",
+  "description": "Fixture: insignia de estado de Mi Rotaract.",
+  "files": [
+    {
+      "path": "registry/status-badge.tsx",
+      "type": "registry:component",
+      "content": "export function StatusBadge() { return null; }\n"
+    }
+  ]
+}

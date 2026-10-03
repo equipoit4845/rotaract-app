@@ -64,6 +64,11 @@ export * from "./webhooks/webhooks.hooks";
 export * from "./webhooks/webhooks.keys";
 export type * from "./webhooks/webhooks.types";
 
+// E9.3
+export * from "./request-logs/request-logs.hooks";
+export * from "./request-logs/request-logs.keys";
+export type * from "./request-logs/request-logs.types";
+
 export * from "./oauth/oauth.hooks";
 export * from "./oauth/oauth.keys";
 export type * from "./oauth/oauth.types";

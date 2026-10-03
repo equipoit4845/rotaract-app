@@ -222,6 +222,8 @@ const permissionByHandler: Record<string, string> = {
   rotateWebhookSecret: "kernel.app.manage",
   sendWebhookTest: "kernel.app.manage",
   redeliverWebhook: "kernel.app.manage",
+  // E9.3 request logs: same permission as reading the app.
+  listRequestLogs: "kernel.app.read",
   // Fallback defaults only: canActivate() overrides these with the
   // position's own editPermissionCode when the position can be resolved —
   // see the positionHandlers special-case.
@@ -610,6 +612,8 @@ const organizationResolverByHandler: Record<string, OrganizationResolver> = {
   rotateWebhookSecret: developerAppOrganization,
   sendWebhookTest: developerAppOrganization,
   redeliverWebhook: developerAppOrganization,
+  // E9.3
+  listRequestLogs: developerAppOrganization,
   createPosition: positionOwnerOrganization,
   listPositionPermissions: existingPositionOwnerOrganization,
   updateMembership: membershipOrganization,

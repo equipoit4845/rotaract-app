@@ -1,0 +1,23 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "mirotaract",
+  "homepage": "https://developers.rotaract4845.com",
+  "items": [
+    {
+      "name": "status-badge",
+      "type": "registry:component",
+      "title": "Status badge",
+      "description": "Fixture: insignia de estado de Mi Rotaract.",
+      "files": [
+        { "path": "registry/status-badge.tsx", "type": "registry:component" }
+      ]
+    },
+    {
+      "name": "mirotaract-theme",
+      "type": "registry:style",
+      "title": "Tema de Mi Rotaract",
+      "description": "Fixture: variables CSS.",
+      "files": []
+    }
+  ]
+}

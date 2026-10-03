@@ -35,6 +35,10 @@ contratos públicos son [`kernel-openapi.yaml`](../kernel-openapi.yaml),
   shadcn (`packages/registry`). Guías:
   [developers/modulos.md](developers/modulos.md) y
   [developers/kit-de-ui.md](developers/kit-de-ui.md).
+- [Portal y consola de desarrolladores](16-developer-portal.md):
+  `apps/developers-portal` (guías, quickstarts probados en CI, referencia
+  con "Probar"), registros de requests de las apps, changelog, política de
+  deprecación y avisos por email.
 - [Validación v1 del Design System](design-system-v1-validation.md):
   veredicto por área con comandos y resultados reales — no afirmaciones sin
   evidencia.

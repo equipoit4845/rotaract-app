@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
 import { JwtModule } from "@nestjs/jwt";
 import { ThrottlerModule } from "@nestjs/throttler";
@@ -48,6 +48,12 @@ import { WebhookStreamService } from "./application/webhooks/webhook-stream.serv
 import { WebhooksController } from "./interfaces/http/webhooks.controller";
 import { WebhookStreamAliasController } from "./interfaces/http/webhook-stream-alias.controller";
 import { EventsController } from "./interfaces/http/events.controller";
+// E9 — request logs, trace ids and deprecation headers (docs/16-developer-portal.md)
+import { RequestLogWriter } from "./application/request-logs/request-log.writer";
+import { RequestLogsService } from "./application/request-logs/request-logs.service";
+import { RequestLogsController } from "./interfaces/http/request-logs.controller";
+import { RequestLogMiddleware } from "./interfaces/http/request-log.middleware";
+import { DeprecationMiddleware } from "./interfaces/http/deprecation.middleware";
 
 @Module({
   imports: [
@@ -80,6 +86,8 @@ import { EventsController } from "./interfaces/http/events.controller";
     WebhooksController,
     WebhookStreamAliasController,
     EventsController,
+    // E9
+    RequestLogsController,
   ],
   providers: [
     HealthService,
@@ -107,6 +115,9 @@ import { EventsController } from "./interfaces/http/events.controller";
     WebhooksService,
     WebhookDispatcherService,
     WebhookStreamService,
+    // E9
+    RequestLogWriter,
+    RequestLogsService,
     { provide: APP_INTERCEPTOR, useClass: OpenApiValidationInterceptor },
     // Order matters: rate limiting runs before authentication, so floods are
     // rejected before any token verification or database work.
@@ -114,4 +125,10 @@ import { EventsController } from "./interfaces/http/events.controller";
     { provide: APP_GUARD, useClass: KernelAccessGuard },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  // E9: every request gets a trace id; app requests are logged; deprecated
+  // operations carry Deprecation/Sunset headers.
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(RequestLogMiddleware, DeprecationMiddleware).forRoutes("*");
+  }
+}

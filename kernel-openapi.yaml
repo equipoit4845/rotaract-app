@@ -66,6 +66,10 @@ tags:
       secretos, envíos, reintentos y reenvío. Mismos permisos que la app.
   - name: Events
     description: Catálogo público de eventos (E7.3).
+  - name: RequestLogs
+    description: >
+      Registros de los requests de una app (E9.3): para diagnosticar
+      errores por código y por traceId. Mismos permisos que la app.
   - name: OAuth
     description: >
       "Ingresar con Mi Rotaract" (E3): proveedor OAuth 2.0 / OpenID Connect,
@@ -3324,6 +3328,55 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "409": { $ref: "#/components/responses/InvalidTransition" }
 
+  # --- E9: registros de requests de una app (docs/16-developer-portal.md) ---
+
+  /developer/apps/{appId}/request-logs:
+    get:
+      operationId: listRequestLogs
+      tags: [RequestLogs]
+      summary: Registros de los requests que hizo una app
+      description: >
+        Una fila por request autenticado como la app (token de servicio,
+        token de usuario emitido a la app, o credenciales del cliente en
+        `/oauth/token` y `/oauth/revoke`), del más reciente al más viejo.
+        Guarda método, ruta (plantilla, sin ids), estado, código de error,
+        latencia, traceId, instante e IP truncada (/24 en IPv4, /48 en
+        IPv6). Nunca guarda cuerpos, tokens ni datos personales. Se
+        conservan 30 días. Mismo permiso que leer la app.
+      x-required-permission: kernel.app.read
+      parameters:
+        - $ref: "#/components/parameters/appId"
+        - name: status
+          in: query
+          description: Clase (`2xx`, `3xx`, `4xx`, `5xx`), `error` (cualquier 4xx o 5xx) o un código exacto (`404`).
+          schema: { type: string, pattern: "^([1-5]xx|error|[1-5][0-9][0-9])$" }
+        - name: code
+          in: query
+          description: Código de error exacto (`KERNEL_HTTP_403`, `invalid_client`, ...).
+          schema: { type: string, maxLength: 128 }
+        - name: traceId
+          in: query
+          schema: { type: string, maxLength: 128 }
+        - name: from
+          in: query
+          description: Desde este instante (inclusive).
+          schema: { type: string, format: date-time }
+        - name: to
+          in: query
+          description: Hasta este instante (exclusive).
+          schema: { type: string, format: date-time }
+        - $ref: "#/components/parameters/cursor"
+        - $ref: "#/components/parameters/limit"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RequestLogPage" }
+        "400": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
   /events/catalog:
     get:
       operationId: getEventCatalog
@@ -3684,6 +3737,20 @@ components:
     traceparent:
       description: Cabecera de trazado distribuido (W3C Trace Context).
       schema: { type: string }
+    # E9: identificador del request y avisos de deprecación (docs/developers/deprecaciones.md).
+    X-Trace-Id:
+      description: Identificador del request; el mismo `traceId` de Problem Details y de los registros.
+      schema: { type: string }
+    Deprecation:
+      description: >
+        RFC 9745. Solo en operaciones marcadas `deprecated: true`:
+        `@<segundos Unix>` del día en que se deprecó (`x-deprecated-at`).
+      schema: { type: string, example: "@1791072000" }
+    Sunset:
+      description: >
+        RFC 8594. Fecha HTTP a partir de la cual la operación puede dejar de
+        existir (`x-sunset`, al menos 6 meses después de `x-deprecated-at`).
+      schema: { type: string, example: "Sun, 04 Apr 2027 00:00:00 GMT" }
 
   responses:
     Error:
@@ -3723,7 +3790,13 @@ components:
           description: Código estable de error, p. ej. `KERNEL_INVALID_TRANSITION`.
         detail: { type: string }
         instance: { type: string }
-        traceId: { type: string }
+        traceId:
+          type: string
+          description: >
+            Identificador del request (E9). Siempre presente: el trace-id de
+            `traceparent` si vino, si no `X-Correlation-Id`, si no uno
+            generado. También viaja en la cabecera `X-Trace-Id` de toda
+            respuesta y es el filtro de los registros de la app.
         errors:
           type: array
           description: >
@@ -5201,3 +5274,40 @@ components:
             createdAt: { type: string, format: date-time }
             organizationId: { type: string }
             data: { type: object }
+
+    # --- E9: registros de requests (docs/16-developer-portal.md) ------------
+
+    RequestLog:
+      type: object
+      required: [id, appId, method, route, status, latencyMs, traceId, createdAt]
+      properties:
+        id: { type: string }
+        appId: { type: string }
+        method: { type: string, example: GET }
+        route:
+          type: string
+          description: Plantilla de la ruta, sin ids (`/service/organizations/{organizationId}`).
+          example: /service/organizations/{organizationId}/members
+        status: { type: integer, example: 403 }
+        code:
+          type: string
+          nullable: true
+          description: Código del error (`code` de Problem Details o `error` de OAuth). Null si salió bien.
+        type:
+          type: string
+          nullable: true
+          description: "`type` de Problem Details, o `oauth` para errores OAuth."
+        latencyMs: { type: integer }
+        traceId: { type: string }
+        clientIp:
+          type: string
+          nullable: true
+          description: IP truncada (IPv4 /24, IPv6 /48).
+          example: 181.120.34.0
+        createdAt: { type: string, format: date-time }
+    RequestLogPage:
+      type: object
+      required: [items, pageInfo]
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/RequestLog" } }
+        pageInfo: { $ref: "#/components/schemas/PageInfo" }

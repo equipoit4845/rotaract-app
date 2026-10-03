@@ -926,3 +926,32 @@ model WebhookDelivery {
   @@index([status, nextAttemptAt])
   @@index([endpointId, createdAt])
 }
+
+// ---------------------------------------------------------------------------
+// E9 — request logs of developer apps (docs/16-developer-portal.md).
+// One row per request authenticated as an app. No bodies, tokens or personal
+// data; 30-day retention (RequestLogRetentionService). No foreign key to
+// DeveloperApp on purpose: rows are written in async batches and must never
+// block or fail a request, and they expire on their own.
+// ---------------------------------------------------------------------------
+model DeveloperAppRequestLog {
+  id          String   @id @default(cuid())
+  appId       String
+  method      String
+  /// Route template without ids, e.g. "/service/organizations/{organizationId}".
+  route       String
+  status      Int
+  /// Problem Details `code`, or the OAuth `error`; null on success.
+  problemCode String?
+  /// Problem Details `type`, or "oauth".
+  problemType String?
+  latencyMs   Int
+  traceId     String
+  /// Truncated: IPv4 /24, IPv6 /48.
+  clientIp    String?
+  createdAt   DateTime @default(now())
+
+  @@index([appId, createdAt])
+  @@index([appId, traceId])
+  @@index([createdAt])
+}

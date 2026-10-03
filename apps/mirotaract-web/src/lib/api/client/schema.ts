@@ -2320,6 +2320,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/developer/apps/{appId}/request-logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Registros de los requests que hizo una app
+         * @description Una fila por request autenticado como la app (token de servicio, token de usuario emitido a la app, o credenciales del cliente en `/oauth/token` y `/oauth/revoke`), del más reciente al más viejo. Guarda método, ruta (plantilla, sin ids), estado, código de error, latencia, traceId, instante e IP truncada (/24 en IPv4, /48 en IPv6). Nunca guarda cuerpos, tokens ni datos personales. Se conservan 30 días. Mismo permiso que leer la app.
+         */
+        get: operations["listRequestLogs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/events/catalog": {
         parameters: {
             query?: never;
@@ -2516,6 +2536,7 @@ export interface components {
             code: string;
             detail?: string;
             instance: string;
+            /** @description Identificador del request (E9). Siempre presente: el trace-id de `traceparent` si vino, si no `X-Correlation-Id`, si no uno generado. También viaja en la cabecera `X-Trace-Id` de toda respuesta y es el filtro de los registros de la app. */
             traceId?: string;
             /** @description Errores por campo (p. ej. un manifiesto o una configuración de módulo). `path` es la ruta del campo (`permissions[0].code`, "" para la raíz) y `message` está en español, listo para mostrar. */
             errors?: {
@@ -3678,6 +3699,36 @@ export interface components {
                 data: Record<string, never>;
             };
         };
+        RequestLog: {
+            id: string;
+            appId: string;
+            /** @example GET */
+            method: string;
+            /**
+             * @description Plantilla de la ruta, sin ids (`/service/organizations/{organizationId}`).
+             * @example /service/organizations/{organizationId}/members
+             */
+            route: string;
+            /** @example 403 */
+            status: number;
+            /** @description Código del error (`code` de Problem Details o `error` de OAuth). Null si salió bien. */
+            code?: string | null;
+            /** @description `type` de Problem Details, o `oauth` para errores OAuth. */
+            type?: string | null;
+            latencyMs: number;
+            traceId: string;
+            /**
+             * @description IP truncada (IPv4 /24, IPv6 /48).
+             * @example 181.120.34.0
+             */
+            clientIp?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        RequestLogPage: {
+            items: components["schemas"]["RequestLog"][];
+            pageInfo: components["schemas"]["PageInfo"];
+        };
     };
     responses: {
         /** @description Pedido inválido. */
@@ -3755,6 +3806,12 @@ export interface components {
         "X-Correlation-Id": string;
         /** @description Cabecera de trazado distribuido (W3C Trace Context). */
         traceparent: string;
+        /** @description Identificador del request; el mismo `traceId` de Problem Details y de los registros. */
+        "X-Trace-Id": string;
+        /** @description RFC 9745. Solo en operaciones marcadas `deprecated: true`: `@<segundos Unix>` del día en que se deprecó (`x-deprecated-at`). */
+        Deprecation: string;
+        /** @description RFC 8594. Fecha HTTP a partir de la cual la operación puede dejar de existir (`x-sunset`, al menos 6 meses después de `x-deprecated-at`). */
+        Sunset: string;
     };
     pathItems: never;
 }
@@ -7689,6 +7746,45 @@ export interface operations {
             };
             404: components["responses"]["NotFound"];
             409: components["responses"]["InvalidTransition"];
+        };
+    };
+    listRequestLogs: {
+        parameters: {
+            query?: {
+                /** @description Clase (`2xx`, `3xx`, `4xx`, `5xx`), `error` (cualquier 4xx o 5xx) o un código exacto (`404`). */
+                status?: string;
+                /** @description Código de error exacto (`KERNEL_HTTP_403`, `invalid_client`, ...). */
+                code?: string;
+                traceId?: string;
+                /** @description Desde este instante (inclusive). */
+                from?: string;
+                /** @description Hasta este instante (exclusive). */
+                to?: string;
+                /** @description Cursor de paginación opaco devuelto por la página anterior. */
+                cursor?: components["parameters"]["cursor"];
+                /** @description Tamaño de página. Por defecto 25, máximo 100 (§18). */
+                limit?: components["parameters"]["limit"];
+            };
+            header?: never;
+            path: {
+                appId: components["parameters"]["appId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RequestLogPage"];
+                };
+            };
+            400: components["responses"]["Error"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
     getEventCatalog: {

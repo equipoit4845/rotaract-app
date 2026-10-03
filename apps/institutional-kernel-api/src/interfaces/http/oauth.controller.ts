@@ -22,6 +22,8 @@ import {
 } from "../../application/oauth/oidc-access.guard";
 import { OidcService } from "../../application/oauth/oidc.service";
 import { OAuthError } from "../../application/oauth/oauth-error";
+import { markDeveloperAppRequest } from "../../application/request-logs/request-log.context";
+import { setProblemMark } from "./request-log.middleware";
 
 type TokenParams = {
   grant_type?: string;
@@ -70,6 +72,7 @@ async function oauthResponse<T>(
     if (!(error instanceof OAuthError)) throw error;
     if (error.status === 401)
       response.setHeader("WWW-Authenticate", 'Basic realm="mirotaract"');
+    setProblemMark(response, { code: error.error, type: "oauth" });
     response.status(error.status).json(error.toJSON());
     return undefined;
   }
@@ -146,6 +149,8 @@ export class OAuthController {
       const app = await this.clients.authenticate(
         clientCredentials(request, body),
       );
+      // E9.3: from here on the request is the app's (request logs).
+      markDeveloperAppRequest(request, app);
       if (!app.grantTypes.includes(grantType))
         throw new OAuthError(
           "unauthorized_client",
@@ -177,6 +182,8 @@ export class OAuthController {
       const app = await this.clients.authenticate(
         clientCredentials(request, body),
       );
+      // E9.3: from here on the request is the app's (request logs).
+      markDeveloperAppRequest(request, app);
       if (body?.token) await this.oidc.revoke(app, body.token);
       return {};
     });

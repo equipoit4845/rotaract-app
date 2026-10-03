@@ -1,0 +1,8 @@
+.quickstarts/
+src/generated/
+public/docs/
+public/r/
+public/llms.txt
+public/llms-full.txt
+public/search-index.json
+public/openapi.yaml
