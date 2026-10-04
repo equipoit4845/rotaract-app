@@ -689,6 +689,222 @@ describe("KernelService — club-owned positions", () => {
   });
 });
 
+describe("KernelService — positions that grant permissions", () => {
+  const districtOwner = {
+    organization: {
+      findMany: jest.fn().mockResolvedValue([]),
+      findUniqueOrThrow: jest.fn().mockResolvedValue({ type: "DISTRICT" }),
+    },
+  };
+  const districtPosition = {
+    code: "DISTRICT_ROTAMERCH_DIRECTOR",
+    name: "Dirección de RotaMerch",
+    organizationType: "DISTRICT",
+    ownerOrganizationId: "district-1",
+    editPermissionCode: "kernel.position.manage",
+    isSingletonPerPeriod: true,
+  };
+
+  it("creates a role of the position's own with grantsPermissions", async () => {
+    const roleCreate = jest.fn().mockResolvedValue({ id: "role-new" });
+    const positionCreate = jest
+      .fn()
+      .mockImplementation(({ data }: any) => ({ id: "pos-1", ...data }));
+    const { kernel } = buildKernel({
+      ...districtOwner,
+      roleDefinition: {
+        findUnique: jest.fn().mockResolvedValue(null),
+        create: roleCreate,
+      },
+      positionDefinition: { create: positionCreate },
+    });
+
+    const position = await kernel.createPosition({
+      ...districtPosition,
+      grantsPermissions: true,
+    });
+
+    expect(roleCreate).toHaveBeenCalledWith({
+      data: {
+        code: "DISTRICT_ROTAMERCH_DIRECTOR",
+        name: "Dirección de RotaMerch",
+        description: null,
+        isSystem: false,
+      },
+    });
+    const data = positionCreate.mock.calls[0][0].data;
+    expect(data.defaultRoleCode).toBe("DISTRICT_ROTAMERCH_DIRECTOR");
+    expect(data).not.toHaveProperty("grantsPermissions");
+    expect(position.defaultRoleCode).toBe("DISTRICT_ROTAMERCH_DIRECTOR");
+  });
+
+  it("needs an owner organization for grantsPermissions", async () => {
+    const { kernel } = buildKernel({});
+    const { ownerOrganizationId, ...unowned } = districtPosition;
+    void ownerOrganizationId;
+    await expect(
+      kernel.createPosition({ ...unowned, grantsPermissions: true }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it("refuses grantsPermissions when a role with that code exists (it would be shared)", async () => {
+    const { kernel } = buildKernel({
+      ...districtOwner,
+      roleDefinition: {
+        findUnique: jest.fn().mockResolvedValue({ id: "role-x" }),
+      },
+    });
+    await expect(
+      kernel.createPosition({ ...districtPosition, grantsPermissions: true }),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it("rejects a district position pointing at a role that doesn't exist", async () => {
+    const { kernel } = buildKernel({
+      ...districtOwner,
+      roleDefinition: { findUnique: jest.fn().mockResolvedValue(null) },
+    });
+    await expect(
+      kernel.createPosition({
+        ...districtPosition,
+        defaultRoleCode: "NO_SUCH_ROLE",
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it("turns an informational position into one with permissions and grants the role to who already holds it", async () => {
+    const roleCreate = jest.fn().mockResolvedValue({ id: "role-new" });
+    const assignmentCreate = jest.fn().mockResolvedValue({ id: "ra-1" });
+    const updateMany = jest.fn().mockResolvedValue({ count: 0 });
+    const { kernel } = buildKernel({
+      positionDefinition: {
+        findUniqueOrThrow: jest.fn().mockResolvedValue({
+          id: "pos-t",
+          code: "DISTRICT_TREASURER",
+          name: "Tesorería distrital",
+          description: null,
+          defaultRoleCode: null,
+          ownerOrganizationId: "district-1",
+          ownerOrganization: { type: "DISTRICT" },
+        }),
+        update: jest.fn().mockImplementation(({ data }: any) => ({
+          id: "pos-t",
+          defaultRoleCode: data.defaultRoleCode,
+        })),
+      },
+      roleDefinition: {
+        findUnique: jest
+          .fn()
+          .mockResolvedValueOnce(null) // the code is free
+          .mockResolvedValue({ id: "role-new" }), // resync reads it back
+        create: roleCreate,
+      },
+      appointment: {
+        findMany: jest.fn().mockResolvedValue([
+          {
+            id: "appt-1",
+            organizationId: "district-1",
+            periodId: "period-1",
+            membership: { personId: "person-1" },
+            positionDefinition: { organizationType: "DISTRICT" },
+          },
+        ]),
+      },
+      roleAssignment: {
+        updateMany,
+        findFirst: jest.fn().mockResolvedValue(null),
+        create: assignmentCreate,
+      },
+    });
+
+    const updated = await kernel.updatePosition("pos-t", {
+      grantsPermissions: true,
+    });
+
+    expect(updated.defaultRoleCode).toBe("DISTRICT_TREASURER");
+    expect(roleCreate).toHaveBeenCalled();
+    expect(assignmentCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        personId: "person-1",
+        roleDefinitionId: "role-new",
+        scopeType: "ORGANIZATION_TREE",
+        organizationId: "district-1",
+        periodId: "period-1",
+        sourceAppointmentId: "appt-1",
+      }),
+    });
+  });
+
+  it("refuses grantsPermissions on a position that already derives a role", async () => {
+    const { kernel } = buildKernel({
+      positionDefinition: {
+        findUniqueOrThrow: jest.fn().mockResolvedValue({
+          id: "pos-1",
+          code: "DISTRICT_SECRETARY",
+          defaultRoleCode: "DISTRICT_SECRETARY",
+          ownerOrganizationId: "district-1",
+          ownerOrganization: { type: "DISTRICT" },
+        }),
+      },
+    });
+    await expect(
+      kernel.updatePosition("pos-1", { grantsPermissions: true }),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it("moves ACTIVE appointments to the new role when the role changes", async () => {
+    const updateMany = jest.fn().mockResolvedValue({ count: 1 });
+    const assignmentCreate = jest.fn();
+    const { kernel } = buildKernel({
+      positionDefinition: {
+        findUniqueOrThrow: jest.fn().mockResolvedValue({
+          id: "pos-1",
+          code: "X",
+          defaultRoleCode: "OLD_ROLE",
+          ownerOrganizationId: "district-1",
+          ownerOrganization: { type: "DISTRICT" },
+        }),
+        update: jest
+          .fn()
+          .mockResolvedValue({ id: "pos-1", defaultRoleCode: "NEW_ROLE" }),
+      },
+      roleDefinition: {
+        findUnique: jest
+          .fn()
+          .mockResolvedValue({ id: "role-new", isSystem: false }),
+      },
+      appointment: {
+        findMany: jest.fn().mockResolvedValue([
+          {
+            id: "appt-1",
+            organizationId: "district-1",
+            periodId: "period-1",
+            membership: { personId: "person-1" },
+            positionDefinition: { organizationType: "DISTRICT" },
+          },
+        ]),
+      },
+      roleAssignment: {
+        updateMany,
+        findFirst: jest.fn().mockResolvedValue(null),
+        create: assignmentCreate,
+      },
+    });
+
+    await kernel.updatePosition("pos-1", { defaultRoleCode: "NEW_ROLE" });
+
+    expect(updateMany).toHaveBeenCalledWith({
+      where: {
+        sourceAppointmentId: "appt-1",
+        revokedAt: null,
+        roleDefinitionId: { not: "role-new" },
+      },
+      data: expect.objectContaining({ revokedAt: expect.any(Date) }),
+    });
+    expect(assignmentCreate).toHaveBeenCalled();
+  });
+});
+
 describe("KernelService — MEMBER role follows the membership", () => {
   function membershipKernel(
     status: string,

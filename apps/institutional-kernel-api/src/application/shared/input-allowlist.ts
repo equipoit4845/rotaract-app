@@ -70,6 +70,7 @@ export const INPUT_FIELDS = {
     "editPermissionCode",
     "defaultRoleCode",
     "isSingletonPerPeriod",
+    "grantsPermissions",
   ],
   updatePosition: [
     "name",
@@ -77,6 +78,7 @@ export const INPUT_FIELDS = {
     "editPermissionCode",
     "defaultRoleCode",
     "isSingletonPerPeriod",
+    "grantsPermissions",
   ],
   createPermission: [
     "code",

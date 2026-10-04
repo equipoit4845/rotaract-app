@@ -16,6 +16,26 @@ las personas responsables de cada app activa reciben el aviso por email.
 > código tiene que ignorar los campos que no conoce. El contrato es
 > `kernel-openapi.yaml` (versión en `info.version`).
 
+<!-- entry: cargos-con-permisos -->
+## 2026-10-04 · El distrito crea cargos con permisos propios
+
+**Tipo:** nuevo · **Rompe compatibilidad:** no
+
+- `POST /position-definitions` acepta `grantsPermissions: true`: crea un rol
+  técnico propio del cargo (mismo código, no de sistema), así el RDR arma un
+  cargo con permisos —incluidos los de módulos— sin pedirle nada a la
+  plataforma. Un código de rol ya usado da 409.
+- `PATCH /position-definitions/{id}` con `grantsPermissions: true` convierte un
+  cargo informativo (por ejemplo, Tesorería distrital) en uno con permisos.
+- Al cambiar el rol de un cargo, quienes ya lo ocupan (nombramientos `ACTIVE`)
+  pasan al rol nuevo sin volver a ser nombrados.
+- `defaultRoleCode` con un rol que no existe ahora da 400 (antes se aceptaba y
+  fallaba después).
+- En Mi Rotaract: "Este cargo da permisos en la plataforma" al crear un cargo
+  y "Activar permisos para este cargo" en los cargos informativos.
+- Kernel local (`mirotaract dev`): los cargos de sistema pertenecen al
+  distrito de prueba, como en producción, así el RDR los administra.
+
 <!-- entry: e11-gobierno -->
 ## 2026-10-03 · Revisión de apps, historial de accesos, límites por app y apps en el panel (E11)
 

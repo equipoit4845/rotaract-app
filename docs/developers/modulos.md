@@ -115,6 +115,21 @@ En **Cargos** → un cargo → "Qué puede hacer este cargo", los permisos de tu
 módulo aparecen agrupados como "Módulo Reuniones distritales". Por ejemplo,
 "Votar en nombre del club" a la Presidencia de club.
 
+¿Hace falta un cargo nuevo para tu módulo (por ejemplo, "Dirección de
+RotaMerch", uno por período)? El RDR lo crea en **Cargos → Crear cargo** con la
+opción **"Este cargo da permisos en la plataforma"** marcada: Mi Rotaract le
+crea un rol propio y después se le asignan tus permisos como a cualquier otro
+cargo. Un cargo de distrito vale en todos los clubes donde el módulo está
+activo. Un cargo que hoy es solo informativo se convierte con **"Activar
+permisos para este cargo"**, y quienes ya lo ocupan reciben los permisos sin
+volver a ser nombrados.
+
+Por API: `POST /position-definitions` con `"grantsPermissions": true` y
+`ownerOrganizationId` = el distrito; después
+`PUT /position-definitions/{id}/permissions/{permissionId}` por cada permiso, y
+el nombramiento pasa por `NOMINATED → ELECTED → ACTIVE`
+(`/appointments/{id}/elect` y `/activate`).
+
 ## 5. Cada club lo instala y lo configura
 
 La presidencia entra a **Módulos**, toca **Instalar**, completa el formulario

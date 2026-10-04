@@ -7,6 +7,7 @@ import {
   useModules,
   usePermissions,
   usePositionPermissions,
+  useUpdatePositionDefinition,
 } from "@/lib/api";
 import {
   Alert,
@@ -24,7 +25,10 @@ import {
 import { Check, X } from "lucide-react";
 import { useState } from "react";
 
-import { describePositionPermissionError } from "../forms/position-mutation-errors";
+import {
+  describeEnablePermissionsError,
+  describePositionPermissionError,
+} from "../forms/position-mutation-errors";
 
 /**
  * US-POS-03. "Qué puede hacer este cargo", in plain language: the
@@ -52,6 +56,7 @@ export function PositionPermissionsPanel({
   const current = usePositionPermissions(position.id);
   const attach = useAttachPermissionToPosition();
   const detach = useDetachPermissionFromPosition();
+  const enable = useUpdatePositionDefinition();
 
   if (!position.defaultRoleCode) {
     return (
@@ -60,11 +65,45 @@ export function PositionPermissionsPanel({
           <CardTitle>Qué puede hacer este cargo</CardTitle>
         </CardHeader>
         <CardContent>
-          <Alert
-            tone="info"
-            title="Este cargo es solo informativo."
-            description="Quien lo ocupa figura como autoridad, pero el cargo no le da permisos adicionales en la plataforma."
-          />
+          <div className="space-y-3">
+            <Alert
+              tone="info"
+              title="Este cargo es solo informativo."
+              description="Quien lo ocupa figura como autoridad, pero el cargo no le da permisos adicionales en la plataforma."
+            />
+            {position.ownerOrganizationId ? (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  Si querés que este cargo habilite acciones (por ejemplo,
+                  gestionar un módulo del distrito), activá sus permisos.
+                  Quienes ya lo ocupan los reciben automáticamente.
+                </p>
+                <Button
+                  type="button"
+                  disabled={enable.isPending}
+                  onClick={() =>
+                    enable.mutate({
+                      positionDefinitionId: position.id,
+                      payload: { grantsPermissions: true },
+                    })
+                  }
+                >
+                  {enable.isPending
+                    ? "Activando…"
+                    : "Activar permisos para este cargo"}
+                </Button>
+                {enable.isError ? (
+                  <Alert
+                    tone="danger"
+                    title={describeEnablePermissionsError(enable.error).title}
+                    description={
+                      describeEnablePermissionsError(enable.error).description
+                    }
+                  />
+                ) : null}
+              </>
+            ) : null}
+          </div>
         </CardContent>
       </Card>
     );

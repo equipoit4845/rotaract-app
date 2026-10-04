@@ -951,32 +951,53 @@ export class KernelService {
   // Position definitions and appointments
   createPosition(input: any, context?: CommandContext) {
     input = allowInput("createPosition", input);
+    // `grantsPermissions` is not a column: it asks for a technical role of
+    // the position's own, created here, so a district (or a club) can build
+    // a position that grants permissions without a platform-wide
+    // `kernel.role.manage` grant.
+    const { grantsPermissions, ...data } = input;
     return this.mutate(
       "CreatePositionDefinition",
       context,
       input,
       { type: "PositionDefinition", id: "pending" },
       async (tx) => {
-        if (input.ownerOrganizationId) {
+        let ownerType: string | undefined;
+        if (data.ownerOrganizationId) {
           const owner = await tx.organization.findUniqueOrThrow({
-            where: { id: input.ownerOrganizationId },
+            where: { id: data.ownerOrganizationId },
           });
-          if (
-            input.organizationType === "DISTRICT" &&
-            owner.type !== "DISTRICT"
-          )
+          ownerType = owner.type;
+          if (data.organizationType === "DISTRICT" && owner.type !== "DISTRICT")
             throw new BadRequestException(
               "District catalogs must be owned by districts",
             );
           // A club can only define positions for itself, never district or
           // other-type positions.
-          if (owner.type === "CLUB" && input.organizationType !== "CLUB")
+          if (owner.type === "CLUB" && data.organizationType !== "CLUB")
             throw new BadRequestException(
               "A club can only define club positions",
             );
-          await this.assertPositionRole(tx, owner.type, input.defaultRoleCode);
         }
-        const position = await tx.positionDefinition.create({ data: input });
+        if (grantsPermissions === true) {
+          if (!data.ownerOrganizationId)
+            throw new BadRequestException(
+              "grantsPermissions needs an owner organization",
+            );
+          if (data.defaultRoleCode && data.defaultRoleCode !== data.code)
+            throw new BadRequestException(
+              "grantsPermissions creates the position's own role: leave defaultRoleCode empty",
+            );
+          data.defaultRoleCode = await this.createPositionRole(
+            tx,
+            data.code,
+            data.name,
+            data.description,
+          );
+        } else {
+          await this.assertPositionRole(tx, ownerType, data.defaultRoleCode);
+        }
+        const position = await tx.positionDefinition.create({ data });
         await this.outbox.record(
           tx,
           "kernel.position.created.v1",
@@ -1000,6 +1021,7 @@ export class KernelService {
   }
   updatePosition(id: string, input: any, context?: CommandContext) {
     input = allowInput("updatePosition", input);
+    const { grantsPermissions, ...data } = input;
     return this.mutate(
       "UpdatePositionDefinition",
       context,
@@ -1011,21 +1033,138 @@ export class KernelService {
         payload: { positionDefinitionId: id },
       },
       async (tx) => {
-        if (input.defaultRoleCode !== undefined) {
-          const position = await tx.positionDefinition.findUniqueOrThrow({
-            where: { id },
-            include: { ownerOrganization: { select: { type: true } } },
-          });
-          if (position.ownerOrganization)
-            await this.assertPositionRole(
-              tx,
-              position.ownerOrganization.type,
-              input.defaultRoleCode,
+        const position = await tx.positionDefinition.findUniqueOrThrow({
+          where: { id },
+          include: { ownerOrganization: { select: { type: true } } },
+        });
+        if (grantsPermissions === true) {
+          // Turn an informational position into one that grants
+          // permissions: it gets a role of its own (never a shared one).
+          if (position.defaultRoleCode)
+            throw new ConflictException(
+              "This position already derives a technical role",
             );
+          if (!position.ownerOrganizationId)
+            throw new BadRequestException(
+              "grantsPermissions needs an owner organization",
+            );
+          if (data.defaultRoleCode !== undefined)
+            throw new BadRequestException(
+              "grantsPermissions creates the position's own role: leave defaultRoleCode empty",
+            );
+          data.defaultRoleCode = await this.createPositionRole(
+            tx,
+            position.code,
+            data.name ?? position.name,
+            data.description ?? position.description,
+          );
+        } else if (data.defaultRoleCode !== undefined) {
+          await this.assertPositionRole(
+            tx,
+            position.ownerOrganization?.type,
+            data.defaultRoleCode,
+          );
         }
-        return tx.positionDefinition.update({ where: { id }, data: input });
+        const updated = await tx.positionDefinition.update({
+          where: { id },
+          data,
+        });
+        if (
+          data.defaultRoleCode !== undefined &&
+          data.defaultRoleCode !== position.defaultRoleCode
+        )
+          await this.resyncPositionRoleAssignments(
+            tx,
+            updated.id,
+            updated.defaultRoleCode,
+            context,
+          );
+        return updated;
       },
     );
+  }
+  /**
+   * The role of a permission-granting position: same code as the position,
+   * never a system role, so editing its permissions only affects this
+   * position. A taken code is a conflict (it would be shared).
+   */
+  private async createPositionRole(
+    tx: any,
+    code: string,
+    name: string,
+    description?: string | null,
+  ): Promise<string> {
+    const taken = await tx.roleDefinition.findUnique({ where: { code } });
+    if (taken)
+      throw new ConflictException(
+        "A role with this position's code already exists",
+      );
+    await tx.roleDefinition.create({
+      data: { code, name, description: description ?? null, isSystem: false },
+    });
+    return code;
+  }
+  /**
+   * The derived roles of a position's ACTIVE appointments follow its
+   * defaultRoleCode: when the role changes after people were appointed, the
+   * old derived assignments are revoked and the new role is granted with
+   * the same scope activation would have used. Without this, a role added
+   * later would never reach the people already in the position.
+   */
+  private async resyncPositionRoleAssignments(
+    tx: any,
+    positionDefinitionId: string,
+    roleCode: string | null,
+    context?: CommandContext,
+  ): Promise<void> {
+    const appointments = await tx.appointment.findMany({
+      where: { positionDefinitionId, status: "ACTIVE" },
+      include: {
+        membership: { select: { personId: true } },
+        positionDefinition: { select: { organizationType: true } },
+      },
+    });
+    if (!appointments.length) return;
+    const role = roleCode
+      ? await tx.roleDefinition.findUnique({ where: { code: roleCode } })
+      : null;
+    const now = new Date();
+    const actorId = this.context(context).actor.id;
+    for (const appointment of appointments) {
+      await tx.roleAssignment.updateMany({
+        where: {
+          sourceAppointmentId: appointment.id,
+          revokedAt: null,
+          ...(role ? { roleDefinitionId: { not: role.id } } : {}),
+        },
+        data: { revokedAt: now, revokedById: actorId },
+      });
+      if (role) {
+        const existing = await tx.roleAssignment.findFirst({
+          where: {
+            sourceAppointmentId: appointment.id,
+            roleDefinitionId: role.id,
+            revokedAt: null,
+          },
+        });
+        if (!existing)
+          await tx.roleAssignment.create({
+            data: {
+              personId: appointment.membership.personId,
+              roleDefinitionId: role.id,
+              scopeType:
+                appointment.positionDefinition.organizationType === "DISTRICT"
+                  ? "ORGANIZATION_TREE"
+                  : "ORGANIZATION",
+              organizationId: appointment.organizationId,
+              periodId: appointment.periodId,
+              sourceAppointmentId: appointment.id,
+              grantedById: actorId,
+            },
+          });
+      }
+      await this.authorization.invalidate(appointment.membership.personId);
+    }
   }
   /**
    * A position owned by a club may only derive a role of its own: binding
@@ -1035,16 +1174,19 @@ export class KernelService {
    */
   private async assertPositionRole(
     tx: any,
-    ownerType: string,
+    ownerType: string | undefined,
     roleCode?: string | null,
   ): Promise<void> {
-    if (!roleCode || ownerType !== "CLUB") return;
+    if (!roleCode) return;
+    // Any owner: a position must never point at a role that doesn't exist
+    // (permissions could not be attached and appointments would grant
+    // nothing, silently).
     const role = await tx.roleDefinition.findUnique({
       where: { code: roleCode },
       select: { isSystem: true },
     });
     if (!role) throw new BadRequestException("Unknown role");
-    if (role.isSystem)
+    if (ownerType === "CLUB" && role.isSystem)
       throw new ForbiddenException(
         "Club positions cannot derive a system role",
       );

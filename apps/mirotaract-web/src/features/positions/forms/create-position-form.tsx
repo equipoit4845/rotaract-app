@@ -22,6 +22,7 @@ type CreatePositionFormValues = {
   description: string;
   ownerOrganizationId: string;
   isSingletonPerPeriod: boolean;
+  grantsPermissions: boolean;
 };
 
 const DEFAULT_VALUES: CreatePositionFormValues = {
@@ -29,6 +30,7 @@ const DEFAULT_VALUES: CreatePositionFormValues = {
   description: "",
   ownerOrganizationId: "",
   isSingletonPerPeriod: false,
+  grantsPermissions: true,
 };
 
 /**
@@ -60,6 +62,9 @@ function toCreateRequest(
     editPermissionCode: "kernel.position.manage",
     defaultRoleCode: null,
     isSingletonPerPeriod: values.isSingletonPerPeriod,
+    // The kernel creates a role of the position's own, so its permissions
+    // (including modules' ones) can be set right after.
+    grantsPermissions: values.grantsPermissions,
   };
 }
 
@@ -144,6 +149,28 @@ export function CreatePositionForm() {
               onCheckedChange={(checked) => field.onChange(checked === true)}
             />
             Solo una persona puede ocuparlo por período
+          </label>
+        )}
+      />
+
+      <Controller
+        control={control}
+        name="grantsPermissions"
+        render={({ field }) => (
+          <label className="flex items-start gap-2">
+            <Checkbox
+              className="mt-0.5"
+              checked={field.value}
+              onCheckedChange={(checked) => field.onChange(checked === true)}
+            />
+            <span>
+              Este cargo da permisos en la plataforma
+              <span className="block text-sm text-muted-foreground">
+                Después de crearlo vas a poder elegir qué puede hacer quien lo
+                ocupe, incluidos los permisos de los módulos del distrito. Si lo
+                desmarcás, el cargo es solo informativo.
+              </span>
+            </span>
           </label>
         )}
       />

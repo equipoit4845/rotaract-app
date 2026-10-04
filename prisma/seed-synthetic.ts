@@ -652,6 +652,16 @@ async function main() {
   const districtPeriod = await ensurePeriod(district.id);
   log(`Distrito ${district.name} (${district.id})`);
 
+  // Like production (prisma/backfill-baseline-roles.ts): the system position
+  // catalog belongs to the district, so the RDR administers it (edits the
+  // positions and their permissions) instead of needing the platform.
+  const owned = await prisma.positionDefinition.updateMany({
+    where: { isSystem: true, ownerOrganizationId: null },
+    data: { ownerOrganizationId: district.id },
+  });
+  if (owned.count)
+    log(`Cargos de sistema asignados al distrito: ${owned.count}`);
+
   const year = currentRotaryYear();
   const clubs: Array<{
     id: string;

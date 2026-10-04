@@ -327,6 +327,8 @@ test("Create position — success: submits CreatePositionDefinitionRequest and n
     editPermissionCode: "kernel.position.manage",
     defaultRoleCode: null,
     isSingletonPerPeriod: false,
+    // Checked by default: the kernel creates the position's own role.
+    grantsPermissions: true,
   });
   await waitFor(() =>
     assert.ok(router.pushCalls.includes(`/positions/${created.id}`)),
@@ -468,8 +470,16 @@ test("Position detail — the district edits its own system positions when it ho
 test("Position detail — permissions panel: a position without a derived role explains it is informational only", async () => {
   const noRole = position({ id: "pos_norole1", defaultRoleCode: null });
   const backend = new MockBackend();
-  backend.kernelHandler = (request) => {
+  let patchBody: unknown;
+  backend.kernelHandler = async (request) => {
     const url = new URL(request.url);
+    if (
+      request.method === "PATCH" &&
+      url.pathname.endsWith("/position-definitions/pos_norole1")
+    ) {
+      patchBody = await request.json();
+      return jsonResponse({ ...noRole, defaultRoleCode: noRole.code });
+    }
     if (url.pathname.endsWith("/auth/me")) return meResponse();
     if (url.pathname.includes("/effective-permissions")) {
       return permissionsResponse(["kernel.position.manage"]);
@@ -490,6 +500,9 @@ test("Position detail — permissions panel: a position without a derived role e
   );
 
   await waitFor(() => assert.ok(getByText("Este cargo es solo informativo.")));
+  // The district can turn it into a position that grants permissions.
+  fireEvent.click(getByText("Activar permisos para este cargo"));
+  await waitFor(() => assert.deepEqual(patchBody, { grantsPermissions: true }));
 
   tokenManager.clearSession();
 });

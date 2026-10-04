@@ -4756,8 +4756,23 @@ components:
         organizationType: { $ref: "#/components/schemas/OrganizationType" }
         ownerOrganizationId: { type: string, nullable: true }
         editPermissionCode: { type: string, default: kernel.position.manage }
-        defaultRoleCode: { type: string, nullable: true }
+        defaultRoleCode:
+          type: string
+          nullable: true
+          description: >
+            Rol técnico existente que deriva el cargo. Si no existe, 400. Para
+            un cargo con permisos propios, usá `grantsPermissions` y dejalo
+            vacío.
         isSingletonPerPeriod: { type: boolean, default: false }
+        grantsPermissions:
+          type: boolean
+          default: false
+          description: >
+            Crea un rol técnico propio del cargo (mismo código, no de sistema)
+            para que se le puedan asignar permisos, incluidos los de módulos.
+            Requiere `ownerOrganizationId`. Así el distrito arma cargos con
+            permisos sin necesitar `kernel.role.manage`. Si ya existe un rol con
+            ese código: 409.
 
     UpdatePositionDefinitionRequest:
       type: object
@@ -4765,8 +4780,19 @@ components:
         name: { type: string }
         description: { type: string, nullable: true }
         editPermissionCode: { type: string }
-        defaultRoleCode: { type: string, nullable: true }
+        defaultRoleCode:
+          type: string
+          nullable: true
+          description: >
+            Rol técnico existente (si no existe, 400). Al cambiarlo, los
+            nombramientos ACTIVE del cargo pasan al rol nuevo.
         isSingletonPerPeriod: { type: boolean }
+        grantsPermissions:
+          type: boolean
+          description: >
+            `true` convierte un cargo informativo en uno con permisos: le crea un
+            rol técnico propio y se lo da a quienes ya ocupan el cargo. 409 si el
+            cargo ya deriva un rol.
 
     Appointment:
       type: object

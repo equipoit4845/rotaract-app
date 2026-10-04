@@ -15,6 +15,30 @@ import {
 export function describePositionMutationError(
   error: unknown,
 ): KernelErrorMessage {
+  if (
+    error instanceof KernelApiError &&
+    error.status === 409 &&
+    error.detail?.includes("role with this position's code")
+  ) {
+    return {
+      title: "Ya existe un cargo o rol con ese nombre.",
+      description: "Probá con otro nombre para el cargo.",
+    };
+  }
+  return describeKernelError(error);
+}
+
+/** Turning an informational position into one that grants permissions. */
+export function describeEnablePermissionsError(
+  error: unknown,
+): KernelErrorMessage {
+  if (error instanceof KernelApiError && error.status === 409) {
+    return {
+      title: "No se pudieron activar los permisos.",
+      description:
+        "El cargo ya tiene permisos propios, o ya existe un rol con su código. Recargá la página; si sigue igual, avisale al equipo de la plataforma.",
+    };
+  }
   return describeKernelError(error);
 }
 
