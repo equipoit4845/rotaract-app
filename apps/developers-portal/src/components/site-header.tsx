@@ -47,12 +47,12 @@ export function SiteHeader() {
           <ThemeToggle />
         </div>
       </nav>
-      <div className="flex gap-1 overflow-x-auto border-t border-border px-4 py-1 lg:hidden">
+      <div className="flex flex-wrap gap-x-1 border-t border-border px-3 py-1 lg:hidden">
         {LINKS.map((link) => (
           <Link
             key={link.href}
             href={link.href}
-            className="shrink-0 rounded-lg px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground"
+            className="rounded-lg px-2.5 py-1.5 text-sm text-muted-foreground hover:text-foreground"
           >
             {link.label}
           </Link>

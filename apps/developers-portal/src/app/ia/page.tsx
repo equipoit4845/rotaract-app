@@ -269,7 +269,7 @@ export default function IaPage() {
         eyebrow="Antes de empezar"
         title="Lo que necesitás"
       >
-        <div className="grid gap-4 lg:grid-cols-[1fr_1.4fr]">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
           <div className="rounded-xl border border-border bg-card p-5">
             <span className="mb-4 grid size-10 place-items-center rounded-lg bg-primary/10 text-primary">
               <Laptop className="size-5" aria-hidden />
@@ -378,7 +378,7 @@ export default function IaPage() {
         title="Qué va a pasar"
         intro="Tu asistente va a ir paso a paso y te va a preguntar solo lo que tenés que decidir vos."
       >
-        <ol className="grid gap-3 md:grid-cols-3">
+        <ol className="grid grid-cols-1 gap-3 md:grid-cols-3">
           {STEPS.map((step, index) => (
             <li
               key={step}
@@ -399,7 +399,7 @@ export default function IaPage() {
         title="Cuando esté lista"
         intro="Tu asistente te deja el texto y las guías; estos pasos los hacés vos, con el RDR."
       >
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[
             {
               icon: ClipboardCheck,
@@ -450,7 +450,7 @@ export default function IaPage() {
             </div>
           ))}
         </div>
-        <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_1.3fr]">
+        <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]">
           <div className="rounded-xl border border-border bg-card p-5">
             <p className="font-semibold">Dónde publicarla</p>
             <ul className="mt-3 space-y-3 text-sm">
@@ -489,21 +489,21 @@ export default function IaPage() {
             <p className="border-b border-border px-5 py-3 font-semibold">
               Variables de entorno en el servicio
             </p>
-            <table className="w-full text-left text-sm">
-              <tbody>
-                {ENV_VARS.map(([name, value]) => (
-                  <tr
-                    key={name}
-                    className="border-b border-border last:border-0"
-                  >
-                    <td className="px-5 py-2 align-top font-mono text-[12.5px] break-all">
-                      {name}
-                    </td>
-                    <td className="px-5 py-2 text-muted-foreground">{value}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <dl className="text-sm">
+              {ENV_VARS.map(([name, value]) => (
+                <div
+                  key={name}
+                  className="grid gap-0.5 border-b border-border px-5 py-2.5 last:border-0 sm:grid-cols-[minmax(0,15rem)_minmax(0,1fr)] sm:gap-4"
+                >
+                  <dt className="font-mono text-[12.5px] [overflow-wrap:anywhere]">
+                    {name}
+                  </dt>
+                  <dd className="text-muted-foreground [overflow-wrap:anywhere]">
+                    {value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
           </div>
         </div>
       </Section>
@@ -534,7 +534,7 @@ export default function IaPage() {
             </span>
           </p>
         ) : null}
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="rounded-xl border border-border bg-card p-5 text-sm">
             <p className="font-semibold">Instalarlas en tu proyecto</p>
             <pre className="mt-3 overflow-x-auto rounded-lg bg-code p-3 font-mono text-[12.5px] text-code-foreground">
@@ -546,7 +546,7 @@ export default function IaPage() {
               CLI baja el paquete y verifica su suma SHA-256 antes de escribir.
             </p>
             <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
-              <dt className="text-muted-foreground">Versión</dt>
+              <dt className="text-muted-foreground">Versión de las skills</dt>
               <dd className="font-mono">{bundle.fingerprint}</dd>
               <dt className="text-muted-foreground">SHA-256</dt>
               <dd className="font-mono break-all">{bundle.sha256}</dd>

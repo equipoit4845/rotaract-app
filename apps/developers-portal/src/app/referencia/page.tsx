@@ -33,7 +33,7 @@ export default function ReferenceIndex() {
               kernel-openapi.yaml
             </a>{" "}
             (v{contractVersion}). La base es{" "}
-            <code className="rounded bg-muted px-1 font-mono text-sm">
+            <code className="rounded bg-muted px-1 font-mono text-sm break-all">
               https://api.rotaract4845.com/api/kernel/v1
             </code>
             . Los errores siguen{" "}
@@ -59,17 +59,20 @@ export default function ReferenceIndex() {
           <section key={section.title}>
             <h2 className="text-xl font-semibold">{section.title}</h2>
             <p className="mt-1 text-sm text-muted-foreground">{section.text}</p>
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
               {section.items.map((tag) => (
                 <Link
                   key={tag.slug}
                   href={`/referencia/${tag.slug}`}
-                  className="rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/40"
+                  className="min-w-0 rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/40"
                 >
-                  <p className="flex items-center justify-between font-semibold">
+                  <p className="flex flex-wrap items-center justify-between gap-x-3 font-semibold">
                     {tag.name}
                     <span className="text-xs font-normal text-muted-foreground">
-                      {tag.operations.length} operaciones
+                      {tag.operations.length}{" "}
+                      {tag.operations.length === 1
+                        ? "operación"
+                        : "operaciones"}
                     </span>
                   </p>
                   {tag.description ? (
@@ -81,7 +84,7 @@ export default function ReferenceIndex() {
                     {tag.operations.slice(0, 3).map((operation) => (
                       <li
                         key={operation.operationId}
-                        className="flex items-center gap-2 text-xs"
+                        className="flex min-w-0 items-center gap-2 text-xs"
                       >
                         <MethodBadge method={operation.method} />
                         <code className="truncate font-mono">

@@ -224,7 +224,7 @@ export function IdeaForm() {
           className={inputClass}
         />
       </label>
-      <div className="grid gap-5 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
         <label className="block text-sm font-medium">
           ¿Quién la va a usar?
           <textarea
@@ -334,7 +334,7 @@ export function PromptPanel({ master }: { master: string }) {
       <div
         role="tablist"
         aria-label="Tu asistente"
-        className="flex gap-1 overflow-x-auto border-b border-border bg-muted/40 p-1.5"
+        className="grid grid-cols-2 gap-1 border-b border-border bg-muted/40 p-1.5 sm:flex"
       >
         {ASSISTANT_IDS.map((id) => (
           <button
@@ -343,7 +343,7 @@ export function PromptPanel({ master }: { master: string }) {
             role="tab"
             aria-selected={assistant === id}
             onClick={() => setAssistant(id)}
-            className={`shrink-0 rounded-lg px-3 py-1.5 text-sm transition-colors ${
+            className={`flex flex-wrap items-center justify-center gap-x-1.5 gap-y-0.5 rounded-lg px-3 py-1.5 text-sm whitespace-nowrap transition-colors sm:shrink-0 ${
               assistant === id
                 ? "bg-background font-medium text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
@@ -351,7 +351,7 @@ export function PromptPanel({ master }: { master: string }) {
           >
             {ASSISTANTS[id].label}
             {ASSISTANTS[id].recommended ? (
-              <span className="ml-1.5 rounded bg-primary/10 px-1 text-[11px] font-medium text-primary">
+              <span className="rounded bg-primary/10 px-1 text-[11px] font-medium text-primary">
                 recomendado
               </span>
             ) : null}
@@ -362,7 +362,7 @@ export function PromptPanel({ master }: { master: string }) {
         <button
           type="button"
           onClick={copy}
-          className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-6 font-medium text-primary-foreground shadow-lg shadow-primary/20 transition-opacity hover:opacity-90 sm:flex-none"
+          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 font-medium text-primary-foreground shadow-lg shadow-primary/20 transition-opacity hover:opacity-90 sm:w-auto"
         >
           {copied === "ok" ? (
             <>

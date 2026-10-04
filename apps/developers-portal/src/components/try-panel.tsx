@@ -79,7 +79,7 @@ export function ConnectionBar() {
           Probar desde el navegador
         </h2>
       </div>
-      <div className="grid gap-3 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <label className="grid gap-1 text-sm">
           <span className="font-medium">URL base del kernel</span>
           <input

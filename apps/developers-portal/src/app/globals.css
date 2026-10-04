@@ -142,6 +142,8 @@
 }
 .prose-mr :not(pre) > code {
   @apply rounded-md bg-muted px-1.5 py-0.5 font-mono text-[0.85em];
+  /* long URLs and identifiers wrap instead of widening the page on phones */
+  overflow-wrap: anywhere;
 }
 .prose-mr table {
   @apply my-5 block w-full overflow-x-auto text-sm;
