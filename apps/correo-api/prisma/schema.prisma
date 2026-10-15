@@ -1,0 +1,239 @@
+// Correo Distrital (correo-api).
+//
+// Mailboxes @rotaract4845.com for the district authorities, tied to their
+// appointment. People and positions are never owned here: `personId` is a
+// kernel personId, `appointmentId` / `periodId` are kernel ids, and who holds
+// a position is always asked to the kernel. Mail content lives here; the raw
+// MIME and attachment bytes stay in ClickMail.
+//
+// The client is generated into ./generated/prisma so it never clashes with
+// the Institutional Kernel's own @prisma/client.
+
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../generated/prisma"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("CORREO_DATABASE_URL")
+}
+
+/// PERSONAL = nombre.apellido@, expires with its holder's mandate.
+/// ROLE = rdr@ / secretaria@ / tesoreria@, handed to the next holder.
+enum MailboxKind {
+  PERSONAL
+  ROLE
+}
+
+enum MailboxStatus {
+  ACTIVE
+  READ_ONLY
+  CLOSED
+}
+
+enum AssignmentStatus {
+  ACTIVE
+  ENDED
+}
+
+enum Folder {
+  INBOX
+  ARCHIVE
+  TRASH
+  SPAM
+}
+
+enum Direction {
+  IN
+  OUT
+}
+
+enum MessageStatus {
+  RECEIVED
+  QUEUED
+  SENT
+  DELIVERED
+  BOUNCED
+  FAILED
+}
+
+enum WebhookSource {
+  KERNEL
+  CLICKMAIL
+}
+
+model Mailbox {
+  id                    String              @id @default(cuid())
+  kind                  MailboxKind
+  /// Full lowercase address, e.g. "facundo.cubells@rotaract4845.com".
+  address               String              @unique
+  displayName           String
+  /// Kernel position code this mailbox belongs to (DISTRICT_RDR...).
+  positionCode          String
+  clickmailAddressId    String?             @unique
+  clickmailSenderId     String?             @unique
+  status                MailboxStatus       @default(ACTIVE)
+  /// The status ClickMail last reflected (address + sender on/off). Differs
+  /// from `status` (or is null) while ClickMail still has to catch up.
+  clickmailSyncedStatus MailboxStatus?
+  /// When READ_ONLY turns into CLOSED (READ_ONLY only).
+  closesAt              DateTime?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  assignments           MailboxAssignment[]
+  threads               Thread[]
+  messages              Message[]
+  drafts                Draft[]
+
+  @@index([kind, positionCode])
+  @@index([status, closesAt])
+}
+
+model MailboxAssignment {
+  id            String           @id @default(cuid())
+  mailboxId     String
+  mailbox       Mailbox          @relation(fields: [mailboxId], references: [id], onDelete: Cascade)
+  personId      String
+  appointmentId String
+  periodId      String
+  startsAt      DateTime
+  endsAt        DateTime?
+  status        AssignmentStatus @default(ACTIVE)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@unique([mailboxId, appointmentId])
+  @@index([personId, status])
+  @@index([appointmentId])
+}
+
+model Thread {
+  id            String     @id @default(cuid())
+  mailboxId     String
+  mailbox       Mailbox    @relation(fields: [mailboxId], references: [id], onDelete: Cascade)
+  subject       String
+  snippet       String     @default("")
+  folder        Folder     @default(INBOX)
+  unreadCount   Int        @default(0)
+  lastMessageAt DateTime
+  /// Who wrote the newest message: IN = waiting for our reply ("Por responder").
+  lastDirection Direction?
+  /// When it went to the Papelera; emptied after 30 days.
+  trashedAt     DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  messages      Message[]
+  drafts        Draft[]
+
+  @@index([mailboxId, folder, lastMessageAt(sort: Desc)])
+  @@index([trashedAt])
+}
+
+/// An email being written (new, or a reply in a thread), saved as it is typed.
+/// Text and recipients only: attachments stay in the browser until sending.
+model Draft {
+  id        String   @id
+  mailboxId String
+  mailbox   Mailbox  @relation(fields: [mailboxId], references: [id], onDelete: Cascade)
+  personId  String
+  threadId  String?
+  thread    Thread?  @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  replyAll  Boolean  @default(false)
+  toEmails  String[] @default([])
+  ccEmails  String[] @default([])
+  bccEmails String[] @default([])
+  subject   String   @default("")
+  text      String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([mailboxId, personId, updatedAt(sort: Desc)])
+  @@index([threadId, personId])
+}
+
+model Message {
+  id                 String        @id @default(cuid())
+  threadId           String
+  thread             Thread        @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  mailboxId          String
+  mailbox            Mailbox       @relation(fields: [mailboxId], references: [id], onDelete: Cascade)
+  direction          Direction
+  /// ClickMail InboundEmail id (IN) or Email id (OUT).
+  clickmailInboundId String?
+  clickmailEmailId   String?       @unique
+  /// RFC 5322 Message-ID ("<...>"); for OUT it arrives with email.sent.
+  messageIdHeader    String?
+  inReplyTo          String?
+  references         String[]      @default([])
+  fromEmail          String
+  fromName           String?
+  toEmails           String[]      @default([])
+  ccEmails           String[]      @default([])
+  bccEmails          String[]      @default([])
+  replyToEmails      String[]      @default([])
+  subject            String
+  text               String?
+  html               String?
+  status             MessageStatus
+  statusDetail       String?
+  spfVerdict         String?
+  dkimVerdict        String?
+  dmarcVerdict       String?
+  spamVerdict        String?
+  /// Kernel personId of the author (OUT only).
+  sentByPersonId     String?
+  readAt             DateTime?
+  /// receivedAt (IN) or the moment it was queued (OUT).
+  at                 DateTime
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  attachments        Attachment[]
+
+  @@unique([mailboxId, clickmailInboundId])
+  @@index([threadId, at])
+  @@index([messageIdHeader])
+}
+
+model Attachment {
+  id                    String   @id @default(cuid())
+  messageId             String
+  message               Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  clickmailAttachmentId String?
+  filename              String
+  contentType           String?
+  contentId             String?
+  sizeBytes             Int
+  /// false when ClickMail did not keep the content (size/count limits).
+  stored                Boolean  @default(true)
+  createdAt             DateTime @default(now())
+
+  @@index([messageId])
+}
+
+/// Webhook ids already handled (both senders deliver at-least-once).
+model WebhookReceipt {
+  id          String        @id @default(cuid())
+  source      WebhookSource
+  eventId     String
+  type        String
+  processedAt DateTime      @default(now())
+
+  @@unique([source, eventId])
+}
+
+/// Who opened, sent, deleted or closed what. `meta` never holds bodies,
+/// addresses or tokens.
+model AuditEvent {
+  id            String   @id @default(cuid())
+  actorPersonId String?
+  action        String
+  mailboxId     String?
+  messageId     String?
+  meta          Json?
+  at            DateTime @default(now())
+
+  @@index([mailboxId, at])
+  @@index([actorPersonId, at])
+}

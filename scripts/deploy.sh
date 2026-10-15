@@ -9,7 +9,7 @@
 # Services:
 #   api, web            blue/green behind the edge proxy: zero downtime.
 #   worker              recreated (no traffic; jobs pause a few seconds).
-#   developers-portal, meetings-api, meetings-web
+#   developers-portal, meetings-api, meetings-web, correo-api, correo-web
 #                       recreated (a few seconds of downtime; see the doc).
 #
 # Steps: lock → back up the database → build (once) → migrate (one-off,
@@ -279,7 +279,7 @@ needs_db=0
 for s in "${SERVICES[@]}"; do
   case "$s" in
     api | worker) needs_db=1 ;;
-    web | developers-portal | meetings-api | meetings-web) ;;
+    web | developers-portal | meetings-api | meetings-web | correo-api | correo-web) ;;
     *) die "unknown service $s" ;;
   esac
 done

@@ -239,6 +239,89 @@ services:
       MEETINGS_TOKEN_SECRET: ${MEETINGS_TOKEN_SECRET:-}
     ports: ["127.0.0.1:${MEETINGS_WEB_HOST_PORT:-3002}:3002"]
 
+  # --- Correo Distrital (apps/correo-api, apps/correo-web) -------------------
+  # Own database "correo" on the shared postgres, created by correo-db-init;
+  # correo-api applies its migrations on start. https://correo.rotaract4845.com:
+  # cloudflared → edge :3007 (infra/deploy/nginx/nginx.conf), which routes
+  # "/correo-api/*" to correo-api and the rest to correo-web.
+  correo-db-init:
+    image: postgres:16-alpine
+    restart: "no"
+    environment:
+      PGHOST: postgres
+      PGUSER: ${POSTGRES_USER:-kernel}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
+      CORREO_DB_NAME: ${CORREO_DB_NAME:-correo}
+    command:
+      - sh
+      - -c
+      - >-
+        psql -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname = '$$CORREO_DB_NAME'" | grep -q 1
+        || psql -d postgres -c "CREATE DATABASE \"$$CORREO_DB_NAME\""
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  correo-api:
+    restart: unless-stopped
+    init: true
+    build:
+      context: .
+      dockerfile: infra/docker/correo-api.Dockerfile
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3006
+      # e.g. postgresql://kernel:<POSTGRES_PASSWORD>@postgres:5432/correo
+      CORREO_DATABASE_URL: ${CORREO_DATABASE_URL:-}
+      # Shared with correo-web (HS256, >= 32 chars).
+      CORREO_TOKEN_SECRET: ${CORREO_TOKEN_SECRET:-}
+      CORREO_CORS_ORIGIN: ${CORREO_CORS_ORIGIN:-https://correo.rotaract4845.com}
+      # Kernel service app (client_credentials). The SDK checks the discovery
+      # issuer, so this is the public URL, not http://api:3001.
+      KERNEL_API_URL: ${CORREO_KERNEL_API_URL:-https://api.rotaract4845.com/api/kernel/v1}
+      KERNEL_CLIENT_ID: ${CORREO_KERNEL_CLIENT_ID:-}
+      KERNEL_CLIENT_SECRET: ${CORREO_KERNEL_CLIENT_SECRET:-}
+      CORREO_DISTRICT_ORGANIZATION_ID: ${CORREO_DISTRICT_ORGANIZATION_ID:-}
+      # Kernel webhooks (appointment.*), whsec_ from the app's webhook endpoint.
+      MIROTARACT_WEBHOOK_SECRET: ${CORREO_MIROTARACT_WEBHOOK_SECRET:-}
+      # ClickMail: own key with send, inbound:read and inbound:write. Without
+      # it mailboxes are created and wait ("Preparando").
+      CORREO_CLICKMAIL_API_KEY: ${CORREO_CLICKMAIL_API_KEY:-}
+      # Signs ClickMail's webhooks to /correo-api/webhooks/clickmail (email.received).
+      CORREO_CLICKMAIL_WEBHOOK_SECRET: ${CORREO_CLICKMAIL_WEBHOOK_SECRET:-}
+    ports: ["127.0.0.1:${CORREO_API_HOST_PORT:-3006}:3006"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      correo-db-init: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3006/correo-api/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+
+  correo-web:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: infra/docker/correo-web.Dockerfile
+      args:
+        NEXT_PUBLIC_CORREO_API_URL: ${NEXT_PUBLIC_CORREO_API_URL:-}
+        NEXT_PUBLIC_MIROTARACT_URL: ${NEXT_PUBLIC_MIROTARACT_URL:-https://app.rotaract4845.com}
+    environment:
+      NODE_ENV: production
+      PORT: 3005
+      HOSTNAME: 0.0.0.0
+      # Empty defaults on purpose (see meetings-web): the app refuses to log
+      # anyone in without them.
+      # "Ingresar con Mi Rotaract" (CONFIDENTIAL kernel app).
+      MIROTARACT_ISSUER: ${MIROTARACT_ISSUER:-https://api.rotaract4845.com/api/kernel/v1}
+      MIROTARACT_CLIENT_ID: ${CORREO_MIROTARACT_CLIENT_ID:-}
+      MIROTARACT_CLIENT_SECRET: ${CORREO_MIROTARACT_CLIENT_SECRET:-}
+      MIROTARACT_REDIRECT_URI: ${CORREO_MIROTARACT_REDIRECT_URI:-https://correo.rotaract4845.com/auth/callback}
+      SESSION_SECRET: ${CORREO_SESSION_SECRET:-}
+      # Shared with correo-api: signs the 15-minute correo token.
+      CORREO_TOKEN_SECRET: ${CORREO_TOKEN_SECRET:-}
+    ports: ["127.0.0.1:${CORREO_WEB_HOST_PORT:-3005}:3005"]
+
 volumes:
   postgres-data:
   redis-data:

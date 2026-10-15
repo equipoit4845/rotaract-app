@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developers.rotaract4845.com/schemas/module-manifest.v1.json",
+  "id": "correo",
+  "name": "Correo Distrital",
+  "description": "Casillas @rotaract4845.com para las autoridades distritales, atadas al mandato.",
+  "version": "1.0.0",
+  "contractVersion": 1,
+  "permissions": [
+    { "code": "correo.mailbox.use", "name": "Usar la casilla de su cargo", "description": "Leer, redactar y responder desde la casilla del cargo que ejerce.", "scopeType": "ORGANIZATION_TREE" },
+    { "code": "correo.mailbox.manage", "name": "Administrar casillas", "description": "Ver el estado de las casillas, reactivar o cerrar una, y ver la auditoría.", "scopeType": "ORGANIZATION_TREE" }
+  ],
+  "events": { "subscribes": ["appointment.activated.v1", "appointment.ended.v1", "person.updated.v1"], "emits": [] },
+  "configurationSchema": {
+    "type": "object",
+    "properties": {
+      "positions": {
+        "title": "Cargos con casilla",
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "positionCode": { "type": "string", "title": "Código del cargo" },
+            "alias": { "type": "string", "title": "Dirección del cargo", "pattern": "^[a-z0-9.-]+$" }
+          },
+          "required": ["positionCode", "alias"],
+          "additionalProperties": false
+        },
+        "default": [
+          { "positionCode": "DISTRICT_RDR", "alias": "rdr" },
+          { "positionCode": "DISTRICT_SECRETARY", "alias": "secretaria" },
+          { "positionCode": "DISTRICT_TREASURER", "alias": "tesoreria" }
+        ]
+      },
+      "graceDays": { "title": "Días de solo lectura después del mandato", "type": "integer", "minimum": 0, "maximum": 90, "default": 30 }
+    },
+    "additionalProperties": false
+  },
+  "ui": { "entryUrl": "https://correo.rotaract4845.com", "navLabel": "Correo", "icon": "mail" },
+  "oauth": { "scopes": ["openid", "profile", "positions", "kernel.service.authorities.read", "kernel.service.periods.read", "kernel.service.persons.read", "kernel.service.authorization.check"] }
+}

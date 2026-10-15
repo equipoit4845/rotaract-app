@@ -81,6 +81,8 @@ services:
     ports:
       - "127.0.0.1:${API_HOST_PORT:-3001}:3001"
       - "127.0.0.1:${WEB_HOST_PORT:-3000}:3000"
+      # Correo Distrital (cloudflared → correo.rotaract4845.com).
+      - "127.0.0.1:${CORREO_EDGE_HOST_PORT:-3007}:3007"
     volumes:
       - ./infra/deploy/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       # Written by scripts/deploy.sh: which slot serves api and web.
