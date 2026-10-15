@@ -218,6 +218,44 @@ export function MailApp({
     />
   );
 
+  const searchBox = (
+    <form
+      role="search"
+      className="mx-auto flex h-11 max-w-2xl items-center gap-3 rounded-full bg-muted px-4 focus-within:bg-background focus-within:shadow-md focus-within:ring-1 focus-within:ring-border"
+      onSubmit={(e) => {
+        e.preventDefault();
+        const value = new FormData(e.currentTarget).get("q")?.toString().trim();
+        router.push(
+          value ? `${pathname}?q=${encodeURIComponent(value)}` : pathname,
+        );
+      }}
+    >
+      <Search className="size-5 shrink-0 text-muted-foreground" aria-hidden />
+      <input
+        ref={searchInput}
+        key={q ?? ""}
+        name="q"
+        defaultValue={q ?? ""}
+        placeholder="Buscar en el correo (de:, asunto:, adjunto)"
+        aria-label="Buscar en esta casilla"
+        title="Buscar (/)"
+        onKeyDown={(e) =>
+          e.key === "Escape" &&
+          (e.currentTarget.blur(), q && router.push(pathname))
+        }
+        className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+      />
+      {q ? (
+        <Link
+          href={pathname}
+          className="text-xs text-muted-foreground hover:text-foreground"
+        >
+          Limpiar
+        </Link>
+      ) : null}
+    </form>
+  );
+
   const filterHref = (nextVista: string | null) =>
     nextVista ? `${pathname}?vista=${nextVista}` : pathname;
 
@@ -228,6 +266,8 @@ export function MailApp({
   return (
     <div className="flex h-dvh flex-col bg-background">
       <AppHeader
+        center={searchBox}
+        account={{ name: me.state.data.name, detail: mailbox.address }}
         leading={
           <button
             type="button"
@@ -273,48 +313,6 @@ export function MailApp({
             openId ? "hidden lg:flex" : "flex",
           )}
         >
-          <form
-            role="search"
-            className="flex shrink-0 items-center gap-2 border-b px-3 py-2"
-            onSubmit={(e) => {
-              e.preventDefault();
-              const value = new FormData(e.currentTarget)
-                .get("q")
-                ?.toString()
-                .trim();
-              router.push(
-                value ? `${pathname}?q=${encodeURIComponent(value)}` : pathname,
-              );
-            }}
-          >
-            <Search
-              className="size-4 shrink-0 text-muted-foreground"
-              aria-hidden
-            />
-            <input
-              ref={searchInput}
-              key={q ?? ""}
-              name="q"
-              defaultValue={q ?? ""}
-              placeholder="Buscar (de:, asunto:, adjunto)"
-              aria-label="Buscar en esta casilla"
-              title="Buscar (/)"
-              onKeyDown={(e) =>
-                e.key === "Escape" &&
-                (e.currentTarget.blur(), q && router.push(pathname))
-              }
-              className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
-            />
-            {q ? (
-              <Link
-                href={pathname}
-                className="text-xs text-muted-foreground hover:text-foreground"
-              >
-                Limpiar
-              </Link>
-            ) : null}
-          </form>
-
           {view === "INBOX" && !q ? (
             <nav
               className="flex shrink-0 gap-1 overflow-x-auto border-b px-2 py-1.5"

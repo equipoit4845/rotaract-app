@@ -1,32 +1,51 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { AccountMenu, AppsMenu } from "@/components/layout/HeaderMenus";
 import { Logo } from "@/components/layout/Logo";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
-/** Logo, theme and sign out; `leading` goes before the logo (mobile menu). */
-export function AppHeader({ leading }: { leading?: ReactNode }) {
+/**
+ * The top bar, Gmail-style: logo on the left, `center` (the inbox search) in
+ * the middle, then theme, the district apps and the account menu. Without
+ * `account` (screens before the mailbox loads) a plain "Salir" stays.
+ */
+export function AppHeader({
+  leading,
+  center,
+  account,
+}: {
+  leading?: ReactNode;
+  center?: ReactNode;
+  account?: { name: string | null; detail?: string };
+}) {
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between border-b px-3">
-      <span className="flex items-center gap-2">
+    <header className="flex h-14 shrink-0 items-center gap-3 border-b px-3">
+      <span className="flex shrink-0 items-center gap-2 lg:w-[13rem]">
         {leading}
         <Link href="/bandeja" className="flex items-center gap-3">
           <Logo size={28} />
-          <span className="text-sm font-semibold text-foreground">
+          <span className="hidden text-sm font-semibold text-foreground sm:inline">
             Correo Distrital
           </span>
         </Link>
       </span>
-      <span className="flex items-center gap-1">
+      <div className="min-w-0 flex-1">{center}</div>
+      <span className="flex shrink-0 items-center gap-1">
         <ThemeToggle />
-        <form action="/auth/logout" method="post">
-          <button
-            type="submit"
-            className="rounded-lg px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted"
-          >
-            Salir
-          </button>
-        </form>
+        <AppsMenu />
+        {account ? (
+          <AccountMenu name={account.name} detail={account.detail} />
+        ) : (
+          <form action="/auth/logout" method="post">
+            <button
+              type="submit"
+              className="rounded-lg px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted"
+            >
+              Salir
+            </button>
+          </form>
+        )}
       </span>
     </header>
   );

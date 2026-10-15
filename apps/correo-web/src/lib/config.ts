@@ -19,3 +19,8 @@ export const SESSION_TOKEN_PATH = "/api/session/token";
 export function loginHref(returnTo: string): string {
   return `/auth/login?returnTo=${encodeURIComponent(returnTo)}`;
 }
+
+/** Reuniones Distritales, in the apps menu. */
+export const REUNIONES_URL = trimSlash(
+  process.env.NEXT_PUBLIC_REUNIONES_URL || "https://reuniones.rotaract4845.com",
+);

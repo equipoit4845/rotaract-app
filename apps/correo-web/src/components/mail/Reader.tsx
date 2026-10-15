@@ -5,6 +5,7 @@ import {
   ArchiveRestore,
   ArrowLeft,
   Download,
+  Eye,
   Mail,
   OctagonAlert,
   Reply,
@@ -15,6 +16,11 @@ import {
 import { useEffect, useState, type ReactNode } from "react";
 
 import { notifyInboxChanged } from "@/components/mail/ComposeProvider";
+import {
+  AttachmentPreview,
+  attachmentUrl,
+  previewKind,
+} from "@/components/mail/AttachmentPreview";
 import { Composer } from "@/components/mail/Composer";
 import { HtmlFrame } from "@/components/mail/HtmlFrame";
 import { api } from "@/lib/api";
@@ -260,6 +266,7 @@ function recipientsOf(last: MessageView, own: string[]) {
 }
 
 function MessageCard({ message: m }: { message: MessageView }) {
+  const [preview, setPreview] = useState<number | null>(null);
   return (
     <section className="rounded-xl border p-4">
       <header className="mb-3 space-y-0.5">
@@ -303,41 +310,72 @@ function MessageCard({ message: m }: { message: MessageView }) {
       )}
       {m.attachments.length ? (
         <ul className="mt-4 flex flex-wrap gap-2">
-          {m.attachments.map((a) => (
+          {m.attachments.map((a, i) => (
             <li key={a.id}>
               <AttachmentButton
                 messageId={m.id}
                 attachment={a}
                 outgoing={m.direction === "OUT"}
+                onPreview={() => setPreview(i)}
               />
             </li>
           ))}
         </ul>
       ) : null}
+      {preview !== null ? (
+        <AttachmentPreview
+          messageId={m.id}
+          attachments={m.attachments}
+          index={preview}
+          onIndex={setPreview}
+          onClose={() => setPreview(null)}
+        />
+      ) : null}
     </section>
   );
 }
 
+/**
+ * An attachment chip: images show a thumbnail; images, PDFs and text open the
+ * viewer; anything else downloads.
+ */
 function AttachmentButton({
   messageId,
   attachment: a,
   outgoing,
+  onPreview,
 }: {
   messageId: string;
   attachment: AttachmentView;
   outgoing: boolean;
+  onPreview: () => void;
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [thumb, setThumb] = useState<string | null>(null);
+  const kind = a.available ? previewKind(a) : null;
+
+  useEffect(() => {
+    if (kind !== "image") return;
+    let cancelled = false;
+    attachmentUrl(messageId, a.id)
+      .then((u) => !cancelled && setThumb(u))
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [kind, messageId, a.id]);
 
   const open = async () => {
+    if (kind) return onPreview();
     setBusy(true);
     setError(null);
     try {
-      const { url } = await api<{ url: string }>(
-        `/messages/${messageId}/attachments/${a.id}`,
+      window.open(
+        await attachmentUrl(messageId, a.id),
+        "_blank",
+        "noopener,noreferrer",
       );
-      window.open(url, "_blank", "noopener,noreferrer");
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se pudo abrir.");
     } finally {
@@ -345,23 +383,55 @@ function AttachmentButton({
     }
   };
 
+  const title = !a.available
+    ? outgoing
+      ? "Enviado con el mail; no se puede abrir desde acá"
+      : "Este adjunto no se guardó (superaba el tamaño)"
+    : kind
+      ? "Ver"
+      : "Descargar";
+
   return (
     <span className="inline-flex flex-col">
       <button
         onClick={open}
         disabled={!a.available || busy}
-        title={
-          a.available
-            ? "Descargar"
-            : outgoing
-              ? "Enviado con el mail; no se puede descargar desde acá"
-              : "Este adjunto no se guardó (superaba el tamaño)"
-        }
-        className="inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs text-foreground hover:bg-muted disabled:opacity-60"
+        title={title}
+        className={cn(
+          "overflow-hidden rounded-lg border text-left text-xs text-foreground hover:bg-muted disabled:opacity-60",
+          thumb ? "w-40" : "inline-flex items-center gap-2 px-3 py-1.5",
+        )}
       >
-        <Download className="size-3.5" aria-hidden />
-        <span className="max-w-48 truncate">{a.filename}</span>
-        <span className="text-muted-foreground">{formatSize(a.sizeBytes)}</span>
+        {thumb ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={thumb}
+              alt=""
+              referrerPolicy="no-referrer"
+              loading="lazy"
+              className="h-24 w-full bg-muted object-cover"
+            />
+            <span className="flex items-center gap-1 px-2 py-1.5">
+              <span className="min-w-0 flex-1 truncate">{a.filename}</span>
+              <span className="text-muted-foreground">
+                {formatSize(a.sizeBytes)}
+              </span>
+            </span>
+          </>
+        ) : (
+          <>
+            {kind ? (
+              <Eye className="size-3.5" aria-hidden />
+            ) : (
+              <Download className="size-3.5" aria-hidden />
+            )}
+            <span className="max-w-48 truncate">{a.filename}</span>
+            <span className="text-muted-foreground">
+              {formatSize(a.sizeBytes)}
+            </span>
+          </>
+        )}
       </button>
       {error ? (
         <span className="mt-1 text-xs text-destructive">{error}</span>
