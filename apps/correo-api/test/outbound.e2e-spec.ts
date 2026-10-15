@@ -145,6 +145,45 @@ describe('sending mail (e2e)', () => {
     expect(sent.body.items.map((t: { subject: string }) => t.subject)).toEqual(['Convocatoria']);
   });
 
+  it('sends the editor HTML cleaned again, with inline images by cid', async () => {
+    const res = http()
+      .post(`/correo-api/mailboxes/${facuBox}/messages`)
+      .set('Authorization', auth)
+      .field(
+        'payload',
+        JSON.stringify({
+          to: ['a@example.org'],
+          subject: 'Con formato',
+          text: 'Hola fuerte',
+          html: '<p onclick="x()">Hola <strong>fuerte</strong> <a href="javascript:alert(1)">mal</a></p><img src="cid:img1.abc@correo" alt="logo"><script>alert(1)</script>',
+          inlineIds: ['img1.abc@correo'],
+          idempotencyKey: key(20),
+        }),
+      )
+      .attach('inline', Buffer.from('PNGDATA'), { filename: 'logo.png', contentType: 'image/png' });
+    await res.expect(201);
+    const sent = mail.sent[0];
+    expect(sent.html).toContain(
+      '<p>Hola <strong>fuerte</strong> <a target="_blank" rel="noopener noreferrer">mal</a></p><img src="cid:img1.abc@correo" alt="logo" />',
+    );
+    expect(sent.html).not.toContain('script');
+    expect(sent.attachments).toEqual([expect.objectContaining({ filename: 'logo.png', contentId: 'img1.abc@correo' })]);
+    const att = await prisma.attachment.findFirstOrThrow();
+    expect(att.contentId).toBe('img1.abc@correo');
+  });
+
+  it('rejects inline images whose ids do not match', async () => {
+    await http()
+      .post(`/correo-api/mailboxes/${facuBox}/messages`)
+      .set('Authorization', auth)
+      .field(
+        'payload',
+        JSON.stringify({ to: ['a@example.org'], subject: 's', text: 't', inlineIds: [], idempotencyKey: key(21) }),
+      )
+      .attach('inline', Buffer.from('x'), 'a.png')
+      .expect(400);
+  });
+
   it('the same idempotency key never sends twice nor duplicates the row', async () => {
     const payload = { to: ['a@example.org'], subject: 'x', text: 'y', idempotencyKey: key(2) };
     const first = await compose(facuBox, payload).expect(201);

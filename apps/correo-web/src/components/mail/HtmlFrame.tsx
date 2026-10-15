@@ -13,9 +13,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 export function HtmlFrame({
   html,
   remoteImages,
+  imageOrigins = [],
 }: {
   html: string;
   remoteImages: boolean;
+  /** Inline images (cid:) load from these, always: they are this email's own parts. */
+  imageOrigins?: string[];
 }) {
   const [showImages, setShowImages] = useState(false);
   const [height, setHeight] = useState(120);
@@ -23,9 +26,14 @@ export function HtmlFrame({
 
   const srcDoc = useMemo(() => {
     const body = showImages ? html.replace(/ data-cd-src="/g, ' src="') : html;
-    const imgSrc = showImages ? "data: https: http:" : "data:";
+    const safeOrigins = imageOrigins.filter((o) =>
+      /^https:\/\/[a-z0-9.-]+(:\d+)?$/i.test(o),
+    );
+    const imgSrc = showImages
+      ? "data: https: http:"
+      : ["data:", ...safeOrigins].join(" ");
     return `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${imgSrc}; style-src 'unsafe-inline'; font-src data:"><base target="_blank"><style>html{margin:0;padding:0}body{margin:0;padding:12px 14px;background:#fff;color:#111;font:14px/1.5 Arial,Helvetica,sans-serif;word-wrap:break-word}img{max-width:100%;height:auto}table{max-width:100%}blockquote{margin:0 0 0 .8em;padding-left:.8em;border-left:2px solid #ccc;color:#555}</style></head><body>${body}</body></html>`;
-  }, [html, showImages]);
+  }, [html, showImages, imageOrigins]);
 
   const observer = useRef<ResizeObserver | null>(null);
   useEffect(() => () => observer.current?.disconnect(), []);

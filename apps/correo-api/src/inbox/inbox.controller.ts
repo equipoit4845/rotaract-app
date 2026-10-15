@@ -15,7 +15,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { AuditService } from '../audit/audit.service';
 import { htmlToText } from '../inbound/inbound-mail';
-import { sanitizeEmailHtml } from '../inbound/sanitize-email';
+import { normalizeCid, resolveInlineImages, sanitizeEmailHtml } from '../inbound/sanitize-email';
 import { parseSearch } from './search';
 import { CurrentUser, CurrentUserPayload } from '../auth/current-user.decorator';
 import { MAIL_PROVIDER, type MailProvider } from '../mail-provider/mail-provider';
@@ -156,6 +156,34 @@ export class InboxController {
       mailboxId: thread.mailboxId,
       meta: { threadId },
     });
+    // Sanitized HTML per message; inline images (cid:) of received ones get
+    // their short-lived links, and are not listed again as attachments.
+    const views = new Map<
+      string,
+      { html: string | null; remoteImages: boolean; origins: string[]; inlineCids: Set<string> }
+    >();
+    for (const m of messages) {
+      const safe = sanitizeEmailHtml(m.html);
+      const inlineCids = new Set([...(safe?.html.matchAll(/ data-cd-cid="([^"]*)"/g) ?? [])].map((x) => x[1]));
+      const urls = new Map<string, string>();
+      if (safe && inlineCids.size && m.direction === 'IN' && m.clickmailInboundId) {
+        for (const a of m.attachments) {
+          const cid = a.contentId ? normalizeCid(a.contentId) : null;
+          if (!cid || !inlineCids.has(cid) || !a.stored || !a.clickmailAttachmentId) continue;
+          try {
+            urls.set(cid, await this.mail.attachmentUrl(m.clickmailInboundId, a.clickmailAttachmentId));
+          } catch {
+            // Shown without that image.
+          }
+        }
+      }
+      views.set(m.id, {
+        html: safe ? resolveInlineImages(safe.html, urls) : null,
+        remoteImages: safe?.remoteImages ?? false,
+        origins: [...new Set([...urls.values()].map((u) => new URL(u).origin))],
+        inlineCids: new Set([...inlineCids].filter((c) => urls.has(c))),
+      });
+    }
     return {
       id: thread.id,
       mailboxId: thread.mailboxId,
@@ -163,10 +191,17 @@ export class InboxController {
       folder: thread.folder,
       // The person's unsent reply here, if they left one.
       draft: draft
-        ? { id: draft.id, replyAll: draft.replyAll, cc: draft.ccEmails, bcc: draft.bccEmails, text: draft.text }
+        ? {
+            id: draft.id,
+            replyAll: draft.replyAll,
+            cc: draft.ccEmails,
+            bcc: draft.bccEmails,
+            text: draft.text,
+            html: draft.html,
+          }
         : null,
       messages: messages.map((m) => {
-        const safe = sanitizeEmailHtml(m.html);
+        const view = views.get(m.id)!;
         return {
           id: m.id,
           direction: m.direction,
@@ -177,8 +212,10 @@ export class InboxController {
           subject: m.subject,
           body: m.text ?? htmlToText(m.html),
           // Sanitized here (src/inbound/sanitize-email.ts); the reader shows it in a sandboxed iframe.
-          html: safe?.html ?? null,
-          remoteImages: safe?.remoteImages ?? false,
+          html: view.html,
+          remoteImages: view.remoteImages,
+          /** Where inline images load from (the reader's CSP allows them). */
+          imageOrigins: view.origins,
           at: m.at,
           status: m.status,
           statusDetail: m.statusDetail,
@@ -186,13 +223,15 @@ export class InboxController {
           // SPF, DKIM or DMARC failed: the sender may not be who it claims.
           suspicious: failed(m.spfVerdict) || failed(m.dkimVerdict) || failed(m.dmarcVerdict),
           spam: failed(m.spamVerdict),
-          attachments: m.attachments.map((a) => ({
-            id: a.id,
-            filename: a.filename,
-            contentType: a.contentType,
-            sizeBytes: a.sizeBytes,
-            available: a.stored && !!a.clickmailAttachmentId,
-          })),
+          attachments: m.attachments
+            .filter((a) => !(a.contentId && view.inlineCids.has(normalizeCid(a.contentId))))
+            .map((a) => ({
+              id: a.id,
+              filename: a.filename,
+              contentType: a.contentType,
+              sizeBytes: a.sizeBytes,
+              available: a.stored && !!a.clickmailAttachmentId,
+            })),
         };
       }),
     };

@@ -157,3 +157,54 @@
     @apply min-h-screen bg-background text-foreground;
   }
 }
+
+/* Composer body (Tiptap): formatting the way it will look in the email. */
+.prose-mail p {
+  margin: 0 0 0.75em;
+}
+.prose-mail ul {
+  list-style: disc;
+  padding-left: 1.5em;
+  margin: 0 0 0.75em;
+}
+.prose-mail ol {
+  list-style: decimal;
+  padding-left: 1.5em;
+  margin: 0 0 0.75em;
+}
+.prose-mail blockquote {
+  border-left: 2px solid var(--border);
+  padding-left: 0.8em;
+  color: var(--muted-foreground);
+  margin: 0 0 0.75em;
+}
+.prose-mail a {
+  color: var(--primary);
+  text-decoration: underline;
+}
+.prose-mail h2 {
+  font-size: 1.15em;
+  font-weight: 600;
+  margin: 0 0 0.5em;
+}
+.prose-mail h3 {
+  font-size: 1.05em;
+  font-weight: 600;
+  margin: 0 0 0.5em;
+}
+.prose-mail img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.375rem;
+  margin: 0.25em 0;
+}
+.prose-mail img.ProseMirror-selectednode {
+  outline: 2px solid var(--primary);
+}
+.prose-mail p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--muted-foreground);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}

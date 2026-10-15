@@ -146,6 +146,8 @@ model Draft {
   bccEmails String[] @default([])
   subject   String   @default("")
   text      String   @default("")
+  /// The editor's HTML (sanitized); text is its plain version.
+  html      String   @default("")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

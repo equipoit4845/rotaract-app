@@ -301,8 +301,12 @@ function MessageCard({ message: m }: { message: MessageView }) {
           enlaces ni adjuntos si no lo esperabas.
         </p>
       ) : null}
-      {m.html && m.direction === "IN" ? (
-        <HtmlFrame html={m.html} remoteImages={m.remoteImages} />
+      {m.html ? (
+        <HtmlFrame
+          html={m.html}
+          remoteImages={m.remoteImages}
+          imageOrigins={m.imageOrigins}
+        />
       ) : (
         <div className="whitespace-pre-wrap break-words text-sm leading-relaxed text-foreground">
           {m.body || <span className="text-muted-foreground">(sin texto)</span>}

@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { CurrentUser, CurrentUserPayload } from '../auth/current-user.decorator';
+import { sanitizeOutgoingHtml } from '../inbound/sanitize-email';
 import { MailboxAccessService } from '../inbox/mailbox-access.service';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -61,6 +62,7 @@ export class DraftsController {
       bcc: d.bccEmails,
       subject: d.threadId ? (d.thread?.subject ?? d.subject) : d.subject,
       text: d.text,
+      html: d.html,
       updatedAt: d.updatedAt,
     }));
   }
@@ -89,6 +91,8 @@ export class DraftsController {
       bccEmails: list(body.bcc),
       subject: text(body.subject, 500),
       text: text(body.text, 200_000),
+      // Pasted images live in the browser until sending: blob: links are not kept.
+      html: sanitizeOutgoingHtml(text(body.html, 500_000)),
     };
     const draft = await this.prisma.draft.upsert({
       where: { id },

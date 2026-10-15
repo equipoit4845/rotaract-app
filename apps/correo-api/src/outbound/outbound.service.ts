@@ -13,6 +13,7 @@ import {
 import type { EmailEventData } from '@clickmail/sdk';
 import { AuditService } from '../audit/audit.service';
 import { snippetOf } from '../inbound/inbound-mail';
+import { sanitizeOutgoingHtml } from '../inbound/sanitize-email';
 import { MailboxAccessService } from '../inbox/mailbox-access.service';
 import { MAIL_PROVIDER, type MailProvider, type OutgoingAttachment } from '../mail-provider/mail-provider';
 import { Prisma, type Mailbox, type MessageStatus } from '../prisma/client';
@@ -126,6 +127,8 @@ export type ComposeInput = {
   bcc?: string[];
   subject: string;
   text: string;
+  /** The editor's HTML; sanitized again before sending. */
+  html?: string;
   idempotencyKey: string;
 };
 
@@ -134,12 +137,20 @@ export type ReplyInput = {
   cc?: string[];
   bcc?: string[];
   text: string;
+  html?: string;
   /** The message answered; default: the newest one of the thread. */
   messageId?: string;
   idempotencyKey: string;
 };
 
-export type UploadedFile = { originalname: string; mimetype: string; size: number; buffer: Buffer };
+export type UploadedFile = {
+  originalname: string;
+  mimetype: string;
+  size: number;
+  buffer: Buffer;
+  /** Set for images pasted into the text (sent inline, `cid:`). */
+  contentId?: string;
+};
 
 /** "Hola\n\nChau" → escaped HTML with paragraphs and line breaks. */
 export function textToHtml(text: string): string {
@@ -175,7 +186,22 @@ export function checkAttachments(files: UploadedFile[]): OutgoingAttachment[] {
       throw new BadRequestException(`No se pueden enviar archivos .${ext} (${f.originalname}).`);
     }
   }
-  return files.map((f) => ({ filename: f.originalname, content: f.buffer, contentType: f.mimetype || undefined }));
+  return files.map((f) => ({
+    filename: f.originalname,
+    content: f.buffer,
+    contentType: f.mimetype || undefined,
+    ...(f.contentId ? { contentId: f.contentId } : {}),
+  }));
+}
+
+const BODY_STYLE = 'font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.5';
+
+/** The email's HTML: the editor's, cleaned again here, or the plain text as paragraphs. */
+export function bodyHtml(input: { text: string; html?: string }): string {
+  if (input.html?.trim()) {
+    return `<!doctype html><html><body style="${BODY_STYLE}">${sanitizeOutgoingHtml(input.html)}</body></html>`;
+  }
+  return textToHtml(input.text);
 }
 
 const reSubject = (subject: string) => (/^\s*re:/i.test(subject) ? subject : `Re: ${subject}`);
@@ -220,7 +246,7 @@ export class OutboundService {
     }
     const subject = input.subject.trim() || '(sin asunto)';
     const attachments = checkAttachments(files);
-    const html = textToHtml(input.text);
+    const html = bodyHtml(input);
 
     const emailId = await this.call(() =>
       this.mail.send({
@@ -261,7 +287,7 @@ export class OutboundService {
     const cc = normalizeRecipients(input.cc, 'CC');
     const bcc = normalizeRecipients(input.bcc, 'CCO');
     const attachments = checkAttachments(files);
-    const html = textToHtml(input.text);
+    const html = bodyHtml(input);
     const subject = reSubject(thread.subject);
     const ours = new Set((await this.prisma.mailbox.findMany({ select: { address: true } })).map((m) => m.address));
 
@@ -384,6 +410,7 @@ export class OutboundService {
               create: m.files.map((f) => ({
                 filename: f.originalname,
                 contentType: f.mimetype || null,
+                contentId: f.contentId ?? null,
                 sizeBytes: f.size,
                 // Kept by ClickMail with the sent email, not downloadable from here yet.
                 stored: false,

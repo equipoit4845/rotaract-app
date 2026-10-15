@@ -1,4 +1,4 @@
-import { sanitizeEmailHtml } from './sanitize-email';
+import { resolveInlineImages, sanitizeEmailHtml, sanitizeOutgoingHtml } from './sanitize-email';
 
 const clean = (html: string) => sanitizeEmailHtml(html)!.html;
 
@@ -45,5 +45,23 @@ describe('sanitizeEmailHtml', () => {
     );
     expect(out).toContain('<style>.x{color:red}</style>');
     expect(out).toContain('<td style="padding:8px" class="x">Hola</td>');
+  });
+});
+
+describe('inline images and outgoing HTML', () => {
+  it('turns cid: images into data-cd-cid and resolves them', () => {
+    const out = sanitizeEmailHtml('<p>Logo:</p><img src="cid:Logo@Club" alt="logo"><img src="cid:otro">')!;
+    expect(out.html).toBe('<p>Logo:</p><img alt="logo" data-cd-cid="logo@club" /><img data-cd-cid="otro" />');
+    const resolved = resolveInlineImages(out.html, new Map([['logo@club', 'https://s3.example/x?a=1&b=2']]));
+    expect(resolved).toBe('<p>Logo:</p><img alt="logo" src="https://s3.example/x?a=1&amp;b=2" /><img />');
+  });
+
+  it('keeps only the editor formatting when sending', () => {
+    const out = sanitizeOutgoingHtml(
+      '<p style="color:red" onclick="x()">Hola <strong>fuerte</strong> <u>sub</u> <a href="https://rotary.org">link</a> <a href="javascript:x()">mal</a></p><img src="cid:img1" alt="a"><img src="https://tracker.example/p.gif"><script>alert(1)</script><table><tr><td>t</td></tr></table>',
+    );
+    expect(out).toBe(
+      '<p>Hola <strong>fuerte</strong> <u>sub</u> <a href="https://rotary.org" target="_blank" rel="noopener noreferrer">link</a> <a target="_blank" rel="noopener noreferrer">mal</a></p><img src="cid:img1" alt="a" />t',
+    );
   });
 });

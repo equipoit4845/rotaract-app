@@ -60,6 +60,8 @@ export type MessageView = {
   /** Sanitized by correo-api; shown in a sandboxed iframe. */
   html: string | null;
   remoteImages: boolean;
+  /** Origins of the inline images' links (allowed by the reader's CSP). */
+  imageOrigins: string[];
   at: string;
   status: string;
   statusDetail: string | null;
@@ -78,6 +80,8 @@ export type DraftView = {
   bcc: string[];
   subject: string;
   text: string;
+  /** The editor's HTML (sanitized by correo-api). */
+  html: string;
   updatedAt: string;
 };
 
@@ -87,7 +91,10 @@ export type ThreadView = {
   subject: string;
   folder: Folder;
   /** The person's unsent reply in this thread. */
-  draft: Pick<DraftView, "id" | "replyAll" | "cc" | "bcc" | "text"> | null;
+  draft: Pick<
+    DraftView,
+    "id" | "replyAll" | "cc" | "bcc" | "text" | "html"
+  > | null;
   messages: MessageView[];
 };
 

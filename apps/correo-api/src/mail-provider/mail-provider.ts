@@ -1,6 +1,12 @@
 import type { InboundEmail, InboundEmailSummary } from '@clickmail/sdk';
 
-export type OutgoingAttachment = { filename: string; content: Buffer; contentType?: string };
+export type OutgoingAttachment = {
+  filename: string;
+  content: Buffer;
+  contentType?: string;
+  /** Inline image, referenced from the HTML as `cid:<contentId>`. */
+  contentId?: string;
+};
 
 export type OutgoingMail = {
   /** "Name <address>" of an active sender. */

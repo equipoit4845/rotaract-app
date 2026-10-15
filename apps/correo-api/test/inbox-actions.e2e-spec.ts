@@ -152,6 +152,35 @@ describe('inbox actions (e2e)', () => {
     expect((await prisma.thread.findUniqueOrThrow({ where: { id: a } })).folder).toBe('INBOX');
   });
 
+  it('inline images of a received email get their link and are not listed again', async () => {
+    const t = await prisma.thread.create({ data: { mailboxId: box, subject: 'Logo', lastMessageAt: new Date() } });
+    await prisma.message.create({
+      data: {
+        threadId: t.id,
+        mailboxId: box,
+        direction: 'IN',
+        clickmailInboundId: 'in_logo',
+        fromEmail: 'club@example.org',
+        toEmails: [FACU],
+        subject: 'Logo',
+        html: '<p>Mirá:</p><img src="cid:Logo@Club" alt="logo">',
+        status: 'RECEIVED',
+        at: new Date(),
+        attachments: {
+          create: [
+            { filename: 'logo.png', sizeBytes: 10, clickmailAttachmentId: 'att_logo', contentId: '<logo@club>' },
+            { filename: 'acta.pdf', sizeBytes: 10, clickmailAttachmentId: 'att_acta' },
+          ],
+        },
+      },
+    });
+    const res = await http().get(`/correo-api/threads/${t.id}`).set('Authorization', facu).expect(200);
+    const m = res.body.messages[0];
+    expect(m.html).toBe('<p>Mirá:</p><img alt="logo" src="https://s3.example.test/in_logo/att_logo?signed=1" />');
+    expect(m.imageOrigins).toEqual(['https://s3.example.test']);
+    expect(m.attachments.map((a: { filename: string }) => a.filename)).toEqual(['acta.pdf']);
+  });
+
   it('the list flags attachments in any message; the reader gets sanitized HTML', async () => {
     const a = await thread('Con HTML', {
       html: '<p onclick="x()">Hola</p><script>alert(1)</script><img src="https://cdn.example/logo.png">',

@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { isEmail, RecipientInput } from "@/components/mail/RecipientInput";
+import { RichEditor } from "@/components/mail/RichEditor";
 import { api } from "@/lib/api";
 import { formatSize, type DraftView } from "@/lib/inbox";
 import { cn } from "@/lib/utils";
@@ -27,13 +28,26 @@ export type ComposerMode =
       replyAll: boolean;
       /** Who it goes to: `to` for Responder, plus `others` for Responder a todos. */
       recipients: { to: string[]; others: string[] };
-      draft?: Pick<DraftView, "id" | "cc" | "bcc" | "text">;
+      draft?: Pick<DraftView, "id" | "cc" | "bcc" | "text" | "html">;
     };
 
 export const newKey = () =>
   (
     globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`
   ).replace(/[^A-Za-z0-9_-]/g, "");
+
+/** Plain text (old drafts) → paragraphs for the editor. */
+function textToHtml(text: string): string {
+  if (!text.trim()) return "";
+  const esc = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  return esc
+    .split(/\n{2,}/)
+    .map((p) => `<p>${p.replace(/\n/g, "<br>")}</p>`)
+    .join("");
+}
 
 type Phase = "editing" | "confirm-attachment" | "pending" | "sending";
 
@@ -89,6 +103,11 @@ export function Composer({
     mode.kind === "new" ? (mode.draft?.subject ?? "") : "",
   );
   const [text, setText] = useState(initial?.text ?? "");
+  const [html, setHtml] = useState<string>(
+    initial?.html || textToHtml(initial?.text ?? ""),
+  );
+  /** Images placed in the text: blob: link → the file and its Content-ID. */
+  const inline = useRef(new Map<string, { file: File; cid: string }>());
   const [files, setFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [phase, setPhase] = useState<Phase>("editing");
@@ -101,7 +120,11 @@ export function Composer({
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const toastId = useRef<string | number | null>(null);
 
-  const total = files.reduce((sum, f) => sum + f.size, 0);
+  const usedInline = () =>
+    [...inline.current.entries()].filter(([src]) => html.includes(src));
+  const total =
+    files.reduce((sum, f) => sum + f.size, 0) +
+    usedInline().reduce((sum, [, v]) => sum + v.file.size, 0);
   const hidden = phase === "pending" || phase === "sending";
 
   useEffect(() => onHiddenChange?.(hidden), [hidden, onHiddenChange]);
@@ -122,6 +145,7 @@ export function Composer({
           bcc,
           subject,
           text,
+          html,
         }),
       });
       setSaved("saved");
@@ -140,7 +164,7 @@ export function Composer({
     const t = setTimeout(() => void saveDraft(), AUTOSAVE_MS);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [to, cc, bcc, subject, text, replyAll]);
+  }, [to, cc, bcc, subject, text, html, replyAll]);
 
   const addFiles = (picked: FileList | null) => {
     if (!picked) return;
@@ -148,12 +172,38 @@ export function Composer({
     const blocked = next.find((f) => BLOCKED.test(f.name));
     if (blocked)
       return setError(`No se pueden enviar archivos como ${blocked.name}.`);
-    if (next.length > MAX_FILES)
-      return setError(`Podés adjuntar hasta ${MAX_FILES} archivos.`);
-    if (next.reduce((s, f) => s + f.size, 0) > MAX_BYTES)
+    const used = usedInline();
+    if (next.length + used.length > MAX_FILES)
+      return setError(
+        `Podés adjuntar hasta ${MAX_FILES} archivos (contando las imágenes del texto).`,
+      );
+    if (
+      next.reduce((s, f) => s + f.size, 0) +
+        used.reduce((s, [, v]) => s + v.file.size, 0) >
+      MAX_BYTES
+    )
       return setError("Los adjuntos pasan de 25 MB en total.");
     setError(null);
     setFiles(next);
+  };
+
+  /** An image pasted or picked in the editor: sent inline (cid:), shown from a blob: link. */
+  const addInlineImage = (file: File): string | null => {
+    if (files.length + usedInline().length + 1 > MAX_FILES) {
+      setError(
+        `Podés adjuntar hasta ${MAX_FILES} archivos (contando las imágenes del texto).`,
+      );
+      return null;
+    }
+    if (total + file.size > MAX_BYTES) {
+      setError("Las imágenes y adjuntos pasan de 25 MB en total.");
+      return null;
+    }
+    const src = URL.createObjectURL(file);
+    const cid = `img${inline.current.size + 1}.${draftId.slice(0, 12)}@correo`;
+    inline.current.set(src, { file, cid });
+    setError(null);
+    return src;
   };
 
   const validate = (): string | null => {
@@ -161,7 +211,7 @@ export function Composer({
     if (bad) return `«${bad}» no es una dirección válida.`;
     if (mode.kind === "new" && !to.length)
       return "Agregá al menos un destinatario.";
-    if (!text.trim()) return "El mensaje está vacío.";
+    if (!text.trim() && !usedInline().length) return "El mensaje está vacío.";
     return null;
   };
 
@@ -169,10 +219,16 @@ export function Composer({
     setPhase("sending");
     try {
       const form = new FormData();
+      const used = usedInline();
+      let outgoing = html;
+      for (const [src, { cid }] of used)
+        outgoing = outgoing.split(src).join(`cid:${cid}`);
       const common = {
         cc,
         bcc,
         text,
+        html: outgoing,
+        inlineIds: used.map(([, v]) => v.cid),
         idempotencyKey: `${draftId}-${attempt.current}`,
       };
       form.append(
@@ -184,6 +240,7 @@ export function Composer({
         ),
       );
       files.forEach((f) => form.append("attachments", f, f.name));
+      used.forEach(([, v]) => form.append("inline", v.file, v.file.name));
       const result = await api<{ threadId: string; messageId: string }>(
         mode.kind === "new"
           ? `/mailboxes/${mode.mailboxId}/messages`
@@ -368,15 +425,17 @@ export function Composer({
           aria-label="Asunto"
         />
       ) : null}
-      <textarea
-        className="min-h-48 flex-1 resize-none bg-transparent px-3 py-3 text-sm leading-relaxed text-foreground outline-none placeholder:text-muted-foreground"
+      <RichEditor
+        initialHtml={html}
         placeholder={
           mode.kind === "reply" ? "Escribí tu respuesta" : "Escribí tu mensaje"
         }
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        aria-label="Mensaje"
         autoFocus={mode.kind === "reply" && autoFocus}
+        onChange={(v) => {
+          setHtml(v.html);
+          setText(v.text);
+        }}
+        onImage={addInlineImage}
       />
 
       {files.length ? (
