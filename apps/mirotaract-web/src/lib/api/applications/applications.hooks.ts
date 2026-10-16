@@ -17,10 +17,14 @@ import type {
   MembershipApplication,
 } from "./applications.types";
 
-export function useMembershipApplications(filters: ApplicationFilters = {}) {
+export function useMembershipApplications(
+  filters: ApplicationFilters = {},
+  { enabled = true }: { enabled?: boolean } = {},
+) {
   return useQuery({
     queryKey: applicationKeys.list(filters),
     queryFn: ({ signal }) => applicationsApi.list(filters, { signal }),
+    enabled,
   });
 }
 

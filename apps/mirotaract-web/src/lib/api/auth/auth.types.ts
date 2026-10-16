@@ -6,6 +6,7 @@ export type AuthTokens = components["schemas"]["AuthTokens"];
 export type LoginRequest = components["schemas"]["LoginRequest"];
 export type RegisterAccountRequest =
   components["schemas"]["RegisterAccountRequest"];
+export type RegistrationClub = components["schemas"]["RegistrationClub"];
 export type AcceptAccountInvitationRequest =
   components["schemas"]["AcceptAccountInvitationRequest"];
 export type AccountSession = components["schemas"]["AccountSession"];

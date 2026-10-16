@@ -12,7 +12,7 @@ export default function ApplicationDetailPage({
   const { applicationId } = use(params);
 
   return (
-    <DashboardShell activePath="/applications">
+    <DashboardShell activePath="/applications" allowWithoutOrganization>
       <ApplicationDetailContainer applicationId={applicationId} />
     </DashboardShell>
   );

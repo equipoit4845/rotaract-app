@@ -29,6 +29,7 @@ import { KernelService } from "./application/kernel/kernel.service";
 import { HttpCommandContextFactory } from "./interfaces/http/command-context.factory";
 import { KernelAccessGuard } from "./interfaces/http/kernel-access.guard";
 import { NotificationService } from "./application/notifications/notification.service";
+import { MembershipApplicationNotifierService } from "./application/notifications/membership-application-notifier.service";
 import { OpenApiValidationInterceptor } from "./interfaces/http/openapi-validation.interceptor";
 import { OpenApiValidationService } from "./interfaces/http/openapi-validation.service";
 import { SigningKeyService } from "./infrastructure/crypto/signing-key.service";
@@ -126,6 +127,7 @@ import { StatusController } from "./interfaces/http/status.controller";
     KernelService,
     HttpCommandContextFactory,
     NotificationService,
+    MembershipApplicationNotifierService,
     OpenApiValidationService,
     SigningKeyService,
     DeveloperAppsService,

@@ -3,6 +3,7 @@ import {
   ConflictException,
   GoneException,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
@@ -18,6 +19,7 @@ import { PrismaService } from "../../infrastructure/prisma/prisma.service";
 import { OutboxService } from "../outbox/outbox.service";
 import { AuditService } from "../audit/audit.service";
 import { NotificationService } from "../notifications/notification.service";
+import { KernelService } from "../kernel/kernel.service";
 import { webUrl } from "../shared/web-url";
 import { verifyPasswordHash } from "./password-verifier";
 import { CommandContext } from "../../domain/shared/command-context";
@@ -32,15 +34,21 @@ type RegisterInput = {
   firstName: string;
   lastName: string;
   displayName?: string;
+  /** Club the person asks to join (Mi Rotaract requires it). */
+  organizationId?: string | null;
+  message?: string | null;
 };
+const MAX_APPLICATION_MESSAGE = 1_000;
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
     private readonly outbox: OutboxService,
     private readonly audit: AuditService,
     private readonly notifications: NotificationService,
+    private readonly kernel: KernelService,
   ) {}
   private normalized(email: string): string {
     return email.trim().toLowerCase();
@@ -127,8 +135,24 @@ export class AuthService {
     const email = this.normalized(input.email);
     if (!/^\S+@\S+\.\S+$/.test(email) || input.password.length < 10)
       throw new ConflictException("Invalid registration data");
+    const requestedOrganizationId = input.organizationId?.trim() || null;
+    const requestedMessage = input.message?.trim() || null;
+    if (requestedMessage && requestedMessage.length > MAX_APPLICATION_MESSAGE)
+      throw new BadRequestException(
+        `The message for the club must be at most ${MAX_APPLICATION_MESSAGE} characters`,
+      );
     try {
       const { account, token } = await this.prisma.$transaction(async (tx) => {
+        // The application itself is only created once the email is
+        // verified (verifyEmail): an unverified account can't apply.
+        if (requestedOrganizationId) {
+          const club = await tx.organization.findUnique({
+            where: { id: requestedOrganizationId },
+            select: { type: true, status: true },
+          });
+          if (!club || club.type !== "CLUB" || club.status !== "ACTIVE")
+            throw new BadRequestException("Only active clubs accept requests");
+        }
         const person = await tx.person.create({
           data: {
             firstName: input.firstName,
@@ -144,6 +168,8 @@ export class AuthService {
             emailNormalized: email,
             passwordHash: await argon2.hash(input.password),
             status: AccountStatus.PENDING_VERIFICATION,
+            requestedOrganizationId,
+            requestedMessage: requestedOrganizationId ? requestedMessage : null,
           },
         });
         const token = randomBytes(32).toString("base64url");
@@ -181,6 +207,25 @@ export class AuthService {
         throw new ConflictException("Email already registered");
       throw error;
     }
+  }
+  /**
+   * The club directory of the public register form. Only what a person
+   * needs to recognise their club: no people, no contact data.
+   */
+  async registrationClubs(): Promise<{
+    items: Array<{
+      id: string;
+      name: string;
+      code: string;
+      city: string | null;
+    }>;
+  }> {
+    const items = await this.prisma.organization.findMany({
+      where: { type: "CLUB", status: "ACTIVE" },
+      select: { id: true, name: true, code: true, city: true },
+      orderBy: { name: "asc" },
+    });
+    return { items };
   }
   async login(
     emailInput: string,
@@ -337,7 +382,53 @@ export class AuthService {
       await this.grantBaselineRole(tx, updated.personId);
       return updated;
     });
+    await this.submitRequestedApplication(account);
     return this.publicAccount(account);
+  }
+  /**
+   * The club chosen at registration becomes a submitted membership
+   * application as soon as the account is active, through the same kernel
+   * commands as `/join-club` (same invariants, same Outbox events, so the
+   * club presidency is emailed). A failure here (the club was deactivated
+   * meanwhile, an application is already open…) never undoes the
+   * verification: the person can still apply from `/join-club`.
+   */
+  private async submitRequestedApplication(account: {
+    id: string;
+    personId: string;
+    requestedOrganizationId: string | null;
+    requestedMessage: string | null;
+  }): Promise<void> {
+    if (!account.requestedOrganizationId) return;
+    const context: CommandContext = {
+      commandId: randomUUID(),
+      actor: { type: "USER", id: account.personId },
+      operation: "submitRequestedMembershipApplication",
+      correlationId: `verify-email:${account.id}`,
+    };
+    try {
+      const application = await this.kernel.createApplication(
+        {
+          organizationId: account.requestedOrganizationId,
+          message: account.requestedMessage,
+        },
+        context,
+      );
+      await this.kernel.transitionApplication(
+        application.id,
+        "SUBMITTED",
+        {},
+        { ...context, commandId: randomUUID() },
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Could not submit the application chosen at registration for account ${account.id}: ${error instanceof Error ? error.message : "unknown error"}`,
+      );
+    }
+    await this.prisma.userAccount.update({
+      where: { id: account.id },
+      data: { requestedOrganizationId: null, requestedMessage: null },
+    });
   }
   async requestPasswordReset(emailInput: string): Promise<void> {
     const account = await this.prisma.userAccount.findUnique({

@@ -11,8 +11,10 @@ import {
   Button,
   Card,
   CardContent,
+  FormField,
   Input,
   Skeleton,
+  Textarea,
 } from "@/components/ui";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -32,6 +34,7 @@ export function JoinClubContainer() {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [selectedClubId, setSelectedClubId] = useState<string>();
+  const [message, setMessage] = useState("");
   const clubs = useOrganizations({ type: "CLUB", status: "ACTIVE" });
   const create = useCreateMembershipApplication();
   const submit = useSubmitMembershipApplication();
@@ -53,7 +56,7 @@ export function JoinClubContainer() {
   function requestToJoin() {
     if (!selectedClubId) return;
     create.mutate(
-      { organizationId: selectedClubId },
+      { organizationId: selectedClubId, message: message.trim() || null },
       {
         onSuccess: (application) =>
           submit.mutate(application.id, {
@@ -127,6 +130,20 @@ export function JoinClubContainer() {
               })}
             </div>
           )}
+
+          <FormField
+            label="Mensaje para la presidencia"
+            htmlFor="joinClubMessage"
+            hint="Opcional. Contales quién sos o por qué querés sumarte."
+          >
+            <Textarea
+              id="joinClubMessage"
+              rows={3}
+              maxLength={1000}
+              value={message}
+              onChange={(event) => setMessage(event.target.value)}
+            />
+          </FormField>
 
           {error ? (
             <Alert tone="danger" {...describeKernelError(error)} />

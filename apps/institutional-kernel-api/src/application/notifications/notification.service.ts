@@ -32,12 +32,18 @@ export class NotificationService {
     process.env.CLICKMAIL_FROM_ADDRESS ??
     "Mi Rotaract <no-reply@mirotaract.org>";
 
-  async sendEmail(message: EmailMessage): Promise<void> {
+  /**
+   * Resolves to false only when ClickMail was reached and refused, or
+   * could not be reached: callers that keep a durable intent (the
+   * application notifier) retry on false. Without an API key nothing is
+   * sent and the email counts as handled.
+   */
+  async sendEmail(message: EmailMessage): Promise<boolean> {
     if (!this.apiKey) {
       this.logger.debug(
         `CLICKMAIL_API_KEY is not configured; skipping email to ${message.to}`,
       );
-      return;
+      return true;
     }
     try {
       const response = await fetch(`${this.baseUrl}/v1/emails`, {
@@ -62,11 +68,14 @@ export class NotificationService {
         this.logger.warn(
           `ClickMail rejected an email to ${message.to}: ${response.status} ${body}`,
         );
+        return false;
       }
+      return true;
     } catch (error) {
       this.logger.warn(
         `ClickMail delivery failed for ${message.to}: ${error instanceof Error ? error.message : "unknown error"}`,
       );
+      return false;
     }
   }
 }

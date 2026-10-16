@@ -36,6 +36,7 @@ function overrideQueryParam(
 
 const publicOperations = new Set([
   "register",
+  "registrationClubs",
   "login",
   "refresh",
   "verify",

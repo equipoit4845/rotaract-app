@@ -31,11 +31,17 @@ export function describeLoginError(error: unknown): KernelErrorMessage {
   return describeKernelError(error);
 }
 
-/** `POST /auth/register` — 409 means the email is already registered (CA-ID-02). */
+/** `POST /auth/register` — 409: email already registered (CA-ID-02); 400: the chosen club is not an active club. */
 export function describeRegisterError(error: unknown): KernelErrorMessage {
   if (error instanceof KernelApiError) {
     if (error.status === 409) {
       return { title: "Ya existe una cuenta registrada con ese email." };
+    }
+    if (error.status === 400) {
+      return {
+        title: "Ese club no acepta solicitudes.",
+        description: "Elegí otro club o recargá la página.",
+      };
     }
     if (error.isRateLimited) {
       return { title: "Demasiados intentos. Intentá nuevamente más tarde." };

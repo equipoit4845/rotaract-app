@@ -38,11 +38,44 @@ const { VerifyEmailContainer } =
 // MembershipApplication, see docs/09).
 // ---------------------------------------------------------------------------
 
-test("Register — success shows the verify-email prompt instead of redirecting", async () => {
+const clubs = {
+  items: [
+    { id: "club_centro", name: "Rotaract Club Centro", code: "RC-CENTRO", city: "Rosario" },
+    { id: "club_norte", name: "Rotaract Club Norte", code: "RC-NORTE", city: null },
+  ],
+};
+
+function fillRegisterForm(
+  getByLabelText: (text: string | RegExp, options?: object) => HTMLElement,
+  { club }: { club?: string } = {},
+) {
+  fireEvent.change(getByLabelText("Nombre", { exact: false }), {
+    target: { value: "Ana" },
+  });
+  fireEvent.change(getByLabelText("Apellido", { exact: false }), {
+    target: { value: "Gómez" },
+  });
+  fireEvent.change(getByLabelText("Email", { exact: false }), {
+    target: { value: "ana@example.com" },
+  });
+  fireEvent.change(getByLabelText(/^Contraseña/), {
+    target: { value: "correct-password" },
+  });
+  fireEvent.change(getByLabelText("Confirmar contraseña", { exact: false }), {
+    target: { value: "correct-password" },
+  });
+  if (club)
+    fireEvent.change(getByLabelText(/^Club/), { target: { value: club } });
+}
+
+test("Register — sends the chosen club and message, then shows the verify-email prompt", async () => {
   tokenManager.clearSession();
+  let body: Record<string, unknown> | undefined;
   setFetchHandler(async (input) => {
     const url = urlOf(input);
+    if (url.endsWith("/auth/register/clubs")) return jsonResponse(clubs);
     if (url.endsWith("/auth/register")) {
+      body = await (input as Request).clone().json();
       return jsonResponse({
         id: "acc_1",
         personId: "per_1",
@@ -57,32 +90,53 @@ test("Register — success shows the verify-email prompt instead of redirecting"
     React.createElement(RegisterContainer),
   );
 
-  fireEvent.change(getByLabelText("Nombre", { exact: false }), {
-    target: { value: "Ana" },
-  });
-  fireEvent.change(getByLabelText("Apellido", { exact: false }), {
-    target: { value: "Gómez" },
-  });
-  fireEvent.change(getByLabelText("Email", { exact: false }), {
-    target: { value: "ana@example.com" },
-  });
-  fireEvent.change(getByLabelText(/^Contraseña/), {
-    target: { value: "correct-password" },
-  });
-  fireEvent.change(getByLabelText("Confirmar contraseña", { exact: false }), {
-    target: { value: "correct-password" },
+  await waitFor(() => assert.ok(getByText("Rotaract Club Centro — Rosario")));
+  fillRegisterForm(getByLabelText, { club: "club_centro" });
+  fireEvent.change(getByLabelText("Mensaje para la presidencia"), {
+    target: { value: "  Me mudé a Rosario  " },
   });
   fireEvent.click(
     getByText("Crear cuenta", { selector: "button[type=submit]" }),
   );
 
   await waitFor(() => assert.ok(getByText("Revisá tu email")));
+  assert.equal(body?.organizationId, "club_centro");
+  assert.equal(body?.message, "Me mudé a Rosario");
+  assert.equal(body?.passwordConfirmation, undefined);
+});
+
+test("Register — the club is required", async () => {
+  tokenManager.clearSession();
+  let registerCalls = 0;
+  setFetchHandler(async (input) => {
+    const url = urlOf(input);
+    if (url.endsWith("/auth/register/clubs")) return jsonResponse(clubs);
+    if (url.endsWith("/auth/register")) {
+      registerCalls += 1;
+      return jsonResponse({});
+    }
+    throw new Error(`unexpected call ${url}`);
+  });
+
+  const { getByLabelText, getByText } = renderWithRouter(
+    React.createElement(RegisterContainer),
+  );
+
+  await waitFor(() => assert.ok(getByText("Rotaract Club Norte")));
+  fillRegisterForm(getByLabelText);
+  fireEvent.click(
+    getByText("Crear cuenta", { selector: "button[type=submit]" }),
+  );
+
+  await waitFor(() => assert.ok(getByText("Elegí tu club.")));
+  assert.equal(registerCalls, 0);
 });
 
 test("Register — duplicate email (409) shows a clear message without leaking which field is wrong", async () => {
   tokenManager.clearSession();
   setFetchHandler(async (input) => {
     const url = urlOf(input);
+    if (url.endsWith("/auth/register/clubs")) return jsonResponse(clubs);
     if (url.endsWith("/auth/register"))
       return problemResponse(409, "ALREADY_EXISTS");
     throw new Error(`unexpected call ${url}`);
@@ -92,21 +146,8 @@ test("Register — duplicate email (409) shows a clear message without leaking w
     React.createElement(RegisterContainer),
   );
 
-  fireEvent.change(getByLabelText("Nombre", { exact: false }), {
-    target: { value: "Ana" },
-  });
-  fireEvent.change(getByLabelText("Apellido", { exact: false }), {
-    target: { value: "Gómez" },
-  });
-  fireEvent.change(getByLabelText("Email", { exact: false }), {
-    target: { value: "ana@example.com" },
-  });
-  fireEvent.change(getByLabelText(/^Contraseña/), {
-    target: { value: "correct-password" },
-  });
-  fireEvent.change(getByLabelText("Confirmar contraseña", { exact: false }), {
-    target: { value: "correct-password" },
-  });
+  await waitFor(() => assert.ok(getByText("Rotaract Club Norte")));
+  fillRegisterForm(getByLabelText, { club: "club_norte" });
   fireEvent.click(
     getByText("Crear cuenta", { selector: "button[type=submit]" }),
   );

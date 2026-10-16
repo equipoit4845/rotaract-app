@@ -1,10 +1,11 @@
-import { UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, UnauthorizedException } from "@nestjs/common";
 import * as argon2 from "argon2";
 
 import { AuditService } from "../audit/audit.service";
 import { NotificationService } from "../notifications/notification.service";
 import { OutboxService } from "../outbox/outbox.service";
 import { PrismaService } from "../../infrastructure/prisma/prisma.service";
+import { KernelService } from "../kernel/kernel.service";
 import { AuthService } from "./auth.service";
 
 function buildAuth(prismaOverrides: Record<string, any> = {}) {
@@ -16,14 +17,27 @@ function buildAuth(prismaOverrides: Record<string, any> = {}) {
   const notifications = {
     sendEmail: jest.fn(),
   } as unknown as NotificationService;
+  const kernel = {
+    createApplication: jest.fn().mockResolvedValue({ id: "application-1" }),
+    transitionApplication: jest.fn().mockResolvedValue({ id: "application-1" }),
+  };
   const auth = new AuthService(
     fakePrisma as PrismaService,
     jwt as any,
     outbox,
     audit,
     notifications,
+    kernel as unknown as KernelService,
   );
-  return { auth, prisma: fakePrisma, jwt, outbox, audit, notifications };
+  return {
+    auth,
+    prisma: fakePrisma,
+    jwt,
+    outbox,
+    audit,
+    notifications,
+    kernel,
+  };
 }
 
 describe("AuthService.login — lockout and audit (§14.1/§14.4)", () => {
@@ -384,5 +398,154 @@ describe("AuthService.me — OpenAPI UserContext", () => {
         },
       ],
     });
+  });
+});
+
+describe("AuthService — club chosen at registration", () => {
+  function verifiable(rawTokenHash: string, account: Record<string, unknown>) {
+    return {
+      emailVerificationToken: {
+        findMany: jest.fn().mockResolvedValue([
+          {
+            id: "vtok-club",
+            accountId: "account-1",
+            tokenHash: rawTokenHash,
+            usedAt: null,
+            expiresAt: new Date(Date.now() + 3_600_000),
+          },
+        ]),
+        update: jest.fn(),
+      },
+      userAccount: { update: jest.fn().mockResolvedValue(account) },
+      roleDefinition: { findUnique: jest.fn().mockResolvedValue(null) },
+    };
+  }
+
+  it("stores the chosen club and message without applying yet", async () => {
+    const { auth, prisma, kernel } = buildAuth({
+      organization: {
+        findUnique: jest
+          .fn()
+          .mockResolvedValue({ type: "CLUB", status: "ACTIVE" }),
+      },
+      person: { create: jest.fn().mockResolvedValue({ id: "person-1" }) },
+      userAccount: {
+        create: jest.fn().mockResolvedValue({
+          id: "account-1",
+          personId: "person-1",
+          email: "new@example.com",
+          status: "PENDING_VERIFICATION",
+        }),
+      },
+      emailVerificationToken: { create: jest.fn() },
+    });
+
+    await auth.register({
+      email: "new@example.com",
+      password: "a-long-enough-password",
+      firstName: "Ada",
+      lastName: "Lovelace",
+      organizationId: "club-1",
+      message: "  Quiero sumarme  ",
+    });
+
+    expect(prisma.userAccount.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          requestedOrganizationId: "club-1",
+          requestedMessage: "Quiero sumarme",
+        }),
+      }),
+    );
+    expect(kernel.createApplication).not.toHaveBeenCalled();
+  });
+
+  it("rejects a club that is not an active club", async () => {
+    const { auth, prisma } = buildAuth({
+      organization: {
+        findUnique: jest
+          .fn()
+          .mockResolvedValue({ type: "DISTRICT", status: "ACTIVE" }),
+      },
+      person: { create: jest.fn() },
+      userAccount: { create: jest.fn() },
+    });
+
+    await expect(
+      auth.register({
+        email: "new@example.com",
+        password: "a-long-enough-password",
+        firstName: "Ada",
+        lastName: "Lovelace",
+        organizationId: "district-4845",
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(prisma.person.create).not.toHaveBeenCalled();
+  });
+
+  it("creates and submits the application as the person once verified", async () => {
+    const rawToken = "verify-token-club";
+    const { auth, prisma, kernel } = buildAuth(
+      verifiable(await argon2.hash(rawToken), {
+        id: "account-1",
+        personId: "person-1",
+        requestedOrganizationId: "club-1",
+        requestedMessage: "Hola",
+      }),
+    );
+
+    await auth.verifyEmail(rawToken);
+
+    expect(kernel.createApplication).toHaveBeenCalledWith(
+      { organizationId: "club-1", message: "Hola" },
+      expect.objectContaining({ actor: { type: "USER", id: "person-1" } }),
+    );
+    expect(kernel.transitionApplication).toHaveBeenCalledWith(
+      "application-1",
+      "SUBMITTED",
+      {},
+      expect.objectContaining({ actor: { type: "USER", id: "person-1" } }),
+    );
+    expect(prisma.userAccount.update).toHaveBeenLastCalledWith({
+      where: { id: "account-1" },
+      data: { requestedOrganizationId: null, requestedMessage: null },
+    });
+  });
+
+  it("still verifies the account when the application can't be created", async () => {
+    const rawToken = "verify-token-club-2";
+    const { auth, kernel } = buildAuth(
+      verifiable(await argon2.hash(rawToken), {
+        id: "account-1",
+        personId: "person-1",
+        email: "new@example.com",
+        status: "ACTIVE",
+        requestedOrganizationId: "club-gone",
+        requestedMessage: null,
+      }),
+    );
+    kernel.createApplication.mockRejectedValueOnce(
+      new BadRequestException("Only active clubs accept requests"),
+    );
+
+    await expect(auth.verifyEmail(rawToken)).resolves.toEqual(
+      expect.objectContaining({ id: "account-1", status: "ACTIVE" }),
+    );
+    expect(kernel.transitionApplication).not.toHaveBeenCalled();
+  });
+
+  it("does nothing more when no club was chosen", async () => {
+    const rawToken = "verify-token-club-3";
+    const { auth, kernel } = buildAuth(
+      verifiable(await argon2.hash(rawToken), {
+        id: "account-1",
+        personId: "person-1",
+        requestedOrganizationId: null,
+      }),
+    );
+
+    await auth.verifyEmail(rawToken);
+
+    expect(kernel.createApplication).not.toHaveBeenCalled();
   });
 });

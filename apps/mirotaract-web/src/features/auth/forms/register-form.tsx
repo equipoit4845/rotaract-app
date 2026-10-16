@@ -1,7 +1,15 @@
 "use client";
 
-import { useRegister } from "@/lib/api";
-import { Alert, Button, FormField, Input } from "@/components/ui";
+import { useRegister, useRegistrationClubs } from "@/lib/api";
+import {
+  Alert,
+  Button,
+  FormField,
+  Input,
+  Select,
+  Skeleton,
+  Textarea,
+} from "@/components/ui";
 import { useForm } from "react-hook-form";
 
 import { describeRegisterError } from "../adapters/auth-mutation-errors";
@@ -13,14 +21,19 @@ type RegisterFormValues = {
   email: string;
   password: string;
   passwordConfirmation: string;
+  organizationId: string;
+  message: string;
 };
+
+const MAX_MESSAGE = 1_000;
 
 /**
  * `POST /auth/register` (`RegisterAccountRequest`) creates `Person` +
- * `UserAccount` atomically (CA-ID-01) — this account has no `Membership`
- * yet. Joining a club/district afterward goes through a `MembershipApplication`
- * (Fase 7, `/applications`), not through anything this form does; this is
- * a genuinely separate self-service path from the admin-driven
+ * `UserAccount` atomically (CA-ID-01). The club is required here: the
+ * Kernel keeps it and, once the email is verified, creates and submits the
+ * `MembershipApplication` to that club in the person's name (its
+ * presidency is emailed). The form never creates a membership itself; this
+ * stays a separate self-service path from the admin-driven
  * Person → Membership → Invitation flow (`/invite/[token]`).
  */
 export function RegisterForm({ onSuccess }: { onSuccess: () => void }) {
@@ -37,14 +50,20 @@ export function RegisterForm({ onSuccess }: { onSuccess: () => void }) {
       email: "",
       password: "",
       passwordConfirmation: "",
+      organizationId: "",
+      message: "",
     },
   });
+  const clubs = useRegistrationClubs();
 
   const password = watch("password");
 
   const onSubmit = handleSubmit(
-    ({ passwordConfirmation: _passwordConfirmation, ...payload }) => {
-      register_.mutate(payload, { onSuccess });
+    ({ passwordConfirmation: _passwordConfirmation, message, ...payload }) => {
+      register_.mutate(
+        { ...payload, message: message.trim() || null },
+        { onSuccess },
+      );
     },
   );
 
@@ -125,6 +144,55 @@ export function RegisterForm({ onSuccess }: { onSuccess: () => void }) {
           {...register("passwordConfirmation", {
             validate: (value) => value === password,
           })}
+        />
+      </FormField>
+
+      <FormField
+        label="Club"
+        htmlFor="organizationId"
+        required
+        hint="La presidencia del club recibirá tu solicitud cuando confirmes tu email."
+        error={errors.organizationId ? "Elegí tu club." : undefined}
+      >
+        {clubs.isLoading ? (
+          <Skeleton className="h-9" />
+        ) : (
+          <Select
+            id="organizationId"
+            disabled={clubs.isError}
+            {...register("organizationId", { required: true })}
+          >
+            <option value="">Elegí tu club</option>
+            {(clubs.data?.items ?? []).map((club) => (
+              <option key={club.id} value={club.id}>
+                {club.city ? `${club.name} — ${club.city}` : club.name}
+              </option>
+            ))}
+          </Select>
+        )}
+      </FormField>
+      {clubs.isError ? (
+        <Alert
+          tone="danger"
+          title="No pudimos cargar los clubes"
+          description="Recargá la página en unos minutos."
+        />
+      ) : null}
+
+      <FormField
+        label="Mensaje para la presidencia"
+        htmlFor="message"
+        hint="Opcional. Contales quién sos o por qué querés sumarte."
+        error={
+          errors.message
+            ? `Usá como máximo ${MAX_MESSAGE} caracteres.`
+            : undefined
+        }
+      >
+        <Textarea
+          id="message"
+          rows={3}
+          {...register("message", { maxLength: MAX_MESSAGE })}
         />
       </FormField>
 
