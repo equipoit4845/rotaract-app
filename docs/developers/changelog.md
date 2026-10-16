@@ -36,6 +36,9 @@ las personas responsables de cada app activa reciben el aviso por email.
   archivan. Ver [modulos.md](modulos.md#4-los-cargos-que-usan-tus-permisos).
 - SDKs: `client.positions.list/get` y `client.permissions.effective` (JS y
   Python).
+- Paquetes publicados: `@mirotaract/sdk` 0.2.0, `mirotaract` (PyPI) 0.2.0,
+  `@mirotaract/module-manifest` 1.1.0 (esquema con `positions[]` y
+  `grants[]`) y `@mirotaract/mcp` 0.2.0 (valida esos campos).
 
 <!-- entry: cargos-con-permisos -->
 ## 2026-10-04 · El distrito crea cargos con permisos propios

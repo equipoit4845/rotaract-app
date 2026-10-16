@@ -1,6 +1,6 @@
 {
   "name": "@mirotaract/sdk",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "SDK oficial de Mi Rotaract: API de datos institucionales e \"Ingresar con Mi Rotaract\" (OAuth 2.0 + OpenID Connect).",
   "license": "MIT",
   "type": "module",

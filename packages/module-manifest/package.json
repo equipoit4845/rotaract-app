@@ -1,6 +1,6 @@
 {
   "name": "@mirotaract/module-manifest",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Contrato del manifiesto de módulos de Mi Rotaract (mirotaract.module.json): JSON Schema v1, tipos, validateManifest y validateConfiguration con errores en español.",
   "license": "MIT",
   "type": "module",

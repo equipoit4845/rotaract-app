@@ -16,7 +16,7 @@ import httpx
 
 from .errors import MiRotaractError, error_from_response
 
-SDK_VERSION = "0.1.0"
+SDK_VERSION = "0.2.0"
 RETRYABLE_STATUS = frozenset({429, 502, 503, 504})
 SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS", "PUT", "DELETE"})
 

@@ -58,7 +58,7 @@ export type HttpResponse<T> = {
   notModified: boolean;
 };
 
-export const SDK_VERSION = "0.1.0";
+export const SDK_VERSION = "0.2.0";
 
 const RETRYABLE_STATUS = new Set([429, 502, 503, 504]);
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS", "PUT", "DELETE"]);
