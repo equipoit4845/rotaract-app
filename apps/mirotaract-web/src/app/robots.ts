@@ -14,8 +14,9 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: [
         "/invite/",
-        "/reset-password/",
-        "/verify-email/",
+        "/accept-invitation",
+        "/reset-password",
+        "/verify-email",
         "/dashboard",
         "/organizations",
         "/persons",
