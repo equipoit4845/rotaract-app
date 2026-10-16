@@ -3665,7 +3665,11 @@ export interface components {
         ModulePositionsOverview: {
             moduleId: string;
             organizationId: string;
-            installationStatus: components["schemas"]["InstallationStatus"] | null;
+            /**
+             * @description Estado de la instalación en la organización; null si nunca se instaló.
+             * @enum {string|null}
+             */
+            installationStatus: "PENDING" | "ACTIVE" | "SUSPENDED" | "DISABLED" | null;
             positions: {
                 key: string;
                 name: string;
