@@ -36,6 +36,7 @@ globs:
 | Personas | `GET /service/persons/{id}`, `POST /service/persons/batch` | `kernel.service.persons.read` |
 | Autoridades vigentes | `GET /service/organizations/{id}/authorities` | `kernel.service.authorities.read` |
 | Períodos | `GET /service/organizations/{id}/periods` | `kernel.service.periods.read` |
+| Cargos y qué permite cada uno | `GET /service/organizations/{id}/positions`, `GET /service/positions/{code}` | `kernel.service.positions.read` |
 | Email, teléfono, nacimiento | (agrega campos a personas y socios) | `kernel.service.persons.contact.read` — **solo** si la app tiene que contactar personas |
 
 Pedí en el token solo los scopes que usa ese proceso (`scope` del cliente).
@@ -63,7 +64,11 @@ const todos = await mr.members.list(clubId, { limit: 100 }).all({ max: 2000 }); 
 
 // Autoridades vigentes (presidencias de todos los clubes, pedido sobre el distrito)
 const autoridades = await mr.authorities.list(districtId, { includeDescendants: true });
-const presidencias = autoridades.filter((a) => a.positionCode === "CLUB_PRESIDENT"); // lógica por positionCode, mostrar positionName
+const presidencias = autoridades.filter((a) => a.positionCode === "CLUB_PRESIDENT"); // filtrar por cargos del sistema está bien; mostrar positionName
+
+// Cargos que se pueden ejercer en el club (sistema, propios y de módulos)
+const cargos = await mr.positions.list(clubId, { includePermissions: true });
+// Para AUTORIZAR no uses el cargo: skill mirotaract-permisos (check / effective).
 
 // Período vigente
 const [vigente] = await mr.periods.list(clubId, { status: "ACTIVE" });

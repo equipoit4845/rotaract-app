@@ -31,7 +31,11 @@ export const INSTRUCTIONS = `Servidor MCP oficial de Mi Rotaract (Distrito Rotar
 - validate_module_manifest: valida mirotaract.module.json.
 - generate_types: tipos TS o Python de la API y los eventos.
 - create_test_app, issue_test_token: SOLO contra un kernel local (mirotaract dev, datos sintéticos).
-Reglas: tokens nunca en localStorage; verificar tokens con el JWKS (ES256, iss, aud); scopes mínimos; verificar la firma de cada webhook; secretos solo en el servidor; nada de datos personales en logs.`;
+Qué usar para cada pregunta:
+- "¿Esta persona puede hacer X?" → POST /service/authorization/check (una acción) o GET /service/organizations/{id}/persons/{personId}/permissions (todos sus permisos, para menús); scope kernel.service.authorization.check. Nunca deduzcas permisos del cargo, del rol ni de los claims del login.
+- "¿Qué cargos hay y qué permite cada uno?" → GET /service/organizations/{id}/positions (scope kernel.service.positions.read). Solo para mostrar: los códigos de cargos de clubes o módulos no son estables.
+- "Mi módulo necesita un cargo nuevo" → positions[] en mirotaract.module.json (solo permisos del propio módulo); "sumar mis permisos a un cargo existente" → grants[]. Validalo con validate_module_manifest.
+Reglas: tokens nunca en localStorage; verificar tokens con el JWKS (ES256, iss, aud); scopes mínimos; verificar la firma de cada webhook; secretos solo en el servidor; nada de datos personales en logs; autorizar siempre en el servidor preguntando al kernel.`;
 
 const text = (value) => ({
   content: [
@@ -289,7 +293,7 @@ export async function createServer({
       if (kind === "all" || kind === "kernel")
         parts.push(
           "",
-          "## Permisos del kernel (se consultan con POST /service/authorization/check)",
+          "## Permisos del kernel (se consultan con POST /service/authorization/check, o todos juntos con GET /service/organizations/{id}/persons/{personId}/permissions)",
           "",
           table(
             ["Permiso", "Qué permite", "Roles con este permiso por defecto"],
@@ -383,7 +387,7 @@ export async function createServer({
     {
       title: "Validar un manifiesto de módulo",
       description:
-        "Valida un mirotaract.module.json contra el contrato de módulos v1: id y namespace de permisos, scopeType, eventos del catálogo (y el scope que exigen), configurationSchema, ui y scopes OAuth mínimos. Devuelve ok, errores con su ruta y advertencias.",
+        "Valida un mirotaract.module.json contra el contrato de módulos v1: id y namespace de permisos, scopeType, eventos del catálogo (y el scope que exigen), configurationSchema, ui, scopes OAuth mínimos, y los cargos que crea (positions[], solo con permisos del propio módulo) y los permisos que sugiere para cargos existentes (grants[]). Devuelve ok, errores con su ruta y advertencias.",
       inputSchema: {
         manifest: z
           .union([z.string(), z.record(z.string(), z.any())])

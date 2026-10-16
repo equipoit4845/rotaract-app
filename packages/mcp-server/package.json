@@ -1,6 +1,6 @@
 {
   "name": "@mirotaract/mcp",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Servidor MCP oficial de Mi Rotaract (stdio): documentación, contrato OpenAPI, permisos, eventos, manifiestos de módulo y tipos; app y tokens de prueba solo contra un kernel local.",
   "license": "MIT",
   "type": "module",

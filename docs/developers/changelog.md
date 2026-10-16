@@ -38,7 +38,12 @@ las personas responsables de cada app activa reciben el aviso por email.
   Python).
 - Paquetes publicados: `@mirotaract/sdk` 0.2.0, `mirotaract` (PyPI) 0.2.0,
   `@mirotaract/module-manifest` 1.1.0 (esquema con `positions[]` y
-  `grants[]`) y `@mirotaract/mcp` 0.2.0 (valida esos campos).
+  `grants[]`) y `@mirotaract/mcp` 0.2.1 (valida esos campos y sus
+  instrucciones guían al agente: permisos con `check`/`effective`, cargos solo
+  para mostrar, `positions[]`/`grants[]` en módulos).
+- Skills de IA (`/ia`): `mirotaract-permisos` suma los permisos efectivos y
+  los cargos; `mirotaract-modulo`, `positions[]` y `grants[]`;
+  `mirotaract-padron` y `mirotaract-webhooks`, los cargos y sus eventos.
 
 <!-- entry: cargos-con-permisos -->
 ## 2026-10-04 · El distrito crea cargos con permisos propios

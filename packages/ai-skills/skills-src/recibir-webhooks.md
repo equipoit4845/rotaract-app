@@ -32,7 +32,10 @@ que la app necesita para recibirlos): `membership.created.v1`,
 `organization.updated.v1`, `organization.archived.v1` →
 `kernel.service.organizations.read`; `person.updated.v1` →
 `kernel.service.persons.read`; `period.created.v1` →
-`kernel.service.periods.read`; `ping.v1` (prueba). Detalle y JSON Schema:
+`kernel.service.periods.read`; `position.created.v1`,
+`position.updated.v1`, `position.permissions-changed.v1` (cargos y qué
+permiten; útil para invalidar una caché de permisos) →
+`kernel.service.positions.read`; `ping.v1` (prueba). Detalle y JSON Schema:
 `list_events` en el MCP o `docs/developers/catalogo-de-eventos.md`.
 
 ## Las cuatro reglas

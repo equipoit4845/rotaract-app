@@ -5,8 +5,10 @@ description: >-
   Crea o corrige el manifiesto de un módulo de Mi Rotaract
   (mirotaract.module.json): permisos propios en su namespace, eventos a los que
   se suscribe, esquema de configuración, entrada en la navegación y scopes
-  OAuth mínimos, y lo valida. Usala cuando pidan publicar una app como módulo,
-  instalarla en clubes, definir permisos del módulo o escribir el manifiesto.
+  OAuth mínimos, cargos que el módulo crea al instalarse (positions[]) y
+  permisos sugeridos para cargos existentes (grants[]), y lo valida. Usala
+  cuando pidan publicar una app como módulo, instalarla en clubes, definir
+  permisos o cargos del módulo, o escribir el manifiesto.
 globs:
   - "**/mirotaract.module.json"
   - "**/*.{ts,tsx,js,py}"
@@ -24,7 +26,9 @@ instalen** y se vea como parte de Mi Rotaract. Declara en
 - los **eventos** que necesita (`events.subscribes`, tipos del catálogo);
 - el **esquema de configuración** por club (JSON Schema): la presidencia lo
   completa al instalar y el kernel lo valida;
-- la entrada en la navegación (`ui`) y los scopes OAuth que usa.
+- la entrada en la navegación (`ui`) y los scopes OAuth que usa;
+- opcional: los **cargos** que crea al instalarse (`positions[]`) y los
+  permisos que sugiere sumar a cargos existentes (`grants[]`).
 
 ## Forma del manifiesto (contrato v1)
 
@@ -83,6 +87,45 @@ Reglas:
   módulo contacta personas, y documentá para qué. `oauth.clientId` lo completa
   el RDR al registrar la app.
 
+## Cargos del módulo (`positions[]` y `grants[]`, opcionales)
+
+Si la app necesita un cargo que no existe (por ejemplo "Delegado/a a la
+asamblea" en cada club), declaralo. Al instalar, la organización elige cuáles
+crear y nombra personas desde Autoridades como en cualquier cargo.
+
+```json
+"positions": [
+  {
+    "key": "delegado-asamblea",
+    "name": "Delegado/a a la asamblea",
+    "description": "Representa al club en las reuniones distritales.",
+    "organizationTypes": ["CLUB"],
+    "permissions": ["reuniones.meeting.vote"],
+    "install": "suggested"
+  }
+],
+"grants": [
+  { "positionCode": "DISTRICT_SECRETARY", "permissions": ["reuniones.meeting.manage"] }
+]
+```
+
+- `positions[].permissions`: **solo permisos de este mismo módulo** (los de
+  `permissions[]`). Nunca `kernel.*` ni de otro módulo: el validador y el
+  kernel lo rechazan.
+- `key`: minúsculas y guiones, única en el manifiesto. `organizationTypes`:
+  `CLUB`, `DISTRICT` o ambos. `install`: `suggested` (default, se elige al
+  instalar) o `required` (se crea siempre).
+- El código del cargo **lo arma el kernel** (`<moduleId>.<key>.<slug del
+  club>`): no lo hardcodees. Para autorizar, chequeá el permiso del módulo;
+  para mostrar el cargo, `mr.positions.list(clubId)`.
+- `grants[]` son **sugerencias** sobre cargos existentes: se aplican solo si
+  quien instala las aprueba y solo sobre cargos que administra esa
+  organización (un club no puede tocar `CLUB_PRESIDENT`; el distrito sí).
+- Al desinstalar, los cargos del módulo se archivan (terminan sus
+  nombramientos) y se quitan los permisos de los `grants[]`.
+- ¿Alcanza con que el RDR asigne tus permisos a cargos existentes? Entonces no
+  declares `positions[]`: menos cargos es mejor.
+
 ## Validarlo
 
 - MCP: `validate_module_manifest` con el contenido del archivo (devuelve
@@ -116,5 +159,8 @@ Para saber si el módulo está instalado y activo en un club:
   rechaza; pedí lo que usás.
 - Decidir permisos por cargo (`positionCode === "CLUB_PRESIDENT"`) en vez de
   preguntar al kernel → se rompe cuando el RDR reasigna permisos.
+- Un cargo de `positions[]` con un permiso `kernel.*` o de otro módulo →
+  inválido.
+- Hardcodear el código de un cargo creado por el módulo → cambia por club.
 
-Guía completa (cuando esté publicada): `docs/developers/modulos.md`.
+Guía completa: `docs/developers/modulos.md` (`read_doc modulos` en el MCP).

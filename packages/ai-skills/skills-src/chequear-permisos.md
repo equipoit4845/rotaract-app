@@ -3,11 +3,12 @@ name: mirotaract-permisos
 title: Chequear permisos de una persona
 description: >-
   Pregunta al kernel de Mi Rotaract si una persona puede hacer algo en una
-  organización (POST /service/authorization/check y batch-check), con permisos
-  del kernel o de un módulo, cacheando hasta cacheUntil y fallando cerrado.
-  Usala cuando pidan restringir una acción a presidencia, secretaría, RDR o a
-  quien tenga cierto permiso, mostrar u ocultar botones según rol, o proteger
-  rutas por permiso.
+  organización (POST /service/authorization/check y batch-check), o qué puede
+  hacer en total (permisos efectivos), con permisos del kernel o de un módulo,
+  cacheando hasta cacheUntil y fallando cerrado. Usala cuando pidan restringir
+  una acción a presidencia, secretaría, RDR o a quien tenga cierto permiso,
+  mostrar u ocultar botones o menús según rol, proteger rutas por permiso, o
+  listar los cargos de un club y qué permite cada uno.
 globs:
   - "**/*.{ts,tsx,js,mjs,py}"
 ---
@@ -88,9 +89,62 @@ if not decision["allowed"]:
   `kernel.membership.activate` (altas), `kernel.appointment.read`
   (autoridades), `kernel.period.read`, `kernel.application.review`.
 - Si tu app es un módulo, definí permisos propios (`<moduleId>.<recurso>.<acción>`)
-  en el manifiesto (skill `mirotaract-modulo`) y chequeá esos.
+  en el manifiesto (skill `mirotaract-modulo`) y chequeá esos. Si además
+  necesita un cargo que no existe, declaralo en `positions[]` del manifiesto.
 - `personId` sale del `sub` del `id_token` verificado (skill
   `mirotaract-ingresar`), nunca de un parámetro que mande el navegador.
+
+## ¿Qué puede hacer esta persona? (todos sus permisos)
+
+Para armar un menú o una pantalla con muchas acciones, pedí **todos los
+permisos de la persona en la organización** de una vez, en vez de N chequeos:
+
+`GET /service/organizations/{organizationId}/persons/{personId}/permissions`
+· scope `kernel.service.authorization.check` (el mismo que el chequeo).
+
+```ts
+// Ojo con el orden: primero la organización, después la persona.
+const { permissions } = await mr.permissions.effective(clubId, personId);
+const puedeEditar = permissions.includes("reuniones.meeting.manage");
+```
+
+```python
+efectivos = mr.permissions.effective(club_id, user["sub"])
+puede_editar = "reuniones.meeting.manage" in efectivos["permissions"]
+```
+
+- Devuelve `{ organizationId, personId, permissions: string[], evaluatedAt }`:
+  las mismas decisiones que `check` daría una por una (incluye los permisos de
+  módulos, y respeta si el módulo está activo en esa organización).
+- **No trae `cacheUntil`**: usalo para una request o una pantalla, no lo
+  guardes. Para proteger **una** acción concreta, seguí usando `check`.
+- Mismas reglas: organización dentro del alcance de la app, `personId` del
+  `sub` verificado, fallá cerrado (lista vacía si la consulta falla).
+
+## Cargos: mostralos, no decidas con ellos
+
+Con el scope `kernel.service.positions.read` podés listar los cargos que se
+pueden ejercer en una organización (los del distrito, los propios del club y
+los que crearon los módulos) y qué permite cada uno:
+
+```ts
+const cargos = await mr.positions.list(clubId, { includePermissions: true });
+const cargo = await mr.positions.get("CLUB_PRESIDENT"); // con sus permisos
+```
+
+```python
+cargos = mr.positions.list(club_id, include_permissions=True)
+```
+
+Sirve para **mostrar** ("Este cargo puede: …") o para documentar qué cargo
+necesita alguien. **No** para autorizar: los códigos de cargos creados por
+clubes o módulos no son nombres estables
+(`reuniones.delegado-asamblea.rc-centro`), y el RDR puede cambiar qué permite
+cada cargo. Para autorizar, siempre `check` o `effective`.
+
+Si querés enterarte de cambios: webhooks `position.created.v1`,
+`position.updated.v1` y `position.permissions-changed.v1` (skill
+`mirotaract-webhooks`); invalidá tu caché de permisos al recibir el último.
 
 ## En la UI
 
