@@ -160,8 +160,10 @@ scripts/deploy.sh --cutover          # una sola vez: pasar de compose clásico a
 ```
 
 Pasos: lock (`flock`) → backup de la base (`scripts/backup-postgres.sh`, si
-toca api/worker) → build (una vez, con la caché de Docker) → migraciones
-como paso aparte (`docker compose run --rm migrate`) → arranca el slot
+toca api/worker) → build (una vez, con la caché de Docker; si toca
+api/worker también construye la imagen `migrate`) → migraciones como paso
+aparte (`docker compose run --rm migrate`) → **verifica que estén todas
+aplicadas** (ver abajo) → arranca el slot
 inactivo con la imagen nueva → espera _healthy_ y además prueba la ruta de
 readiness **desde el edge** (`/health/ready`, `/login`) → reescribe
 `upstreams.conf` y `nginx -s reload` (los workers viejos terminan sus
@@ -178,6 +180,32 @@ recarga nginx y se detiene el nuevo.
 (`up --force-recreate`): el worker no recibe tráfico; los otros tienen unos
 segundos de corte (meetings mantiene sockets y estado en memoria; el portal
 podría sumarse a blue/green copiando el patrón si hace falta).
+
+### Las migraciones del deploy son las del árbol
+
+`migrate` es un servicio con imagen propia (`rotaract-app-migrate`, mismo
+`api.Dockerfile`). Si no se reconstruye, `prisma migrate deploy` corre con las
+migraciones del árbol desde el que se construyó la última vez y contesta
+_"No pending migrations"_ aunque haya nuevas: el 2026-10-16 un deploy de
+api/worker/web quedó sin `20261016100000_application_notifications` por eso y
+hubo que aplicarla a mano (`docker compose ... build migrate && docker compose
+... run --rm --no-deps migrate`). Desde entonces `scripts/deploy.sh`:
+
+1. Cuando el deploy incluye `api` o `worker` (y no hay `--skip-build` ni
+   `--skip-migrate`), suma `migrate` al mismo paso de build. Comparte capas
+   con la imagen de la API, así que casi no agrega tiempo.
+2. Después de migrar, lista las carpetas de `prisma/migrations` del árbol
+   (las que tienen `migration.sql`) y las compara con las filas terminadas y
+   no revertidas de `_prisma_migrations` (vía `psql` dentro del contenedor
+   `postgres`). Si falta alguna, la nombra y **aborta antes de tocar
+   cualquier slot**: la versión anterior sigue sirviendo. También aborta si
+   no puede leer la tabla. Con `--skip-build` el chequeo corre igual, así
+   que una imagen `migrate` vieja se detecta en vez de pasar en silencio.
+3. `--skip-migrate` saltea las tres cosas (build, migración y chequeo).
+
+Si el chequeo falla: `docker compose -p rotaract-app --env-file .env build
+migrate`, volver a correr el deploy. Pruebas: `scripts/test/deploy.test.mjs`
+(docker falso; `node --test scripts/test/*.test.mjs`).
 
 ### Migraciones compatibles hacia atrás
 

@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Fake `docker` for scripts/test/deploy.test.mjs (never talks to Docker).
+# FAKE_APPLIED: file with the migration names _prisma_migrations returns.
+echo "docker $*" >>"${FAKE_LOG:-/dev/null}"
+[ "$1" = compose ] || { [ "$1" = inspect ] && echo healthy; exit 0; }
+while [ $# -gt 0 ]; do
+  case "$1" in
+    build | run | up) exit 0 ;;
+    ps) echo fakecontainer; exit 0 ;;
+    exec)
+      [ -n "${FAKE_DB_DOWN:-}" ] && { echo "psql: connection refused" >&2; exit 2; }
+      cat "${FAKE_APPLIED:?}"
+      exit 0
+      ;;
+  esac
+  shift
+done
