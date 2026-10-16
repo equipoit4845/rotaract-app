@@ -23,7 +23,10 @@ chmodSync(join(fakeBin, "docker"), 0o755);
 const root = mkdtempSync(join(tmpdir(), "deploy-test-"));
 after(() => rmSync(root, { recursive: true, force: true }));
 
-const TREE = ["20261001000000_init", "20261016100000_application_notifications"];
+const TREE = [
+  "20261001000000_init",
+  "20261016100000_application_notifications",
+];
 
 function setup(name, applied) {
   const dir = join(root, name);
@@ -32,7 +35,10 @@ function setup(name, applied) {
     mkdirSync(join(migrations, m), { recursive: true });
     writeFileSync(join(migrations, m, "migration.sql"), "-- fake\n");
   }
-  writeFileSync(join(migrations, "migration_lock.toml"), 'provider = "postgresql"\n');
+  writeFileSync(
+    join(migrations, "migration_lock.toml"),
+    'provider = "postgresql"\n',
+  );
   writeFileSync(join(dir, "applied"), applied.map((m) => `${m}\n`).join(""));
   return {
     dir,
@@ -74,7 +80,10 @@ test("a migration missing from _prisma_migrations stops the deploy before any sw
   const ctx = setup("missing", TREE.slice(0, 1));
   const r = run(ctx, ["worker"]);
   assert.equal(r.status, 1);
-  assert.match(r.stderr, /not applied: 20261016100000_application_notifications/);
+  assert.match(
+    r.stderr,
+    /not applied: 20261016100000_application_notifications/,
+  );
   assert.match(r.stderr, /1 of 2 migrations .* are not applied/);
   assert.ok(!recreated(ctx), "nothing may be started after a failed check");
 });
