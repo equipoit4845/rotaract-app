@@ -201,6 +201,39 @@ def test_authorities_and_periods(kernel):
     assert kernel.calls_to("GET", "/service/organizations/d1/periods")[0].url.params["status"] == "ACTIVE"
 
 
+def test_positions_and_effective_permissions(kernel):
+    kernel.on("GET", "/service/organizations/c1/positions", lambda r: (200, [{"code": "CLUB_PRESIDENT"}]))
+    kernel.on("GET", "/service/positions/reuniones.delegado.rc-x", lambda r: (200, {"code": "reuniones.delegado.rc-x"}))
+    kernel.on(
+        "GET",
+        "/service/organizations/c1/persons/p1/permissions",
+        lambda r: (200, {"organizationId": "c1", "personId": "p1", "permissions": ["a.b.c"]}),
+    )
+    client = make(kernel)
+    assert client.positions.list("c1", include_permissions=True)[0]["code"] == "CLUB_PRESIDENT"
+    assert kernel.calls_to("GET", "/service/organizations/c1/positions")[0].url.params["include"] == "permissions"
+    assert client.positions.get("reuniones.delegado.rc-x")["code"] == "reuniones.delegado.rc-x"
+    assert client.permissions.effective("c1", "p1")["permissions"] == ["a.b.c"]
+
+
+def test_async_positions(kernel):
+    kernel.on("GET", "/service/organizations/c1/positions", lambda r: (200, [{"code": "CLUB_PRESIDENT"}]))
+    kernel.on(
+        "GET",
+        "/service/organizations/c1/persons/p1/permissions",
+        lambda r: (200, {"organizationId": "c1", "personId": "p1", "permissions": []}),
+    )
+
+    async def run():
+        client = make_async(kernel)
+        assert (await client.positions.list("c1"))[0]["code"] == "CLUB_PRESIDENT"
+        assert "include" not in kernel.calls_to("GET", "/service/organizations/c1/positions")[0].url.params
+        assert (await client.permissions.effective("c1", "p1"))["permissions"] == []
+        await client.aclose()
+
+    asyncio.run(run())
+
+
 def test_permissions_check_and_check_many(kernel):
     kernel.on(
         "POST",

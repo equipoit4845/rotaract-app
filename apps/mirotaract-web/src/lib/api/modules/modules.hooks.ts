@@ -3,9 +3,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { authorizationKeys } from "../authorization/authorization.keys";
+import { positionKeys } from "../positions/positions.keys";
 import { modulesApi } from "./modules.api";
 import { moduleKeys } from "./modules.keys";
-import type { ModuleStatus, RegisterModuleRequest } from "./modules.types";
+import type {
+  ModulePositionSelection,
+  ModuleStatus,
+  RegisterModuleRequest,
+} from "./modules.types";
 
 /** Module catalog, read from (and authorized at) `organizationId`. */
 export function useModules(
@@ -69,6 +74,35 @@ export function useOrganizationCapabilities(
   });
 }
 
+/** What the module creates here: its position templates and grants. */
+export function useModulePositions(
+  organizationId: string | undefined,
+  moduleId: string | undefined,
+) {
+  return useQuery({
+    queryKey: moduleKeys.positions(organizationId ?? "", moduleId ?? ""),
+    queryFn: ({ signal }) =>
+      modulesApi.positions(organizationId as string, moduleId as string, {
+        signal,
+      }),
+    enabled: Boolean(organizationId && moduleId),
+  });
+}
+
+export function useProvisionModulePositions() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      organizationId,
+      moduleId,
+      selection,
+    }: InstallationTarget & { selection: ModulePositionSelection }) =>
+      modulesApi.provisionPositions(organizationId, moduleId, selection),
+    onSettled: (_overview, _error, { organizationId }) =>
+      invalidateInstallation(queryClient, organizationId),
+  });
+}
+
 /** A new module brings new permissions: refresh the permission catalog too. */
 function invalidateCatalog(queryClient: ReturnType<typeof useQueryClient>) {
   queryClient.invalidateQueries({ queryKey: moduleKeys.lists() });
@@ -129,6 +163,13 @@ function invalidateInstallation(
   queryClient.invalidateQueries({
     queryKey: [...moduleKeys.all, "installationsInTree"],
   });
+  // Installing and uninstalling create / archive positions and change
+  // what positions grant.
+  queryClient.invalidateQueries({
+    queryKey: [...moduleKeys.all, "positions", organizationId],
+  });
+  queryClient.invalidateQueries({ queryKey: positionKeys.all });
+  queryClient.invalidateQueries({ queryKey: authorizationKeys.all });
 }
 
 type InstallationTarget = { organizationId: string; moduleId: string };
@@ -140,9 +181,12 @@ export function useInstallModule() {
       organizationId,
       moduleId,
       configuration,
+      selection,
     }: InstallationTarget & {
       configuration?: Record<string, unknown> | null;
-    }) => modulesApi.install(organizationId, moduleId, configuration),
+      selection?: ModulePositionSelection;
+    }) =>
+      modulesApi.install(organizationId, moduleId, configuration, selection),
     onSettled: (_installation, _error, { organizationId }) =>
       invalidateInstallation(queryClient, organizationId),
   });

@@ -43,7 +43,8 @@ describe("module manifest (kernel copy of @mirotaract/module-manifest)", () => {
   });
 
   it("keeps permission codes inside the module namespace", () => {
-    const manifest = example();
+    // Without cargos: renaming a permission would also break their references.
+    const { positions: _p, grants: _g, ...manifest } = example();
     manifest.permissions[0].code = "kernel.person.manage";
     manifest.permissions[1].code = "reunionesx.vote.cast";
     const result = validateManifest(manifest);
@@ -118,5 +119,20 @@ describe("module manifest (kernel copy of @mirotaract/module-manifest)", () => {
     expect(compareSemver("2.0.0", "1.9.9")).toBe(1);
     expect(compareSemver("1.0.0-beta.1", "1.0.0")).toBe(-1);
     expect(compareSemver("1.0.0", "1.0.0-rc.1")).toBe(1);
+  });
+
+  it("only lets cargos and grants hand out the module's own permissions", () => {
+    const manifest = example();
+    manifest.positions[0].permissions.push("kernel.role.assign");
+    manifest.grants[0].permissions.push("tienda.orders.manage");
+    const result = validateManifest(manifest);
+    expect(result.ok).toBe(false);
+    expect(paths(result)).toEqual([
+      "positions[0].permissions[4]",
+      "grants[0].permissions[2]",
+    ]);
+    expect(messages(result)[0]).toContain(
+      "solo puede dar permisos del propio módulo",
+    );
   });
 });

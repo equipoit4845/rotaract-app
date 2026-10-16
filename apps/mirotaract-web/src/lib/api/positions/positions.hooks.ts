@@ -10,10 +10,21 @@ import type {
   UpdatePositionDefinitionRequest,
 } from "./positions.types";
 
-export function usePositionDefinitions(organizationType?: OrganizationType) {
+/**
+ * `applicableTo`: only the positions that can be held in that organization
+ * (excludes the ones modules created in other clubs).
+ */
+export function usePositionDefinitions(
+  organizationType?: OrganizationType,
+  options: { applicableTo?: string } = {},
+) {
   return useQuery({
-    queryKey: positionKeys.list(organizationType),
-    queryFn: ({ signal }) => positionsApi.list(organizationType, { signal }),
+    queryKey: positionKeys.list(organizationType, options.applicableTo),
+    queryFn: ({ signal }) =>
+      positionsApi.list(organizationType, {
+        signal,
+        applicableTo: options.applicableTo,
+      }),
   });
 }
 

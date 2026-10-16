@@ -237,6 +237,12 @@ describe("Modules from a manifest (E8)", () => {
       where: { id: presidentPositionId },
       data: { ownerOrganizationId: presidentPositionOwner },
     });
+    // Positions the installations created from the manifest's positions[].
+    await prisma.appointment.deleteMany({
+      where: { positionDefinition: { moduleId } },
+    });
+    await prisma.positionDefinition.deleteMany({ where: { moduleId } });
+    await prisma.roleDefinition.deleteMany({ where: { moduleId } });
     // RolePermission rows cascade with the permissions.
     await prisma.permissionDefinition.deleteMany({ where: { moduleId } });
     await prisma.moduleInstallation.deleteMany({ where: { moduleId } });
@@ -307,7 +313,8 @@ describe("Modules from a manifest (E8)", () => {
       .expect(403);
 
     // Permissions outside the module's namespace: 422 in Spanish.
-    const bad = manifest();
+    // Without its cargos: they would also point at the renamed permission.
+    const { positions: _positions, grants: _grants, ...bad } = manifest();
     bad.permissions[0].code = "kernel.person.manage";
     const rejected = await as(rdr)
       .post("/modules", { appId, manifest: bad })
@@ -534,6 +541,10 @@ describe("Modules from a manifest (E8)", () => {
     const next = manifest("1.1.0");
     next.permissions = next.permissions.filter(
       (p: any) => p.code !== code("minutes.read"),
+    );
+    // Its cargo template can't keep a permission the module no longer has.
+    next.positions[0].permissions = next.positions[0].permissions.filter(
+      (permission: string) => permission !== code("minutes.read"),
     );
     next.permissions[0].name = "Conducir reuniones distritales";
     await as(president)

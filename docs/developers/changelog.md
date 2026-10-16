@@ -16,6 +16,27 @@ las personas responsables de cada app activa reciben el aviso por email.
 > código tiene que ignorar los campos que no conoce. El contrato es
 > `kernel-openapi.yaml` (versión en `info.version`).
 
+<!-- entry: cargos-de-modulos -->
+## 2026-10-16 · Cargos y permisos para apps; cargos declarados por módulos
+
+**Tipo:** nuevo · **Rompe compatibilidad:** no
+
+- Scope nuevo `kernel.service.positions.read`:
+  `GET /service/organizations/{id}/positions` (con `include=permissions`) y
+  `GET /service/positions/{code}` devuelven los cargos que se pueden ejercer
+  en una organización y qué permite cada uno.
+- `GET /service/organizations/{id}/persons/{personId}/permissions` (scope
+  `kernel.service.authorization.check`): todos los permisos de una persona en
+  una organización, en una llamada.
+- Eventos `position.created.v1`, `position.updated.v1` y
+  `position.permissions-changed.v1`.
+- El manifiesto acepta `positions[]` (cargos que el módulo crea al
+  instalarse, solo con sus propios permisos) y `grants[]` (permisos sugeridos
+  para cargos existentes, con aprobación). Al desinstalar, esos cargos se
+  archivan. Ver [modulos.md](modulos.md#4-los-cargos-que-usan-tus-permisos).
+- SDKs: `client.positions.list/get` y `client.permissions.effective` (JS y
+  Python).
+
 <!-- entry: cargos-con-permisos -->
 ## 2026-10-04 · El distrito crea cargos con permisos propios
 

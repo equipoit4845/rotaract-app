@@ -223,3 +223,70 @@ export function toPeriodView(period: InstitutionalPeriod): PeriodView {
     endDate: iso(period.endDate)!,
   };
 }
+
+export type PositionPermissionView = {
+  code: string;
+  name: string;
+  moduleId: string | null;
+};
+
+export type PositionView = {
+  code: string;
+  name: string;
+  description: string | null;
+  organizationType: PositionDefinition["organizationType"];
+  ownerOrganizationId: string | null;
+  /** SYSTEM: sembrado por la plataforma; MODULE: lo creó la instalación de un módulo. */
+  source: "SYSTEM" | "ORGANIZATION" | "MODULE";
+  moduleId: string | null;
+  isSingletonPerPeriod: boolean;
+  /** Dónde valen sus permisos: el club del cargo, o el distrito y sus clubes. */
+  scope: "ORGANIZATION" | "ORGANIZATION_TREE";
+  /** Archivado al desinstalar el módulo que lo creó (solo en el detalle). */
+  archived: boolean;
+  /** Solo si se pidieron (`?include=permissions`, o el detalle). */
+  permissions?: PositionPermissionView[];
+};
+
+/**
+ * A position definition as developer apps see it: no ids, no technical role
+ * code (apps decide by permission, never by role), and its permissions only
+ * when asked for.
+ */
+export function toPositionView(
+  position: PositionDefinition,
+  permissions?: Array<{
+    code: string;
+    name: string;
+    moduleId: string | null;
+  }>,
+): PositionView {
+  const view: PositionView = {
+    code: position.code,
+    name: position.name,
+    description: position.description ?? null,
+    organizationType: position.organizationType,
+    ownerOrganizationId: position.ownerOrganizationId ?? null,
+    source: position.moduleId
+      ? "MODULE"
+      : position.isSystem
+        ? "SYSTEM"
+        : "ORGANIZATION",
+    moduleId: position.moduleId ?? null,
+    isSingletonPerPeriod: position.isSingletonPerPeriod,
+    scope:
+      position.organizationType === "DISTRICT"
+        ? "ORGANIZATION_TREE"
+        : "ORGANIZATION",
+    archived: position.archivedAt != null,
+  };
+  if (permissions)
+    view.permissions = permissions
+      .map(({ code, name, moduleId }) => ({
+        code,
+        name,
+        moduleId: moduleId ?? null,
+      }))
+      .sort((a, b) => a.code.localeCompare(b.code));
+  return view;
+}

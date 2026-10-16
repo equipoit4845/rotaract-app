@@ -32,7 +32,14 @@ export function PositionsTable({ items }: { items: PositionDefinition[] }) {
       <TableBody>
         {items.map((item) => (
           <TableRow key={item.id}>
-            <TableCell className="font-medium">{item.name}</TableCell>
+            <TableCell className="font-medium">
+              {item.name}
+              {item.moduleId ? (
+                <Badge tone="info" className="ml-2">
+                  De la app {item.moduleId}
+                </Badge>
+              ) : null}
+            </TableCell>
             <TableCell>
               <Badge tone={positionScopeToTone(item.organizationType)}>
                 {positionScopeToLabel(item.organizationType)}
@@ -40,7 +47,11 @@ export function PositionsTable({ items }: { items: PositionDefinition[] }) {
             </TableCell>
             <TableCell>{item.isSingletonPerPeriod ? "Sí" : "No"}</TableCell>
             <TableCell className="text-muted-foreground">
-              {item.isSystem ? "Distrito" : "Club"}
+              {item.moduleId
+                ? "Instalación del módulo"
+                : item.isSystem
+                  ? "Distrito"
+                  : "Club"}
             </TableCell>
             <TableCell className="text-right">
               <Link

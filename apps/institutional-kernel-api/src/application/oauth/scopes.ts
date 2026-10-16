@@ -24,6 +24,8 @@ export const SERVICE_SCOPE_LABELS = {
   "kernel.service.organizations.read": "Leer clubes y distrito",
   "kernel.service.memberships.read": "Leer el padrón de socios",
   "kernel.service.authorities.read": "Leer autoridades vigentes",
+  "kernel.service.positions.read":
+    "Leer los cargos de la organización y qué permite cada uno",
   "kernel.service.periods.read": "Leer períodos",
   "kernel.service.authorization.check": "Consultar permisos de una persona",
   "kernel.service.modules.read": "Leer instalaciones de módulos",

@@ -87,6 +87,41 @@ class AuthorityView(_AuthorityViewRequired, total=False):
     endsAt: Optional[str]
 
 
+class _PositionPermissionRequired(TypedDict):
+    code: str
+    name: str
+
+
+class PositionPermission(_PositionPermissionRequired, total=False):
+    moduleId: Optional[str]
+
+
+class _PositionViewRequired(TypedDict):
+    code: str
+    name: str
+    organizationType: OrganizationType
+    source: Literal["SYSTEM", "ORGANIZATION", "MODULE"]
+    isSingletonPerPeriod: bool
+    scope: Literal["ORGANIZATION", "ORGANIZATION_TREE"]
+    archived: bool
+
+
+class PositionView(_PositionViewRequired, total=False):
+    """A position (cargo). Decide with ``permissions.check``, not with ``code``."""
+
+    description: Optional[str]
+    ownerOrganizationId: Optional[str]
+    moduleId: Optional[str]
+    permissions: list[PositionPermission]
+
+
+class PersonPermissions(TypedDict):
+    organizationId: str
+    personId: str
+    permissions: list[str]
+    evaluatedAt: str
+
+
 class PeriodView(TypedDict):
     id: str
     organizationId: str

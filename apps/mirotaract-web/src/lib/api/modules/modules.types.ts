@@ -9,6 +9,12 @@ export type ModuleInstallationInTree =
 export type ModuleStatus = components["schemas"]["ModuleStatus"];
 export type InstallationStatus = components["schemas"]["InstallationStatus"];
 
+/** The module's position templates and grants in one organization. */
+export type ModulePositionsOverview =
+  components["schemas"]["ModulePositionsOverview"];
+/** What to create / approve when installing (or later). */
+export type ModulePositionSelection = { positions: string[]; grants: string[] };
+
 export type OrganizationCapabilities =
   operations["getOrganizationCapabilities"]["responses"][200]["content"]["application/json"];
 
@@ -41,5 +47,7 @@ export type ModuleManifestView = {
     description?: string;
     scopeType?: "ORGANIZATION" | "ORGANIZATION_TREE";
   }>;
+  positions?: Array<{ key: string; name: string }>;
+  grants?: Array<{ positionCode: string; permissions: string[] }>;
   ui?: { entryUrl?: string; navLabel?: string; icon?: string };
 };

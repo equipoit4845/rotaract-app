@@ -304,6 +304,8 @@ const permissionByHandler: Record<string, string> = {
   capabilities: "kernel.module.read",
   // --- E8 (docs/15-modules.md)
   installationsInTree: "kernel.module.read",
+  modulePositions: "kernel.module.read",
+  provisionModulePositions: "kernel.module.install",
   // --- end E8
   // --- E12 (docs/19-operations-e12.md): incidents and maintenances.
   listStatusIncidents: "kernel.status.manage",

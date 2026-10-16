@@ -1268,6 +1268,18 @@ paths:
         - name: organizationType
           in: query
           schema: { $ref: "#/components/schemas/OrganizationType" }
+        - name: applicableTo
+          in: query
+          schema: { type: string }
+          description: >
+            Solo los cargos que se pueden ejercer en esa organización: los de
+            su tipo, de la plataforma, de su propio catálogo o del de sus
+            ancestros (el distrito). Los cargos que creó un módulo en otro
+            club no aparecen.
+        - name: includeArchived
+          in: query
+          schema: { type: boolean, default: false }
+          description: Incluye los cargos archivados (su módulo se desinstaló).
       responses:
         "200":
           description: OK
@@ -2278,6 +2290,21 @@ paths:
               type: object
               properties:
                 configuration: { type: object, nullable: true }
+                positions:
+                  type: array
+                  items: { type: string }
+                  description: >
+                    Claves de `positions[]` del manifiesto a crear como cargos
+                    de la organización. Sin este campo se crean todas las que
+                    aplican a su tipo; las `required` se crean siempre.
+                grants:
+                  type: array
+                  items: { type: string }
+                  description: >
+                    `positionCode` de los `grants[]` del manifiesto que quien
+                    instala aprueba. Sin este campo no se aplica ninguno. Solo
+                    sobre cargos que administra la organización (403
+                    `KERNEL_MODULE_GRANT_FORBIDDEN`).
       responses:
         "201":
           description: Instalada.
@@ -2417,6 +2444,62 @@ paths:
               schema:
                 type: array
                 items: { $ref: "#/components/schemas/ModuleInstallation" }
+
+  /organizations/{organizationId}/modules/{moduleId}/positions:
+    get:
+      operationId: getModulePositions
+      tags: [Modules]
+      summary: Cargos que el módulo crea en la organización
+      description: >
+        Las plantillas `positions[]` del manifiesto que aplican al tipo de la
+        organización y sus `grants[]`, con su estado (creado, archivado, sin
+        crear; aplicado o no). Sirve antes de instalar, para mostrar qué va
+        a crear la instalación.
+      x-required-permission: kernel.module.read
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+        - $ref: "#/components/parameters/moduleId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ModulePositionsOverview" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    post:
+      operationId: provisionModulePositions
+      tags: [Modules]
+      summary: Crear más cargos del módulo o aplicar más permisos sugeridos
+      description: >
+        Sobre una instalación que ya existe (no `DISABLED`): crea las
+        plantillas indicadas en `positions` (por ejemplo, las que trajo una
+        versión nueva) y aplica los `grants` aprobados. Sin `positions` no
+        crea ninguna.
+      x-required-permission: kernel.module.install
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+        - $ref: "#/components/parameters/moduleId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                positions: { type: array, items: { type: string } }
+                grants: { type: array, items: { type: string } }
+      responses:
+        "200":
+          description: Estado actualizado.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ModulePositionsOverview" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422":
+          description: Clave o cargo que el módulo no declara (`KERNEL_MODULE_POSITION_UNKNOWN`, `KERNEL_MODULE_GRANT_UNKNOWN`).
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Error" }
 
   /organizations/{organizationId}/module-installations:
     get:
@@ -2603,6 +2686,96 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "304": { description: Sin cambios desde el ETag enviado. }
         "404": { $ref: "#/components/responses/NotFound" }
+
+  /service/organizations/{organizationId}/positions:
+    get:
+      operationId: serviceListPositions
+      tags: [Service]
+      summary: Cargos que se pueden ejercer en la organización
+      description: >
+        Los de la plataforma, los del catálogo de la organización y de sus
+        ancestros (el distrito define los de todos sus clubes) y los que
+        crearon los módulos instalados. Sin los archivados. Para decidir qué
+        puede hacer alguien, consultá permisos (`/service/authorization/check`),
+        no códigos de cargo.
+      security: [{ serviceAuth: [] }]
+      x-service-only: true
+      x-required-scope: kernel.service.positions.read
+      parameters:
+        - $ref: "#/components/parameters/ifNoneMatch"
+        - $ref: "#/components/parameters/organizationId"
+        - name: include
+          in: query
+          schema: { type: string, enum: [permissions] }
+          description: "`permissions` agrega a cada cargo los permisos que da."
+      responses:
+        "429": { $ref: "#/components/responses/RateLimited" }
+        "200":
+          description: OK
+          headers:
+            ETag: { schema: { type: string } }
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/PositionView" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "304": { description: Sin cambios desde el ETag enviado. }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /service/positions/{positionCode}:
+    get:
+      operationId: serviceGetPosition
+      tags: [Service]
+      summary: Un cargo y los permisos que da
+      description: >
+        404 si el cargo no existe o no se puede ejercer en ninguna
+        organización del alcance de la app.
+      security: [{ serviceAuth: [] }]
+      x-service-only: true
+      x-required-scope: kernel.service.positions.read
+      parameters:
+        - $ref: "#/components/parameters/ifNoneMatch"
+        - name: positionCode
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "429": { $ref: "#/components/responses/RateLimited" }
+        "200":
+          description: OK
+          headers:
+            ETag: { schema: { type: string } }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PositionView" }
+        "304": { description: Sin cambios desde el ETag enviado. }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /service/organizations/{organizationId}/persons/{personId}/permissions:
+    get:
+      operationId: servicePersonPermissions
+      tags: [Service]
+      summary: Todos los permisos de una persona en una organización
+      description: >
+        Las mismas decisiones que daría `/service/authorization/check` para
+        cada permiso, incluida la regla de módulos (un permiso de módulo solo
+        vale donde el módulo está activo). Queda en el historial de accesos
+        de la persona.
+      security: [{ serviceAuth: [] }]
+      x-service-only: true
+      x-required-scope: kernel.service.authorization.check
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+        - $ref: "#/components/parameters/personId"
+      responses:
+        "429": { $ref: "#/components/responses/RateLimited" }
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PersonPermissions" }
+        "403": { $ref: "#/components/responses/Forbidden" }
 
   /service/organizations/{organizationId}/periods:
     get:
@@ -4743,6 +4916,16 @@ components:
         defaultRoleCode: { type: string, nullable: true }
         isSingletonPerPeriod: { type: boolean }
         isSystem: { type: boolean }
+        moduleId:
+          type: string
+          nullable: true
+          description: Módulo cuya instalación creó el cargo (plantilla `positions[]`).
+        moduleTemplateKey: { type: string, nullable: true }
+        archivedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Archivado al desinstalar su módulo; no admite nombramientos.
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
 
@@ -5176,6 +5359,16 @@ components:
         installedAt: { type: string, format: date-time }
         activatedAt: { type: string, format: date-time, nullable: true }
         disabledAt: { type: string, format: date-time, nullable: true }
+        grantedPermissions:
+          description: Permisos del módulo que esta instalación sumó a cargos existentes (`grants[]` aprobados); se quitan al desinstalar.
+          type: array
+          nullable: true
+          items:
+            type: object
+            required: [positionCode, permissions]
+            properties:
+              positionCode: { type: string }
+              permissions: { type: array, items: { type: string } }
         updatedAt: { type: string, format: date-time }
         module:
           description: El módulo (sólo en `GET /organizations/{id}/modules`), sin `permissions`.
@@ -5189,6 +5382,67 @@ components:
           properties:
             organizationName: { type: string }
             organizationType: { $ref: "#/components/schemas/OrganizationType" }
+
+    ModulePositionsOverview:
+      type: object
+      required: [moduleId, organizationId, installationStatus, positions, grants]
+      properties:
+        moduleId: { type: string }
+        organizationId: { type: string }
+        installationStatus:
+          type: string
+          nullable: true
+          enum: [PENDING, ACTIVE, SUSPENDED, DISABLED, null]
+          description: Estado de la instalación en la organización; null si nunca se instaló.
+        positions:
+          type: array
+          items:
+            type: object
+            required: [key, name, install, isSingletonPerPeriod, permissions, position]
+            properties:
+              key: { type: string }
+              name: { type: string }
+              description: { type: string, nullable: true }
+              install: { type: string, enum: [required, suggested] }
+              isSingletonPerPeriod: { type: boolean }
+              permissions:
+                type: array
+                items:
+                  type: object
+                  required: [code, name]
+                  properties:
+                    code: { type: string }
+                    name: { type: string }
+              position:
+                description: El cargo creado en la organización, o null si todavía no.
+                type: object
+                nullable: true
+                required: [id, code, name, archived]
+                properties:
+                  id: { type: string }
+                  code: { type: string }
+                  name: { type: string }
+                  archived: { type: boolean }
+        grants:
+          type: array
+          items:
+            type: object
+            required: [positionCode, positionName, permissions, allowed, applied]
+            properties:
+              positionCode: { type: string }
+              positionName: { type: string, nullable: true }
+              permissions:
+                type: array
+                items:
+                  type: object
+                  required: [code, name]
+                  properties:
+                    code: { type: string }
+                    name: { type: string }
+              allowed:
+                type: boolean
+                description: La organización administra ese cargo y puede sumarle permisos.
+              applied: { type: boolean }
 
     # --- Contratos para consumidores (§12) ------------------------------
 
@@ -5691,6 +5945,47 @@ components:
         status: { $ref: "#/components/schemas/PeriodStatus" }
         startDate: { type: string, format: date-time }
         endDate: { type: string, format: date-time }
+    PositionView:
+      type: object
+      required: [code, name, organizationType, source, scope, isSingletonPerPeriod, archived]
+      properties:
+        code: { type: string }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        organizationType: { $ref: "#/components/schemas/OrganizationType" }
+        ownerOrganizationId:
+          type: string
+          nullable: true
+          description: Organización que mantiene el cargo (el distrito para el catálogo de clubes).
+        source:
+          type: string
+          enum: [SYSTEM, ORGANIZATION, MODULE]
+          description: "`MODULE`: lo creó la instalación de un módulo."
+        moduleId: { type: string, nullable: true }
+        isSingletonPerPeriod: { type: boolean }
+        scope:
+          type: string
+          enum: [ORGANIZATION, ORGANIZATION_TREE]
+          description: Dónde valen sus permisos (el club del cargo, o el distrito y sus clubes).
+        archived: { type: boolean }
+        permissions:
+          description: Solo con `?include=permissions` o en el detalle.
+          type: array
+          items:
+            type: object
+            required: [code, name]
+            properties:
+              code: { type: string }
+              name: { type: string }
+              moduleId: { type: string, nullable: true }
+    PersonPermissions:
+      type: object
+      required: [organizationId, personId, permissions, evaluatedAt]
+      properties:
+        organizationId: { type: string }
+        personId: { type: string }
+        permissions: { type: array, items: { type: string } }
+        evaluatedAt: { type: string, format: date-time }
     # --- Webhooks (E7) ----------------------------------------------------
     WebhookEndpointStatus:
       type: string

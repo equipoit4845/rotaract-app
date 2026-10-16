@@ -28,6 +28,7 @@ import {
   toPeriodView,
   toPersonMembershipView,
   toPersonView,
+  toPositionView,
 } from "./views";
 
 export const CONTACT_SCOPE = "kernel.service.persons.contact.read";
@@ -177,6 +178,70 @@ export class DataApiService {
     return periods.map(toPeriodView);
   }
 
+  /**
+   * Positions that can be held in the organization: the platform's and the
+   * catalogs of the organization and its ancestors (the district defines
+   * every club's), for its organization type. Archived ones (their module
+   * was uninstalled) are left out.
+   */
+  async listPositions(organizationId: string, query: Query) {
+    const organization = await this.prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { id: true, type: true },
+    });
+    if (!organization) throw new NotFoundException("Organization not found");
+    const owners = await this.ancestorsOrSelf(organizationId);
+    const positions = await this.prisma.positionDefinition.findMany({
+      where: {
+        organizationType: organization.type,
+        archivedAt: null,
+        OR: [
+          { ownerOrganizationId: null },
+          { ownerOrganizationId: { in: owners } },
+        ],
+      },
+      orderBy: [{ code: "asc" }],
+    });
+    if (!includes(query.include, "permissions"))
+      return positions.map((position) => toPositionView(position));
+    const permissions = await this.rolePermissions(
+      positions.map((position) => position.defaultRoleCode),
+    );
+    return positions.map((position) =>
+      toPositionView(
+        position,
+        permissions.get(position.defaultRoleCode ?? "") ?? [],
+      ),
+    );
+  }
+
+  /**
+   * One position, with its permissions. Visible when it can be held
+   * somewhere in the app's tree: its owner is in the tree or above it.
+   * Otherwise 404, so the response doesn't reveal that the code exists.
+   */
+  async getPosition(service: ServiceIdentity, code: string) {
+    const position = await this.prisma.positionDefinition.findUnique({
+      where: { code },
+    });
+    const allowed = service.allowedOrganizationIds;
+    const visible =
+      position &&
+      (!allowed ||
+        !position.ownerOrganizationId ||
+        allowed.includes(position.ownerOrganizationId) ||
+        (await this.subtree(position.ownerOrganizationId)).some((id) =>
+          allowed.includes(id),
+        ));
+    if (!position || !visible)
+      throw new NotFoundException("Position not found");
+    const permissions = await this.rolePermissions([position.defaultRoleCode]);
+    return toPositionView(
+      position,
+      permissions.get(position.defaultRoleCode ?? "") ?? [],
+    );
+  }
+
   async getPerson(service: ServiceIdentity, personId: string) {
     const person = await this.prisma.person.findUnique({
       where: { id: personId },
@@ -246,6 +311,42 @@ export class DataApiService {
     if (!organization) throw new NotFoundException("Organization not found");
   }
 
+  /** The organization and its ancestors, nearest first. */
+  private async ancestorsOrSelf(organizationId: string): Promise<string[]> {
+    const ids: string[] = [];
+    let current: string | null = organizationId;
+    while (current && !ids.includes(current)) {
+      ids.push(current);
+      const organization: { parentId: string | null } | null =
+        await this.prisma.organization.findUnique({
+          where: { id: current },
+          select: { parentId: true },
+        });
+      current = organization?.parentId ?? null;
+    }
+    return ids;
+  }
+
+  /** Role code → its permissions (a position grants its role's). */
+  private async rolePermissions(roleCodes: Array<string | null>) {
+    const codes = [...new Set(roleCodes.filter((code) => code !== null))];
+    const byRole = new Map<
+      string,
+      Array<{ code: string; name: string; moduleId: string | null }>
+    >();
+    if (!codes.length) return byRole;
+    const roles = await this.prisma.roleDefinition.findMany({
+      where: { code: { in: codes } },
+      include: { permissions: { include: { permissionDefinition: true } } },
+    });
+    for (const role of roles)
+      byRole.set(
+        role.code,
+        role.permissions.map((link) => link.permissionDefinition),
+      );
+    return byRole;
+  }
+
   /** The organization and all its descendants. */
   private async subtree(rootId: string): Promise<string[]> {
     const ids = [rootId];
@@ -262,6 +363,17 @@ export class DataApiService {
     }
     return ids;
   }
+}
+
+/** `?include=a,b` contains `value`. */
+function includes(include: unknown, value: string): boolean {
+  return (
+    typeof include === "string" &&
+    include
+      .split(",")
+      .map((item) => item.trim())
+      .includes(value)
+  );
 }
 
 export function hasContactScope(service: ServiceIdentity): boolean {

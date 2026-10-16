@@ -74,6 +74,26 @@ export const MODULE_MANIFEST_SCHEMA: Record<string, unknown> = {
         $ref: "#/definitions/permission",
       },
     },
+    positions: {
+      title: "Cargos",
+      description:
+        "Cargos que el módulo necesita, con permisos de este módulo. Al instalarlo, cada club o el distrito elige cuáles crear; quedan como cargos propios de esa organización y la presidencia (o el RDR) nombra a las personas como en cualquier cargo.",
+      type: "array",
+      maxItems: 20,
+      items: {
+        $ref: "#/definitions/positionTemplate",
+      },
+    },
+    grants: {
+      title: "Permisos para cargos existentes",
+      description:
+        "Sugerencias para sumar permisos de este módulo a cargos que ya existen (por ejemplo DISTRICT_SECRETARY). Solo se aplican si quien instala las aprueba, y solo sobre cargos que administra esa organización.",
+      type: "array",
+      maxItems: 20,
+      items: {
+        $ref: "#/definitions/grant",
+      },
+    },
     events: {
       title: "Eventos",
       type: "object",
@@ -214,6 +234,93 @@ export const MODULE_MANIFEST_SCHEMA: Record<string, unknown> = {
       type: "string",
       maxLength: 120,
       pattern: "^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*)+\\.v[1-9][0-9]*$",
+    },
+    positionTemplate: {
+      type: "object",
+      additionalProperties: false,
+      required: ["key", "name", "organizationTypes", "permissions"],
+      properties: {
+        key: {
+          title: "Clave",
+          description:
+            "Identifica la plantilla dentro del módulo y no cambia nunca (por ejemplo encargado-casilla).",
+          type: "string",
+          maxLength: 40,
+          pattern: "^[a-z][a-z0-9-]*$",
+        },
+        name: {
+          title: "Nombre",
+          description:
+            "Nombre del cargo, como lo ve la presidencia al nombrar a alguien.",
+          type: "string",
+          minLength: 3,
+          maxLength: 80,
+        },
+        description: {
+          title: "Descripción",
+          type: "string",
+          maxLength: 500,
+        },
+        organizationTypes: {
+          title: "Dónde se crea",
+          description:
+            "CLUB: en los clubes que instalan el módulo. DISTRICT: en el distrito.",
+          type: "array",
+          minItems: 1,
+          uniqueItems: true,
+          items: {
+            enum: ["CLUB", "DISTRICT"],
+          },
+        },
+        permissions: {
+          type: "array",
+          minItems: 1,
+          uniqueItems: true,
+          items: {
+            type: "string",
+          },
+          title: "Permisos",
+          description:
+            "Códigos de permissions[] de este mismo manifiesto. Nunca permisos del kernel ni de otros módulos.",
+        },
+        isSingletonPerPeriod: {
+          title: "Una sola persona por período",
+          type: "boolean",
+          default: false,
+        },
+        install: {
+          title: "Al instalar",
+          description:
+            "required: se crea siempre. suggested: quien instala puede no crearlo.",
+          enum: ["required", "suggested"],
+          default: "suggested",
+        },
+      },
+    },
+    grant: {
+      type: "object",
+      additionalProperties: false,
+      required: ["positionCode", "permissions"],
+      properties: {
+        positionCode: {
+          title: "Código del cargo",
+          description:
+            "Un cargo que ya existe, por ejemplo DISTRICT_SECRETARY o CLUB_PRESIDENT.",
+          type: "string",
+          minLength: 1,
+          maxLength: 120,
+        },
+        permissions: {
+          type: "array",
+          minItems: 1,
+          uniqueItems: true,
+          items: {
+            type: "string",
+          },
+          title: "Permisos",
+          description: "Códigos de permissions[] de este mismo manifiesto.",
+        },
+      },
     },
   },
 };

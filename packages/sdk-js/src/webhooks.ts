@@ -6,6 +6,7 @@ import type {
   OrganizationView,
   PeriodView,
   PersonView,
+  PositionView,
 } from "./types.ts";
 
 /**
@@ -104,6 +105,25 @@ export type PeriodCreatedEvent = MiRotaractEvent<
   "period.created.v1",
   { period: PeriodView }
 >;
+/** Positions events (scope kernel.service.positions.read): `permissions` always comes. */
+export type PositionEventData = {
+  position: PositionView & {
+    permissions: NonNullable<PositionView["permissions"]>;
+  };
+};
+export type PositionCreatedEvent = MiRotaractEvent<
+  "position.created.v1",
+  PositionEventData
+>;
+export type PositionUpdatedEvent = MiRotaractEvent<
+  "position.updated.v1",
+  PositionEventData
+>;
+/** A permission was added to or removed from a position: refresh what you cached about it. */
+export type PositionPermissionsChangedEvent = MiRotaractEvent<
+  "position.permissions-changed.v1",
+  PositionEventData
+>;
 /** E8: your module's installation in a club (or the district). */
 export type ModuleInstallationView = {
   moduleId: string;
@@ -148,6 +168,9 @@ export type MiRotaractWebhookEvent =
   | OrganizationArchivedEvent
   | PersonUpdatedEvent
   | PeriodCreatedEvent
+  | PositionCreatedEvent
+  | PositionUpdatedEvent
+  | PositionPermissionsChangedEvent
   | ModuleInstalledEvent
   | ModuleEnabledEvent
   | ModuleDisabledEvent

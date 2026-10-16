@@ -496,6 +496,86 @@ Las autoridades nunca traen datos de contacto, aunque tengas el scope.
 Parámetros: `periodId`, `at`. Respuesta `AuthoritySnapshot` con
 `appointments: [{ appointmentId, positionCode, membershipId, membershipOrganizationId, personId, status, startsAt, endsAt }]`.
 
+## Cargos
+
+Qué cargos se pueden ejercer en una organización y qué permite cada uno.
+Sirve para **mostrar** cargos y para configurar tu app (por ejemplo, elegir
+qué cargos tienen casilla). Para **decidir** qué puede hacer alguien usá
+[permisos](#consultar-un-permiso), no códigos de cargo: el distrito y los
+clubes crean y renombran cargos, y un cargo creado por un módulo tiene un
+código distinto en cada club.
+
+### Cargos de una organización · v1
+
+`GET /service/organizations/{organizationId}/positions` · scope
+`kernel.service.positions.read`
+
+Los cargos de la plataforma, los del catálogo de la organización y de sus
+ancestros (el distrito define los de todos sus clubes) y los que crearon los
+módulos instalados ahí. Sin los archivados. Con `include=permissions`, cada
+cargo trae los permisos que da. Respuestas: `200` (lista de `PositionView`),
+`403`, `404`. Admite `ETag`.
+
+```bash
+curl -s "$API/service/organizations/$CLUB_ID/positions?include=permissions" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+```json
+[
+  {
+    "code": "CLUB_PRESIDENT",
+    "name": "Presidencia",
+    "description": null,
+    "organizationType": "CLUB",
+    "ownerOrganizationId": "cmb0d1distrito4845000001",
+    "source": "SYSTEM",
+    "moduleId": null,
+    "isSingletonPerPeriod": true,
+    "scope": "ORGANIZATION",
+    "archived": false,
+    "permissions": [
+      { "code": "kernel.appointment.create", "name": "Nombrar autoridades", "moduleId": null },
+      { "code": "reuniones.vote.cast", "name": "Votar en nombre del club", "moduleId": "reuniones" }
+    ]
+  },
+  {
+    "code": "reuniones.delegado-asamblea.rc-asuncion-centro",
+    "name": "Delegado/a a la asamblea",
+    "description": "Representa al club en las reuniones distritales.",
+    "organizationType": "CLUB",
+    "ownerOrganizationId": "cmb0c1asucentro000000001",
+    "source": "MODULE",
+    "moduleId": "reuniones",
+    "isSingletonPerPeriod": false,
+    "scope": "ORGANIZATION",
+    "archived": false,
+    "permissions": [
+      { "code": "reuniones.vote.cast", "name": "Votar en nombre del club", "moduleId": "reuniones" }
+    ]
+  }
+]
+```
+
+- `source`: `SYSTEM` (sembrado por la plataforma), `ORGANIZATION` (lo creó
+  el distrito o el club) o `MODULE` (lo creó la instalación de un módulo,
+  `moduleId`).
+- `scope`: dónde valen sus permisos. `ORGANIZATION_TREE` (cargos de
+  distrito) vale también en los clubes.
+
+### Un cargo · v1
+
+`GET /service/positions/{positionCode}` · scope
+`kernel.service.positions.read`
+
+Un `PositionView` con `permissions`. `404` si no existe o no se puede ejercer
+en ninguna organización de tu alcance. Un cargo archivado se sigue pudiendo
+leer (`archived: true`), para mostrar el historial.
+
+Los cambios llegan por [webhooks](catalogo-de-eventos.md):
+`position.created.v1`, `position.updated.v1` y
+`position.permissions-changed.v1`.
+
 ## Períodos
 
 ### Períodos de una organización · v1
@@ -587,6 +667,30 @@ decision = client.permissions.check(
 decision["allowed"]
 ```
 
+### Todos los permisos de una persona · v1
+
+`GET /service/organizations/{organizationId}/persons/{personId}/permissions`
+· scope `kernel.service.authorization.check`
+
+Las mismas decisiones que `check` daría permiso por permiso (incluida la
+regla de módulos: un permiso de módulo solo vale donde el módulo está
+activo), en una sola llamada. Útil para pintar una pantalla sin hacer una
+consulta por botón. Queda en el historial de accesos de la persona.
+
+```json
+{
+  "organizationId": "cmb0c1asucentro000000001",
+  "personId": "cmb1p0matias000000000002",
+  "permissions": ["kernel.appointment.create", "reuniones.vote.cast"],
+  "evaluatedAt": "2026-10-16T13:00:00.000Z"
+}
+```
+
+```ts
+const { permissions } = await client.permissions.effective(clubId, personId);
+const puedeVotar = permissions.includes("reuniones.vote.cast");
+```
+
 ### Varias decisiones · disponible
 
 `POST /service/authorization/batch-check` · mismo scope. Cuerpo
@@ -620,10 +724,13 @@ necesita:
 | `POST /service/persons/batch` | `kernel.service.persons.read` |
 | `GET /service/organizations/{organizationId}/authorities` | `kernel.service.authorities.read` |
 | `GET /service/organizations/{organizationId}/authority-snapshot` | `kernel.service.authorities.read` |
+| `GET /service/organizations/{organizationId}/positions` | `kernel.service.positions.read` |
+| `GET /service/positions/{positionCode}` | `kernel.service.positions.read` |
 | `GET /service/organizations/{organizationId}/periods` | `kernel.service.periods.read` |
 | `GET /service/organizations/{organizationId}/period-snapshot` | `kernel.service.periods.read` |
 | `POST /service/authorization/check` | `kernel.service.authorization.check` |
 | `POST /service/authorization/batch-check` | `kernel.service.authorization.check` |
+| `GET /service/organizations/{organizationId}/persons/{personId}/permissions` | `kernel.service.authorization.check` |
 | `GET /service/users/{accountId}/context` | `kernel.service.users.read` |
 | `GET /service/modules/{moduleId}/installations/{organizationId}` | `kernel.service.modules.read` |
 | `POST /auth/introspect` | `kernel.service.tokens.introspect` |

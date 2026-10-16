@@ -31,7 +31,9 @@ import type {
   PeriodStatus,
   PeriodView,
   PersonMembershipView,
+  PersonPermissions,
   PersonView,
+  PositionView,
   ScopeType,
   TokenSet,
 } from "./types.ts";
@@ -100,6 +102,7 @@ export class MiRotaract {
   readonly persons: PersonsResource;
   readonly authorities: AuthoritiesResource;
   readonly periods: PeriodsResource;
+  readonly positions: PositionsResource;
   readonly permissions: PermissionsResource;
 
   private readonly http: HttpClient;
@@ -127,6 +130,7 @@ export class MiRotaract {
     this.persons = new PersonsResource(this);
     this.authorities = new AuthoritiesResource(this);
     this.periods = new PeriodsResource(this);
+    this.positions = new PositionsResource(this);
     this.permissions = new PermissionsResource(this);
   }
 
@@ -381,6 +385,38 @@ export class PeriodsResource {
   }
 }
 
+/** Scope `kernel.service.positions.read`. */
+export class PositionsResource {
+  private readonly client: MiRotaract;
+  constructor(client: MiRotaract) {
+    this.client = client;
+  }
+
+  /** Positions that can be held in the organization (its own, the district's catalog and its modules'). */
+  async list(
+    organizationId: string,
+    options: { includePermissions?: boolean } = {},
+  ): Promise<PositionView[]> {
+    const { data } = await this.client.request<PositionView[]>({
+      method: "GET",
+      path: `/service/organizations/${enc(organizationId)}/positions`,
+      query: {
+        include: options.includePermissions ? "permissions" : undefined,
+      },
+    });
+    return data;
+  }
+
+  /** One position, with the permissions it grants. */
+  async get(positionCode: string): Promise<PositionView> {
+    const { data } = await this.client.request<PositionView>({
+      method: "GET",
+      path: `/service/positions/${enc(positionCode)}`,
+    });
+    return data;
+  }
+}
+
 function toCheckRequest(check: PermissionCheck) {
   return {
     subjectId: check.personId,
@@ -407,6 +443,22 @@ export class PermissionsResource {
       path: "/service/authorization/check",
       json: toCheckRequest(check),
       idempotencyKey: randomId(),
+    });
+    return data;
+  }
+
+  /**
+   * Every permission `personId` holds in `organizationId` (the same
+   * decisions `check` would give, one by one). Scope
+   * `kernel.service.authorization.check`.
+   */
+  async effective(
+    organizationId: string,
+    personId: string,
+  ): Promise<PersonPermissions> {
+    const { data } = await this.client.request<PersonPermissions>({
+      method: "GET",
+      path: `/service/organizations/${enc(organizationId)}/persons/${enc(personId)}/permissions`,
     });
     return data;
   }

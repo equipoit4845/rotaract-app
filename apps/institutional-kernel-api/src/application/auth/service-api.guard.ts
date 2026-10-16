@@ -57,6 +57,9 @@ const serviceScopeByHandler: Record<string, string> = {
   serviceListMembers: "kernel.service.memberships.read",
   serviceListAuthorities: "kernel.service.authorities.read",
   serviceListPeriods: "kernel.service.periods.read",
+  serviceListPositions: "kernel.service.positions.read",
+  serviceGetPosition: "kernel.service.positions.read",
+  servicePersonPermissions: "kernel.service.authorization.check",
   // persons/batch has no route personId: the ids in the body are not
   // checked here; out-of-scope persons are omitted by DataApiService.
   serviceBatchPersons: "kernel.service.persons.read",

@@ -32,10 +32,28 @@ import {
   summarizeErrors,
   validateConfiguration,
   validateManifest,
+  type ModuleGrant,
   type ModuleManifest,
+  type ModulePositionTemplate,
   type ValidationError,
 } from "../modules/manifest";
 import { SUBSCRIBABLE_EVENT_TYPES } from "../webhooks/catalog";
+
+/** `positions` / `grants` chosen when installing a module. */
+type ModulePositionSelection = { positions?: string[]; grants?: string[] };
+/** What an installation added to an existing position (ModuleInstallation.grantedPermissions). */
+type ModuleGrantRecord = { positionCode: string; permissions: string[] };
+
+function grantRecords(value: unknown): ModuleGrantRecord[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter(
+    (item): item is ModuleGrantRecord =>
+      !!item &&
+      typeof item === "object" &&
+      typeof (item as ModuleGrantRecord).positionCode === "string" &&
+      Array.isArray((item as ModuleGrantRecord).permissions),
+  );
+}
 
 /**
  * Permissions that act beyond a single club (structure, role delegation,
@@ -476,6 +494,21 @@ export class KernelService {
         orderBy: { name: "asc" },
       });
     });
+  }
+  /** The organization and its ancestors, nearest first. */
+  private async ancestorsOrSelfIn(tx: any, id: string): Promise<string[]> {
+    const result: string[] = [];
+    let current: string | null = id;
+    while (current && !result.includes(current)) {
+      result.push(current);
+      const organization: { parentId: string | null } | null =
+        await tx.organization.findUnique({
+          where: { id: current },
+          select: { parentId: true },
+        });
+      current = organization?.parentId ?? null;
+    }
+    return result;
   }
   private async descendantsIn(tx: any, id: string): Promise<string[]> {
     const result: string[] = [];
@@ -1010,12 +1043,35 @@ export class KernelService {
       },
     );
   }
-  listPositions(query: any = {}) {
+  /**
+   * `applicableTo`: only the positions that can be held in that
+   * organization (its type; the platform's, its own and its ancestors'
+   * catalogs). Archived positions (their module was uninstalled) only with
+   * `includeArchived=true`.
+   */
+  async listPositions(query: any = {}) {
+    const where: Prisma.PositionDefinitionWhereInput = {
+      organizationType: query.organizationType,
+      ownerOrganizationId: query.ownerOrganizationId,
+      ...(String(query.includeArchived) === "true" ? {} : { archivedAt: null }),
+    };
+    if (query.applicableTo) {
+      const organization = await this.prisma.organization.findUniqueOrThrow({
+        where: { id: String(query.applicableTo) },
+        select: { id: true, type: true },
+      });
+      where.organizationType = organization.type;
+      where.OR = [
+        { ownerOrganizationId: null },
+        {
+          ownerOrganizationId: {
+            in: await this.ancestorsOrSelfIn(this.prisma, organization.id),
+          },
+        },
+      ];
+    }
     return this.prisma.positionDefinition.findMany({
-      where: {
-        organizationType: query.organizationType,
-        ownerOrganizationId: query.ownerOrganizationId,
-      },
+      where,
       orderBy: { code: "asc" },
     });
   }
@@ -1235,29 +1291,7 @@ export class KernelService {
         const role = await tx.roleDefinition.findUniqueOrThrow({
           where: { code: position.defaultRoleCode },
         });
-        // Editing a position's permissions edits its role for everyone who
-        // holds it. That is only coherent when every position deriving the
-        // role has the same owner (e.g. the district catalog defining what
-        // every club president can do), never across owners.
-        const otherOwners = await tx.positionDefinition.count({
-          where: {
-            id: { not: position.id },
-            defaultRoleCode: position.defaultRoleCode,
-            // Explicit OR: `NOT { owner: X }` alone would skip NULL owners.
-            OR: position.ownerOrganizationId
-              ? [
-                  { ownerOrganizationId: null },
-                  {
-                    ownerOrganizationId: { not: position.ownerOrganizationId },
-                  },
-                ]
-              : [{ ownerOrganizationId: { not: null } }],
-          },
-        });
-        if (otherOwners > 0)
-          throw new ConflictException(
-            "This role is shared with positions of another organization",
-          );
+        await this.assertRoleNotShared(tx, position);
         if (attach && position.ownerOrganizationId) {
           const [owner, permission] = await Promise.all([
             tx.organization.findUniqueOrThrow({
@@ -1306,6 +1340,40 @@ export class KernelService {
       },
     );
   }
+  /**
+   * Editing a position's permissions edits its role for everyone who holds
+   * it. That is only coherent when every position deriving the role has the
+   * same owner (e.g. the district catalog defining what every club
+   * president can do), never across owners.
+   */
+  private async assertRoleNotShared(
+    tx: any,
+    position: {
+      id: string;
+      defaultRoleCode: string | null;
+      ownerOrganizationId: string | null;
+    },
+  ): Promise<void> {
+    const otherOwners = await tx.positionDefinition.count({
+      where: {
+        id: { not: position.id },
+        defaultRoleCode: position.defaultRoleCode,
+        // Explicit OR: `NOT { owner: X }` alone would skip NULL owners.
+        OR: position.ownerOrganizationId
+          ? [
+              { ownerOrganizationId: null },
+              {
+                ownerOrganizationId: { not: position.ownerOrganizationId },
+              },
+            ]
+          : [{ ownerOrganizationId: { not: null } }],
+      },
+    });
+    if (otherOwners > 0)
+      throw new ConflictException(
+        "This role is shared with positions of another organization",
+      );
+  }
   async createAppointment(
     organizationId: string,
     input: any,
@@ -1334,6 +1402,24 @@ export class KernelService {
           period.organizationId !== organizationId
         )
           throw new BadRequestException("Invalid appointment references");
+        if (position.archivedAt)
+          throw new ConflictException({
+            code: "KERNEL_POSITION_ARCHIVED",
+            message: `El cargo «${position.name}» está archivado: la app que lo creó se desinstaló.`,
+          });
+        // A position owned by an organization (its own catalog, or one a
+        // module created there) is only held there or below it: a club
+        // never appoints into another club's position.
+        if (
+          position.ownerOrganizationId &&
+          !(await this.ancestorsOrSelfIn(tx, organizationId)).includes(
+            position.ownerOrganizationId,
+          )
+        )
+          throw new BadRequestException({
+            code: "KERNEL_POSITION_NOT_APPLICABLE",
+            message: `El cargo «${position.name}» es de otra organización.`,
+          });
         assertActiveMembership(membership.status);
         assertNonArchived(membership.person.archivedAt);
         const descendants = await this.descendantsIn(tx, organizationId);
@@ -2521,6 +2607,13 @@ export class KernelService {
           },
         });
         await this.syncModulePermissions(tx, manifest);
+        await this.syncModulePositionTemplates(
+          tx,
+          id,
+          ((module.manifest ?? {}) as unknown as ModuleManifest).positions ??
+            [],
+          manifest.positions ?? [],
+        );
         const [presented] = await this.presentModules(tx, [updated]);
         return presented;
       },
@@ -2572,10 +2665,11 @@ export class KernelService {
     context?: CommandContext,
   ) {
     const configuration = input?.configuration;
+    const selection = this.positionSelection(input);
     return this.mutate(
       "InstallModule",
       context,
-      { organizationId, moduleId, configuration },
+      { organizationId, moduleId, configuration, ...selection },
       {
         type: "ModuleInstallation",
         id: `${moduleId}:${organizationId}`,
@@ -2603,7 +2697,7 @@ export class KernelService {
           });
         const organization = await tx.organization.findUniqueOrThrow({
           where: { id: organizationId },
-          select: { status: true },
+          select: { id: true, status: true, type: true, slug: true },
         });
         if (organization.status === "ARCHIVED")
           throw new ConflictException({
@@ -2650,10 +2744,27 @@ export class KernelService {
                   : {}),
               },
             });
+        // Cargos the module declares (positions[]) and approved grants[]:
+        // created in the same transaction, so an installation never exists
+        // without the positions it needs.
+        const grantedPermissions = await this.provisionModulePositions(
+          tx,
+          module,
+          organization,
+          selection,
+          [],
+          context,
+        );
+        const provisioned = grantedPermissions.length
+          ? await tx.moduleInstallation.update({
+              where: { id: installation.id },
+              data: { grantedPermissions: grantedPermissions as Json },
+            })
+          : installation;
         await this.bumpCacheVersion(
           `kernel:module-version:${organizationId}:${moduleId}:v1`,
         );
-        return installation;
+        return provisioned;
       },
     );
   }
@@ -2718,14 +2829,698 @@ export class KernelService {
               target === "ACTIVE" ? new Date() : installation.activatedAt,
             disabledAt:
               target === "DISABLED" ? new Date() : installation.disabledAt,
+            ...(target === "DISABLED"
+              ? { grantedPermissions: Prisma.DbNull }
+              : {}),
           },
         });
+        // Uninstalling archives the positions the module created (their
+        // appointments end) and takes back the permissions it added to
+        // existing positions. Suspending touches nothing: the module gate
+        // already denies its permissions.
+        if (target === "DISABLED")
+          await this.deprovisionModulePositions(
+            tx,
+            moduleId,
+            organizationId,
+            installation.grantedPermissions,
+            context,
+          );
         await this.bumpCacheVersion(
           `kernel:module-version:${organizationId}:${moduleId}:v1`,
         );
         return updated;
       },
     );
+  }
+  // --- Cargos declared by modules (manifest positions[] / grants[]) -----
+
+  /**
+   * `positions`: template keys to create (omitted = every template that
+   * applies; `required` ones always). `grants`: positionCodes of grants[]
+   * the installer approves (omitted = none).
+   */
+  private positionSelection(input: any): ModulePositionSelection {
+    const read = (name: "positions" | "grants") => {
+      const value = input?.[name];
+      if (value === undefined || value === null) return undefined;
+      if (
+        !Array.isArray(value) ||
+        !value.every((item) => typeof item === "string")
+      )
+        throw new BadRequestException({
+          code: "KERNEL_VALIDATION_ERROR",
+          message: `«${name}» tiene que ser una lista de textos.`,
+        });
+      return [...new Set(value as string[])];
+    };
+    return { positions: read("positions"), grants: read("grants") };
+  }
+  /**
+   * What a module would create in (or has created in) an organization: its
+   * position templates for the organization's type and its grants[], each
+   * with its current state. Works before installing (the install dialog).
+   */
+  async modulePositionsOverview(organizationId: string, moduleId: string) {
+    const [module, organization, installation] = await Promise.all([
+      this.prisma.moduleDefinition.findUnique({ where: { id: moduleId } }),
+      this.prisma.organization.findUniqueOrThrow({
+        where: { id: organizationId },
+        select: { id: true, type: true },
+      }),
+      this.prisma.moduleInstallation.findUnique({
+        where: { moduleId_organizationId: { moduleId, organizationId } },
+      }),
+    ]);
+    if (!module)
+      throw new NotFoundException({
+        code: "KERNEL_NOT_FOUND",
+        message: `No existe el módulo «${moduleId}».`,
+      });
+    const manifest = (module.manifest ?? {}) as unknown as ModuleManifest;
+    const names = new Map(
+      (manifest.permissions ?? []).map((permission) => [
+        permission.code,
+        permission.name,
+      ]),
+    );
+    const describe = (codes: string[]) =>
+      codes.map((code) => ({ code, name: names.get(code) ?? code }));
+    const templates = (manifest.positions ?? []).filter((template) =>
+      template.organizationTypes.includes(organization.type as never),
+    );
+    const created = await this.prisma.positionDefinition.findMany({
+      where: { ownerOrganizationId: organizationId, moduleId },
+    });
+    const granted = grantRecords(installation?.grantedPermissions);
+    const grantPositions = await this.prisma.positionDefinition.findMany({
+      where: {
+        code: {
+          in: (manifest.grants ?? []).map((grant) => grant.positionCode),
+        },
+      },
+    });
+    return {
+      moduleId,
+      organizationId,
+      installationStatus: installation?.status ?? null,
+      positions: templates.map((template) => {
+        const position = created.find(
+          (item) => item.moduleTemplateKey === template.key,
+        );
+        return {
+          key: template.key,
+          name: template.name,
+          description: template.description ?? null,
+          install: template.install ?? "suggested",
+          isSingletonPerPeriod: template.isSingletonPerPeriod ?? false,
+          permissions: describe(template.permissions),
+          position: position
+            ? {
+                id: position.id,
+                code: position.code,
+                name: position.name,
+                archived: position.archivedAt !== null,
+              }
+            : null,
+        };
+      }),
+      grants: (manifest.grants ?? []).map((grant) => {
+        const position = grantPositions.find(
+          (item) => item.code === grant.positionCode,
+        );
+        return {
+          positionCode: grant.positionCode,
+          positionName: position?.name ?? null,
+          permissions: describe(grant.permissions),
+          // Only the organization that owns a position may change what it
+          // grants (a club never edits CLUB_PRESIDENT, shared by all clubs).
+          allowed:
+            !!position &&
+            !position.archivedAt &&
+            position.ownerOrganizationId === organizationId,
+          applied: granted.some(
+            (record) => record.positionCode === grant.positionCode,
+          ),
+        };
+      }),
+    };
+  }
+  /**
+   * Creates more of the module's positions, or applies more grants, on an
+   * installation that already exists (e.g. a new version brought a new
+   * template).
+   */
+  async provisionModulePositionsCommand(
+    organizationId: string,
+    moduleId: string,
+    input: any,
+    context?: CommandContext,
+  ) {
+    const selection = this.positionSelection(input);
+    await this.mutate(
+      "ProvisionModulePositions",
+      context,
+      { organizationId, moduleId, ...selection },
+      {
+        type: "ModuleInstallation",
+        id: `${moduleId}:${organizationId}`,
+        organizationId,
+      },
+      async (tx) => {
+        const installation = await tx.moduleInstallation.findUnique({
+          where: { moduleId_organizationId: { moduleId, organizationId } },
+          include: { module: true },
+        });
+        if (!installation || installation.status === "DISABLED")
+          throw new NotFoundException({
+            code: "KERNEL_NOT_FOUND",
+            message: "El módulo no está instalado en esta organización.",
+          });
+        const organization = await tx.organization.findUniqueOrThrow({
+          where: { id: organizationId },
+          select: { id: true, type: true, slug: true },
+        });
+        // Here, omitted `positions` means "none": only what was asked for
+        // (plus the required ones, already there) is created.
+        const grantedPermissions = await this.provisionModulePositions(
+          tx,
+          installation.module,
+          organization,
+          { positions: selection.positions ?? [], grants: selection.grants },
+          grantRecords(installation.grantedPermissions),
+          context,
+        );
+        return tx.moduleInstallation.update({
+          where: { id: installation.id },
+          data: {
+            grantedPermissions: grantedPermissions.length
+              ? (grantedPermissions as Json)
+              : Prisma.DbNull,
+          },
+        });
+      },
+    );
+    return this.modulePositionsOverview(organizationId, moduleId);
+  }
+  /**
+   * Materializes the selected templates as positions of the organization
+   * and applies the approved grants. Returns every grant this installation
+   * holds (the previous ones plus the new ones), to store on it.
+   */
+  private async provisionModulePositions(
+    tx: any,
+    module: { id: string; manifest: unknown },
+    organization: { id: string; type: string; slug: string },
+    selection: ModulePositionSelection,
+    previous: ModuleGrantRecord[],
+    context?: CommandContext,
+  ): Promise<ModuleGrantRecord[]> {
+    const manifest = (module.manifest ?? {}) as ModuleManifest;
+    const templates = (manifest.positions ?? []).filter((template) =>
+      template.organizationTypes.includes(organization.type as never),
+    );
+    const known = new Set(templates.map((template) => template.key));
+    const unknown = (selection.positions ?? []).filter(
+      (key) => !known.has(key),
+    );
+    if (unknown.length)
+      throw this.moduleError(
+        "KERNEL_MODULE_POSITION_UNKNOWN",
+        `El módulo no declara ${unknown.map((key) => `«${key}»`).join(", ")} como cargo para este tipo de organización.`,
+      );
+    const wanted = new Set(
+      selection.positions === undefined
+        ? templates.map((template) => template.key)
+        : [
+            ...selection.positions,
+            ...templates
+              .filter((template) => template.install === "required")
+              .map((template) => template.key),
+          ],
+    );
+    const created: string[] = [];
+    for (const template of templates)
+      if (wanted.has(template.key))
+        created.push(
+          await this.materializeModulePosition(
+            tx,
+            module.id,
+            organization,
+            template,
+            context,
+          ),
+        );
+
+    const records = previous.map((record) => ({ ...record }));
+    for (const positionCode of selection.grants ?? []) {
+      const grant = (manifest.grants ?? []).find(
+        (item) => item.positionCode === positionCode,
+      );
+      if (!grant)
+        throw this.moduleError(
+          "KERNEL_MODULE_GRANT_UNKNOWN",
+          `El módulo no sugiere permisos para el cargo «${positionCode}».`,
+        );
+      const added = await this.applyModuleGrant(
+        tx,
+        module.id,
+        organization.id,
+        grant,
+        context,
+      );
+      const record = records.find((item) => item.positionCode === positionCode);
+      if (record)
+        record.permissions = [...new Set([...record.permissions, ...added])];
+      else if (added.length) records.push({ positionCode, permissions: added });
+    }
+    if (created.length || (selection.grants ?? []).length)
+      await this.outbox.record(
+        tx,
+        "kernel.module-positions-provisioned.v1",
+        "ModuleInstallation",
+        `${module.id}:${organization.id}`,
+        {
+          moduleId: module.id,
+          organizationId: organization.id,
+          positionCodes: created,
+          grants: records,
+        },
+        this.context(context),
+        organization.id,
+      );
+    return records;
+  }
+  /** The module's own permissions among `codes` (never kernel.* or another module's). */
+  private async moduleOwnPermissions(
+    tx: any,
+    moduleId: string,
+    codes: string[],
+  ): Promise<Array<{ id: string; code: string }>> {
+    const permissions = await tx.permissionDefinition.findMany({
+      where: { code: { in: codes }, moduleId },
+      select: { id: true, code: true },
+    });
+    const missing = codes.filter(
+      (code) =>
+        !permissions.some((permission: any) => permission.code === code),
+    );
+    if (missing.length)
+      throw this.moduleError(
+        "KERNEL_MODULE_PERMISSION_FOREIGN",
+        `Un cargo del módulo solo puede dar permisos del propio módulo: ${missing.map((code) => `«${code}»`).join(", ")} no lo son.`,
+      );
+    return permissions;
+  }
+  /**
+   * One template → one position owned by the organization, with a role of
+   * its own that holds only the template's permissions. Reinstalling
+   * brings an archived position back instead of creating another.
+   */
+  private async materializeModulePosition(
+    tx: any,
+    moduleId: string,
+    organization: { id: string; type: string; slug: string },
+    template: ModulePositionTemplate,
+    context?: CommandContext,
+  ): Promise<string> {
+    const permissions = await this.moduleOwnPermissions(
+      tx,
+      moduleId,
+      template.permissions,
+    );
+    const existing = await tx.positionDefinition.findFirst({
+      where: {
+        ownerOrganizationId: organization.id,
+        moduleId,
+        moduleTemplateKey: template.key,
+      },
+    });
+    let position = existing;
+    if (existing?.archivedAt) {
+      position = await tx.positionDefinition.update({
+        where: { id: existing.id },
+        data: { archivedAt: null },
+      });
+      await this.outbox.record(
+        tx,
+        "kernel.position.updated.v1",
+        "PositionDefinition",
+        existing.id,
+        { positionDefinitionId: existing.id },
+        this.context(context),
+      );
+    }
+    if (!position) {
+      // Codes are unique platform-wide: the module, the template and the
+      // organization make it unique, and the module never chooses it.
+      const code = `${moduleId}.${template.key}.${organization.slug}`;
+      const taken = await tx.positionDefinition.findUnique({ where: { code } });
+      if (taken)
+        throw new ConflictException({
+          code: "KERNEL_POSITION_CODE_TAKEN",
+          message: `Ya existe un cargo con el código «${code}».`,
+        });
+      const roleTaken = await tx.roleDefinition.findUnique({ where: { code } });
+      if (roleTaken)
+        throw new ConflictException(
+          "A role with this position's code already exists",
+        );
+      await tx.roleDefinition.create({
+        data: {
+          code,
+          name: template.name,
+          description: template.description ?? null,
+          moduleId,
+          isSystem: false,
+        },
+      });
+      position = await tx.positionDefinition.create({
+        data: {
+          code,
+          name: template.name,
+          description: template.description ?? null,
+          organizationType: organization.type,
+          ownerOrganizationId: organization.id,
+          defaultRoleCode: code,
+          isSingletonPerPeriod: template.isSingletonPerPeriod ?? false,
+          moduleId,
+          moduleTemplateKey: template.key,
+        },
+      });
+      await this.outbox.record(
+        tx,
+        "kernel.position.created.v1",
+        "PositionDefinition",
+        position.id,
+        { positionDefinitionId: position.id },
+        this.context(context),
+      );
+    }
+    // The role carries at least the template's permissions (a reinstall
+    // after a new version may bring more).
+    const role = await tx.roleDefinition.findUniqueOrThrow({
+      where: { code: position.defaultRoleCode },
+    });
+    for (const permission of permissions)
+      await tx.rolePermission.upsert({
+        where: {
+          roleDefinitionId_permissionDefinitionId: {
+            roleDefinitionId: role.id,
+            permissionDefinitionId: permission.id,
+          },
+        },
+        create: {
+          roleDefinitionId: role.id,
+          permissionDefinitionId: permission.id,
+        },
+        update: {},
+      });
+    await this.invalidateRoleHolders(tx, role.id);
+    return position.code;
+  }
+  /**
+   * Adds a grant's permissions to an existing position's role. Only the
+   * organization that owns the position may do it, and never on a role
+   * shared with another owner's positions. A position without a role of its
+   * own gets one (same as `grantsPermissions`). Returns the permissions it
+   * actually added (those it already had are not the module's to remove).
+   */
+  private async applyModuleGrant(
+    tx: any,
+    moduleId: string,
+    organizationId: string,
+    grant: ModuleGrant,
+    context?: CommandContext,
+  ): Promise<string[]> {
+    let position = await tx.positionDefinition.findUnique({
+      where: { code: grant.positionCode },
+    });
+    if (!position || position.archivedAt)
+      throw this.moduleError(
+        "KERNEL_MODULE_GRANT_INVALID",
+        `No existe el cargo «${grant.positionCode}».`,
+      );
+    if (position.ownerOrganizationId !== organizationId)
+      throw new ForbiddenException({
+        code: "KERNEL_MODULE_GRANT_FORBIDDEN",
+        message: `El cargo «${position.name}» lo administra otra organización: solo ella puede sumarle permisos.`,
+      });
+    const permissions = await this.moduleOwnPermissions(
+      tx,
+      moduleId,
+      grant.permissions,
+    );
+    if (!position.defaultRoleCode) {
+      const roleCode = await this.createPositionRole(
+        tx,
+        position.code,
+        position.name,
+        position.description,
+      );
+      position = await tx.positionDefinition.update({
+        where: { id: position.id },
+        data: { defaultRoleCode: roleCode },
+      });
+      await this.resyncPositionRoleAssignments(
+        tx,
+        position.id,
+        roleCode,
+        context,
+      );
+    }
+    await this.assertRoleNotShared(tx, position);
+    const role = await tx.roleDefinition.findUniqueOrThrow({
+      where: { code: position.defaultRoleCode },
+    });
+    const added: string[] = [];
+    for (const permission of permissions) {
+      const link = await tx.rolePermission.findUnique({
+        where: {
+          roleDefinitionId_permissionDefinitionId: {
+            roleDefinitionId: role.id,
+            permissionDefinitionId: permission.id,
+          },
+        },
+      });
+      if (link) continue;
+      await tx.rolePermission.create({
+        data: {
+          roleDefinitionId: role.id,
+          permissionDefinitionId: permission.id,
+        },
+      });
+      added.push(permission.code);
+      await this.outbox.record(
+        tx,
+        "kernel.position.permissions-changed.v1",
+        "PositionDefinition",
+        position.id,
+        {
+          positionDefinitionId: position.id,
+          permissionId: permission.id,
+          attached: true,
+        },
+        this.context(context),
+      );
+    }
+    await this.invalidateRoleHolders(tx, role.id);
+    return added;
+  }
+  /**
+   * Uninstall: the module's positions in the organization are archived and
+   * their open appointments closed (history stays); the permissions its
+   * grants added are taken back.
+   */
+  private async deprovisionModulePositions(
+    tx: any,
+    moduleId: string,
+    organizationId: string,
+    grantedPermissions: unknown,
+    context?: CommandContext,
+  ): Promise<void> {
+    const positions = await tx.positionDefinition.findMany({
+      where: {
+        ownerOrganizationId: organizationId,
+        moduleId,
+        archivedAt: null,
+      },
+    });
+    const now = new Date();
+    for (const position of positions) {
+      await tx.positionDefinition.update({
+        where: { id: position.id },
+        data: { archivedAt: now },
+      });
+      await this.closeAppointmentsOfPosition(
+        tx,
+        position.id,
+        "La app que creó el cargo se desinstaló",
+        context,
+      );
+      await this.outbox.record(
+        tx,
+        "kernel.position.updated.v1",
+        "PositionDefinition",
+        position.id,
+        { positionDefinitionId: position.id },
+        this.context(context),
+      );
+    }
+    for (const record of grantRecords(grantedPermissions)) {
+      const position = await tx.positionDefinition.findUnique({
+        where: { code: record.positionCode },
+      });
+      if (!position?.defaultRoleCode) continue;
+      const role = await tx.roleDefinition.findUnique({
+        where: { code: position.defaultRoleCode },
+      });
+      if (!role) continue;
+      const permissions = await tx.permissionDefinition.findMany({
+        where: { code: { in: record.permissions }, moduleId },
+        select: { id: true },
+      });
+      for (const permission of permissions) {
+        const removed = await tx.rolePermission.deleteMany({
+          where: {
+            roleDefinitionId: role.id,
+            permissionDefinitionId: permission.id,
+          },
+        });
+        if (removed.count)
+          await this.outbox.record(
+            tx,
+            "kernel.position.permissions-changed.v1",
+            "PositionDefinition",
+            position.id,
+            {
+              positionDefinitionId: position.id,
+              permissionId: permission.id,
+              attached: false,
+            },
+            this.context(context),
+          );
+      }
+      await this.invalidateRoleHolders(tx, role.id);
+    }
+  }
+  /** Same as closeAppointmentsOfMembership, for every holder of a position. */
+  private async closeAppointmentsOfPosition(
+    tx: any,
+    positionDefinitionId: string,
+    reason: string,
+    context?: CommandContext,
+  ): Promise<void> {
+    const open = await tx.appointment.findMany({
+      where: {
+        positionDefinitionId,
+        status: { in: ["NOMINATED", "ELECTED", "ACTIVE"] },
+      },
+      include: { membership: { select: { personId: true } } },
+    });
+    const now = new Date();
+    const actorId = this.context(context).actor.id;
+    for (const appointment of open) {
+      const target = appointment.status === "ACTIVE" ? "ENDED" : "REVOKED";
+      appointmentStateMachine.assertTransition(appointment.status, target);
+      await tx.appointment.update({
+        where: { id: appointment.id },
+        data:
+          target === "ENDED"
+            ? { status: target, endedAt: now }
+            : {
+                status: target,
+                revokedAt: now,
+                revokedById: actorId,
+                revokeReason: reason,
+              },
+      });
+      await tx.roleAssignment.updateMany({
+        where: { sourceAppointmentId: appointment.id, revokedAt: null },
+        data: { revokedAt: now, revokedById: actorId },
+      });
+      await this.outbox.record(
+        tx,
+        target === "ENDED"
+          ? "kernel.appointment.ended.v1"
+          : "kernel.appointment.revoked.v1",
+        "Appointment",
+        appointment.id,
+        { appointmentId: appointment.id, status: target },
+        this.context(context),
+      );
+      await this.authorization.invalidate(appointment.membership.personId);
+      await this.bumpCacheVersion(
+        `kernel:authorities-version:${appointment.organizationId}:v1`,
+      );
+    }
+  }
+  /**
+   * A new manifest version: the positions created from a template that
+   * still exists follow its permission changes (added ones are attached,
+   * removed ones detached). Permissions a person added by hand are left
+   * alone; new templates are offered, not created.
+   */
+  private async syncModulePositionTemplates(
+    tx: any,
+    moduleId: string,
+    previous: ModulePositionTemplate[],
+    next: ModulePositionTemplate[],
+  ): Promise<void> {
+    for (const template of next) {
+      const before = previous.find((item) => item.key === template.key);
+      if (!before) continue;
+      const added = template.permissions.filter(
+        (code) => !before.permissions.includes(code),
+      );
+      const removed = before.permissions.filter(
+        (code) => !template.permissions.includes(code),
+      );
+      if (!added.length && !removed.length) continue;
+      const positions = await tx.positionDefinition.findMany({
+        where: { moduleId, moduleTemplateKey: template.key, archivedAt: null },
+      });
+      const toAttach = added.length
+        ? await this.moduleOwnPermissions(tx, moduleId, added)
+        : [];
+      // Removed codes may already be gone (syncModulePermissions deletes
+      // the permissions the manifest no longer declares).
+      const toDetach = await tx.permissionDefinition.findMany({
+        where: { code: { in: removed }, moduleId },
+        select: { id: true },
+      });
+      for (const position of positions) {
+        if (!position.defaultRoleCode) continue;
+        const role = await tx.roleDefinition.findUnique({
+          where: { code: position.defaultRoleCode },
+        });
+        if (!role) continue;
+        for (const permission of toAttach)
+          await tx.rolePermission.upsert({
+            where: {
+              roleDefinitionId_permissionDefinitionId: {
+                roleDefinitionId: role.id,
+                permissionDefinitionId: permission.id,
+              },
+            },
+            create: {
+              roleDefinitionId: role.id,
+              permissionDefinitionId: permission.id,
+            },
+            update: {},
+          });
+        if (toDetach.length)
+          await tx.rolePermission.deleteMany({
+            where: {
+              roleDefinitionId: role.id,
+              permissionDefinitionId: {
+                in: toDetach.map((permission: { id: string }) => permission.id),
+              },
+            },
+          });
+        await this.invalidateRoleHolders(tx, role.id);
+      }
+    }
   }
   updateInstallationConfiguration(
     organizationId: string,

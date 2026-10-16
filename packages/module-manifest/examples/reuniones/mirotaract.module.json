@@ -42,6 +42,34 @@
       "scopeType": "ORGANIZATION"
     }
   ],
+  "positions": [
+    {
+      "key": "delegado-asamblea",
+      "name": "Delegado/a a la asamblea",
+      "description": "Representa al club en las reuniones distritales: vota y maneja las cartas poder.",
+      "organizationTypes": ["CLUB"],
+      "permissions": [
+        "reuniones.vote.cast",
+        "reuniones.proxy.manage",
+        "reuniones.meeting.attend",
+        "reuniones.minutes.read"
+      ],
+      "install": "suggested"
+    }
+  ],
+  "grants": [
+    {
+      "positionCode": "DISTRICT_RDR",
+      "permissions": [
+        "reuniones.meeting.manage",
+        "reuniones.club-standing.manage"
+      ]
+    },
+    {
+      "positionCode": "DISTRICT_SECRETARY",
+      "permissions": ["reuniones.meeting.manage"]
+    }
+  ],
   "events": {
     "subscribes": [
       "appointment.activated.v1",

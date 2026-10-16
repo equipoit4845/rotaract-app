@@ -295,6 +295,73 @@ const MODULE_EVENT_NOTE =
   " Solo llega a la app dueña del módulo (la que lo registró).";
 // --- end E8
 
+// --- Cargos (positions) and what each one allows ----------------------
+export const POSITION_VIEW_SCHEMA: JsonSchema = {
+  type: "object",
+  description:
+    "Igual que PositionView de la API de datos, con sus permisos. Sin personas.",
+  required: [
+    "code",
+    "name",
+    "organizationType",
+    "source",
+    "scope",
+    "archived",
+    "permissions",
+  ],
+  properties: {
+    code: { type: "string" },
+    name: { type: "string" },
+    description: nullableString,
+    organizationType: { type: "string", enum: ["DISTRICT", "CLUB", "OTHER"] },
+    ownerOrganizationId: nullableString,
+    source: { type: "string", enum: ["SYSTEM", "ORGANIZATION", "MODULE"] },
+    moduleId: nullableString,
+    isSingletonPerPeriod: { type: "boolean" },
+    scope: { type: "string", enum: ["ORGANIZATION", "ORGANIZATION_TREE"] },
+    archived: { type: "boolean" },
+    permissions: {
+      type: "array",
+      items: {
+        type: "object",
+        required: ["code", "name"],
+        properties: {
+          code: { type: "string" },
+          name: { type: "string" },
+          moduleId: nullableString,
+        },
+      },
+    },
+  },
+};
+
+const examplePosition = (extra: Record<string, unknown> = {}) => ({
+  code: "reuniones.delegado-asamblea.rc-san-lorenzo",
+  name: "Delegado/a a la asamblea",
+  description: "Representa al club en las reuniones distritales.",
+  organizationType: "CLUB",
+  ownerOrganizationId: ORG,
+  source: "MODULE",
+  moduleId: "reuniones",
+  isSingletonPerPeriod: false,
+  scope: "ORGANIZATION",
+  archived: false,
+  permissions: [
+    {
+      code: "reuniones.vote.cast",
+      name: "Votar en nombre del club",
+      moduleId: "reuniones",
+    },
+  ],
+  ...extra,
+});
+
+const positionSchema: JsonSchema = {
+  type: "object",
+  required: ["position"],
+  properties: { position: POSITION_VIEW_SCHEMA },
+};
+
 const membershipSchema = (
   extra: Record<string, unknown> = {},
   required: string[] = [],
@@ -470,6 +537,39 @@ export const EVENT_CATALOG: readonly EventDefinition[] = [
         endDate: "2028-06-30T00:00:00.000Z",
       },
     },
+  },
+  {
+    type: "position.created.v1",
+    name: "position.created",
+    version: 1,
+    title: "Cargo creado",
+    description:
+      "Se creó un cargo que se puede ejercer en tus organizaciones: lo definió el distrito o el club, o lo creó la instalación de un módulo.",
+    scope: "kernel.service.positions.read",
+    schema: positionSchema,
+    example: { position: examplePosition() },
+  },
+  {
+    type: "position.updated.v1",
+    name: "position.updated",
+    version: 1,
+    title: "Cargo actualizado",
+    description:
+      "Cambió el nombre o la descripción de un cargo, o se archivó (`archived`: la app que lo creó se desinstaló) o se volvió a usar.",
+    scope: "kernel.service.positions.read",
+    schema: positionSchema,
+    example: { position: examplePosition() },
+  },
+  {
+    type: "position.permissions-changed.v1",
+    name: "position.permissions-changed",
+    version: 1,
+    title: "Cambiaron los permisos de un cargo",
+    description:
+      "Se sumó o se quitó un permiso a un cargo. `position.permissions` trae la lista completa actual. Si tu app guarda en caché qué puede hacer cada persona, este es el evento para invalidarla.",
+    scope: "kernel.service.positions.read",
+    schema: positionSchema,
+    example: { position: examplePosition() },
   },
   // --- E8: module installations, only for the module's own app.
   {

@@ -10,6 +10,8 @@ export const moduleKeys = {
     [...moduleKeys.all, "organizationInstallations", organizationId] as const,
   installationsInTree: (organizationId: string) =>
     [...moduleKeys.all, "installationsInTree", organizationId] as const,
+  positions: (organizationId: string, moduleId: string) =>
+    [...moduleKeys.all, "positions", organizationId, moduleId] as const,
   capabilities: (organizationId: string) =>
     [...moduleKeys.all, "capabilities", organizationId] as const,
 };

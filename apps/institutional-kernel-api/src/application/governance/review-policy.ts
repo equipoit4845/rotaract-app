@@ -16,6 +16,8 @@ export const REVIEW_SAFE_SERVICE_SCOPES: readonly string[] = [
   "kernel.service.organizations.read",
   "kernel.service.periods.read",
   "kernel.service.modules.read",
+  // Cargos y sus permisos: estructura, sin personas.
+  "kernel.service.positions.read",
 ];
 
 export type ReviewedApp = {

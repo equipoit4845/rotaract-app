@@ -40,6 +40,10 @@ export const APP_OWN_DATA = [
     code: "kernel.service.authorities.read",
     label: "Leer autoridades vigentes",
   },
+  {
+    code: "kernel.service.positions.read",
+    label: "Leer los cargos de la organización y qué permite cada uno",
+  },
   { code: "kernel.service.periods.read", label: "Leer períodos" },
   {
     code: "kernel.service.authorization.check",

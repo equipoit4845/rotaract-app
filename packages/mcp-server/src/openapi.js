@@ -28,6 +28,18 @@ const SDK = {
     ts: "await client.authorities.list(organizationId, { includeDescendants: false })",
     py: "client.authorities.list(organization_id, include_descendants=False)",
   },
+  serviceListPositions: {
+    ts: "await client.positions.list(organizationId, { includePermissions: true })",
+    py: "client.positions.list(organization_id, include_permissions=True)",
+  },
+  serviceGetPosition: {
+    ts: "await client.positions.get(positionCode)",
+    py: "client.positions.get(position_code)",
+  },
+  servicePersonPermissions: {
+    ts: "await client.permissions.effective(organizationId, personId)",
+    py: "client.permissions.effective(organization_id, person_id)",
+  },
   serviceListPeriods: {
     ts: 'await client.periods.list(organizationId, { status: "ACTIVE" })',
     py: 'client.periods.list(organization_id, status="ACTIVE")',

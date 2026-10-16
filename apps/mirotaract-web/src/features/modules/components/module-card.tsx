@@ -20,7 +20,13 @@ import {
 import { Blocks, Check, ExternalLink } from "lucide-react";
 
 export type ModuleAction =
-  "install" | "activate" | "configure" | "suspend" | "uninstall" | "publish";
+  | "install"
+  | "activate"
+  | "configure"
+  | "positions"
+  | "suspend"
+  | "uninstall"
+  | "publish";
 
 /**
  * One module of the catalog, as seen from the active club (or district):
@@ -55,6 +61,9 @@ export function ModuleCard({
         ?.properties ?? {},
     ).length > 0;
   const entryUrl = manifest.ui?.entryUrl;
+  const templates = manifest.positions ?? [];
+  const hasPositions =
+    templates.length > 0 || (manifest.grants ?? []).length > 0;
   const deprecated = module.status === "DEPRECATED";
 
   return (
@@ -107,7 +116,9 @@ export function ModuleCard({
               </p>
             ) : null}
             <p className="mt-3 text-xs text-muted-foreground">
-              El distrito decide qué cargos tienen cada uno, desde Cargos.
+              {templates.length
+                ? `Al instalarlo crea ${templates.length === 1 ? "el cargo" : "los cargos"} ${templates.map((template) => `«${template.name}»`).join(", ")}, para nombrar a quien lo use.`
+                : "El distrito decide qué cargos tienen cada uno, desde Cargos."}
             </p>
           </>
         ) : (
@@ -147,6 +158,15 @@ export function ModuleCard({
             onClick={() => onAction("configure")}
           >
             Configurar
+          </Button>
+        ) : null}
+        {status && hasPositions && can.install ? (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onAction("positions")}
+          >
+            Cargos
           </Button>
         ) : null}
         {status === "ACTIVE" && can.disable ? (

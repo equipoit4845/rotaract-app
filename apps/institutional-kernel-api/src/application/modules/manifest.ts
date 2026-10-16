@@ -20,6 +20,16 @@ export type ModulePermission = {
   description?: string;
   scopeType?: ModulePermissionScope;
 };
+export type ModulePositionTemplate = {
+  key: string;
+  name: string;
+  description?: string;
+  organizationTypes: Array<"CLUB" | "DISTRICT">;
+  permissions: string[];
+  isSingletonPerPeriod?: boolean;
+  install?: "required" | "suggested";
+};
+export type ModuleGrant = { positionCode: string; permissions: string[] };
 export type ModuleManifest = {
   $schema?: string;
   id: string;
@@ -28,6 +38,8 @@ export type ModuleManifest = {
   version: string;
   contractVersion: 1;
   permissions: ModulePermission[];
+  positions?: ModulePositionTemplate[];
+  grants?: ModuleGrant[];
   events?: { subscribes?: string[]; emits?: string[] };
   configurationSchema?: Record<string, unknown>;
   ui?: { entryUrl: string; navLabel?: string; icon?: string };
@@ -166,6 +178,59 @@ export function validateManifest(
       });
     else seen.set(code, index);
   });
+
+  // Cargos (positions[]) and grants[] may only hand out this module's own
+  // permissions: never the kernel's or another module's.
+  const declared = new Set(
+    permissions
+      .map((permission) =>
+        isPlainObject(permission) ? permission.code : undefined,
+      )
+      .filter((code): code is string => typeof code === "string"),
+  );
+  const checkGranted = (list: unknown, path: string) => {
+    if (!Array.isArray(list)) return;
+    list.forEach((code: unknown, index: number) => {
+      if (typeof code === "string" && !declared.has(code))
+        errors.push({
+          path: `${path}[${index}]`,
+          message: `El permiso «${code}» no está en permissions[] de este manifiesto: un cargo solo puede dar permisos del propio módulo.`,
+          keyword: "modulePermission",
+        });
+    });
+  };
+  const keys = new Map<string, number>();
+  (Array.isArray(manifest.positions) ? manifest.positions : []).forEach(
+    (template: unknown, index: number) => {
+      if (!isPlainObject(template)) return;
+      if (typeof template.key === "string") {
+        if (keys.has(template.key))
+          errors.push({
+            path: `positions[${index}].key`,
+            message: `La clave «${template.key}» está repetida (también en positions[${keys.get(template.key)}]).`,
+            keyword: "uniqueKey",
+          });
+        else keys.set(template.key, index);
+      }
+      checkGranted(template.permissions, `positions[${index}].permissions`);
+    },
+  );
+  const grantCodes = new Map<string, number>();
+  (Array.isArray(manifest.grants) ? manifest.grants : []).forEach(
+    (grant: unknown, index: number) => {
+      if (!isPlainObject(grant)) return;
+      if (typeof grant.positionCode === "string") {
+        if (grantCodes.has(grant.positionCode))
+          errors.push({
+            path: `grants[${index}].positionCode`,
+            message: `El cargo «${grant.positionCode}» está repetido (también en grants[${grantCodes.get(grant.positionCode)}]).`,
+            keyword: "uniqueCode",
+          });
+        else grantCodes.set(grant.positionCode, index);
+      }
+      checkGranted(grant.permissions, `grants[${index}].permissions`);
+    },
+  );
 
   const events = isPlainObject(manifest.events) ? manifest.events : {};
   if (Array.isArray(events.emits))

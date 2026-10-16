@@ -75,7 +75,8 @@ test("missing required fields are reported in Spanish", () => {
 });
 
 test("permission codes must live in the module's namespace", () => {
-  const manifest = clone();
+  // Without cargos: renaming a permission would also break their references.
+  const { positions: _p, grants: _g, ...manifest } = clone();
   manifest.permissions[0].code = "kernel.person.manage";
   manifest.permissions[1].code = "meetings.vote.cast";
   const result = validateManifest(manifest);
@@ -102,7 +103,7 @@ test("a code that only repeats the module id is not namespaced", () => {
 });
 
 test("permission codes need <namespace>.<resource>.<action>", () => {
-  const manifest = clone();
+  const { positions: _p, grants: _g, ...manifest } = clone();
   manifest.permissions[0].code = "reuniones.vote";
   const result = validateManifest(manifest);
   assert.equal(result.ok, false);
@@ -301,4 +302,40 @@ test("anyOf noise is summarised in one message", () => {
   assert.deepEqual(messages(result), [
     "«limite» no coincide con ninguna de las opciones posibles.",
   ]);
+});
+
+test("position templates and grants only hand out the module's own permissions", () => {
+  const manifest = clone();
+  manifest.positions[0].permissions.push("kernel.role.assign");
+  manifest.grants[0].permissions.push("tienda.orders.manage");
+  const result = validateManifest(manifest);
+  assert.equal(result.ok, false);
+  assert.deepEqual(
+    result.errors.map((error) => error.path),
+    ["positions[0].permissions[4]", "grants[0].permissions[2]"],
+  );
+  assert.match(
+    messages(result)[0],
+    /solo puede dar permisos del propio módulo/,
+  );
+});
+
+test("position template keys and grant positions are unique", () => {
+  const manifest = clone();
+  manifest.positions.push({ ...manifest.positions[0] });
+  manifest.grants.push({ ...manifest.grants[0] });
+  const result = validateManifest(manifest);
+  assert.equal(result.ok, false);
+  assert.deepEqual(result.errors.map((error) => error.keyword).sort(), [
+    "uniqueCode",
+    "uniqueKey",
+  ]);
+});
+
+test("a position template needs a key, a name, where it goes and permissions", () => {
+  const manifest = clone();
+  manifest.positions = [{ key: "Mal Formada", name: "X" }];
+  const result = validateManifest(manifest);
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.length >= 3);
 });

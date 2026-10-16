@@ -366,6 +366,12 @@ model PositionDefinition {
   defaultRoleCode      String?
   isSingletonPerPeriod Boolean          @default(false)
   isSystem             Boolean          @default(false)
+  // Cargo creado por la instalación de un módulo (plantilla `positions[]`
+  // de su manifiesto, identificada por `moduleTemplateKey`).
+  moduleId             String?
+  moduleTemplateKey    String?
+  // Archivado al desinstalar el módulo que lo creó: no admite nombramientos.
+  archivedAt           DateTime?
   createdAt            DateTime         @default(now())
   updatedAt            DateTime         @updatedAt
 
@@ -373,8 +379,10 @@ model PositionDefinition {
   ownerOrganization Organization?        @relation("PositionCatalogOwner", fields: [ownerOrganizationId], references: [id], onDelete: Restrict)
   editPermission    PermissionDefinition @relation("PositionEditPermission", fields: [editPermissionCode], references: [code], onDelete: Restrict)
 
+  @@unique([ownerOrganizationId, moduleId, moduleTemplateKey])
   @@index([organizationType])
   @@index([ownerOrganizationId, organizationType])
+  @@index([moduleId])
   @@index([editPermissionCode])
 }
 
@@ -598,16 +606,20 @@ model ModuleDefinition {
 }
 
 model ModuleInstallation {
-  id             String             @id @default(cuid())
-  moduleId       String
-  organizationId String
-  status         InstallationStatus @default(PENDING)
-  configuration  Json?
-  installedById  String?
-  installedAt    DateTime           @default(now())
-  activatedAt    DateTime?
-  disabledAt     DateTime?
-  updatedAt      DateTime           @updatedAt
+  id                 String             @id @default(cuid())
+  moduleId           String
+  organizationId     String
+  status             InstallationStatus @default(PENDING)
+  configuration      Json?
+  installedById      String?
+  installedAt        DateTime           @default(now())
+  activatedAt        DateTime?
+  disabledAt         DateTime?
+  // Permisos del módulo que esta instalación sumó a cargos que ya existían
+  // (`grants[]` aprobados): [{ positionCode, permissions: [code] }]. Al
+  // desinstalar se quitan exactamente esos.
+  grantedPermissions Json?
+  updatedAt          DateTime           @updatedAt
 
   module       ModuleDefinition @relation(fields: [moduleId], references: [id], onDelete: Restrict)
   organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
@@ -718,24 +730,24 @@ enum SigningKeyStatus {
 /// An application built by a committee on top of the Kernel. Bound to one
 /// organization: a club app sees that club; a district app sees the tree.
 model DeveloperApp {
-  id             String             @id @default(cuid())
-  clientId       String             @unique
-  name           String
-  description    String?
-  type           DeveloperAppType
-  status         DeveloperAppStatus @default(ACTIVE)
-  organizationId String
-  ownerPersonId  String
+  id                String                   @id @default(cuid())
+  clientId          String                   @unique
+  name              String
+  description       String?
+  type              DeveloperAppType
+  status            DeveloperAppStatus       @default(ACTIVE)
+  organizationId    String
+  ownerPersonId     String
   /// "client_credentials" | "authorization_code" | "refresh_token"
-  grantTypes     String[]
+  grantTypes        String[]
   /// OIDC scopes (openid, profile, email, memberships, positions) and/or
   /// service scopes (kernel.service.*).
-  scopes         String[]
-  redirectUris   String[]
-  createdAt      DateTime           @default(now())
-  updatedAt      DateTime           @updatedAt
-  suspendedAt    DateTime?
-  revokedAt      DateTime?
+  scopes            String[]
+  redirectUris      String[]
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+  suspendedAt       DateTime?
+  revokedAt         DateTime?
   // --- E11 (docs/18-data-governance.md): review, checklist data, quotas.
   reviewStatus      DeveloperAppReviewStatus @default(IN_REVIEW)
   /// Scopes the district approved: the only ones that work for everybody.
@@ -1047,6 +1059,7 @@ model DeveloperAppListing {
 
   @@index([published, displayOrder])
 }
+
 // E12.1 — status of the kernel and its satellites (docs/19-operations-e12.md).
 // The worker probes every component once a minute (StatusCheck, raw, kept
 // 7 days) and folds each result into a per-day summary (StatusDailySummary,
@@ -1156,4 +1169,5 @@ model StatusIncidentUpdate {
 
   @@index([incidentId, createdAt])
 }
+
 // --- end E12

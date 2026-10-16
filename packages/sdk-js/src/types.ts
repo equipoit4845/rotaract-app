@@ -83,6 +83,43 @@ export type PersonMembershipView = {
   endedAt?: string | null;
 };
 
+/** A permission a position grants. */
+export type PositionPermission = {
+  code: string;
+  name: string;
+  moduleId?: string | null;
+};
+
+/**
+ * A position (cargo) that can be held in an organization. Decide what a
+ * person may do with `permissions.check`, not with `code`: codes of
+ * positions created by organizations or modules are not stable names.
+ */
+export type PositionView = {
+  code: string;
+  name: string;
+  description?: string | null;
+  organizationType: OrganizationType;
+  ownerOrganizationId?: string | null;
+  /** MODULE: created by a module's installation. */
+  source: "SYSTEM" | "ORGANIZATION" | "MODULE";
+  moduleId?: string | null;
+  isSingletonPerPeriod: boolean;
+  /** Where its permissions apply: the position's club, or the district and its clubs. */
+  scope: "ORGANIZATION" | "ORGANIZATION_TREE";
+  archived: boolean;
+  /** Only with `includePermissions` (list) or in `positions.get`. */
+  permissions?: PositionPermission[];
+};
+
+/** Every permission a person holds in an organization. */
+export type PersonPermissions = {
+  organizationId: string;
+  personId: string;
+  permissions: string[];
+  evaluatedAt: string;
+};
+
 export type AuthorizationDecision = {
   allowed: boolean;
   decisionId: string;

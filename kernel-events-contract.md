@@ -415,7 +415,9 @@ Disparado por: `CancelPeriod`, `DRAFT/SCHEDULED → CANCELLED` (§7.4, terminal)
 
 #### `kernel.position.created.v1`
 
-Disparado por: `CreatePositionDefinition`.
+Disparado por: `CreatePositionDefinition`, o por `InstallModule` /
+`ProvisionModulePositions` al crear un cargo desde una plantilla
+`positions[]` del manifiesto.
 
 | Campo | Tipo | Obligatorio |
 |---|---|---|
@@ -427,7 +429,8 @@ Disparado por: `CreatePositionDefinition`.
 
 #### `kernel.position.updated.v1`
 
-Disparado por: `UpdatePositionDefinition`. Señal para invalidar catálogos;
+Disparado por: `UpdatePositionDefinition`, y al archivar (desinstalar el
+módulo que lo creó) o reactivar un cargo de módulo. Señal para invalidar catálogos;
 los consumidores consultan el recurso si necesitan valores actuales.
 
 | Campo | Tipo | Obligatorio |
@@ -438,7 +441,9 @@ los consumidores consultan el recurso si necesitan valores actuales.
 
 #### `kernel.position.permissions-changed.v1`
 
-Disparado por: `AttachPermissionToPosition` o `DetachPermissionFromPosition`.
+Disparado por: `AttachPermissionToPosition` o `DetachPermissionFromPosition`,
+y por los `grants[]` de un módulo al instalarlo (se suman) o desinstalarlo
+(se quitan).
 
 | Campo | Tipo | Obligatorio |
 |---|---|---|
@@ -789,10 +794,25 @@ Disparado por: `SuspendModuleInstallation`, `ACTIVE → SUSPENDED` (§7.8).
 | `moduleId` | string | sí |
 | `organizationId` | string | sí |
 
+#### `kernel.module-positions-provisioned.v1`
+
+Disparado por: `InstallModule` o `ProvisionModulePositions` cuando la
+instalación creó cargos desde las plantillas `positions[]` del manifiesto o
+aplicó `grants[]` aprobados (docs/15-modules.md, «Cargos de módulos»).
+
+| Campo | Tipo | Obligatorio |
+|---|---|---|
+| `moduleId` | string | sí |
+| `organizationId` | string | sí |
+| `positionCodes` | string[] | sí |
+| `grants` | `{ positionCode, permissions[] }[]` | sí |
+
 #### `kernel.module-disabled.v1`
 
 Disparado por: `DisableModuleInstallation`. No elimina datos del servicio
-consumidor (invariante 6.10.5, CA-MOD-04).
+consumidor (invariante 6.10.5, CA-MOD-04). Archiva los cargos que creó la
+instalación (sus nombramientos terminan) y quita los permisos que sumaron
+sus `grants[]`.
 
 | Campo | Tipo | Obligatorio |
 |---|---|---|

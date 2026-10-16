@@ -424,3 +424,34 @@ test("requires baseUrl, clientId and clientSecret", () => {
     MiRotaractConfigError,
   );
 });
+
+test("positions.list/get and permissions.effective call the Data API", async () => {
+  const { kernel, client } = await setup();
+  kernel.on("GET", "/service/organizations/c1/positions", () => ({
+    body: [{ code: "CLUB_PRESIDENT", permissions: [] }],
+  }));
+  kernel.on("GET", "/service/positions/reuniones.delegado.rc-x", () => ({
+    body: { code: "reuniones.delegado.rc-x", permissions: [] },
+  }));
+  kernel.on("GET", "/service/organizations/c1/persons/p1/permissions", () => ({
+    body: { organizationId: "c1", personId: "p1", permissions: ["a.b.c"] },
+  }));
+  assert.equal(
+    (await client.positions.list("c1", { includePermissions: true }))[0].code,
+    "CLUB_PRESIDENT",
+  );
+  assert.equal(
+    kernel
+      .callsTo("GET", "/service/organizations/c1/positions")[0]
+      .url.searchParams.get("include"),
+    "permissions",
+  );
+  assert.equal(
+    (await client.positions.get("reuniones.delegado.rc-x")).code,
+    "reuniones.delegado.rc-x",
+  );
+  assert.deepEqual(
+    (await client.permissions.effective("c1", "p1")).permissions,
+    ["a.b.c"],
+  );
+});

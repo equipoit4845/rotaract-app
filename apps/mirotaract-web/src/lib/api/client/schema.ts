@@ -1692,6 +1692,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/organizations/{organizationId}/modules/{moduleId}/positions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Cargos que el módulo crea en la organización
+         * @description Las plantillas `positions[]` del manifiesto que aplican al tipo de la organización y sus `grants[]`, con su estado (creado, archivado, sin crear; aplicado o no). Sirve antes de instalar, para mostrar qué va a crear la instalación.
+         */
+        get: operations["getModulePositions"];
+        put?: never;
+        /**
+         * Crear más cargos del módulo o aplicar más permisos sugeridos
+         * @description Sobre una instalación que ya existe (no `DISABLED`): crea las plantillas indicadas en `positions` (por ejemplo, las que trajo una versión nueva) y aplica los `grants` aprobados. Sin `positions` no crea ninguna.
+         */
+        post: operations["provisionModulePositions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/organizations/{organizationId}/module-installations": {
         parameters: {
             query?: never;
@@ -1795,6 +1819,66 @@ export interface paths {
         };
         /** Autoridades vigentes (nombramientos ACTIVE) */
         get: operations["serviceListAuthorities"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/service/organizations/{organizationId}/positions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Cargos que se pueden ejercer en la organización
+         * @description Los de la plataforma, los del catálogo de la organización y de sus ancestros (el distrito define los de todos sus clubes) y los que crearon los módulos instalados. Sin los archivados. Para decidir qué puede hacer alguien, consultá permisos (`/service/authorization/check`), no códigos de cargo.
+         */
+        get: operations["serviceListPositions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/service/positions/{positionCode}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Un cargo y los permisos que da
+         * @description 404 si el cargo no existe o no se puede ejercer en ninguna organización del alcance de la app.
+         */
+        get: operations["serviceGetPosition"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/service/organizations/{organizationId}/persons/{personId}/permissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Todos los permisos de una persona en una organización
+         * @description Las mismas decisiones que daría `/service/authorization/check` para cada permiso, incluida la regla de módulos (un permiso de módulo solo vale donde el módulo está activo). Queda en el historial de accesos de la persona.
+         */
+        get: operations["servicePersonPermissions"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3180,6 +3264,14 @@ export interface components {
             defaultRoleCode?: string | null;
             isSingletonPerPeriod: boolean;
             isSystem: boolean;
+            /** @description Módulo cuya instalación creó el cargo (plantilla `positions[]`). */
+            moduleId?: string | null;
+            moduleTemplateKey?: string | null;
+            /**
+             * Format: date-time
+             * @description Archivado al desinstalar su módulo; no admite nombramientos.
+             */
+            archivedAt?: string | null;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
@@ -3526,6 +3618,11 @@ export interface components {
             activatedAt?: string | null;
             /** Format: date-time */
             disabledAt?: string | null;
+            /** @description Permisos del módulo que esta instalación sumó a cargos existentes (`grants[]` aprobados); se quitan al desinstalar. */
+            grantedPermissions?: {
+                positionCode: string;
+                permissions: string[];
+            }[] | null;
             /** Format: date-time */
             updatedAt: string;
             /** @description El módulo (sólo en `GET /organizations/{id}/modules`), sin `permissions`. */
@@ -3534,6 +3631,41 @@ export interface components {
         ModuleInstallationInTree: components["schemas"]["ModuleInstallation"] & {
             organizationName: string;
             organizationType: components["schemas"]["OrganizationType"];
+        };
+        ModulePositionsOverview: {
+            moduleId: string;
+            organizationId: string;
+            installationStatus: components["schemas"]["InstallationStatus"] | null;
+            positions: {
+                key: string;
+                name: string;
+                description?: string | null;
+                /** @enum {string} */
+                install: "required" | "suggested";
+                isSingletonPerPeriod: boolean;
+                permissions: {
+                    code: string;
+                    name: string;
+                }[];
+                /** @description El cargo creado en la organización, o null si todavía no. */
+                position: {
+                    id: string;
+                    code: string;
+                    name: string;
+                    archived: boolean;
+                } | null;
+            }[];
+            grants: {
+                positionCode: string;
+                positionName: string | null;
+                permissions: {
+                    code: string;
+                    name: string;
+                }[];
+                /** @description La organización administra ese cargo y puede sumarle permisos. */
+                allowed: boolean;
+                applied: boolean;
+            }[];
         };
         UserContext: {
             accountId: string;
@@ -3916,6 +4048,40 @@ export interface components {
             startDate: string;
             /** Format: date-time */
             endDate: string;
+        };
+        PositionView: {
+            code: string;
+            name: string;
+            description?: string | null;
+            organizationType: components["schemas"]["OrganizationType"];
+            /** @description Organización que mantiene el cargo (el distrito para el catálogo de clubes). */
+            ownerOrganizationId?: string | null;
+            /**
+             * @description `MODULE`: lo creó la instalación de un módulo.
+             * @enum {string}
+             */
+            source: "SYSTEM" | "ORGANIZATION" | "MODULE";
+            moduleId?: string | null;
+            isSingletonPerPeriod: boolean;
+            /**
+             * @description Dónde valen sus permisos (el club del cargo, o el distrito y sus clubes).
+             * @enum {string}
+             */
+            scope: "ORGANIZATION" | "ORGANIZATION_TREE";
+            archived: boolean;
+            /** @description Solo con `?include=permissions` o en el detalle. */
+            permissions?: {
+                code: string;
+                name: string;
+                moduleId?: string | null;
+            }[];
+        };
+        PersonPermissions: {
+            organizationId: string;
+            personId: string;
+            permissions: string[];
+            /** Format: date-time */
+            evaluatedAt: string;
         };
         /** @enum {string} */
         WebhookEndpointStatus: "ENABLED" | "DISABLED";
@@ -5967,6 +6133,10 @@ export interface operations {
         parameters: {
             query?: {
                 organizationType?: components["schemas"]["OrganizationType"];
+                /** @description Solo los cargos que se pueden ejercer en esa organización: los de su tipo, de la plataforma, de su propio catálogo o del de sus ancestros (el distrito). Los cargos que creó un módulo en otro club no aparecen. */
+                applicableTo?: string;
+                /** @description Incluye los cargos archivados (su módulo se desinstaló). */
+                includeArchived?: boolean;
             };
             header?: never;
             path?: never;
@@ -7148,6 +7318,10 @@ export interface operations {
             content: {
                 "application/json": {
                     configuration?: Record<string, never> | null;
+                    /** @description Claves de `positions[]` del manifiesto a crear como cargos de la organización. Sin este campo se crean todas las que aplican a su tipo; las `required` se crean siempre. */
+                    positions?: string[];
+                    /** @description `positionCode` de los `grants[]` del manifiesto que quien instala aprueba. Sin este campo no se aplica ninguno. Solo sobre cargos que administra la organización (403 `KERNEL_MODULE_GRANT_FORBIDDEN`). */
+                    grants?: string[];
                 };
             };
         };
@@ -7330,6 +7504,71 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ModuleInstallation"][];
+                };
+            };
+        };
+    };
+    getModulePositions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: components["parameters"]["organizationId"];
+                moduleId: components["parameters"]["moduleId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModulePositionsOverview"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    provisionModulePositions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: components["parameters"]["organizationId"];
+                moduleId: components["parameters"]["moduleId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    positions?: string[];
+                    grants?: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description Estado actualizado. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModulePositionsOverview"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description Clave o cargo que el módulo no declara (`KERNEL_MODULE_POSITION_UNKNOWN`, `KERNEL_MODULE_GRANT_UNKNOWN`). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Error"];
                 };
             };
         };
@@ -7537,6 +7776,105 @@ export interface operations {
             };
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
+        };
+    };
+    serviceListPositions: {
+        parameters: {
+            query?: {
+                /** @description `permissions` agrega a cada cargo los permisos que da. */
+                include?: "permissions";
+            };
+            header?: {
+                /** @description ETag de una respuesta anterior; si no hubo cambios responde 304. */
+                "If-None-Match"?: components["parameters"]["ifNoneMatch"];
+            };
+            path: {
+                organizationId: components["parameters"]["organizationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    ETag?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PositionView"][];
+                };
+            };
+            /** @description Sin cambios desde el ETag enviado. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
+        };
+    };
+    serviceGetPosition: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description ETag de una respuesta anterior; si no hubo cambios responde 304. */
+                "If-None-Match"?: components["parameters"]["ifNoneMatch"];
+            };
+            path: {
+                positionCode: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    ETag?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PositionView"];
+                };
+            };
+            /** @description Sin cambios desde el ETag enviado. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
+        };
+    };
+    servicePersonPermissions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: components["parameters"]["organizationId"];
+                personId: components["parameters"]["personId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonPermissions"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
             429: components["responses"]["RateLimited"];
         };
     };

@@ -8,13 +8,16 @@ import type {
 } from "./positions.types";
 
 export const positionsApi = {
+  /** `applicableTo`: only positions that can be held in that organization. */
   list: (
     organizationType?: OrganizationType,
-    opts?: { signal?: AbortSignal },
+    opts?: { signal?: AbortSignal; applicableTo?: string },
   ) =>
     apiRequest(() =>
       httpClient.GET("/position-definitions", {
-        params: { query: { organizationType } },
+        params: {
+          query: { organizationType, applicableTo: opts?.applicableTo },
+        },
         signal: opts?.signal,
       }),
     ) as Promise<PositionDefinition[]>,

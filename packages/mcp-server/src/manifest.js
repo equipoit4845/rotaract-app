@@ -26,6 +26,7 @@ export const SERVICE_SCOPES = [
   "kernel.service.organizations.read",
   "kernel.service.memberships.read",
   "kernel.service.authorities.read",
+  "kernel.service.positions.read",
   "kernel.service.periods.read",
   "kernel.service.authorization.check",
   "kernel.service.modules.read",
@@ -42,6 +43,8 @@ const KNOWN_KEYS = [
   "version",
   "contractVersion",
   "permissions",
+  "positions",
+  "grants",
   "events",
   "configurationSchema",
   "ui",
@@ -144,6 +147,65 @@ export function validateManifestLocal(
     });
   }
 
+  // positions[] / grants[]: only this module's own permissions
+  const declared = new Set(
+    (Array.isArray(manifest.permissions) ? manifest.permissions : [])
+      .map((p) => (isObject(p) ? p.code : undefined))
+      .filter(nonEmpty),
+  );
+  const checkGranted = (list, at) => {
+    if (!Array.isArray(list) || list.length === 0)
+      return error(at, "Lista de permisos del módulo (al menos uno).");
+    list.forEach((code, j) => {
+      if (!declared.has(code))
+        error(
+          `${at}/${j}`,
+          `«${code}» no está en permissions[]: un cargo solo puede dar permisos del propio módulo.`,
+        );
+    });
+  };
+  if (manifest.positions !== undefined) {
+    if (!Array.isArray(manifest.positions))
+      error("/positions", "Lista de plantillas de cargo.");
+    else {
+      const keys = new Set();
+      manifest.positions.forEach((t, i) => {
+        const at = `/positions/${i}`;
+        if (!isObject(t)) return error(at, "Cada cargo es un objeto.");
+        if (typeof t.key !== "string" || !/^[a-z][a-z0-9-]*$/.test(t.key))
+          error(`${at}/key`, "Obligatorio: minúsculas, números y guiones.");
+        else if (keys.has(t.key)) error(`${at}/key`, `Repetida: ${t.key}.`);
+        else keys.add(t.key);
+        if (!nonEmpty(t.name))
+          error(`${at}/name`, "Obligatorio (lo ve la presidencia al nombrar).");
+        if (
+          !Array.isArray(t.organizationTypes) ||
+          t.organizationTypes.length === 0 ||
+          !t.organizationTypes.every((type) =>
+            ["CLUB", "DISTRICT"].includes(type),
+          )
+        )
+          error(`${at}/organizationTypes`, "CLUB y/o DISTRICT.");
+        checkGranted(t.permissions, `${at}/permissions`);
+      });
+    }
+  }
+  if (manifest.grants !== undefined) {
+    if (!Array.isArray(manifest.grants))
+      error("/grants", "Lista de { positionCode, permissions }.");
+    else
+      manifest.grants.forEach((g, i) => {
+        const at = `/grants/${i}`;
+        if (!isObject(g)) return error(at, "Cada sugerencia es un objeto.");
+        if (!nonEmpty(g.positionCode))
+          error(
+            `${at}/positionCode`,
+            "Obligatorio (por ejemplo DISTRICT_SECRETARY).",
+          );
+        checkGranted(g.permissions, `${at}/permissions`);
+      });
+  }
+
   // events
   const scopes = Array.isArray(manifest.oauth?.scopes)
     ? manifest.oauth.scopes
@@ -160,7 +222,7 @@ export function validateManifestLocal(
           const at = `/events/subscribes/${i}`;
           if (
             typeof type !== "string" ||
-            !/^[a-z]+(\.[a-z_]+)+\.v\d+$/.test(type)
+            !/^[a-z]+(\.[a-z_-]+)+\.v\d+$/.test(type)
           )
             return error(
               at,

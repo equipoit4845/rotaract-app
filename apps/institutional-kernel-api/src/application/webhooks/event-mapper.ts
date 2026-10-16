@@ -6,6 +6,7 @@ import {
   toOrganizationView,
   toPeriodView,
   toPersonView,
+  toPositionView,
 } from "../data-api/views";
 import { eventDefinition, type PublicEnvelope } from "./catalog";
 
@@ -54,6 +55,7 @@ export type EventPlan =
     }
   | { kind: "person"; type: string; personId: string; changedFields: string[] }
   | { kind: "period"; type: string; periodId: string }
+  | { kind: "position"; type: string; positionDefinitionId: string }
   | {
       kind: "module";
       type: string;
@@ -178,6 +180,14 @@ export function planPublicEvent(message: OutboxLike): EventPlan | null {
         type: "period.created.v1",
         periodId: id("periodId"),
       };
+    case "kernel.position.created.v1":
+    case "kernel.position.updated.v1":
+    case "kernel.position.permissions-changed.v1":
+      return {
+        kind: "position",
+        type: message.eventType.replace(/^kernel\./, ""),
+        positionDefinitionId: id("positionDefinitionId"),
+      };
     // E8: module installations (aggregateId is "<moduleId>:<organizationId>").
     case "kernel.module-installed.v1":
     case "kernel.module-activated.v1":
@@ -220,6 +230,9 @@ export const MAPPED_INTERNAL_TYPES = [
   "kernel.organization.archived.v1",
   "kernel.person.updated.v1",
   "kernel.period.created.v1",
+  "kernel.position.created.v1",
+  "kernel.position.updated.v1",
+  "kernel.position.permissions-changed.v1",
   "kernel.module-installed.v1",
   "kernel.module-activated.v1",
   "kernel.module-suspended.v1",
@@ -281,6 +294,8 @@ type Reader = Pick<
   | "person"
   | "institutionalPeriod"
   | "moduleInstallation"
+  | "positionDefinition"
+  | "roleDefinition"
 >;
 
 /** Loads what a plan needs. Null when the aggregate is gone or not publishable. */
@@ -423,6 +438,37 @@ export async function resolvePublicEvent(
         ...base,
         organizationIds: [period.organizationId],
         data: () => ({ period: toPeriodView(period) }),
+      };
+    }
+    case "position": {
+      const position = await db.positionDefinition.findUnique({
+        where: { id: plan.positionDefinitionId },
+        include: { ownerOrganization: { select: { type: true } } },
+      });
+      // Platform-wide positions have no owner and concern no organization.
+      if (!position?.ownerOrganizationId) return null;
+      const role = position.defaultRoleCode
+        ? await db.roleDefinition.findUnique({
+            where: { code: position.defaultRoleCode },
+            include: {
+              permissions: { include: { permissionDefinition: true } },
+            },
+          })
+        : null;
+      // A catalog the district keeps for its clubs concerns every club.
+      const organizationIds =
+        position.organizationType !== position.ownerOrganization?.type
+          ? await organizationTree(db, position.ownerOrganizationId)
+          : [position.ownerOrganizationId];
+      const { ownerOrganization: _owner, ...row } = position;
+      const view = toPositionView(
+        row,
+        (role?.permissions ?? []).map((link) => link.permissionDefinition),
+      );
+      return {
+        ...base,
+        organizationIds,
+        data: () => ({ position: view }),
       };
     }
     case "module": {

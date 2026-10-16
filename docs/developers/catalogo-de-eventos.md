@@ -30,6 +30,9 @@ nacimiento) solo aparecen si la app tiene
 | [`organization.archived.v1`](#organizationarchivedv1--club-archivado) | Club archivado | `kernel.service.organizations.read` |
 | [`person.updated.v1`](#personupdatedv1--datos-de-una-persona-actualizados) | Datos de una persona actualizados | `kernel.service.persons.read` |
 | [`period.created.v1`](#periodcreatedv1--período-creado) | Período creado | `kernel.service.periods.read` |
+| [`position.created.v1`](#positioncreatedv1--cargo-creado) | Cargo creado | `kernel.service.positions.read` |
+| [`position.updated.v1`](#positionupdatedv1--cargo-actualizado) | Cargo actualizado | `kernel.service.positions.read` |
+| [`position.permissions-changed.v1`](#positionpermissions-changedv1--cambiaron-los-permisos-de-un-cargo) | Cambiaron los permisos de un cargo | `kernel.service.positions.read` |
 | [`module.installed.v1`](#moduleinstalledv1--módulo-instalado) | Módulo instalado | — |
 | [`module.enabled.v1`](#moduleenabledv1--módulo-activado) | Módulo activado | — |
 | [`module.disabled.v1`](#moduledisabledv1--módulo-desactivado) | Módulo desactivado | — |
@@ -538,6 +541,174 @@ Ejemplo del cuerpo que recibís:
       "status": "DRAFT",
       "startDate": "2027-07-01T00:00:00.000Z",
       "endDate": "2028-06-30T00:00:00.000Z"
+    }
+  }
+}
+```
+
+### `position.created.v1` — Cargo creado
+
+Se creó un cargo que se puede ejercer en tus organizaciones: lo definió el distrito o el club, o lo creó la instalación de un módulo.
+
+- **Permiso que necesita la app:** `kernel.service.positions.read` (kernel.service.positions.read)
+- **Versión:** 1
+
+Campos de `data`:
+
+| Campo | Tipo | Siempre presente | Notas |
+|---|---|---|---|
+| `position` | objeto | sí | Igual que PositionView de la API de datos, con sus permisos. Sin personas. |
+| `position.code` | string | sí |  |
+| `position.name` | string | sí |  |
+| `position.description` | string (o null) | no |  |
+| `position.organizationType` | string: `DISTRICT`, `CLUB`, `OTHER` | sí |  |
+| `position.ownerOrganizationId` | string (o null) | no |  |
+| `position.source` | string: `SYSTEM`, `ORGANIZATION`, `MODULE` | sí |  |
+| `position.moduleId` | string (o null) | no |  |
+| `position.isSingletonPerPeriod` | boolean | no |  |
+| `position.scope` | string: `ORGANIZATION`, `ORGANIZATION_TREE` | sí |  |
+| `position.archived` | boolean | sí |  |
+| `position.permissions` | array | sí |  |
+
+Ejemplo del cuerpo que recibís:
+
+```json
+{
+  "id": "evt_cm1exampleevent000000000",
+  "type": "position.created.v1",
+  "createdAt": "2026-10-02T21:15:04.000Z",
+  "organizationId": "cm1clubsanlorenzo0000000",
+  "data": {
+    "position": {
+      "code": "reuniones.delegado-asamblea.rc-san-lorenzo",
+      "name": "Delegado/a a la asamblea",
+      "description": "Representa al club en las reuniones distritales.",
+      "organizationType": "CLUB",
+      "ownerOrganizationId": "cm1clubsanlorenzo0000000",
+      "source": "MODULE",
+      "moduleId": "reuniones",
+      "isSingletonPerPeriod": false,
+      "scope": "ORGANIZATION",
+      "archived": false,
+      "permissions": [
+        {
+          "code": "reuniones.vote.cast",
+          "name": "Votar en nombre del club",
+          "moduleId": "reuniones"
+        }
+      ]
+    }
+  }
+}
+```
+
+### `position.updated.v1` — Cargo actualizado
+
+Cambió el nombre o la descripción de un cargo, o se archivó (`archived`: la app que lo creó se desinstaló) o se volvió a usar.
+
+- **Permiso que necesita la app:** `kernel.service.positions.read` (kernel.service.positions.read)
+- **Versión:** 1
+
+Campos de `data`:
+
+| Campo | Tipo | Siempre presente | Notas |
+|---|---|---|---|
+| `position` | objeto | sí | Igual que PositionView de la API de datos, con sus permisos. Sin personas. |
+| `position.code` | string | sí |  |
+| `position.name` | string | sí |  |
+| `position.description` | string (o null) | no |  |
+| `position.organizationType` | string: `DISTRICT`, `CLUB`, `OTHER` | sí |  |
+| `position.ownerOrganizationId` | string (o null) | no |  |
+| `position.source` | string: `SYSTEM`, `ORGANIZATION`, `MODULE` | sí |  |
+| `position.moduleId` | string (o null) | no |  |
+| `position.isSingletonPerPeriod` | boolean | no |  |
+| `position.scope` | string: `ORGANIZATION`, `ORGANIZATION_TREE` | sí |  |
+| `position.archived` | boolean | sí |  |
+| `position.permissions` | array | sí |  |
+
+Ejemplo del cuerpo que recibís:
+
+```json
+{
+  "id": "evt_cm1exampleevent000000000",
+  "type": "position.updated.v1",
+  "createdAt": "2026-10-02T21:15:04.000Z",
+  "organizationId": "cm1clubsanlorenzo0000000",
+  "data": {
+    "position": {
+      "code": "reuniones.delegado-asamblea.rc-san-lorenzo",
+      "name": "Delegado/a a la asamblea",
+      "description": "Representa al club en las reuniones distritales.",
+      "organizationType": "CLUB",
+      "ownerOrganizationId": "cm1clubsanlorenzo0000000",
+      "source": "MODULE",
+      "moduleId": "reuniones",
+      "isSingletonPerPeriod": false,
+      "scope": "ORGANIZATION",
+      "archived": false,
+      "permissions": [
+        {
+          "code": "reuniones.vote.cast",
+          "name": "Votar en nombre del club",
+          "moduleId": "reuniones"
+        }
+      ]
+    }
+  }
+}
+```
+
+### `position.permissions-changed.v1` — Cambiaron los permisos de un cargo
+
+Se sumó o se quitó un permiso a un cargo. `position.permissions` trae la lista completa actual. Si tu app guarda en caché qué puede hacer cada persona, este es el evento para invalidarla.
+
+- **Permiso que necesita la app:** `kernel.service.positions.read` (kernel.service.positions.read)
+- **Versión:** 1
+
+Campos de `data`:
+
+| Campo | Tipo | Siempre presente | Notas |
+|---|---|---|---|
+| `position` | objeto | sí | Igual que PositionView de la API de datos, con sus permisos. Sin personas. |
+| `position.code` | string | sí |  |
+| `position.name` | string | sí |  |
+| `position.description` | string (o null) | no |  |
+| `position.organizationType` | string: `DISTRICT`, `CLUB`, `OTHER` | sí |  |
+| `position.ownerOrganizationId` | string (o null) | no |  |
+| `position.source` | string: `SYSTEM`, `ORGANIZATION`, `MODULE` | sí |  |
+| `position.moduleId` | string (o null) | no |  |
+| `position.isSingletonPerPeriod` | boolean | no |  |
+| `position.scope` | string: `ORGANIZATION`, `ORGANIZATION_TREE` | sí |  |
+| `position.archived` | boolean | sí |  |
+| `position.permissions` | array | sí |  |
+
+Ejemplo del cuerpo que recibís:
+
+```json
+{
+  "id": "evt_cm1exampleevent000000000",
+  "type": "position.permissions-changed.v1",
+  "createdAt": "2026-10-02T21:15:04.000Z",
+  "organizationId": "cm1clubsanlorenzo0000000",
+  "data": {
+    "position": {
+      "code": "reuniones.delegado-asamblea.rc-san-lorenzo",
+      "name": "Delegado/a a la asamblea",
+      "description": "Representa al club en las reuniones distritales.",
+      "organizationType": "CLUB",
+      "ownerOrganizationId": "cm1clubsanlorenzo0000000",
+      "source": "MODULE",
+      "moduleId": "reuniones",
+      "isSingletonPerPeriod": false,
+      "scope": "ORGANIZATION",
+      "archived": false,
+      "permissions": [
+        {
+          "code": "reuniones.vote.cast",
+          "name": "Votar en nombre del club",
+          "moduleId": "reuniones"
+        }
+      ]
     }
   }
 }

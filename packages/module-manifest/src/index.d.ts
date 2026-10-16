@@ -11,6 +11,34 @@ export interface ModulePermission {
   scopeType?: ModulePermissionScope;
 }
 
+/**
+ * Plantilla de cargo: al instalar el módulo se crea como cargo propio de la
+ * organización, con un rol que solo tiene estos permisos del módulo.
+ */
+export interface ModulePositionTemplate {
+  /** Estable dentro del módulo, p. ej. `encargado-casilla`. */
+  key: string;
+  /** Nombre del cargo, como lo ve la presidencia. */
+  name: string;
+  description?: string;
+  /** Dónde se crea: en clubes, en el distrito o en ambos. */
+  organizationTypes: Array<"CLUB" | "DISTRICT">;
+  /** Códigos de `permissions[]` de este mismo manifiesto. */
+  permissions: string[];
+  /** Default: false. */
+  isSingletonPerPeriod?: boolean;
+  /** `required`: se crea siempre. Default: `suggested`. */
+  install?: "required" | "suggested";
+}
+
+/** Sugerencia: sumar permisos del módulo a un cargo que ya existe. */
+export interface ModuleGrant {
+  /** Código de un cargo existente, p. ej. `DISTRICT_SECRETARY`. */
+  positionCode: string;
+  /** Códigos de `permissions[]` de este mismo manifiesto. */
+  permissions: string[];
+}
+
 /** JSON Schema (draft-07) de la configuración por club. */
 export type JsonSchema = { [key: string]: unknown };
 
@@ -23,6 +51,10 @@ export interface ModuleManifest {
   version: string;
   contractVersion: 1;
   permissions: ModulePermission[];
+  /** Cargos que el módulo crea al instalarse. */
+  positions?: ModulePositionTemplate[];
+  /** Permisos del módulo para cargos que ya existen (con aprobación). */
+  grants?: ModuleGrant[];
   events?: {
     /** Tipos del catálogo público, p. ej. `membership.activated.v1`. */
     subscribes?: string[];

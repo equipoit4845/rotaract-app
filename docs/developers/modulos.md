@@ -109,7 +109,56 @@ Versiones nuevas: "Publicar versión" en la tarjeta del módulo, o
 `PUT /modules/{id}/manifest { "manifest": ... }`. Los permisos que saques del
 manifiesto se quitan también de los cargos que los tenían.
 
-## 4. El RDR asigna tus permisos a cargos
+## 4. Los cargos que usan tus permisos
+
+### Declaralos en el manifiesto
+
+Si tu app necesita un cargo que no existe (por ejemplo, "Delegado/a a la
+asamblea" en cada club), declaralo en `positions[]`. Al instalar el módulo,
+la organización elige cuáles crear y quedan como **cargos propios de esa
+organización**: la presidencia (o el RDR) nombra a las personas desde
+Autoridades, como en cualquier cargo.
+
+```json
+"positions": [
+  {
+    "key": "delegado-asamblea",
+    "name": "Delegado/a a la asamblea",
+    "description": "Representa al club en las reuniones distritales.",
+    "organizationTypes": ["CLUB"],
+    "permissions": ["reuniones.vote.cast", "reuniones.proxy.manage"],
+    "install": "suggested"
+  }
+],
+"grants": [
+  { "positionCode": "DISTRICT_SECRETARY", "permissions": ["reuniones.meeting.manage"] }
+]
+```
+
+- Un cargo de `positions[]` **solo puede dar permisos de tu propio módulo**
+  (los de `permissions[]`): nunca `kernel.*` ni de otro módulo. El validador
+  y el kernel lo rechazan.
+- `organizationTypes`: dónde se crea (`CLUB`, `DISTRICT` o ambos).
+  `install: "required"` lo crea siempre; `suggested` (default) deja elegir.
+- Tu app no elige el código del cargo: el kernel lo arma con el módulo, la
+  clave y el club (`reuniones.delegado-asamblea.rc-asuncion-centro`). Leelo
+  con `client.positions.list(clubId)` si lo necesitás mostrar, y decidí por
+  permisos.
+- `grants[]` son **sugerencias** para sumar permisos de tu módulo a cargos que
+  ya existen. Se aplican solo si quien instala las aprueba, y solo sobre
+  cargos que administra esa organización: un club no puede tocar
+  `CLUB_PRESIDENT` (lo comparten todos los clubes); el distrito sí, y vale
+  para todos.
+- Al **desinstalar**, los cargos que creó tu módulo se archivan (sus
+  nombramientos terminan, la historia queda) y se quitan los permisos que
+  sumaron los `grants[]`. Al reinstalar vuelven los mismos cargos, sin
+  nombramientos.
+- Si una versión nueva agrega o quita permisos de una plantilla, los cargos ya
+  creados la siguen. Las plantillas nuevas no se crean solas: la organización
+  las agrega desde **Módulos → Cargos**
+  (`POST /organizations/{id}/modules/{moduleId}/positions`).
+
+### O el RDR los asigna a mano
 
 En **Cargos** → un cargo → "Qué puede hacer este cargo", los permisos de tu
 módulo aparecen agrupados como "Módulo Reuniones distritales". Por ejemplo,
@@ -132,7 +181,8 @@ el nombramiento pasa por `NOMINATED → ELECTED → ACTIVE`
 
 ## 5. Cada club lo instala y lo configura
 
-La presidencia entra a **Módulos**, toca **Instalar**, completa el formulario
+La presidencia entra a **Módulos**, toca **Instalar**, elige qué cargos de
+tu manifiesto crear y qué permisos sugeridos aprobar, completa el formulario
 (generado de tu `configurationSchema`) y queda activo. Después puede
 **Configurar**, **Desactivar** (reversible) o **Desinstalar** (no se borra lo
 que tu app guardó; se puede volver a instalar). Instalado en el distrito,
@@ -163,7 +213,11 @@ decision = client.permissions.check(
 )
 ```
 
-O de una vez para todos los clubes de la persona:
+O todos los permisos de la persona en un club, de una vez:
+`client.permissions.effective(clubId, personId)`
+(`GET /service/organizations/{id}/persons/{personId}/permissions`).
+
+O para todos los clubes de la persona:
 `GET /service/users/{accountId}/context` trae, en cada workspace,
 `modulePermissions: ["reuniones.vote.cast"]`.
 

@@ -262,6 +262,31 @@ export class WorkflowController {
       this.contexts.from(request, "disableModuleInstallation"),
     );
   }
+  /** The module's position templates and grants for this organization. */
+  @Get("organizations/:organizationId/modules/:moduleId/positions")
+  modulePositions(
+    @Param("organizationId") organizationId: string,
+    @Param("moduleId") moduleId: string,
+  ) {
+    return this.kernel.modulePositionsOverview(organizationId, moduleId);
+  }
+  // Creates more of the module's positions / applies more grants: 200 with
+  // the updated overview, like the other installation commands.
+  @HttpCode(200)
+  @Post("organizations/:organizationId/modules/:moduleId/positions")
+  provisionModulePositions(
+    @Param("organizationId") organizationId: string,
+    @Param("moduleId") moduleId: string,
+    @Body() body: any,
+    @Req() request: Request,
+  ) {
+    return this.kernel.provisionModulePositionsCommand(
+      organizationId,
+      moduleId,
+      body ?? {},
+      this.contexts.from(request, "provisionModulePositions"),
+    );
+  }
   @Get("organizations/:organizationId/modules") installations(
     @Param("organizationId") organizationId: string,
   ) {

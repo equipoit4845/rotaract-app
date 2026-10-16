@@ -25,7 +25,9 @@ from .types import (
     OrganizationView,
     PeriodView,
     PersonMembershipView,
+    PersonPermissions,
     PersonView,
+    PositionView,
     TokenSet,
 )
 
@@ -149,6 +151,7 @@ class MiRotaract(_ClientCore):
         self.persons = Persons(self)
         self.authorities = Authorities(self)
         self.periods = Periods(self)
+        self.positions = Positions(self)
         self.permissions = Permissions(self)
 
     def close(self) -> None:
@@ -297,9 +300,34 @@ class Periods:
         ).data
 
 
+class Positions:
+    """Scope ``kernel.service.positions.read``."""
+
+    def __init__(self, client: MiRotaract):
+        self._client = client
+
+    def list(self, organization_id: str, *, include_permissions: bool = False) -> list[PositionView]:
+        """Positions that can be held in the organization (its own, the district's catalog and its modules')."""
+        return self._client.request(
+            "GET",
+            f"/service/organizations/{_enc(organization_id)}/positions",
+            params={"include": "permissions" if include_permissions else None},
+        ).data
+
+    def get(self, position_code: str) -> PositionView:
+        """One position, with the permissions it grants."""
+        return self._client.request("GET", f"/service/positions/{_enc(position_code)}").data
+
+
 class Permissions:
     def __init__(self, client: MiRotaract):
         self._client = client
+
+    def effective(self, organization_id: str, person_id: str) -> PersonPermissions:
+        """Every permission the person holds in the organization (same decisions as ``check``)."""
+        return self._client.request(
+            "GET", f"/service/organizations/{_enc(organization_id)}/persons/{_enc(person_id)}/permissions"
+        ).data
 
     def check(
         self,
@@ -356,6 +384,7 @@ class AsyncMiRotaract(_ClientCore):
         self.members = AsyncMembers(self)
         self.persons = AsyncPersons(self)
         self.authorities = AsyncAuthorities(self)
+        self.positions = AsyncPositions(self)
         self.periods = AsyncPeriods(self)
         self.permissions = AsyncPermissions(self)
 
@@ -507,9 +536,32 @@ class AsyncPeriods:
         return response.data
 
 
+class AsyncPositions:
+    def __init__(self, client: AsyncMiRotaract):
+        self._client = client
+
+    async def list(self, organization_id: str, *, include_permissions: bool = False) -> list[PositionView]:
+        response = await self._client.request(
+            "GET",
+            f"/service/organizations/{_enc(organization_id)}/positions",
+            params={"include": "permissions" if include_permissions else None},
+        )
+        return response.data
+
+    async def get(self, position_code: str) -> PositionView:
+        response = await self._client.request("GET", f"/service/positions/{_enc(position_code)}")
+        return response.data
+
+
 class AsyncPermissions:
     def __init__(self, client: AsyncMiRotaract):
         self._client = client
+
+    async def effective(self, organization_id: str, person_id: str) -> PersonPermissions:
+        response = await self._client.request(
+            "GET", f"/service/organizations/{_enc(organization_id)}/persons/{_enc(person_id)}/permissions"
+        )
+        return response.data
 
     async def check(
         self,

@@ -4,6 +4,8 @@ import type {
   ModuleDefinition,
   ModuleInstallation,
   ModuleInstallationInTree,
+  ModulePositionSelection,
+  ModulePositionsOverview,
   ModuleStatus,
   OrganizationCapabilities,
   RegisterModuleRequest,
@@ -59,16 +61,51 @@ export const modulesApi = {
     organizationId: string,
     moduleId: string,
     configuration?: Record<string, unknown> | null,
+    selection?: ModulePositionSelection,
   ) =>
     apiRequest(() =>
       httpClient.POST(
         "/organizations/{organizationId}/modules/{moduleId}/install",
         {
           params: { path: { organizationId, moduleId } },
-          body: (configuration !== undefined ? { configuration } : {}) as never,
+          body: {
+            ...(configuration !== undefined ? { configuration } : {}),
+            ...(selection ?? {}),
+          } as never,
         },
       ),
     ) as Promise<ModuleInstallation>,
+
+  /** The module's position templates and grants here (works before installing). */
+  positions: (
+    organizationId: string,
+    moduleId: string,
+    opts?: { signal?: AbortSignal },
+  ) =>
+    apiRequest(() =>
+      httpClient.GET(
+        "/organizations/{organizationId}/modules/{moduleId}/positions",
+        {
+          params: { path: { organizationId, moduleId } },
+          signal: opts?.signal,
+        },
+      ),
+    ) as Promise<ModulePositionsOverview>,
+
+  provisionPositions: (
+    organizationId: string,
+    moduleId: string,
+    selection: ModulePositionSelection,
+  ) =>
+    apiRequest(() =>
+      httpClient.POST(
+        "/organizations/{organizationId}/modules/{moduleId}/positions",
+        {
+          params: { path: { organizationId, moduleId } },
+          body: selection,
+        },
+      ),
+    ) as Promise<ModulePositionsOverview>,
 
   activateInstallation: (organizationId: string, moduleId: string) =>
     apiRequest(() =>

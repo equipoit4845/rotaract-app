@@ -25,6 +25,7 @@ export const ACCESS_DETAIL_LABELS: Record<string, string> = {
   contact: "tu correo, teléfono y fecha de nacimiento",
   "person-memberships": "tus membresías",
   "account-context": "tu cuenta, clubes y permisos",
+  permissions: "tus permisos",
 };
 
 export const ACCESS_KIND_LABELS: Record<AccessKind, string> = {

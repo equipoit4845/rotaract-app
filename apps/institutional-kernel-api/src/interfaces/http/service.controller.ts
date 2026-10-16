@@ -129,6 +129,47 @@ export class ServiceController {
       await this.data.listAuthorities(request.service, organizationId, query),
     );
   }
+  @Get("organizations/:organizationId/positions") async serviceListPositions(
+    @Param("organizationId") organizationId: string,
+    @Query() query: Record<string, unknown>,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    return withEtag(
+      response,
+      await this.data.listPositions(organizationId, query),
+    );
+  }
+  @Get("positions/:positionCode") async serviceGetPosition(
+    @Req() request: ServiceRequest,
+    @Param("positionCode") positionCode: string,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    return withEtag(
+      response,
+      await this.data.getPosition(request.service, positionCode),
+    );
+  }
+  /**
+   * Every permission the person holds in the organization: the same
+   * decisions POST /authorization/check would give, module gate included.
+   */
+  @Get("organizations/:organizationId/persons/:personId/permissions")
+  async servicePersonPermissions(
+    @Req() request: ServiceRequest,
+    @Param("organizationId") organizationId: string,
+    @Param("personId") personId: string,
+  ) {
+    const permissions = await this.kernel.effectivePermissions(personId, {
+      organizationId,
+    });
+    recordRead(this.history, request, [personId], ["permissions"]);
+    return {
+      organizationId,
+      personId,
+      permissions: [...permissions].sort(),
+      evaluatedAt: new Date().toISOString(),
+    };
+  }
   @Get("organizations/:organizationId/periods") async serviceListPeriods(
     @Param("organizationId") organizationId: string,
     @Query() query: Record<string, unknown>,

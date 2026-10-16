@@ -46,7 +46,9 @@ export function CreateAppointmentDialog({
   const [touched, setTouched] = useState(false);
 
   const organization = useOrganization(organizationId);
-  const positions = usePositionDefinitions(organization.data?.type);
+  const positions = usePositionDefinitions(organization.data?.type, {
+    applicableTo: organizationId,
+  });
   const periods = usePeriods(organizationId);
   const createAppointment = useCreateAppointment();
 

@@ -1,6 +1,11 @@
 "use client";
 
-import type { JsonSchemaNode, ModuleDefinition } from "@/lib/api";
+import type {
+  JsonSchemaNode,
+  ModuleDefinition,
+  ModuleManifestView,
+  ModulePositionSelection,
+} from "@/lib/api";
 import {
   KernelApiError,
   useActivateModuleInstallation,
@@ -8,8 +13,10 @@ import {
   useDeveloperApps,
   useDisableModuleInstallation,
   useInstallModule,
+  useModulePositions,
   useModules,
   useOrganizationModules,
+  useProvisionModulePositions,
   useSuspendModuleInstallation,
   useUpdateModuleConfiguration,
 } from "@/lib/api";
@@ -35,6 +42,11 @@ import { describeKernelError } from "@/features/shell/kernel-error-message";
 
 import { DistrictModulesOverview } from "../components/district-modules-overview";
 import { ModuleCard, type ModuleAction } from "../components/module-card";
+import {
+  ModulePositionsPicker,
+  defaultPositionSelection,
+  hasPendingPositions,
+} from "../components/module-positions-picker";
 import { ModuleConfigurationForm } from "../forms/module-configuration-form";
 import { PublishModuleDialog } from "../forms/publish-module-dialog";
 import { errorsByPath } from "../utils/schema-form";
@@ -77,6 +89,17 @@ export function ModulesContainer() {
   const configure = useUpdateModuleConfiguration();
   const suspend = useSuspendModuleInstallation();
   const uninstall = useDisableModuleInstallation();
+  const provision = useProvisionModulePositions();
+  // Positions the module creates here and grants it suggests: shown when
+  // installing and from the card's "Cargos" action.
+  const positionsOverview = useModulePositions(
+    pending?.action === "install" || pending?.action === "positions"
+      ? organizationId
+      : undefined,
+    pending?.module.id,
+  );
+  const [chosen, setChosen] = useState<ModulePositionSelection | null>(null);
+  const selection = chosen ?? defaultPositionSelection(positionsOverview.data);
 
   const placeName = organization?.name ?? "esta organización";
   const installationOf = (moduleId: string) =>
@@ -96,6 +119,8 @@ export function ModulesContainer() {
     configure.reset();
     suspend.reset();
     uninstall.reset();
+    provision.reset();
+    setChosen(null);
     if (action === "publish") setPublishing({ module });
     else setPending({ action, module });
   }
@@ -110,7 +135,13 @@ export function ModulesContainer() {
     configuration?: Record<string, unknown>,
   ) {
     try {
-      await install.mutateAsync({ ...target(module), configuration });
+      await install.mutateAsync({
+        ...target(module),
+        configuration,
+        // Until the overview loads, the Kernel's default applies (every
+        // template, no grant).
+        selection: positionsOverview.data ? selection : undefined,
+      });
       await activate.mutateAsync(target(module));
       close();
     } catch {
@@ -188,6 +219,19 @@ export function ModulesContainer() {
     JsonSchemaNode | null | undefined;
   const hasFields = Object.keys(schema?.properties ?? {}).length > 0;
   const installError = install.error ?? activate.error;
+  const positionsPicker =
+    pendingModule && positionsOverview.data ? (
+      <ModulePositionsPicker
+        overview={positionsOverview.data}
+        value={selection}
+        onChange={setChosen}
+        idPrefix={`module-${pendingModule.id}`}
+      />
+    ) : null;
+  const pendingManifest = (pendingModule?.manifest ?? {}) as ModuleManifestView;
+  const createsPositions = Boolean(
+    pendingManifest.positions?.length || pendingManifest.grants?.length,
+  );
 
   return (
     <>
@@ -223,6 +267,7 @@ export function ModulesContainer() {
                 cambiar.
               </DialogDescription>
             </DialogHeader>
+            {positionsPicker}
             <ModuleConfigurationForm
               schema={schema}
               fieldErrors={fieldErrorsOf(installError)}
@@ -249,7 +294,39 @@ export function ModulesContainer() {
             installError ? describeKernelError(installError) : undefined
           }
           onConfirm={() => installAndActivate(pendingModule)}
-        />
+        >
+          {positionsPicker}
+        </ConfirmationDialog>
+      ) : null}
+
+      {pending?.action === "positions" && pendingModule ? (
+        <ConfirmationDialog
+          open
+          onOpenChange={(next) => (next ? null : close())}
+          title={`Cargos de ${pendingModule.name}`}
+          description={
+            hasPendingPositions(positionsOverview.data)
+              ? `Creá los cargos que falten en ${placeName} o sumá los permisos sugeridos a cargos que ya existen.`
+              : `Todos los cargos del módulo ya están creados en ${placeName}.`
+          }
+          confirmLabel="Aplicar"
+          isPending={provision.isPending}
+          errorMessage={
+            provision.error ? describeKernelError(provision.error) : undefined
+          }
+          onConfirm={() =>
+            provision.mutate(
+              { ...target(pendingModule), selection },
+              { onSuccess: close },
+            )
+          }
+        >
+          {positionsOverview.isLoading ? (
+            <Skeleton className="h-24" />
+          ) : (
+            positionsPicker
+          )}
+        </ConfirmationDialog>
       ) : null}
 
       {pending?.action === "configure" && pendingModule ? (
@@ -322,7 +399,7 @@ export function ModulesContainer() {
           open
           onOpenChange={(next) => (next ? null : close())}
           title={`Desinstalar ${pendingModule.name}`}
-          description={`Deja de estar disponible para ${placeName}. Lo que el módulo guardó no se borra, y lo podés volver a instalar cuando quieras.`}
+          description={`Deja de estar disponible para ${placeName}. Lo que el módulo guardó no se borra, y lo podés volver a instalar cuando quieras.${createsPositions ? " Los cargos que creó se archivan (sus nombramientos terminan) y se quitan los permisos que sumó a otros cargos." : ""}`}
           confirmLabel="Desinstalar"
           confirmVariant="danger"
           isPending={uninstall.isPending}

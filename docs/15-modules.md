@@ -80,6 +80,41 @@ otro permiso (`PUT /position-definitions/{id}/permissions/{permissionId}`).
 `scopeType` del manifiesto es informativo: el alcance real lo da la
 asignación del cargo (club: `ORGANIZATION`; distrito: `ORGANIZATION_TREE`).
 
+### Cargos de módulos (`positions[]` y `grants[]`)
+
+Análisis y decisiones: `docs/analisis-roles-api-developers.md`.
+
+- `positions[]`: plantillas de cargo. Al instalar (`installModule`, en la
+  misma transacción) cada plantilla elegida se materializa como
+  `PositionDefinition` de la organización (`ownerOrganizationId`,
+  `moduleId`, `moduleTemplateKey`; único por los tres) con un `RoleDefinition`
+  propio (`moduleId`, no de sistema) que solo tiene permisos del módulo
+  (`moduleOwnPermissions` lo verifica además del validador). Código:
+  `<moduleId>.<key>.<slug de la organización>`. Quien instala no necesita
+  `kernel.position.create`: solo crea cargos con permisos del módulo, que
+  solo valen con el módulo activo ahí.
+- El body de install acepta `positions` (claves; sin el campo, todas; las
+  `required` siempre) y `grants` (`positionCode` aprobados; sin el campo,
+  ninguno). `GET/POST /organizations/{org}/modules/{id}/positions` muestran el
+  estado y crean más cargos o aplican más grants después.
+- `grants[]`: solo sobre cargos con `ownerOrganizationId` = la organización
+  que instala (403 `KERNEL_MODULE_GRANT_FORBIDDEN` si no) y con rol no
+  compartido entre dueños; si el cargo no tenía rol, se le crea uno propio
+  (como `grantsPermissions`). Lo que se sumó queda en
+  `ModuleInstallation.grantedPermissions`.
+- Desinstalar (`DISABLED`): archiva los cargos del módulo
+  (`archivedAt`; sus nombramientos `ACTIVE` terminan y los pendientes se
+  revocan) y quita exactamente los permisos de `grantedPermissions`.
+  Suspender no toca nada. Reinstalar reactiva los mismos cargos, sin
+  nombramientos.
+- Versión nueva del manifiesto: los cargos de una plantilla que sigue
+  existiendo reciben los permisos agregados y pierden los quitados
+  (`syncModulePositionTemplates`); las plantillas nuevas no se crean solas.
+- Un cargo archivado no admite nombramientos (409 `KERNEL_POSITION_ARCHIVED`),
+  y un cargo de otra organización tampoco (400
+  `KERNEL_POSITION_NOT_APPLICABLE`). `GET /position-definitions` acepta
+  `applicableTo` e `includeArchived`.
+
 ## Instalación por club
 
 | Acción | Endpoint | Permiso |
@@ -89,6 +124,7 @@ asignación del cargo (club: `ORGANIZATION`; distrito: `ORGANIZATION_TREE`).
 | Configurar | `PATCH .../configuration` | `kernel.module.configure` |
 | Desactivar (`SUSPENDED`, reversible) | `.../suspend` | `kernel.module.disable` |
 | Desinstalar (`DISABLED`) | `.../disable` | `kernel.module.disable` |
+| Cargos del módulo (ver / crear más) | `GET`/`POST .../positions` | `kernel.module.read` / `kernel.module.install` |
 | Vista de distrito | `GET /organizations/{org}/module-installations` | `kernel.module.read` |
 
 La presidencia tiene esos permisos en su club; los cargos de distrito, en el
