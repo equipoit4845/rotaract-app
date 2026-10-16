@@ -4,7 +4,11 @@
 # esta misma carpeta, cuando existe.
 #
 # Campos: id, title, summary (la tarjeta), template (next | fastapi),
-# scope (club | distrito), idea, users, data, guide (opcional).
+# scope (club | distrito), idea, users, data, guide (opcional) y
+# available (opcional): la idea ya está en Mi Rotaract o en una de sus apps.
+#   available: { app, url, note, partial, repo }  — partial: true cuando lo
+#   que existe cubre solo una parte (por ejemplo, el distrito y no el club);
+#   repo (opcional): su código en GitHub, para "Colaborá en GitHub".
 
 - id: inscripciones-evento
   guide: inscripciones-evento
@@ -32,6 +36,12 @@
     historial y el del club.
   users: Secretaría y presidencia del club (crean reuniones y toman asistencia); socias y socios del club (ven el historial).
   data: El padrón del club (socios activos y de licencia) desde Mi Rotaract; las reuniones y la asistencia las guarda la app.
+  available:
+    app: Reuniones Distritales
+    url: https://reuniones.rotaract4845.com
+    repo: https://github.com/equipoit4845/rotaract-app/tree/main/apps/meetings-api/src/meetings
+    note: Asistencia y quórum por club en las reuniones del distrito. Para las reuniones de tu club, todavía no.
+    partial: true
 
 - id: bienvenida-nuevos-socios
   guide: bienvenida-nuevos-socios
@@ -57,6 +67,12 @@
     (presidencia, secretaría, tesorería), ordenadas por cargo, siempre al día.
   users: Cualquier socia o socio del distrito que ingresó con su cuenta.
   data: Clubes y autoridades vigentes desde Mi Rotaract. La app no guarda nada.
+  available:
+    app: Mi Rotaract
+    url: https://app.rotaract4845.com/authorities
+    repo: https://github.com/equipoit4845/rotaract-app/tree/main/apps/mirotaract-web/src/features/appointments
+    note: Autoridades vigentes de cada club y del distrito, en la sección Autoridades.
+    partial: false
 
 - id: horas-de-servicio
   title: Horas de servicio
@@ -105,6 +121,12 @@
     resultados se ven al cerrarla y el voto es secreto.
   users: Presidencia del club (crea y cierra votaciones); socias y socios activos (votan).
   data: Padrón del club desde Mi Rotaract (quién puede votar); la app guarda las votaciones y los votos sin relacionarlos con la persona.
+  available:
+    app: Reuniones Distritales
+    url: https://reuniones.rotaract4845.com
+    repo: https://github.com/equipoit4845/rotaract-app/tree/main/apps/meetings-api/src/voting
+    note: Votaciones y elecciones en las asambleas del distrito, por delegación de club. Para asambleas de un club, todavía no.
+    partial: true
 
 - id: informe-mensual
   title: Informe mensual de clubes

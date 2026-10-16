@@ -11,6 +11,15 @@ export type Idea = {
   users: string;
   data: string;
   guide: string | null;
+  /** The idea already runs in Mi Rotaract or one of its apps. */
+  available: {
+    app: string;
+    url: string;
+    note: string;
+    partial: boolean;
+    /** Its code on GitHub (public repo), for "Colaborá en GitHub". */
+    repo: string | null;
+  } | null;
 };
 
 export type IaContent = {

@@ -513,8 +513,28 @@ export function loadIdeas(dir = PROMPTS_DIR) {
       users: clean(raw.users),
       data: clean(raw.data),
       guide: raw.guide ?? null,
+      available: loadAvailable(raw.available, where),
     };
   });
+}
+
+/** `available`: where the idea already runs, for the "ya está" mark on /ia. */
+function loadAvailable(raw, where) {
+  if (raw === undefined || raw === null) return null;
+  for (const field of ["app", "url", "note"])
+    if (typeof raw?.[field] !== "string" || !raw[field].trim())
+      throw new SkillError(`${where}: available.${field} falta`);
+  if (!/^https:\/\//.test(raw.url))
+    throw new SkillError(`${where}: available.url tiene que ser https`);
+  if (raw.repo !== undefined && !/^https:\/\/github\.com\//.test(raw.repo))
+    throw new SkillError(`${where}: available.repo tiene que ser un link de GitHub`);
+  return {
+    app: raw.app.trim(),
+    url: raw.url.trim(),
+    note: raw.note.replace(/\s+/g, " ").trim(),
+    partial: raw.partial === true,
+    repo: raw.repo?.trim() ?? null,
+  };
 }
 
 export const BUNDLE_SCHEMA = "mirotaract-skills-bundle/1";

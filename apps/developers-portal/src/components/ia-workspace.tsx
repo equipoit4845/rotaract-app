@@ -2,6 +2,7 @@
 
 import {
   Check,
+  CircleCheck,
   Copy,
   Download,
   ExternalLink,
@@ -154,6 +155,53 @@ export function IdeaCards({ ideas }: { ideas: Idea[] }) {
             <p className="mt-1.5 flex-1 text-sm text-muted-foreground">
               {idea.summary}
             </p>
+            {idea.available ? (
+              <div
+                className={`mt-3 rounded-lg border px-3 py-2 text-xs ${
+                  idea.available.partial
+                    ? "border-amber-500/30 bg-amber-500/5"
+                    : "border-emerald-500/30 bg-emerald-500/5"
+                }`}
+              >
+                <p
+                  className={`flex items-center gap-1.5 font-semibold ${
+                    idea.available.partial
+                      ? "text-amber-700 dark:text-amber-400"
+                      : "text-emerald-700 dark:text-emerald-400"
+                  }`}
+                >
+                  <CircleCheck className="size-3.5" aria-hidden />
+                  {idea.available.partial
+                    ? "Algo parecido ya existe"
+                    : "Ya está en Mi Rotaract"}
+                </p>
+                <p className="mt-1 text-muted-foreground">
+                  {idea.available.note}
+                </p>
+                <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
+                  <a
+                    href={idea.available.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 font-medium text-foreground underline-offset-2 hover:underline"
+                  >
+                    Abrir {idea.available.app}
+                    <ExternalLink className="size-3" aria-hidden />
+                  </a>
+                  {idea.available.repo ? (
+                    <a
+                      href={idea.available.repo}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 font-medium text-foreground underline-offset-2 hover:underline"
+                    >
+                      Colaborá en GitHub
+                      <ExternalLink className="size-3" aria-hidden />
+                    </a>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
             <button
               type="button"
               onClick={() => pickIdea(idea)}

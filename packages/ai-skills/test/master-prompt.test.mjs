@@ -306,6 +306,21 @@ describe("ideas", () => {
     }
   });
 
+  test("ideas already in Mi Rotaract carry where they run", () => {
+    const available = loadIdeas().filter((i) => i.available);
+    assert.ok(available.length > 0);
+    for (const { id, available: a } of available) {
+      assert.match(a.url, /^https:\/\//, id);
+      assert.ok(a.app && a.note, id);
+      assert.equal(typeof a.partial, "boolean", id);
+      if (a.repo) assert.match(a.repo, /^https:\/\/github\.com\//, id);
+    }
+    assert.equal(
+      loadIdeas().find((i) => i.id === "tablero-autoridades").available.partial,
+      false,
+    );
+  });
+
   test("loadPrompts skips the _ files", () => {
     assert.ok(loadPrompts().every((p) => !p.file.startsWith("_")));
   });

@@ -259,7 +259,7 @@ export default function IaPage() {
         id="ideas"
         eyebrow="Paso 1"
         title="¿Qué podés construir?"
-        intro="Algunas ideas para empezar. Tocá “Usar esta idea” y se completa el formulario; después la podés cambiar a tu gusto."
+        intro="Algunas ideas para empezar. Tocá “Usar esta idea” y se completa el formulario; después la podés cambiar a tu gusto. Las que ya existen en Mi Rotaract están marcadas: podés abrirlas o usarlas igual como punto de partida."
       >
         <IdeaCards ideas={ia.ideas} />
       </Section>
