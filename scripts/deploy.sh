@@ -12,8 +12,10 @@
 #   developers-portal, meetings-api, meetings-web, correo-api, correo-web
 #                       recreated (a few seconds of downtime; see the doc).
 #
-# Steps: lock → back up the database → build (once) → migrate (one-off,
-# must be backward compatible) → start the idle slot with the new image →
+# Steps: lock → back up the database → build (once; api/worker also build
+# the migrate image, so it carries this tree's migrations) → migrate (one-off,
+# must be backward compatible) → check that every folder in prisma/migrations
+# is applied in _prisma_migrations → start the idle slot with the new image →
 # wait until it is healthy → point nginx at it (graceful reload) → drain →
 # stop the old slot. Any failure before the switch leaves the old slot
 # serving; a failure right after the switch puts the old slot back.
@@ -21,7 +23,7 @@
 # Options:
 #   --skip-backup   do not run scripts/backup-postgres.sh first
 #   --skip-build    reuse the images already built for this project
-#   --skip-migrate  do not run the migrate service
+#   --skip-migrate  do not run (nor build, nor check) the migrate service
 #   --cutover       start api+web slots, stop the legacy api/web containers
 #                   and start the edge (a few seconds of downtime, once)
 #   --rollback      switch api/web back to the previous slot (its stopped
@@ -35,6 +37,7 @@
 #   DEPLOY_HEALTH_TIMEOUT  240 seconds for a new slot to become healthy
 #   DEPLOY_DRAIN_SECONDS   15 seconds between switch and stopping the old slot
 #   DEPLOY_HEALTH_PATH_<SERVICE>  override the readiness path (tests)
+#   DEPLOY_MIGRATIONS_DIR  prisma/migrations (tests)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -46,6 +49,7 @@ PREFIX="${DEPLOY_IMAGE_PREFIX:-mirotaract}"
 STATE_DIR="${DEPLOY_STATE_DIR:-infra/deploy/state}"
 HEALTH_TIMEOUT="${DEPLOY_HEALTH_TIMEOUT:-240}"
 DRAIN_SECONDS="${DEPLOY_DRAIN_SECONDS:-15}"
+MIGRATIONS_DIR="${DEPLOY_MIGRATIONS_DIR:-prisma/migrations}"
 export DEPLOY_IMAGE_PREFIX="$PREFIX"
 case "$STATE_DIR" in /*) ;; *) STATE_DIR="$ROOT/$STATE_DIR" ;; esac
 export DEPLOY_STATE_DIR="$STATE_DIR"
@@ -167,6 +171,29 @@ migrate() {
   log "applying migrations (one-off, backward compatible)"
   docker compose -p "$PROJECT" --env-file "$ENV_FILE" -f docker-compose.yml \
     run --rm --no-deps migrate || die "migrations failed; the running version keeps serving"
+  verify_migrations
+}
+
+# Prisma answers "No pending migrations" when the migrate image is older than
+# the tree (2026-10-16: a release shipped without its migration). So compare
+# the tree, not the image, with what the database recorded as applied.
+verify_migrations() {
+  local expected applied missing d
+  expected="$(for d in "$MIGRATIONS_DIR"/*/; do
+    [ -f "$d/migration.sql" ] && basename "$d"
+  done | sort)"
+  [ -n "$expected" ] || die "no migrations found in $MIGRATIONS_DIR"
+  applied="$(docker compose -p "$PROJECT" --env-file "$ENV_FILE" -f docker-compose.yml \
+    exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tA -c \
+      "SELECT migration_name FROM _prisma_migrations WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL"' |
+    tr -d '\r' | grep -v '^$' | sort -u)" ||
+    die "could not read _prisma_migrations; the running version keeps serving"
+  missing="$(comm -23 <(echo "$expected") <(echo "$applied"))"
+  if [ -n "$missing" ]; then
+    printf '  not applied: %s\n' $missing >&2
+    die "$(echo "$missing" | wc -l) of $(echo "$expected" | wc -l) migrations in $MIGRATIONS_DIR are not applied (stale migrate image? rebuild it, or drop --skip-build); the running version keeps serving"
+  fi
+  log "migrations: all $(echo "$expected" | wc -l) in $MIGRATIONS_DIR are applied"
 }
 
 # Image built by `docker compose build <svc>` for this project.
@@ -288,6 +315,9 @@ if [ "$ROLLBACK" = 0 ]; then
   [ "$needs_db" = 1 ] && backup
   build_list=()
   for s in "${SERVICES[@]}"; do build_list+=("$s"); done
+  # The migrate service has its own image: without rebuilding it, it would
+  # apply the migrations of whatever tree it was last built from.
+  [ "$needs_db" = 1 ] && [ "$SKIP_MIGRATE" = 0 ] && build_list+=(migrate)
   build "${build_list[@]}"
   [ "$needs_db" = 1 ] && migrate
 fi
