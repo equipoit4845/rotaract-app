@@ -5,7 +5,7 @@ import { DashboardShell } from "@/features/shell/dashboard-shell";
 
 export default function ApplicationsPage() {
   return (
-    <DashboardShell activePath="/applications">
+    <DashboardShell activePath="/applications" allowWithoutOrganization>
       <ApplicationsListContainer />
     </DashboardShell>
   );

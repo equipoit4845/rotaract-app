@@ -53,6 +53,15 @@ export function useRegister() {
   });
 }
 
+/** Active clubs offered by the register form; public, no session needed. */
+export function useRegistrationClubs() {
+  return useQuery({
+    queryKey: authKeys.registrationClubs(),
+    queryFn: ({ signal }) => authApi.registrationClubs({ signal }),
+    staleTime: 5 * 60_000,
+  });
+}
+
 export function useVerifyEmail() {
   return useMutation({
     mutationFn: (payload: { token: string }) => authApi.verifyEmail(payload),

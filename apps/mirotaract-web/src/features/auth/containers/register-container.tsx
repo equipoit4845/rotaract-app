@@ -33,13 +33,13 @@ export function RegisterContainer() {
   return (
     <AuthShell
       title="Crear cuenta"
-      description="Registrate para después solicitar unirte a un club o distrito."
+      description="Creá tu cuenta y elegí el club al que querés sumarte."
     >
       {registered ? (
         <Alert
           tone="success"
           title="Revisá tu email"
-          description="Te enviamos un enlace para verificar tu cuenta antes de poder iniciar sesión."
+          description="Te enviamos un enlace para verificar tu cuenta. Cuando lo confirmes, tu solicitud llega a la presidencia del club."
         />
       ) : (
         <>

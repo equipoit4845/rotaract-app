@@ -8,7 +8,6 @@ import {
 import {
   AppShell,
   Avatar,
-  DataState,
   OrganizationSwitcher,
   PeriodIndicator,
 } from "@/components/layout";
@@ -19,6 +18,7 @@ import type { ReactNode } from "react";
 import { AccountMenu } from "./account-menu";
 import { ActiveOrganizationProvider } from "./active-organization-context";
 import { AuthGate } from "./auth-gate";
+import { NoClubState } from "./no-club-state";
 import { toVisualPeriodStatus } from "./period-status";
 import { useOrganizationOptions } from "./use-organization-options";
 import { findActiveNavLabel, useShellNavItems } from "./use-shell-nav";
@@ -143,19 +143,7 @@ function DashboardShellContent({
           {organization || allowWithoutOrganization ? (
             children
           ) : (
-            <DataState
-              kind="empty"
-              title="Todavía no pertenecés a un club"
-              description="Buscá tu club y enviá una solicitud. La presidencia del club la revisará antes de habilitar tu espacio de socio."
-              action={
-                <Link
-                  href="/join-club"
-                  className="inline-flex h-9 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-                >
-                  Buscar mi club
-                </Link>
-              }
-            />
+            <NoClubState personId={currentUser?.personId} />
           )}
         </ActiveOrganizationProvider>
       </AppShell>

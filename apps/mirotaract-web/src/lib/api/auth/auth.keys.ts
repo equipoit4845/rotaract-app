@@ -2,4 +2,5 @@ export const authKeys = {
   all: ["auth"] as const,
   currentUser: () => [...authKeys.all, "currentUser"] as const,
   sessions: () => [...authKeys.all, "sessions"] as const,
+  registrationClubs: () => [...authKeys.all, "registrationClubs"] as const,
 };

@@ -42,9 +42,16 @@ export class AuthController {
       firstName: string;
       lastName: string;
       displayName?: string;
+      organizationId?: string | null;
+      message?: string | null;
     },
   ) {
     return this.auth.register(body);
+  }
+  /** Active clubs the register form offers (public: id, name, code, city). */
+  @Get("register/clubs")
+  registrationClubs() {
+    return this.auth.registrationClubs();
   }
   @Post("login")
   @HttpCode(200)

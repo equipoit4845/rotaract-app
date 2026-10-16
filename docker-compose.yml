@@ -96,6 +96,12 @@ services:
       KERNEL_SIGNING_KEY_SECRET: ${KERNEL_SIGNING_KEY_SECRET:?KERNEL_SIGNING_KEY_SECRET must be set in .env}
       KERNEL_ISSUER_URL: ${KERNEL_ISSUER_URL:-http://localhost:3001/api/kernel/v1}
       KERNEL_JOBS_ENABLED: "true"
+      # Membership-application emails (club presidency on submit, applicant
+      # on approve/reject) go out from the worker through ClickMail.
+      CLICKMAIL_API_KEY: ${CLICKMAIL_API_KEY:-}
+      CLICKMAIL_BASE_URL: ${CLICKMAIL_BASE_URL:-http://localhost:3000}
+      CLICKMAIL_FROM_ADDRESS: ${CLICKMAIL_FROM_ADDRESS:-Mi Rotaract <no-reply@mirotaract.org>}
+      KERNEL_PUBLIC_WEB_URL: ${KERNEL_PUBLIC_WEB_URL:-http://localhost:3000}
       # E7: the worker delivers webhooks (outbound HTTPS to third parties).
       KERNEL_WEBHOOKS_ALLOW_INSECURE: ${KERNEL_WEBHOOKS_ALLOW_INSECURE:-false}
       # E12.1 (docs/19-operations-e12.md): status probes, once a minute. The

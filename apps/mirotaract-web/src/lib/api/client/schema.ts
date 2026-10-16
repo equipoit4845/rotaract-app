@@ -15,9 +15,29 @@ export interface paths {
         put?: never;
         /**
          * Registrar una nueva cuenta
-         * @description Crea `Person` y `UserAccount` atómicamente (CA-ID-01).
+         * @description Crea `Person` y `UserAccount` atómicamente (CA-ID-01). Si incluye `organizationId` (Mi Rotaract lo exige), el club queda guardado y, al verificar el email, se crea y envía una `MembershipApplication` a ese club en nombre de la persona; la presidencia del club recibe un email.
          */
         post: operations["registerAccount"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/register/clubs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Clubes que se pueden elegir al registrarse
+         * @description Directorio público de clubes activos para el formulario de registro. Solo datos para reconocer el club: id, nombre, código y ciudad.
+         */
+        get: operations["listRegistrationClubs"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3040,6 +3060,16 @@ export interface components {
             /** Format: email */
             email: string;
             password: string;
+            /** @description Club al que la persona pide ingresar (de `GET /auth/register/clubs`). La solicitud se envía al verificar el email. */
+            organizationId?: string | null;
+            /** @description Mensaje opcional para la presidencia del club. */
+            message?: string | null;
+        };
+        RegistrationClub: {
+            id: string;
+            name: string;
+            code: string;
+            city: string | null;
         };
         LoginRequest: {
             /** Format: email */
@@ -4669,6 +4699,15 @@ export interface operations {
                     "application/json": components["schemas"]["UserAccount"];
                 };
             };
+            /** @description El club elegido no existe, no es un club o no está activo. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Error"];
+                };
+            };
             /** @description Email ya registrado (CA-ID-02). */
             409: {
                 headers: {
@@ -4676,6 +4715,28 @@ export interface operations {
                 };
                 content: {
                     "application/problem+json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    listRegistrationClubs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Clubes activos ordenados por nombre. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["RegistrationClub"][];
+                    };
                 };
             };
         };

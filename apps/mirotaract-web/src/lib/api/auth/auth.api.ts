@@ -5,6 +5,7 @@ import type {
   AcceptAccountInvitationRequest,
   LoginRequest,
   RegisterAccountRequest,
+  RegistrationClub,
   UserAccount,
   UserContext,
 } from "./auth.types";
@@ -67,6 +68,12 @@ export const authApi = {
         signal: opts?.signal,
       }),
     ) as Promise<UserAccount>,
+
+  /** Public club directory of the register form (`GET /auth/register/clubs`). */
+  registrationClubs: (opts?: { signal?: AbortSignal }) =>
+    apiRequest(() =>
+      httpClient.GET("/auth/register/clubs", { signal: opts?.signal }),
+    ) as Promise<{ items: RegistrationClub[] }>,
 
   verifyEmail: (payload: { token: string }, opts?: { signal?: AbortSignal }) =>
     apiRequest(() =>

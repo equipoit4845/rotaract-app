@@ -43,7 +43,7 @@ export function VerifyEmailContainer({ token }: { token: string }) {
           <Alert
             tone="success"
             title="Tu email fue verificado."
-            description="Ya podés iniciar sesión."
+            description="Ya podés iniciar sesión. Si elegiste un club al registrarte, tu solicitud ya está en manos de su presidencia."
           />
           <p className="text-center text-sm text-muted-foreground [&_a]:font-medium [&_a]:text-primary [&_a:hover]:underline">
             <Link href="/login">Ir a ingresar</Link>

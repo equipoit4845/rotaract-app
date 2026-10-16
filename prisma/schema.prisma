@@ -187,6 +187,11 @@ model UserAccount {
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt
   disabledAt          DateTime?
+  /// Club chosen at self-registration. The membership application is
+  /// created and submitted when the email is verified (the account is not
+  /// allowed to apply before that); both fields are cleared afterwards.
+  requestedOrganizationId String?
+  requestedMessage        String? @db.Text
 
   person                  Person                   @relation(fields: [personId], references: [id], onDelete: Restrict)
   sessions                AccountSession[]
@@ -668,9 +673,14 @@ model OutboxMessage {
   /// E7: when the webhook dispatcher turned this message into deliveries
   /// (or decided no endpoint wants it). Independent of the NATS `status`.
   webhooksFannedOutAt DateTime?
+  /// When the membership-application email notifier handled this message
+  /// (or decided it sends nothing). Independent of NATS and webhooks.
+  emailsNotifiedAt    DateTime?
+  emailAttempts       Int          @default(0)
 
   @@index([status, nextAttemptAt])
   @@index([webhooksFannedOutAt, occurredAt])
+  @@index([emailsNotifiedAt, eventType])
   @@index([aggregateType, aggregateId, aggregateVersion])
   @@index([occurredAt])
 }

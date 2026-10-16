@@ -101,7 +101,11 @@ paths:
       operationId: registerAccount
       tags: [Auth]
       summary: Registrar una nueva cuenta
-      description: Crea `Person` y `UserAccount` atómicamente (CA-ID-01).
+      description: >-
+        Crea `Person` y `UserAccount` atómicamente (CA-ID-01). Si incluye
+        `organizationId` (Mi Rotaract lo exige), el club queda guardado y, al
+        verificar el email, se crea y envía una `MembershipApplication` a ese
+        club en nombre de la persona; la presidencia del club recibe un email.
       security: []
       x-required-permission: null
       x-rate-limited: true
@@ -116,11 +120,39 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/UserAccount" }
+        "400":
+          description: El club elegido no existe, no es un club o no está activo.
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Error" }
         "409":
           description: Email ya registrado (CA-ID-02).
           content:
             application/problem+json:
               schema: { $ref: "#/components/schemas/Error" }
+
+  /auth/register/clubs:
+    get:
+      operationId: listRegistrationClubs
+      tags: [Auth]
+      summary: Clubes que se pueden elegir al registrarse
+      description: >-
+        Directorio público de clubes activos para el formulario de registro.
+        Solo datos para reconocer el club: id, nombre, código y ciudad.
+      security: []
+      x-required-permission: null
+      responses:
+        "200":
+          description: Clubes activos ordenados por nombre.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/RegistrationClub" }
 
   /auth/login:
     post:
@@ -4638,6 +4670,26 @@ components:
         lastName: { type: string }
         email: { type: string, format: email }
         password: { type: string, minLength: 10 }
+        organizationId:
+          type: string
+          nullable: true
+          description: >-
+            Club al que la persona pide ingresar (de `GET
+            /auth/register/clubs`). La solicitud se envía al verificar el email.
+        message:
+          type: string
+          nullable: true
+          maxLength: 1000
+          description: Mensaje opcional para la presidencia del club.
+
+    RegistrationClub:
+      type: object
+      required: [id, name, code, city]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        code: { type: string }
+        city: { type: string, nullable: true }
 
     LoginRequest:
       type: object
