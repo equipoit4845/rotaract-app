@@ -8,6 +8,7 @@ export const MAILBOX_POSITIONS: ReadonlyArray<{ positionCode: string; alias: str
   { positionCode: 'DISTRICT_RDR', alias: 'rdr', label: 'Representación Distrital' },
   { positionCode: 'DISTRICT_SECRETARY', alias: 'secretaria', label: 'Secretaría Distrital' },
   { positionCode: 'DISTRICT_TREASURER', alias: 'tesoreria', label: 'Tesorería Distrital' },
+  { positionCode: 'DISTRICT_COMITE_IT', alias: 'it', label: 'Comité IT' },
 ];
 
 export const positionConfig = (positionCode: string) =>

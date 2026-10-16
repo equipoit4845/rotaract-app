@@ -62,10 +62,11 @@ export class MailboxesService {
     const startsAt = authority.startsAt ? new Date(authority.startsAt) : new Date();
 
     const touched = await this.locked(async (tx) => {
-      // Personal mailbox: reuse the one this person had for this position
-      // (re-elected, or back within the grace period), else a new address.
+      // Personal mailbox: the address belongs to the person, not the position.
+      // Reuse the one they already have (re-elected, another position, or back
+      // within the grace period), else a new address.
       const previous = await tx.mailboxAssignment.findFirst({
-        where: { personId, mailbox: { kind: 'PERSONAL', positionCode: cfg.positionCode } },
+        where: { personId, mailbox: { kind: 'PERSONAL' } },
         orderBy: { startsAt: 'desc' },
         include: { mailbox: true },
       });
@@ -272,11 +273,18 @@ export class MailboxesService {
       }
       if (clickmailAddressId) await this.mail.setAddressActive(clickmailAddressId, active);
       if (clickmailSenderId) await this.mail.setSenderActive(clickmailSenderId, active);
-      await this.prisma.mailbox.update({
-        where: { id: mailbox.id },
+      // Recorded only if the status is still the one pushed: when two kernel
+      // events race (one mandate ends as another starts), the older push must
+      // not mark the newer status as synced.
+      const recorded = await this.prisma.mailbox.updateMany({
+        where: { id: mailbox.id, status: mailbox.status },
         data: { clickmailAddressId, clickmailSenderId, clickmailSyncedStatus: mailbox.status },
       });
       await this.audit.record('mailbox.clickmail_synced', { mailboxId: mailbox.id, meta: { status: mailbox.status } });
+      if (!recorded.count) {
+        await this.prisma.mailbox.update({ where: { id: mailbox.id }, data: { clickmailAddressId, clickmailSenderId } });
+        return this.sync(mailboxId);
+      }
       return true;
     } catch (error) {
       this.logger.warn(

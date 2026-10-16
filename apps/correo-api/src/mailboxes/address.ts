@@ -9,6 +9,7 @@ const RESERVED = new Set([
   'rdr',
   'secretaria',
   'tesoreria',
+  'it',
   'no-reply',
   'noreply',
   'postmaster',

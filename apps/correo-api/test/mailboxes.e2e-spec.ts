@@ -115,6 +115,27 @@ describe('mailbox lifecycle (e2e)', () => {
     expect(await prisma.mailboxAssignment.count()).toBe(2);
   });
 
+  it('a person moving to another position keeps their personal address, which stays active', async () => {
+    await mailboxes.activate(authority({ appointmentId: 'a1', personId: 'p-facu' }), 'kernel');
+    await mailboxes.activate(
+      authority({ appointmentId: 'it1', personId: 'p-facu', positionCode: 'DISTRICT_COMITE_IT' }),
+      'kernel',
+    );
+    await mailboxes.end('a1', 'kernel');
+
+    const boxes = await prisma.mailbox.findMany({ orderBy: { address: 'asc' } });
+    expect(boxes.map((b) => [b.kind, b.address, b.status])).toEqual([
+      ['PERSONAL', 'facundo.cubells@rotaract4845.com', 'ACTIVE'],
+      ['ROLE', 'it@rotaract4845.com', 'ACTIVE'],
+      ['ROLE', 'rdr@rotaract4845.com', 'ACTIVE'],
+    ]);
+    const held = await prisma.mailboxAssignment.findMany({ where: { status: 'ACTIVE' }, include: { mailbox: true } });
+    expect(held.map((a) => [a.appointmentId, a.mailbox.address]).sort()).toEqual([
+      ['it1', 'facundo.cubells@rotaract4845.com'],
+      ['it1', 'it@rotaract4845.com'],
+    ]);
+  });
+
   it('two people with the same name get different addresses', async () => {
     await mailboxes.activate(
       authority({ appointmentId: 's1', personId: 'p-ana', positionCode: 'DISTRICT_SECRETARY' }),

@@ -28,7 +28,8 @@
         "default": [
           { "positionCode": "DISTRICT_RDR", "alias": "rdr" },
           { "positionCode": "DISTRICT_SECRETARY", "alias": "secretaria" },
-          { "positionCode": "DISTRICT_TREASURER", "alias": "tesoreria" }
+          { "positionCode": "DISTRICT_TREASURER", "alias": "tesoreria" },
+          { "positionCode": "DISTRICT_COMITE_IT", "alias": "it" }
         ]
       },
       "graceDays": { "title": "Días de solo lectura después del mandato", "type": "integer", "minimum": 0, "maximum": 90, "default": 30 }
