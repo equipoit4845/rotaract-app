@@ -167,6 +167,7 @@ describe('mailbox lifecycle (e2e)', () => {
 
   it('the alias goes to the successor, the predecessor keeps only the personal mailbox', async () => {
     await mailboxes.activate(authority({ appointmentId: 'a1', personId: 'p-facu' }), 'kernel');
+    await mailboxes.end('a1', 'kernel');
     await mailboxes.activate(authority({ appointmentId: 'a9', personId: 'p-ana', periodId: 'per-2027' }), 'kernel');
 
     const role = await prisma.mailbox.findUniqueOrThrow({
@@ -175,6 +176,47 @@ describe('mailbox lifecycle (e2e)', () => {
     });
     expect(role.assignments.find((a) => a.personId === 'p-facu')!.status).toBe('ENDED');
     expect(role.assignments.find((a) => a.personId === 'p-ana')!.status).toBe('ACTIVE');
+  });
+
+  it('a missed end event: the reconciliation takes the alias from the predecessor', async () => {
+    await mailboxes.activate(authority({ appointmentId: 'a1', personId: 'p-facu' }), 'kernel');
+    await mailboxes.activate(authority({ appointmentId: 'a9', personId: 'p-ana', periodId: 'per-2027' }), 'kernel');
+    kernel.current = [authority({ appointmentId: 'a9', personId: 'p-ana', periodId: 'per-2027' })];
+    await mailboxes.reconcile();
+
+    const held = await prisma.mailboxAssignment.findMany({
+      where: { status: 'ACTIVE', mailbox: { address: 'rdr@rotaract4845.com' } },
+    });
+    expect(held.map((a) => a.personId)).toEqual(['p-ana']);
+  });
+
+  it('everyone holding the same position shares its alias, and the reconciliation keeps it that way', async () => {
+    const it1 = authority({ appointmentId: 'it1', personId: 'p-facu', positionCode: 'DISTRICT_COMITE_IT' });
+    const it2 = authority({ appointmentId: 'it2', personId: 'p-ana', positionCode: 'DISTRICT_COMITE_IT' });
+    await mailboxes.activate(it1, 'kernel');
+    await mailboxes.activate(it2, 'kernel');
+    const holders = async () =>
+      (
+        await prisma.mailboxAssignment.findMany({
+          where: { status: 'ACTIVE', mailbox: { address: 'it@rotaract4845.com' } },
+          orderBy: { personId: 'asc' },
+        })
+      ).map((a) => a.personId);
+    expect(await holders()).toEqual(['p-ana', 'p-facu']);
+    expect(await prisma.mailbox.count({ where: { address: 'it@rotaract4845.com' } })).toBe(1);
+
+    // No flip-flop: with both still in the kernel, nothing changes.
+    kernel.current = [it1, it2];
+    await expect(mailboxes.reconcile()).resolves.toEqual({ assigned: 0, ended: 0 });
+    await expect(mailboxes.reconcile()).resolves.toEqual({ assigned: 0, ended: 0 });
+    expect(await holders()).toEqual(['p-ana', 'p-facu']);
+
+    // One leaves: the other keeps the alias, and it stays on in ClickMail.
+    await mailboxes.end('it1', 'kernel');
+    expect(await holders()).toEqual(['p-ana']);
+    const role = await prisma.mailbox.findUniqueOrThrow({ where: { address: 'it@rotaract4845.com' } });
+    expect(role.status).toBe('ACTIVE');
+    expect(mail.addressActive('it@rotaract4845.com')).toBe(true);
   });
 
   it('re-appointed to the same position: the same personal mailbox comes back to life', async () => {

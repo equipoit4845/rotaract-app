@@ -93,7 +93,9 @@ export class MailboxesService {
         });
       }
 
-      // Role alias: one per position, handed from holder to holder.
+      // Role alias: one per position, shared by everyone holding it now.
+      // Each holder leaves it when their own mandate ends (`end`, or the
+      // reconciliation for an end event that never arrived).
       const roleAddress = addressOf(cfg.alias);
       const role =
         (await tx.mailbox.findUnique({ where: { address: roleAddress } })) ??
@@ -107,10 +109,6 @@ export class MailboxesService {
         }));
       if (role.status !== 'ACTIVE')
         await tx.mailbox.update({ where: { id: role.id }, data: { status: 'ACTIVE', closesAt: null } });
-      const handedOver = await tx.mailboxAssignment.updateMany({
-        where: { mailboxId: role.id, status: 'ACTIVE', appointmentId: { not: authority.appointmentId } },
-        data: { status: 'ENDED', endsAt: new Date() },
-      });
 
       for (const mailbox of [personal, role]) {
         await tx.mailboxAssignment.upsert({
@@ -132,7 +130,6 @@ export class MailboxesService {
               appointmentId: authority.appointmentId,
               kind: mailbox.kind,
               source,
-              handedOver: mailbox === role ? handedOver.count : 0,
             },
           },
           tx,
