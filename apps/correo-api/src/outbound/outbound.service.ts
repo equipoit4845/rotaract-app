@@ -23,6 +23,8 @@ import { PrismaService } from '../prisma/prisma.service';
 export const MAX_RECIPIENTS = 50;
 export const MAX_ATTACHMENTS = 10;
 export const MAX_ATTACHMENT_BYTES = 25 * 1024 * 1024;
+/** Inline images up to this size are kept here so the sent view can show them. */
+export const MAX_KEPT_INLINE_BYTES = 2 * 1024 * 1024;
 /** Types SES refuses; checked here so the person gets the message before uploading. */
 const BLOCKED_EXTENSIONS = new Set([
   'ade',
@@ -414,6 +416,10 @@ export class OutboundService {
                 sizeBytes: f.size,
                 // Kept by ClickMail with the sent email, not downloadable from here yet.
                 stored: false,
+                inlineData:
+                  f.contentId && /^image\//i.test(f.mimetype) && f.size <= MAX_KEPT_INLINE_BYTES
+                    ? new Uint8Array(f.buffer)
+                    : null,
               })),
             },
           },

@@ -157,7 +157,8 @@ export class InboxController {
       meta: { threadId },
     });
     // Sanitized HTML per message; inline images (cid:) of received ones get
-    // their short-lived links, and are not listed again as attachments.
+    // their short-lived links, sent ones the copy kept here (data:), and
+    // neither is listed again as an attachment.
     const views = new Map<
       string,
       { html: string | null; remoteImages: boolean; origins: string[]; inlineCids: Set<string> }
@@ -177,10 +178,17 @@ export class InboxController {
           }
         }
       }
+      if (safe && inlineCids.size && m.direction === 'OUT') {
+        for (const a of m.attachments) {
+          const cid = a.contentId ? normalizeCid(a.contentId) : null;
+          if (!cid || !inlineCids.has(cid) || !a.inlineData || !/^image\/[a-z0-9.+-]+$/i.test(a.contentType ?? '')) continue;
+          urls.set(cid, `data:${a.contentType};base64,${Buffer.from(a.inlineData).toString('base64')}`);
+        }
+      }
       views.set(m.id, {
         html: safe ? resolveInlineImages(safe.html, urls) : null,
         remoteImages: safe?.remoteImages ?? false,
-        origins: [...new Set([...urls.values()].map((u) => new URL(u).origin))],
+        origins: [...new Set([...urls.values()].filter((u) => !u.startsWith('data:')).map((u) => new URL(u).origin))],
         inlineCids: new Set([...inlineCids].filter((c) => urls.has(c))),
       });
     }

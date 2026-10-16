@@ -209,6 +209,8 @@ model Attachment {
   sizeBytes             Int
   /// false when ClickMail did not keep the content (size/count limits).
   stored                Boolean  @default(true)
+  /// Copy of an image sent inline (`cid:`): ClickMail does not hand sent parts back.
+  inlineData            Bytes?
   createdAt             DateTime @default(now())
 
   @@index([messageId])

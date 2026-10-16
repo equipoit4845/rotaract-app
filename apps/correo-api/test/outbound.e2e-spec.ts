@@ -168,8 +168,15 @@ describe('sending mail (e2e)', () => {
     );
     expect(sent.html).not.toContain('script');
     expect(sent.attachments).toEqual([expect.objectContaining({ filename: 'logo.png', contentId: 'img1.abc@correo' })]);
-    const att = await prisma.attachment.findFirstOrThrow();
+    const att = await prisma.attachment.findFirstOrThrow({ include: { message: true } });
     expect(att.contentId).toBe('img1.abc@correo');
+
+    // The sent view shows the image from the copy kept here, not as an attachment.
+    const view = await http().get(`/correo-api/threads/${att.message.threadId}`).set('Authorization', auth).expect(200);
+    const m = view.body.messages[0];
+    expect(m.html).toContain(`<img alt="logo" src="data:image/png;base64,${Buffer.from('PNGDATA').toString('base64')}" />`);
+    expect(m.imageOrigins).toEqual([]);
+    expect(m.attachments).toEqual([]);
   });
 
   it('rejects inline images whose ids do not match', async () => {

@@ -26,6 +26,7 @@ const FACU = 'facundo.cubells@rotaract4845.com';
 const RDR = 'rdr@rotaract4845.com';
 
 let seq = 0;
+const T0 = Date.now() - 60 * 60_000;
 function received(over: Partial<EmailReceivedData> = {}): EmailReceivedData {
   seq++;
   return {
@@ -41,7 +42,8 @@ function received(over: Partial<EmailReceivedData> = {}): EmailReceivedData {
     message_id: `<msg-${seq}@clubcentro.org>`,
     in_reply_to: null,
     references: [],
-    received_at: new Date(Date.UTC(2026, 9, 15, 18, seq)).toISOString(),
+    // Recent, one minute apart: the webhook refuses events older than its tolerance.
+    received_at: new Date(T0 + seq * 60_000).toISOString(),
     spam_verdict: 'PASS',
     virus_verdict: 'PASS',
     spf_verdict: 'PASS',
