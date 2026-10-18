@@ -292,6 +292,8 @@ services:
       # ClickMail: own key with send, inbound:read and inbound:write. Without
       # it mailboxes are created and wait ("Preparando").
       CORREO_CLICKMAIL_API_KEY: ${CORREO_CLICKMAIL_API_KEY:-}
+      # The SDK's default host is the old one; this keeps it on the current API.
+      CORREO_CLICKMAIL_BASE_URL: ${CORREO_CLICKMAIL_BASE_URL:-https://resendapi.clickarg.cloud}
       # Signs ClickMail's webhooks to /correo-api/webhooks/clickmail (email.received).
       CORREO_CLICKMAIL_WEBHOOK_SECRET: ${CORREO_CLICKMAIL_WEBHOOK_SECRET:-}
     ports: ["127.0.0.1:${CORREO_API_HOST_PORT:-3006}:3006"]
